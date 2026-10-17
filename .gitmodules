@@ -1,0 +1,4 @@
+[submodule "vendor/wc3v"]
+	path = vendor/wc3v
+	url = https://github.com/jblanchette/wc3v.git
+	ignore = dirty

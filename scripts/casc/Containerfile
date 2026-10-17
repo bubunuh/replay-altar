@@ -1,0 +1,16 @@
+# Builds casc-extract (casc-extract.cpp) against upstream CascLib, to read files
+# out of the local Warcraft III install. Used by scripts/extract-gamedata.sh.
+FROM quay.io/fedora/fedora:latest
+RUN dnf install -y --setopt=install_weak_deps=False git cmake make gcc-c++ zlib-devel && dnf clean all
+# Pinned: 903d9500ce (2026-09-25) uses Windows-only types and breaks the Linux build.
+ARG CASCLIB_COMMIT=2a280f5a231966dc5d1b534978dd9f9f04a374cd
+RUN git init -q /src/CascLib && cd /src/CascLib \
+ && git fetch -q --depth 1 https://github.com/ladislav-zezula/CascLib.git ${CASCLIB_COMMIT} \
+ && git checkout -q FETCH_HEAD \
+ && cmake -S /src/CascLib -B /src/CascLib/build -DCMAKE_BUILD_TYPE=Release \
+      -DCASC_BUILD_SHARED_LIB=OFF -DCASC_BUILD_STATIC_LIB=ON -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -Wno-dev \
+ && cmake --build /src/CascLib/build -j"$(nproc)"
+COPY casc-extract.cpp /src/casc-extract.cpp
+RUN g++ -O2 -std=c++17 -o /usr/local/bin/casc-extract /src/casc-extract.cpp \
+      -I/src/CascLib/src $(find /src/CascLib/build -name 'libcasc*.a' | head -1) -lz -pthread
+ENTRYPOINT ["/usr/local/bin/casc-extract"]
