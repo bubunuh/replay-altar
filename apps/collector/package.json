@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@w3stats/core": "*",
-    "@w3stats/sim": "*"
+    "@w3stats/sim": "*",
+    "@w3stats/reference": "*"
   }
 }

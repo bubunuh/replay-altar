@@ -64,11 +64,19 @@ export function summarize(record: GameRecord, o: WOutput, costs: CostTables, k: 
   };
 }
 
-/** Simulate one archived game. Never throws: failures come back as status "failed". */
-export async function simulateGame(record: GameRecord, opts: { dataRoot: string; warcraftDocuments: string[] }): Promise<SimSummary> {
+/**
+ * Simulate one archived game. Never throws: failures come back as status "failed".
+ * dataRoot is where the output goes; gamedataRoot (default dataRoot) holds sim/gamedata/current,
+ * so reference corpora can share the user's extracted game data.
+ */
+export async function simulateGame(
+  record: GameRecord,
+  opts: { dataRoot: string; warcraftDocuments: string[]; gamedataRoot?: string },
+): Promise<SimSummary> {
   const ranAt = new Date().toISOString();
   const engine = { name: "wc3v" as const, commit: wc3vCommit() };
-  const notReady = simNotReady(opts.dataRoot);
+  const gamedataRoot = opts.gamedataRoot ?? opts.dataRoot;
+  const notReady = simNotReady(gamedataRoot);
   if (notReady) return { status: "failed", engine, ranAt, reason: notReady };
   const mapProblem = ensureMapData(record.game.map.file, opts.warcraftDocuments);
   if (mapProblem) return { status: "failed", engine, ranAt, reason: mapProblem };
@@ -76,7 +84,7 @@ export async function simulateGame(record: GameRecord, opts: { dataRoot: string;
   const res = await runDriver(record.provenance.archivePath, out);
   if (!res.ok || !existsSync(out)) return { status: "failed", engine, ranAt, reason: res.error ?? "simulation produced no output" };
   try {
-    const costs = loadCosts(gamedataDir(opts.dataRoot));
+    const costs = loadCosts(gamedataDir(gamedataRoot));
     return summarize(record, readSimOutput(out), costs, CONSTANTS, { ranAt, runMs: res.ms, outputPath: out });
   } catch (e) {
     return { status: "failed", engine, ranAt, reason: `summary failed: ${(e as Error).message}` };

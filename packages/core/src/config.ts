@@ -2,6 +2,19 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSy
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 
+export type ReferenceGroup = {
+  id: string;
+  label: string;
+  /** W3Champions MMR the subject player must have at least. */
+  minMmr: number;
+  /** Race of the subject player (the one compared with you). */
+  race: "H" | "O" | "U" | "N";
+  /** How many current-patch games to keep. */
+  target: number;
+  /** W3Champions gateways to search: 20 = Europe, 10 = Americas. */
+  gateways: number[];
+};
+
 export type Config = {
   /** Battletags that are you. Games where none of them played are archived as "observed". */
   accounts: string[];
@@ -11,6 +24,8 @@ export type Config = {
   openWindowOnGameStart: boolean;
   /** Desktop notification after each analyzed game. */
   notifyAfterGame: boolean;
+  /** Reference games downloaded from W3Champions to compare against. */
+  reference: { refreshDays: number; groups: ReferenceGroup[] };
 };
 
 const home = homedir();
@@ -20,6 +35,10 @@ export const DEFAULT_CONFIG: Config = {
   warcraftDocuments: [join(home, "Games/battlenet/drive_c/users/steamuser/Documents/Warcraft III")],
   openWindowOnGameStart: true,
   notifyAfterGame: true,
+  reference: {
+    refreshDays: 7,
+    groups: [{ id: "pros", label: "Pros (2400+ MMR)", minMmr: 2400, race: "H", target: 50, gateways: [20, 10] }],
+  },
 };
 
 // W3STATS_DATA / W3STATS_CONFIG let tests and dry runs use throwaway locations.
@@ -28,8 +47,7 @@ export const dataDir = () =>
 export const configPath = () =>
   process.env.W3STATS_CONFIG ?? join(process.env.XDG_CONFIG_HOME ?? join(home, ".config"), "w3stats/config.json");
 
-export const paths = () => {
-  const root = dataDir();
+export const paths = (root = dataDir()) => {
   return {
     root,
     db: join(root, "w3stats.sqlite"),
@@ -39,6 +57,12 @@ export const paths = () => {
     raw: join(root, "raw"),
     events: join(root, "events.jsonl"),
   };
+};
+
+/** Data folder of a reference group: same layout as yours, separate database. */
+export const referencePaths = (groupId: string) => {
+  const p = paths(join(dataDir(), "reference", groupId));
+  return { ...p, db: join(p.root, "reference.sqlite") };
 };
 
 export function loadConfig(): Config {

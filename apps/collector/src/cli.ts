@@ -18,6 +18,8 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { applySim, readRecord } from "@w3stats/core";
 import { CONSTANTS, gamedataDir, loadCosts, readSimOutput, simNotReady, simulateGame, summarize } from "@w3stats/sim";
+import { buildProfile, openReference, readState, refreshGroup } from "@w3stats/reference";
+import { currentReplayBuild } from "./reference.ts";
 import { runCollector } from "./collector.ts";
 import { isReplayFile } from "./watcher.ts";
 import { install, resume, suspend, uninstall } from "./install.ts";
@@ -42,6 +44,9 @@ const HELP = `w3stats — Warcraft III replay archive & stats
   w3stats sim --rerun         simulate every analyzed game again
   w3stats sim --resummarize   recompute economy numbers from stored simulations (after a model update)
   w3stats sim <game>          simulate one game
+  w3stats ref                 reference groups (pro games from W3Champions): status
+  w3stats ref refresh [--target N] [--group id]   download/simulate missing reference games now
+  w3stats ref profile         rebuild the reference statistics from stored games
   w3stats collector           run the collector in the foreground (what the service runs)
 `;
 
@@ -168,6 +173,45 @@ switch (cmd) {
       const sim = await simulateGame(record, { dataRoot: c.paths.root, warcraftDocuments: c.config.warcraftDocuments });
       applySim(c, key, sim);
       console.log(`[${++i}/${keys.length}] ${key.slice(0, 8)} ${sim.status === "ok" ? `ok in ${(sim.runMs / 1000).toFixed(1)}s${sim.warnings.length ? ` (${sim.warnings.join("; ")})` : ""}` : `failed: ${sim.reason}`}`);
+    }
+    break;
+  }
+  case "ref": {
+    const config = loadConfig();
+    const sub = args[0];
+    const gi = args.indexOf("--group");
+    const groups = config.reference.groups.filter((g) => gi < 0 || g.id === args[gi + 1]);
+    const build = currentReplayBuild(openDb(paths().db));
+    if (sub === "refresh") {
+      const ti = args.indexOf("--target");
+      for (const g of groups) {
+        const res = await refreshGroup(g, {
+          config,
+          replayBuild: build,
+          gamedataRoot: paths().root,
+          target: ti >= 0 ? Number(args[ti + 1]) : undefined,
+          log: (m) => console.log(m),
+        });
+        if (res.stopReason) console.log(`${g.id}: stopped early: ${res.stopReason}`);
+        console.log(`${g.id}: +${res.downloaded} downloaded, ${res.skipped} skipped, ${res.pruned} pruned (old patch); ${res.kept} games, ${Object.keys(res.profile.matchups).filter((k) => k !== "all").map((k) => `${k} ${res.profile.matchups[k].n}`).join(", ")}`);
+      }
+    } else if (sub === "profile") {
+      for (const g of groups) {
+        const ref = openReference(g.id, config);
+        const p = buildProfile(ref.db, ref.paths, g, build);
+        console.log(`${g.id}: profile from ${p.games} games`);
+      }
+    } else {
+      console.log(`current replay build: ${build ?? "unknown (no games yet)"}; refresh every ${config.reference.refreshDays} days`);
+      for (const g of groups) {
+        const ref = openReference(g.id, config);
+        const st = readState(ref.paths.root);
+        const n = (ref.db.prepare("SELECT COUNT(*) n FROM ref_matches").get() as { n: number }).n;
+        const sims = ref.db.prepare("SELECT COALESCE(sim_status, 'none') s, COUNT(*) n FROM games GROUP BY 1").all() as { s: string; n: number }[];
+        const byMu = ref.db.prepare("SELECT 'Hv' || opp_race mu, COUNT(*) n FROM ref_matches GROUP BY 1").all() as { mu: string; n: number }[];
+        console.log(`${g.label} [${g.id}]: ${n}/${g.target} games (${byMu.map((x) => `${x.mu} ${x.n}`).join(", ") || "none"}); simulations ${sims.map((x) => `${x.s} ${x.n}`).join(", ") || "none"}`);
+        console.log(`  last refresh: ${st.lastRefreshAt ?? "never"}; data in ${ref.paths.root}`);
+      }
     }
     break;
   }

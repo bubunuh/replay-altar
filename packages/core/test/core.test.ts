@@ -6,6 +6,7 @@ import { beforeAll, describe, expect, test } from "vitest";
 import {
   classify,
   computeMetrics,
+  DEFAULT_CONFIG,
   hallIdleMs,
   detectResult,
   endTimeOf,
@@ -160,7 +161,7 @@ describe.skipIf(files.length === 0)("ingest", () => {
     raw: join(root, "raw"),
     events: join(root, "events.jsonl"),
   };
-  const config: Config = { accounts: ME, warcraftDocuments: [], openWindowOnGameStart: false, notifyAfterGame: false };
+  const config: Config = { ...DEFAULT_CONFIG, accounts: ME, warcraftDocuments: [], openWindowOnGameStart: false, notifyAfterGame: false };
   const inbox = join(root, "inbox");
   cpSync(FIXTURES, inbox, { recursive: true, preserveTimestamps: true });
   const db = openDb(paths.db);
