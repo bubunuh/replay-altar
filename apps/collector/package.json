@@ -1,0 +1,8 @@
+{
+  "name": "@w3stats/collector",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": { "w3stats": "./src/cli.ts" },
+  "dependencies": { "@w3stats/core": "*" }
+}

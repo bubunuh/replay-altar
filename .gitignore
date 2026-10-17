@@ -1,0 +1,6 @@
+node_modules/
+dist/
+out/
+# Real replays contain other players' battletags; keep them local only.
+fixtures/replays/*.w3g
+apps/desktop/out/

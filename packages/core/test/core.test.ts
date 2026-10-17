@@ -1,0 +1,193 @@
+// Runs against the real replays in fixtures/replays (kept out of git; copy them in to run).
+import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, utimesSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { beforeAll, describe, expect, test } from "vitest";
+import {
+  classify,
+  computeMetrics,
+  detectResult,
+  endTimeOf,
+  ingestFile,
+  openDb,
+  parseReplay,
+  reingestAll,
+  type Config,
+  type RawReplay,
+} from "../src/index.ts";
+
+const FIXTURES = join(import.meta.dirname, "../../../fixtures/replays");
+const ME = ["Pedrovisk#1486"];
+const files = existsSync(FIXTURES) ? readdirSync(FIXTURES).filter((f) => f.endsWith(".w3g")).sort() : [];
+const raws = new Map<string, RawReplay>();
+
+beforeAll(async () => {
+  for (const f of files) raws.set(f, await parseReplay(readFileSync(join(FIXTURES, f))));
+});
+
+const clone = (f: string) => structuredClone(raws.get(f)!);
+
+describe.skipIf(files.length === 0)("classification of real replays", () => {
+  test("every fixture is an analyzed 1v1 against a human, from the right ladder", () => {
+    for (const f of files) {
+      const c = classify(raws.get(f)!, ME);
+      expect(c.category, f).toBe("1v1_human");
+      expect(c.analyzed, f).toBe(true);
+      expect(c.source, f).toBe(f.startsWith("w3c-") ? "w3champions" : "bnet_ladder");
+      expect(c.seats.filter((s) => s.isObserver).map((s) => s.name), f).toEqual([f.startsWith("w3c-") ? "FLO" : "Blizzard"]);
+    }
+  });
+
+  test("results match what the file names say", () => {
+    const expected: Record<string, "win" | "loss"> = {
+      "Macro_loss.w3g": "loss",
+      "Victory-1v1-oct-2026.w3g": "win",
+      "victory_vs_elf.w3g": "win",
+    };
+    for (const [f, result] of Object.entries(expected)) {
+      const raw = raws.get(f)!;
+      const r = detectResult(raw, classify(raw, ME));
+      expect(r.me, f).toBe(result);
+      expect(r.confidence, f).toBe("high");
+    }
+  });
+
+  test("our winner agrees with w3gjs on every fixture", () => {
+    for (const f of files) {
+      const raw = raws.get(f)!;
+      expect(detectResult(raw, classify(raw, ME)).winnerTeamId, f).toBe(raw.output.winningTeamId);
+    }
+  });
+});
+
+describe.skipIf(files.length === 0)("classification of edited replays", () => {
+  const base = "LastReplay.w3g";
+
+  test("a computer opponent makes it vs_ai", () => {
+    const raw = clone(base);
+    const opp = raw.meta.slotRecords.find((s) => s.slotStatus === 2 && s.teamId === 1)!;
+    opp.computerFlag = 1;
+    const c = classify(raw, ME);
+    expect([c.category, c.analyzed, c.skipReason]).toEqual(["vs_ai", false, "vs_ai"]);
+  });
+
+  test("sitting in the observer slot makes it observed", () => {
+    const raw = clone(base);
+    const meId = raw.output.players.find((p) => p.name === ME[0])!.id;
+    raw.meta.slotRecords.find((s) => s.playerId === meId)!.teamId = 24;
+    const c = classify(raw, ME);
+    expect([c.category, c.skipReason]).toEqual(["observed", "observed"]);
+  });
+
+  test("someone else's game is not mine", () => {
+    const c = classify(clone(base), ["Somebody#1"]);
+    expect([c.category, c.skipReason]).toEqual(["observed", "not_me"]);
+  });
+
+  test("a third human makes it a team game", () => {
+    const raw = clone(base);
+    raw.meta.slotRecords.push({ ...raw.meta.slotRecords.find((s) => s.teamId === 1)!, playerId: 9 });
+    raw.meta.playerRecords.push({ playerId: 9, playerName: "Ally#1" });
+    const c = classify(raw, ME);
+    expect([c.category, c.skipReason]).toEqual(["team", "not_1v1"]);
+  });
+
+  test("custom lobby 1v1 on a melee map is analyzed", () => {
+    const raw = clone(base);
+    raw.meta.gameName = "pedro practice";
+    raw.meta.slotRecords = raw.meta.slotRecords.filter((s) => s.teamId !== 24);
+    const c = classify(raw, ME);
+    expect([c.source, c.category, c.analyzed]).toEqual(["custom", "1v1_human", true]);
+  });
+
+  test("custom lobby 1v1 on a custom map is skipped", () => {
+    const raw = clone(base);
+    raw.meta.gameName = "lobby";
+    raw.output.map.file = "Legion TD 7.2.w3x";
+    const c = classify(raw, ME);
+    expect([c.source, c.analyzed, c.skipReason]).toEqual(["custom", false, "custom_map"]);
+  });
+});
+
+describe.skipIf(files.length === 0)("metrics", () => {
+  test("Macro_loss: Human timings come from the order stream", () => {
+    const raw = raws.get("Macro_loss.w3g")!;
+    const me = raw.output.players.find((p) => p.name === ME[0])!;
+    const m = computeMetrics(raw, me.id!);
+    expect(m.tier2_ms).toBe(220693); // Keep ordered at 3:40
+    expect(m.hero1_ms).toBe(131191); // Archmage skilled Water Elemental at 2:11
+    expect(m.heroes_count).toBe(2);
+    expect(m.hotkey_select_share).toBeCloseTo(619 / (619 + 475), 6);
+    expect(m.control_groups_used).toBe(4); // groups 1, 2, 4, 5
+  });
+});
+
+describe("time of game", () => {
+  test("W3Champions file names are UTC end times", () => {
+    expect(endTimeOf("/x/w3c-20261012212003.w3g", 0)).toEqual({ endedAt: "2026-10-12T21:20:03.000Z", timeSource: "w3c_filename" });
+  });
+  test("LastReplay mtime is the end of the game; other names are saved copies", () => {
+    expect(endTimeOf("/x/LastReplay.w3g", 0).timeSource).toBe("lastreplay_mtime");
+    expect(endTimeOf("/x/Macro_loss.w3g", 0).timeSource).toBe("saved_file_mtime");
+  });
+});
+
+describe.skipIf(files.length === 0)("ingest", () => {
+  const root = mkdtempSync(join(tmpdir(), "w3stats-test-"));
+  const paths = {
+    root,
+    db: join(root, "w3stats.sqlite"),
+    archive: join(root, "archive"),
+    superseded: join(root, "archive/superseded"),
+    games: join(root, "games"),
+    raw: join(root, "raw"),
+    events: join(root, "events.jsonl"),
+  };
+  const config: Config = { accounts: ME, warcraftDocuments: [], openWindowOnGameStart: false, notifyAfterGame: false };
+  const inbox = join(root, "inbox");
+  cpSync(FIXTURES, inbox, { recursive: true, preserveTimestamps: true });
+  const db = openDb(paths.db);
+  const ctx = { db, config, paths };
+  const dump = () =>
+    ["games", "game_players", "player_metrics", "build_events", "heroes", "hero_skills", "apm_minutes", "files", "classification_reasons"].map((t) =>
+      db.prepare(`SELECT * FROM ${t} ORDER BY 1, 2, 3`).all(),
+    );
+
+  test("each replay becomes one archived game", async () => {
+    for (const f of files) expect((await ingestFile(ctx, join(inbox, f))).status, f).toBe("new");
+    expect(db.prepare("SELECT COUNT(*) n FROM games").get()).toEqual({ n: files.length });
+    expect(readdirSync(join(paths.archive, "2026/10")).length).toBe(files.length);
+  });
+
+  test("ingesting the same file again does nothing", async () => {
+    expect((await ingestFile(ctx, join(inbox, "Macro_loss.w3g"))).status).toBe("duplicate");
+  });
+
+  test("another copy of a known game becomes an alias, not a new game", async () => {
+    const copy = join(inbox, "my_rename.w3g");
+    cpSync(join(inbox, "LastReplay.w3g"), copy);
+    utimesSync(copy, new Date(), new Date());
+    const out = await ingestFile(ctx, copy);
+    expect(out.status).toBe("updated");
+    if (out.status !== "updated") return;
+    expect(out.record.provenance.files.map((f) => f.timeSource).sort()).toEqual(["lastreplay_mtime", "saved_file_mtime"]);
+    expect(out.record.game.timeSource).toBe("lastreplay_mtime"); // the game's own file wins
+    expect(out.record.userLabel).toBe("my_rename");
+    expect(db.prepare("SELECT COUNT(*) n FROM games").get()).toEqual({ n: files.length });
+  });
+
+  test("reingest from the archive reproduces the database exactly", async () => {
+    const before = dump();
+    const out = await reingestAll(ctx);
+    expect(out.errors).toEqual([]);
+    expect(out.games).toBe(files.length);
+    expect(dump()).toEqual(before);
+  });
+
+  test("a manual result override survives reingest", async () => {
+    const key = (db.prepare("SELECT game_key FROM games WHERE user_label = 'Macro_loss'").get() as { game_key: string }).game_key;
+    db.prepare("INSERT INTO annotations (game_key, kind, source, body, created_at) VALUES (?, 'result_override', 'user', '{\"result\":\"win\"}', 'now')").run(key);
+    await reingestAll(ctx);
+    expect(db.prepare("SELECT result, result_detected FROM v_games WHERE game_key = ?").get(key)).toEqual({ result: "win", result_detected: "loss" });
+  });
+});
