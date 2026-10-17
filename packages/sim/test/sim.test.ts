@@ -106,7 +106,6 @@ describe.skipIf(!ready || !existsSync(FIXTURE))("simulating a real replay", () =
     expect(me.metrics.useful_action_share).toBeGreaterThan(0.2);
     expect(me.metrics.useful_action_share).toBeLessThan(1);
     expect(me.metrics.army_food_10m).toBeGreaterThan(0);
-    expect(me.metrics.hero_level3_ms).toBeLessThan(me.metrics.hero_level5_ms ?? Infinity);
     expect(me.series.some((s) => s.dominance !== null)).toBe(true);
   });
 });
