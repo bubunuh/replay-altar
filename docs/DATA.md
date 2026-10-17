@@ -75,9 +75,16 @@ Each metric's `source` says how much to trust it:
 
 Each metric has a `section`:
 
-- **core:** separated winners from losers in roughly 70%+ of 38 games (28 pro, 10 yours), or is a resource the game counts. Only core metrics get green/yellow/red.
-- **mechanics:** APM, effective APM, useful actions, hotkeys and control groups. These track skill level and are compared with pros, without per-game verdicts.
+- **core:** separated winners from losers in roughly 70%+ of 38 games (28 pro, 10 yours), or is a resource the game counts.
+  - It also holds the 2nd and 3rd hero timing and tier 2/3 started, by request. These are strategy-dependent (`better: null`), so they get no colour.
+  - Tier metrics carry `raceLabels` (Keep/Castle, Stronghold/Fortress, …).
+- **mechanics:** APM, effective APM, useful actions, hotkeys, control groups, supply blocked. These get green/yellow/red like core.
 - **details:** everything else.
+
+**Upgrades section** (not metrics):
+- **Research levels:** come from the replay's research orders (`researchLevels()` in `gamedata.ts`). The n-th distinct order of an upgrade is level n, capped at its maximum level. A repeat within 30 s is a cancel-and-requeue.
+- **Attack and armor upgrades** per race (`CORE_UPGRADES`): the upgrades the game data classes as melee, ranged or armor, Masonry excluded.
+- **Pro data:** the profile's `matchups[x].upgrades["code:level"]` holds the pro median time, the share of pro games that research it, and the sorted times.
 
 ## Economy model (`packages/sim`)
 

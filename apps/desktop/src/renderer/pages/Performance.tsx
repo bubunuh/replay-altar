@@ -6,6 +6,8 @@ import { base, Chart, esc, winrateBars, type Tokens } from "../Chart.tsx";
 import { assess, describeRef, pickProfile } from "../compare.ts";
 import { ProMedian, Standing } from "../Standing.tsx";
 import { groupDetails, SECTION_INFO, splitMetrics } from "../sections.ts";
+import { proText, researchTimes, upgradeRows, upgradeStanding } from "../upgrades.ts";
+import type { RaceCode } from "@w3stats/core/gamedata";
 import type { RefGroupInfo } from "../api.ts";
 import { dateTime, GROUP_LABEL, mean, metricValue, mmss, pct, RACE, shortName, SOURCE } from "../format.ts";
 
@@ -283,12 +285,16 @@ export function Performance({ games: all, metrics, pros, onOpen }: { games: Perf
         <p className="sub">
           Averages over the filtered games; (3/6) means only 3 of 6 games had that event. The opponents column is everyone you faced.
           {ref
-            ? ` Pros: ${pros!.group.label}, ${describeRef(ref)}. Core metrics get a verdict: green = pro level (at or above the pro median), yellow = not yet but at least as good as your opponents, red = below both. Whole-game totals are compared per 10 minutes.`
+            ? ` Pros: ${pros!.group.label}, ${describeRef(ref)}. Core and Mechanics get a verdict: green = pro level (at or above the pro median), yellow = not yet but at least as good as your opponents, red = below both. Whole-game totals are compared per 10 minutes.`
             : " Pro comparison appears once reference games are downloaded (w3stats ref refresh)."}
           {" "}Hover a metric for its definition.
         </p>
         {(() => {
           const cols = ref ? 7 : 5;
+          // Your race in view (the most common one), for race names and the Upgrades section.
+          const raceCount = new Map<string, number>();
+          for (const g of games) if (g.me_race) raceCount.set(g.me_race, (raceCount.get(g.me_race) ?? 0) + 1);
+          const race = ([...raceCount.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "") as RaceCode;
           const row = (m: MetricDef, verdict: boolean) => {
             const a = assess(
               m,
@@ -303,7 +309,7 @@ export function Performance({ games: all, metrics, pros, onOpen }: { games: Perf
             const shown = verdict ? a : { ...a, tier: null };
             return (
               <tr key={m.key} title={m.description} className={ref && shown.tier ? `tier-row-${shown.tier}` : undefined}>
-                <td>{m.label}</td>
+                <td>{m.raceLabels?.[race] ?? m.label}</td>
                 <td className="num"><Avg def={m} values={wins.map((g) => g.me[m.key])} /></td>
                 <td className="num"><Avg def={m} values={losses.map((g) => g.me[m.key])} /></td>
                 <td className="num"><Avg def={m} values={games.map((g) => g.me[m.key])} /></td>
@@ -332,6 +338,42 @@ export function Performance({ games: all, metrics, pros, onOpen }: { games: Perf
             </tr>
           );
           const { core, mechanics, details } = splitMetrics(metrics);
+          // Upgrades: per game research times; compared with pros only when they play your race.
+          const timesByGame = new Map(games.map((g) => [g.game_key, researchTimes(g.upgrades.map((u) => ({ kind: "upgrade", code: u.code, ms: u.ms })))]));
+          const yourKeys = new Set([...timesByGame.values()].flatMap((m) => [...m.keys()]));
+          const upMp = ref && pros?.profile?.group.race === race ? ref.mp : null;
+          const ups = ["H", "O", "U", "N"].includes(race) ? upgradeRows(race, yourKeys, upMp) : { core: [], other: [] };
+          const avgTime = (list: PerfGame[], key: string) => {
+            const t = list.map((g) => timesByGame.get(g.game_key)?.get(key)).filter((x): x is number => x !== undefined);
+            return t.length ? (
+              <>
+                {mmss(mean(t))}
+                {t.length < list.length && <span className="muted small"> ({t.length}/{list.length})</span>}
+              </>
+            ) : (
+              "—"
+            );
+          };
+          const subRow = (label: string) => (
+            <tr key={`sub-${label}`}><td colSpan={cols} className="muted small" style={{ paddingTop: 12 }}>{label}</td></tr>
+          );
+          const upRow = (u: (typeof ups.core)[number]) => {
+            const yours = games.map((g) => timesByGame.get(g.game_key)?.get(u.key)).filter((x): x is number => x !== undefined);
+            return (
+              <tr key={u.key}>
+                <td>
+                  {u.label}
+                  {u.detail && <span className="muted small"> {u.detail}</span>}
+                </td>
+                <td className="num">{avgTime(wins, u.key)}</td>
+                <td className="num">{avgTime(losses, u.key)}</td>
+                <td className="num">{avgTime(games, u.key)}</td>
+                <td className="num muted">—</td>
+                {ref && <td className="num muted small">{upMp ? proText(u.pro) : "—"}</td>}
+                {ref && <td className="small muted">{upMp ? upgradeStanding(u.pro, yours.length ? mean(yours) : null) : "—"}</td>}
+              </tr>
+            );
+          };
           return (
             <>
               <table>
@@ -339,8 +381,13 @@ export function Performance({ games: all, metrics, pros, onOpen }: { games: Perf
                 <tbody>
                   {sectionRow("core")}
                   {core.map((m) => row(m, true))}
+                  {sectionRow("upgrades")}
+                  {subRow("Attack and armor")}
+                  {ups.core.map(upRow)}
+                  {ups.other.length > 0 && subRow("Other upgrades")}
+                  {ups.other.map(upRow)}
                   {sectionRow("mechanics")}
-                  {mechanics.map((m) => row(m, false))}
+                  {mechanics.map((m) => row(m, true))}
                 </tbody>
               </table>
               <details className="more-metrics">

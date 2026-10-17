@@ -2,7 +2,7 @@
 // for the subject players of a reference group. Read by the desktop app and exports.
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { heroesXpAt, METRICS, per10Minutes, readRecord, transaction, type DB, type GameRecord, type ReferenceGroup } from "@w3stats/core";
+import { heroesXpAt, METRICS, per10Minutes, readRecord, researchLevels, transaction, type DB, type GameRecord, type ReferenceGroup } from "@w3stats/core";
 import { summarizeValues, type Stat } from "./quantiles.ts";
 import type { RefPaths } from "./store.ts";
 
@@ -12,8 +12,13 @@ export type CurvePoint = { minute: number; n: number; p25: number; p50: number; 
 
 export type StatWithValues = Stat & { values: number[] };
 
+/** One upgrade level: how often the pros research it and when (times of the games that did). */
+export type UpgradeStat = StatWithValues & { name: string; share: number };
+
 export type MatchupProfile = {
   n: number;
+  /** Keyed "code:level", e.g. "Rhme:1". */
+  upgrades: Record<string, UpgradeStat>;
   /** Per metric; whole-game totals (scalesWithLength) also carry per10, normalized per 10 minutes. */
   metrics: Record<string, StatWithValues & { per10?: StatWithValues }>;
   curves: Record<CurveKey, CurvePoint[]>;
@@ -91,7 +96,22 @@ function profileOf(samples: Sample[]): MatchupProfile {
       .filter((x) => x.stat.n >= MIN_CURVE_N)
       .map(({ minute, stat }) => ({ minute, n: stat.n, p25: stat.p25, p50: stat.p50, p75: stat.p75 }));
   }
-  return { n: samples.length, metrics, curves };
+  const upgradeTimes = new Map<string, { name: string; times: number[] }>();
+  for (const s of samples) {
+    const p = s.record.players.find((x) => x.playerId === s.subjectId)!;
+    const names = new Map(p.build.filter((b) => b.kind === "upgrade").map((b) => [b.code, b.name]));
+    for (const r of researchLevels(p.build)) {
+      const key = `${r.code}:${r.level}`;
+      if (!upgradeTimes.has(key)) upgradeTimes.set(key, { name: names.get(r.code) ?? r.code, times: [] });
+      upgradeTimes.get(key)!.times.push(r.ms);
+    }
+  }
+  const upgrades: MatchupProfile["upgrades"] = {};
+  for (const [key, { name, times }] of upgradeTimes) {
+    const stat = withValues(times)!;
+    upgrades[key] = { ...stat, name, share: times.length / samples.length };
+  }
+  return { n: samples.length, metrics, curves, upgrades };
 }
 
 export function buildProfile(db: DB, paths: RefPaths, group: ReferenceGroup, replayBuild: number | null): RefProfile {

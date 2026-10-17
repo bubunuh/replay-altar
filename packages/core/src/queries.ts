@@ -55,6 +55,8 @@ export function getGame(db: DB, paths: Paths, key: string): GameDetail {
 /** One row per analyzed game with both players' metrics, for the Performance view to aggregate. */
 export type PerfGame = GameRow & {
   first_hero: string | null;
+  /** Your research orders in time order (for the Upgrades section). */
+  upgrades: { code: string; ms: number }[];
   me: Record<string, number | null>;
   opp: Record<string, number | null>;
 };
@@ -74,7 +76,14 @@ export function performanceData(db: DB): { games: PerfGame[]; metrics: MetricDef
        WHERE h.player_id = g.me_player_id AND h.hero_order = 1`,
     )
     .all() as { game_key: string; name: string }[];
-  const byKey = new Map<string, PerfGame>(games.map((g) => [g.game_key, { ...g, first_hero: null, me: {}, opp: {} }]));
+  const byKey = new Map<string, PerfGame>(games.map((g) => [g.game_key, { ...g, first_hero: null, upgrades: [], me: {}, opp: {} }]));
+  const research = db
+    .prepare(
+      `SELECT b.game_key, b.code, b.ms FROM build_events b JOIN games g ON g.game_key = b.game_key
+       WHERE g.analyzed = 1 AND b.player_id = g.me_player_id AND b.kind = 'upgrade' ORDER BY b.game_key, b.ms`,
+    )
+    .all() as { game_key: string; code: string; ms: number }[];
+  for (const r of research) byKey.get(r.game_key)?.upgrades.push({ code: r.code, ms: r.ms });
   for (const m of metricRows) {
     const g = byKey.get(m.game_key);
     if (g) (m.is_me ? g.me : g.opp)[m.metric] = m.value;

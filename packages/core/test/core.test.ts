@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { beforeAll, describe, expect, test } from "vitest";
 import {
+  researchLevels,
   heroXpAt,
   levelUpTimes,
   classify,
@@ -146,6 +147,17 @@ describe("hero experience", () => {
   test("after the last level-up it grows to half the next level by the end", () => {
     const levels = [60_000, 200_000, 400_000];
     expect(heroXpAt(levels, 900_000, 900_000)).toBe(500 + 200); // level 3 + half of 400
+  });
+});
+
+describe("research levels", () => {
+  const up = (code: string, s: number) => ({ kind: "upgrade", code, ms: s * 1000 });
+  test("levels count up, a quick re-order is a requeue, and one-level upgrades stay at 1", () => {
+    expect(researchLevels([up("Rhme", 300), up("Rhme", 310), up("Rhri", 400), up("Rhme", 500), up("Rhri", 600)])).toEqual([
+      { code: "Rhme", level: 1, ms: 300_000 },
+      { code: "Rhri", level: 1, ms: 400_000 },
+      { code: "Rhme", level: 2, ms: 500_000 },
+    ]);
   });
 });
 

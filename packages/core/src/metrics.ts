@@ -1,11 +1,11 @@
 // Per-player numbers derived from the parsed command stream.
 // A replay holds commands, not game state: every "time" here is when an order was issued
 // (cancelled orders included), and heroes are timed by their first learned skill.
-import { isRaceCode, POTION_ITEMS, RACES, TOWN_PORTAL, type RaceCode } from "./gamedata.ts";
+import { CORE_UPGRADES, isRaceCode, POTION_ITEMS, RACES, researchLevels, TIER_NAMES, TOWN_PORTAL, type RaceCode } from "./gamedata.ts";
 import { heroesXpAt, levelUpTimes } from "./heroxp.ts";
 import type { RawReplay } from "./parse.ts";
 
-export const METRICS_VERSION = 5;
+export const METRICS_VERSION = 6;
 
 export type MetricUnit = "ms" | "count" | "apm" | "ratio" | "per_min";
 
@@ -25,16 +25,18 @@ export type MetricDef = {
   better: "higher" | "lower" | null;
   /** A whole-game total that grows with game length; compared with other games per 10 minutes. */
   scalesWithLength: boolean;
+  /** Race-specific names, e.g. "Keep started" for Human tier 2. */
+  raceLabels?: Partial<Record<RaceCode, string>>;
   /**
    * core: separates winners from losers (tested on pro and own games); gets good/bad labels.
-   * mechanics: skill-level indicators (APM, hotkeys): compared with pros, no per-game verdict.
+   * mechanics: skill-level habits (APM, hotkeys, avoiding supply blocks); compared with pros.
    * details: everything else.
    */
   section: "core" | "mechanics" | "details";
   description: string;
 };
 
-type MetricSpec = Omit<MetricDef, "better" | "scalesWithLength" | "section">;
+type MetricSpec = Omit<MetricDef, "better" | "scalesWithLength" | "section" | "raceLabels">;
 
 // Filled in by packages/sim once a game has been simulated; null until then.
 const SIM_SPECS: MetricSpec[] = [
@@ -64,8 +66,6 @@ const SIM_SPECS: MetricSpec[] = [
   { key: "army_food_6m", label: "Army food at 6:00", unit: "count", group: "economy", source: "simulation", description: "Food used minus workers at 6:00 (army size, heroes included)." },
   { key: "army_food_8m", label: "Army food at 8:00", unit: "count", group: "economy", source: "simulation", description: "Food used minus workers at 8:00." },
   { key: "army_food_10m", label: "Army food at 10:00", unit: "count", group: "economy", source: "simulation", description: "Food used minus workers at 10:00." },
-  { key: "first_attack_upgrade_ms", label: "1st attack upgrade", unit: "ms", group: "army", source: "simulation", description: "When the first weapon/attack research started." },
-  { key: "first_armor_upgrade_ms", label: "1st armor upgrade", unit: "ms", group: "army", source: "simulation", description: "When the first armor/defense research started." },
   { key: "fights_pitched", label: "Pitched battles", unit: "count", group: "fights", source: "simulation", description: "Army-vs-army fights you took part in." },
   { key: "fights_defending", label: "Base defenses", unit: "count", group: "fights", source: "simulation", description: "Fights at a base that you did not start (defending against attacks or harassment)." },
   { key: "fights_creep", label: "Creep fights", unit: "count", group: "fights", source: "simulation", description: "Fights against neutral creeps." },
@@ -117,16 +117,26 @@ const SCALES_WITH_LENGTH = new Set([
  */
 export const CORE_METRICS = [
   "workers_by_6m", "workers_alive_6m", "workers_alive_10m",
-  "hero_xp_6m", "hero_xp_10m", "hero_xp_share", "hero_level3_ms", "creep_camps_6m",
+  "hero_xp_6m", "hero_xp_10m", "hero_xp_share", "hero_level3_ms", "hero2_ms", "hero3_ms", "creep_camps_6m",
+  "tier2_ms", "tier3_ms",
   "gold_collected", "units_killed", "trade_efficiency",
   "unused_supply_avg", "fights_defending", "hero_deaths", "expansions",
 ];
-export const MECHANICS_METRICS = ["apm", "eapm", "useful_action_share", "hotkey_select_share", "control_groups_used", "control_group_recalls_per_min"];
+export const MECHANICS_METRICS = ["apm", "eapm", "useful_action_share", "hotkey_select_share", "control_groups_used", "control_group_recalls_per_min", "supply_blocked_s"];
+
+const TIER_LABELS: Record<string, Partial<Record<RaceCode, string>>> = Object.fromEntries(
+  (["tier2_ms", "tier3_ms", "tier2_done_ms", "tier3_done_ms"] as const).map((key) => {
+    const tier = key.startsWith("tier2") ? 0 : 1;
+    const verb = key.endsWith("done_ms") ? "finished" : "started";
+    return [key, Object.fromEntries((Object.keys(TIER_NAMES) as RaceCode[]).map((r) => [r, `${TIER_NAMES[r][tier]} ${verb}`]))];
+  }),
+);
 
 const withBetter = (m: MetricSpec): MetricDef => ({
   ...m,
   better: BETTER[m.key] ?? null,
   scalesWithLength: SCALES_WITH_LENGTH.has(m.key),
+  raceLabels: TIER_LABELS[m.key],
   section: CORE_METRICS.includes(m.key) ? "core" : MECHANICS_METRICS.includes(m.key) ? "mechanics" : "details",
 });
 
@@ -175,6 +185,8 @@ const REPLAY_SPECS: MetricSpec[] = [
   { key: "hero_xp_total", label: "Hero XP total", unit: "count", group: "heroes", source: "replay", description: "Experience gained by all your heroes over the game: levels reached plus half of the next level (matched W3Champions' official XP within about 230 XP on pro games)." },
   { key: "hero_xp_per_min", label: "Hero XP per minute", unit: "per_min", group: "heroes", source: "replay", description: "Hero XP total divided by game minutes." },
   { key: "hero_xp_share", label: "Hero XP share", unit: "ratio", group: "heroes", source: "replay", description: "Your heroes' XP as a share of both players' hero XP. Above 50% means you out-levelled your opponent." },
+  { key: "first_attack_upgrade_ms", label: "1st attack upgrade", unit: "ms", group: "army", source: "replay", description: "When your first melee or ranged attack upgrade was ordered (blacksmith-type research)." },
+  { key: "first_armor_upgrade_ms", label: "1st armor upgrade", unit: "ms", group: "army", source: "replay", description: "When your first unit armor upgrade was ordered." },
   { key: "hall_idle_6m_s", label: "Main hall idle by 6:00", unit: "count", group: "macro", source: "replay", description: "Seconds in the first 6 minutes your main hall was not training a worker or upgrading (worker orders queued back to back at their build time). All worker orders are treated as one queue, so after an expansion this can understate idle time." },
   { key: "hall_idle_10m_s", label: "Main hall idle by 10:00", unit: "count", group: "macro", source: "replay", description: "Seconds in the first 10 minutes your main hall was not training a worker or upgrading (same queue model as by 6:00)." },
   { key: "tp_bought", label: "Town Portals bought", unit: "count", group: "items", source: "replay", description: "Scroll of Town Portal purchase orders." },
@@ -243,6 +255,12 @@ function heroMetrics(heroes: { abilityOrder: { type: "ability" | "retraining"; t
   };
 }
 
+function firstUpgrade(orders: { id: string; ms: number }[], race: RaceCode, kind: "attack" | "armor"): number | null {
+  const codes = new Set(CORE_UPGRADES[race].filter((u) => u.kind === kind).map((u) => u.code));
+  const hit = researchLevels(orders.map((o) => ({ kind: "upgrade", code: o.id, ms: o.ms }))).find((r) => codes.has(r.code));
+  return hit?.ms ?? null;
+}
+
 export function computeMetrics(raw: RawReplay, playerId: number): Metrics {
   const p = raw.output.players.find((x) => x.id === playerId) as ParsedPlayer;
   const durationMs = raw.output.duration;
@@ -300,6 +318,8 @@ export function computeMetrics(raw: RawReplay, playerId: number): Metrics {
     ...heroMetrics(p.heroes ?? [], durationMs),
     hall_idle_6m_s: rd && durationMs >= 360_000 ? Math.round(hallIdleMs(race as RaceCode, [...units, ...buildings], 360_000) / 1000) : null,
     hall_idle_10m_s: rd && durationMs >= 600_000 ? Math.round(hallIdleMs(race as RaceCode, [...units, ...buildings], 600_000) / 1000) : null,
+    first_attack_upgrade_ms: rd ? firstUpgrade(p.upgrades!.order, race as RaceCode, "attack") : null,
+    first_armor_upgrade_ms: rd ? firstUpgrade(p.upgrades!.order, race as RaceCode, "armor") : null,
     tp_bought: p.items!.order.filter((i) => i.id === TOWN_PORTAL).length,
     potions_bought: p.items!.order.filter((i) => POTION_ITEMS.has(i.id)).length,
   };

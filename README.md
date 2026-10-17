@@ -65,12 +65,13 @@ Matchup-specific numbers are used when the pros have 10 or more games of that ma
 
 ## Which metrics matter
 
-Metrics are split into three sections:
+Metric tables have four parts:
 
 | Section | What it holds | Verdicts |
 |---|---|---|
-| **Core** | Metrics that separated winners from losers in pro games and yours: workers, hero experience and level timing, creeping by 6:00, gold collected, units killed, trades, unused supply, base defenses, hero deaths, expansions | Green/yellow/red |
-| **Mechanics** | APM, hotkeys and control groups. These show skill level, but don't decide single games. | None |
+| **Core** | Workers, hero experience and level timing, 2nd and 3rd hero, Keep and Castle timing (named by your race), creeping by 6:00, gold collected, units killed, trades, unused supply, base defenses, hero deaths, expansions | Green/yellow/red where a direction is clearly better. Timings that depend on strategy (heroes, tiers) are compared without a colour. |
+| **Upgrades** | Your race's attack and armor upgrades level by level, then other research. For each: your timing, the pros' median timing, and the share of pro games that research it. | None |
+| **Mechanics** | APM, effective APM, useful actions, hotkeys, control groups, supply blocked | Green/yellow/red |
 | **Details** | Everything else | Collapsed by default |
 
 W3Champions games also get the game's own end-of-game stats (gold and lumber collected, experience, units killed, upkeep lost, …), marked "official". These replace our estimates.

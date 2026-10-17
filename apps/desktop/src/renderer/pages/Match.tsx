@@ -7,6 +7,8 @@ import { Chart, timeLines, type Band, type Tokens } from "../Chart.tsx";
 import { assess, describeRef, pickProfile } from "../compare.ts";
 import { ProMedian, Standing } from "../Standing.tsx";
 import { groupDetails, SECTION_INFO, splitMetrics } from "../sections.ts";
+import { proText, researchTimes, upgradeRows, upgradeStanding } from "../upgrades.ts";
+import type { RaceCode } from "@w3stats/core/gamedata";
 import type { CurvePoint, MatchupProfile } from "@w3stats/reference/types";
 import { dateTime, GROUP_LABEL, metricValue, mmss, RACE, shortName, SOURCE } from "../format.ts";
 
@@ -245,12 +247,13 @@ export function Match({ gameKey, metrics, pros, onBack }: { gameKey: string; met
         <p className="sub">
           Order times are when the order was issued (cancels included). Economy and supply rows come from the simulation; ≈ marks estimates.
           {ref
-            ? ` Pros: ${pros!.group.label}, ${describeRef(ref)}. Core metrics get a verdict: green = pro level (at or above the pro median), yellow = at least as good as your opponent, red = below both. Whole-game totals are compared per 10 minutes.`
+            ? ` Pros: ${pros!.group.label}, ${describeRef(ref)}. Core and Mechanics get a verdict: green = pro level (at or above the pro median), yellow = at least as good as your opponent, red = below both. Whole-game totals are compared per 10 minutes.`
             : ""}{" "}
           Hover a metric for its definition.
         </p>
         {(() => {
           const cols = ref ? 5 : 3;
+          const race = (me?.race ?? "") as RaceCode;
           const row = (m: MetricDef, verdict: boolean) => {
             const mine = me?.metrics[m.key];
             const a = assess(m, ref?.mp ?? null, { value: mine, per10: typeof mine === "number" ? per10Minutes(mine, r.game.durationMs) : null }, opp?.metrics[m.key]);
@@ -258,7 +261,7 @@ export function Match({ gameKey, metrics, pros, onBack }: { gameKey: string; met
             return (
               <tr key={m.key} title={m.description} className={ref && shown.tier ? `tier-row-${shown.tier}` : undefined}>
                 <td>
-                  {m.label}
+                  {m.raceLabels?.[race] ?? m.label}
                   {r.metricSources?.[m.key] === "official" && <span className="tag" style={{ marginLeft: 8 }} title="The game's own end-of-game number (from W3Champions)">official</span>}
                 </td>
                 <td className="num">{metricValue(m, mine)}</td>
@@ -285,6 +288,26 @@ export function Match({ gameKey, metrics, pros, onBack }: { gameKey: string; met
             </tr>
           );
           const { core, mechanics, details } = splitMetrics(metrics);
+          // Upgrades: compare with pros only when they play your race.
+          const myTimes = me ? researchTimes(me.build) : new Map<string, number>();
+          const oppTimes = opp ? researchTimes(opp.build) : new Map<string, number>();
+          const upMp = ref && pros?.profile?.group.race === race ? ref.mp : null;
+          const ups = me && ["H", "O", "U", "N"].includes(race) ? upgradeRows(race, new Set(myTimes.keys()), upMp) : { core: [], other: [] };
+          const subRow = (label: string) => (
+            <tr key={`sub-${label}`}><td colSpan={cols} className="muted small" style={{ paddingTop: 12 }}>{label}</td></tr>
+          );
+          const upRow = (u: (typeof ups.core)[number]) => (
+            <tr key={u.key}>
+              <td>
+                  {u.label}
+                  {u.detail && <span className="muted small"> {u.detail}</span>}
+                </td>
+              <td className="num">{mmss(myTimes.get(u.key))}</td>
+              <td className="num">{mmss(oppTimes.get(u.key))}</td>
+              {ref && <td className="num muted small">{upMp ? proText(u.pro) : "—"}</td>}
+              {ref && <td className="small muted">{upMp ? upgradeStanding(u.pro, myTimes.get(u.key) ?? null) : "—"}</td>}
+            </tr>
+          );
           return (
             <>
               <table>
@@ -292,8 +315,13 @@ export function Match({ gameKey, metrics, pros, onBack }: { gameKey: string; met
                 <tbody>
                   {sectionRow("core")}
                   {core.map((m) => row(m, true))}
+                  {sectionRow("upgrades")}
+                  {subRow("Attack and armor")}
+                  {ups.core.map(upRow)}
+                  {ups.other.length > 0 && subRow("Other upgrades")}
+                  {ups.other.map(upRow)}
                   {sectionRow("mechanics")}
-                  {mechanics.map((m) => row(m, false))}
+                  {mechanics.map((m) => row(m, true))}
                 </tbody>
               </table>
               <details className="more-metrics">

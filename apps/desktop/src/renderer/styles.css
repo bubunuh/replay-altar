@@ -141,3 +141,4 @@ tr.tier-row-below td:first-child { box-shadow: inset 3px 0 0 var(--critical); }
 .section-row td { padding-top: 18px; border-bottom: 1px solid var(--axis); }
 .more-metrics { margin-top: 16px; }
 .more-metrics summary { padding: 8px 0; color: var(--ink-2); }
+.standing { flex-wrap: nowrap; white-space: nowrap; }

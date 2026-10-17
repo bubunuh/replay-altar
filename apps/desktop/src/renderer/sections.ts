@@ -5,7 +5,8 @@ import { CORE_METRICS, MECHANICS_METRICS } from "@w3stats/core/metrics";
 
 export const SECTION_INFO = {
   core: { title: "Core", note: "What decides games: in pro games and yours, the winner was better on these most of the time." },
-  mechanics: { title: "Mechanics", note: "Skill level: these grow over months and separate you from pros, but don't decide single games, so no verdict per game." },
+  upgrades: { title: "Upgrades", note: "When you ordered each research; pros column = their median time · share of pro games that research it. Timing depends on strategy, so no verdict." },
+  mechanics: { title: "Mechanics", note: "Skill habits: speed, hotkeys, not getting supply blocked. They grow over months and are a big part of what separates you from pros." },
   details: { title: "Details", note: "Everything else. Useful for digging into a game, weak as a verdict on its own." },
 } as const;
 

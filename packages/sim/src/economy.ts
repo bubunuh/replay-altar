@@ -405,7 +405,5 @@ function fightAndHeroMetrics(tl: Timeline, campTimes: number[]): Metrics {
     spells_per_min: minutes > 0 ? x.spellCasts / minutes : null,
     first_creep_ms: campTimes.length ? Math.min(...campTimes) : null,
     first_scout_ms: x.firstScoutMs,
-    first_attack_upgrade_ms: x.firstAttackUpgradeMs,
-    first_armor_upgrade_ms: x.firstArmorUpgradeMs,
   };
 }
