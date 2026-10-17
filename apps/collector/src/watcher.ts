@@ -11,6 +11,9 @@ const RESCAN_MS = 5 * 60_000; // safety net for missed inotify events
 export type FileOrigin = "event" | "scan";
 export type FileHandler = (path: string, origin: FileOrigin) => Promise<void>;
 
+/** Finished replays only. The game writes TempReplay.w3g while a match is running. */
+export const isReplayFile = (name: string) => /\.w3g$/i.test(name) && !/(^|[\\/])TempReplay\.w3g$/i.test(name);
+
 export class ReplayWatcher {
   private watchers: FSWatcher[] = [];
   private pending = new Map<string, { origin: FileOrigin }>();
@@ -29,7 +32,7 @@ export class ReplayWatcher {
     for (const dir of this.dirs) {
       if (!existsSync(dir)) continue;
       const w = watch(dir, { recursive: true }, (_event, name) => {
-        if (name && name.toLowerCase().endsWith(".w3g")) this.schedule(join(dir, name), "event");
+        if (name && isReplayFile(name)) this.schedule(join(dir, name), "event");
       });
       w.on("error", (e) => this.log(`watch error on ${dir}: ${e.message}`));
       this.watchers.push(w);
@@ -48,7 +51,7 @@ export class ReplayWatcher {
     for (const dir of this.dirs) {
       if (!existsSync(dir)) continue;
       for (const e of readdirSync(dir, { withFileTypes: true, recursive: true })) {
-        if (e.isFile() && e.name.toLowerCase().endsWith(".w3g")) this.schedule(join(e.parentPath, e.name), "scan");
+        if (e.isFile() && isReplayFile(e.name)) this.schedule(join(e.parentPath, e.name), "scan");
       }
     }
   }

@@ -14,6 +14,7 @@ import {
   replayDirs,
 } from "@w3stats/core";
 import { runCollector } from "./collector.ts";
+import { isReplayFile } from "./watcher.ts";
 import { install, resume, suspend, uninstall } from "./install.ts";
 
 const HELP = `w3stats — Warcraft III replay archive & stats
@@ -65,7 +66,7 @@ switch (cmd) {
       cmd === "ingest"
         ? args.map((a) => resolve(a))
         : replayDirs(c.config).flatMap((d) =>
-            readdirSync(d).filter((f) => f.toLowerCase().endsWith(".w3g")).map((f) => `${d}/${f}`),
+            readdirSync(d).filter(isReplayFile).map((f) => `${d}/${f}`),
           );
     const counts: Record<string, number> = {};
     for (const f of files) {
