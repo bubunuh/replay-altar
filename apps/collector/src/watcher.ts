@@ -7,7 +7,9 @@ import { setTimeout as sleep } from "node:timers/promises";
 const SETTLE_MS = 3000; // file must be unchanged this long before we read it
 const RESCAN_MS = 5 * 60_000; // safety net for missed inotify events
 
-export type FileHandler = (path: string) => Promise<void>;
+/** "event": the file just appeared or changed; "scan": found by a (startup or periodic) rescan. */
+export type FileOrigin = "event" | "scan";
+export type FileHandler = (path: string, origin: FileOrigin) => Promise<void>;
 
 export class ReplayWatcher {
   private watchers: FSWatcher[] = [];
@@ -27,7 +29,7 @@ export class ReplayWatcher {
     for (const dir of this.dirs) {
       if (!existsSync(dir)) continue;
       const w = watch(dir, { recursive: true }, (_event, name) => {
-        if (name && name.toLowerCase().endsWith(".w3g")) this.schedule(join(dir, name));
+        if (name && name.toLowerCase().endsWith(".w3g")) this.schedule(join(dir, name), "event");
       });
       w.on("error", (e) => this.log(`watch error on ${dir}: ${e.message}`));
       this.watchers.push(w);
@@ -46,16 +48,16 @@ export class ReplayWatcher {
     for (const dir of this.dirs) {
       if (!existsSync(dir)) continue;
       for (const e of readdirSync(dir, { withFileTypes: true, recursive: true })) {
-        if (e.isFile() && e.name.toLowerCase().endsWith(".w3g")) this.schedule(join(e.parentPath, e.name));
+        if (e.isFile() && e.name.toLowerCase().endsWith(".w3g")) this.schedule(join(e.parentPath, e.name), "scan");
       }
     }
   }
 
   /** One settle-then-ingest job per path; events arriving meanwhile join the running job. */
-  private schedule(path: string) {
+  private schedule(path: string, origin: FileOrigin) {
     if (this.pending.has(path)) return;
     const job = this.settle(path)
-      .then((ok) => (ok ? this.onFile(path) : undefined))
+      .then((ok) => (ok ? this.onFile(path, origin) : undefined))
       .catch((e) => this.log(`failed on ${path}: ${(e as Error).message}`))
       .finally(() => this.pending.delete(path));
     this.pending.set(path, job);

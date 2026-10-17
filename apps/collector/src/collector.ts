@@ -26,15 +26,16 @@ export async function runCollector() {
 
   const watcher = new ReplayWatcher(
     dirs,
-    async (path) => {
+    async (path, origin) => {
       const out = await ingestFile(ctx, path);
       if (out.status === "duplicate") return;
       if (out.status === "error") return log(`${path}: ${out.error}`);
       const r = out.record;
       log(`${out.status} ${r.gameKey.slice(0, 8)} ${r.classification.source}/${r.classification.category} analyzed=${r.classification.analyzed} from ${path}`);
-      // Notify only for a game just played, not for backfill of old saved replays.
+      // Notify only for a game that just ended while we were watching. A rescan can find a
+      // game from minutes ago, and its notification would land in the middle of the next match.
       const fresh = Date.now() - Date.parse(r.game.endedAt) < 10 * 60_000;
-      if (out.status === "new" && fresh && r.classification.analyzed && config.notifyAfterGame) {
+      if (origin === "event" && out.status === "new" && fresh && r.classification.analyzed && config.notifyAfterGame) {
         const { title, body } = describe(r);
         const clicked = await notify(title, body, { id: "open", label: "Open report" });
         if (clicked === "open") openDesktop([`--game=${r.gameKey}`]);
