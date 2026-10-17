@@ -351,7 +351,8 @@ export function economyMetrics(
   const killedSample = opponent ? opponent.income.series.at(-1)! : null;
   const killed = killedSample ? killedSample.goldLost + killedSample.lumberLost : null;
   const past = (ms: number) => tl.endMs >= ms;
-  const bankAt = (s: SimSample) => Math.max(0, s.estGoldBank) + Math.max(0, s.estLumberBank);
+  // Gold only: the lumber estimate proved unreliable against official numbers (correlation 0.60).
+  const bankAt = (s: SimSample) => Math.max(0, s.estGoldBank);
   const early = series.filter((s) => s.t <= ESTIMATE_HORIZON_MS);
 
   return {
@@ -376,7 +377,6 @@ export function economyMetrics(
     upkeep_low_s: low,
     upkeep_high_s: high,
     est_gold_mined_10m: past(600_000) ? at(series, 600_000).estGoldMined : null,
-    est_lumber_mined_10m: past(600_000) ? at(series, 600_000).estLumberMined : null,
     // The income model is calibrated mostly on single-mine play; past ~10 minutes (more mines,
     // Night Elf wisps WC3V under-counts) it drifts, so bank figures stop at 10:00.
     est_bank_avg: early.length ? early.reduce((sum, s) => sum + bankAt(s), 0) / early.length : null,

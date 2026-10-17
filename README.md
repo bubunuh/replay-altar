@@ -18,6 +18,7 @@ Local Warcraft III replay archive and stats. A background service saves every re
 | `w3stats export --jsonl` / `--md latest` | Data for an LLM or script |
 | `w3stats setup-sim` | One-time setup for the economy simulation (WC3V engine, its packages, unit costs from your WC3 install) |
 | `w3stats sim` | Simulation status; `--backfill`, `--retry-failed`, `--rerun`, `--resummarize` |
+| `w3stats official` | Fetch the game's own end-of-game stats from W3Champions for W3C games that lack them (the collector does this by itself for new games) |
 | `w3stats ref` | Pro reference games: status. `ref refresh [--target N]` downloads more now, `ref profile` rebuilds the statistics |
 
 To remove everything, run `w3stats uninstall --purge` (this also deletes the `localhost/w3stats-casc` podman image), then delete `~/Projects/w3stats`.
@@ -61,6 +62,18 @@ The collector downloads public replays of Human players rated 2400+ MMR from W3C
 - **In the app:** charts show the pros' median and middle 50% in grey, and tables show where you stand.
 
 Matchup-specific numbers are used when the pros have 10 or more games of that matchup; otherwise all matchups are combined.
+
+## Which metrics matter
+
+Metrics are split into three sections:
+
+| Section | What it holds | Verdicts |
+|---|---|---|
+| **Core** | Metrics that separated winners from losers in pro games and yours: workers, hero experience and level timing, creeping by 6:00, gold collected, units killed, trades, unused supply, base defenses, hero deaths, expansions | Green/yellow/red |
+| **Mechanics** | APM, hotkeys and control groups. These show skill level, but don't decide single games. | None |
+| **Details** | Everything else | Collapsed by default |
+
+W3Champions games also get the game's own end-of-game stats (gold and lumber collected, experience, units killed, upkeep lost, …), marked "official". These replace our estimates.
 
 ## Limits
 

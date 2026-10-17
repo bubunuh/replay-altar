@@ -81,7 +81,7 @@ function EconomyCard({ record, refMp }: { record: GameRecord; refMp: MatchupProf
   const workers = useMemo(() => timeLines(both((s) => s.workers), undefined, bandOf(refMp?.curves.workers, "Pros")), [mine, theirs, refMp]);
   // The income model is only calibrated for the first 10 minutes (see packages/sim economy.ts).
   const bank = useMemo(
-    () => timeLines((t) => both((s) => Math.max(0, s.estGoldBank) + Math.max(0, s.estLumberBank))(t).map((x) => ({ ...x, points: x.points.filter(([ms]) => ms <= 600_000) }))),
+    () => timeLines((t) => both((s) => Math.max(0, s.estGoldBank))(t).map((x) => ({ ...x, points: x.points.filter(([ms]) => ms <= 600_000) }))),
     [mine, theirs],
   );
   const supplyFor = (p: PlayerRecord | undefined, series: SimSample[], mineColor: boolean, band: Band | null = null) =>
@@ -113,8 +113,8 @@ function EconomyCard({ record, refMp }: { record: GameRecord; refMp: MatchupProf
     <div className="card">
       <h2>Economy</h2>
       <p className="sub">
-        Reconstructed by simulating the replay (WC3V). Spending is priced from your orders with the game's own costs. Unspent resources are an
-        estimate from a mining model calibrated on your games; it is shown for the first 10 minutes only and is a trend, not an exact count.
+        Reconstructed by simulating the replay (WC3V). Spending is priced from your orders with the game's own costs. Unspent gold is an
+        estimate from a mining model fitted to the game's official gold totals (typical error ~11%); shown for the first 10 minutes as a trend, not an exact count.
       </p>
       <div className="grid-2">
         <div>
@@ -126,7 +126,7 @@ function EconomyCard({ record, refMp }: { record: GameRecord; refMp: MatchupProf
           <Chart option={workers} height={200} label="Workers alive over time for both players" />
         </div>
         <div>
-          <h3 className="chart-title">≈ Unspent resources, first 10 minutes (estimate)</h3>
+          <h3 className="chart-title">≈ Unspent gold, first 10 minutes (estimate)</h3>
           <Chart option={bank} height={200} label="Estimated unspent gold plus lumber for both players" />
         </div>
         <div>

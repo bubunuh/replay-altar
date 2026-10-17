@@ -54,6 +54,31 @@ Each metric's `source` says how much to trust it:
 | `simulation` | WC3V's reconstruction of the game: workers alive, food, tier completion, camps, hero levels. Spending is our pricing of the replay's orders. | plain value |
 | `estimate` | Inferred deaths (losses, trades) or the income model. | **≈** prefix |
 
+## Hero experience (replay)
+
+- **Level-ups:** each level gives one skill point, so skill-pick times are the level-up times. Retraining re-picks don't count.
+- **XP per level:** game data, 200/500/900/1,400/2,000/… up to 5,400 for level 10.
+- **XP at time t:** linear between level-ups, and exact at each one. After the last level-up it grows to half the next level by the end of the game.
+- **Validation:** against W3Champions' official XP on 56 pro player-games, correlation 0.96, median ratio 1.01, mean error about 230 XP.
+- **Official override:** W3Champions games use the official total instead (`metricSources`).
+
+## Official end-of-game stats (`record.official`)
+
+- **Source:** the game's score sheet as W3Champions stores it (`api/matches/{id}` → `playerScores`). It has units produced/killed, largest army, heroes killed, items obtained, mercenaries, XP gained, gold and lumber collected, and gold lost to upkeep.
+- **Finding the match:**
+  - Reference games: by their W3C match id.
+  - Your W3C games: through `api/matches/search` by opponent, within 10 minutes of the replay's start time.
+- **Status:** `missing` with attempts while not found. The collector retries after 90 s, 10 min and 1 h.
+- **Effect:** `mergeOfficial()` writes the numbers into the metrics, marks them in `metricSources`, and recomputes hero XP share and per-minute XP. The numbers survive reingest and new simulations.
+
+## Metric sections
+
+Each metric has a `section`:
+
+- **core:** separated winners from losers in roughly 70%+ of 38 games (28 pro, 10 yours), or is a resource the game counts. Only core metrics get green/yellow/red.
+- **mechanics:** APM, effective APM, useful actions, hotkeys and control groups. These track skill level and are compared with pros, without per-game verdicts.
+- **details:** everything else.
+
 ## Economy model (`packages/sim`)
 
 - **Spending:** every order in the replay, priced from the game data extracted from your install (`sim/gamedata/<version>/`, with a sha256 manifest):
@@ -68,10 +93,13 @@ Each metric's `source` says how much to trust it:
   - Mines: the starting mine plus each expansion once it's built. Undead count Haunted Gold Mines only. Each mine holds 12,500 gold.
   - Gold is taxed by upkeep: 30% above 50 food, 60% above 80 (engine defaults; the 3.0 game data doesn't override them).
   - The remaining workers chop lumber. Undead lumber comes from ghouls.
-- **Rates** are in `packages/sim/src/economy-constants.json`, calibrated by `scripts/calibrate-economy.ts`:
-  - For each player-game, it finds the smallest rate that keeps `start + mined − spent ≥ 0`.
-  - It takes the median across games, clamped to 0.6–1.6× of priors derived from the harvest data.
-  - Re-run it as games accumulate, then run `w3stats sim --resummarize`.
+- **Gold rate:** set in `packages/sim/src/economy-constants.json` by `scripts/calibrate-economy.ts`.
+  - **How it's fitted:** so the median end-of-game estimate equals the official gold collected (58 player-games). The result is 1.96 gold per worker-second, against a prior of 2.0 from the game's harvest data.
+  - **Accuracy:** typical error 11%. Games under 15 minutes read about 10% high, longer ones about 12% low.
+  - **Fallback:** with fewer than 20 official samples it uses the "bank can't go negative" method.
+  - **Re-running:** re-run it as games accumulate, then run `w3stats reingest` and `w3stats sim --resummarize`.
+- **Lumber:** the estimate correlated only 0.60 with official lumber, so it isn't reported. Unspent resources are gold only.
+- **Gold collected (non-W3C games):** gold spent minus the 500 starting gold, within about 3% of official on median.
 - **Horizon:** income estimates are reported for the first 10 minutes only. Past that the model drifts, in multi-mine games and for Night Elves, whose wisps WC3V under-counts.
 
 ## SQLite
