@@ -122,6 +122,13 @@ export function uninstall(purge: boolean) {
       rmSync(d, { recursive: true, force: true });
       console.log(`  removed ${d}`);
     }
+    // The game-data extractor's container image (scripts/casc), if it was ever built.
+    try {
+      execFileSync("podman", ["rmi", "-f", "localhost/w3stats-casc:latest"], { stdio: "ignore" });
+      console.log("  removed podman image localhost/w3stats-casc");
+    } catch {
+      // podman missing or image never built
+    }
   } else {
     console.log(`Kept your archive and stats in ${dataDir()} and settings in ${configPath()} (use --purge to delete them).`);
   }
