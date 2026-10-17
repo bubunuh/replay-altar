@@ -13,7 +13,7 @@ export type FileHandler = (path: string, origin: FileOrigin) => Promise<void>;
 
 export class ReplayWatcher {
   private watchers: FSWatcher[] = [];
-  private pending = new Map<string, Promise<void>>();
+  private pending = new Map<string, { origin: FileOrigin }>();
   private rescanTimer?: NodeJS.Timeout;
   private dirs: string[];
   private onFile: FileHandler;
@@ -55,12 +55,18 @@ export class ReplayWatcher {
 
   /** One settle-then-ingest job per path; events arriving meanwhile join the running job. */
   private schedule(path: string, origin: FileOrigin) {
-    if (this.pending.has(path)) return;
-    const job = this.settle(path)
-      .then((ok) => (ok ? this.onFile(path, origin) : undefined))
+    const running = this.pending.get(path);
+    if (running) {
+      // A real file event outranks the rescan that happened to get there first.
+      if (origin === "event") running.origin = "event";
+      return;
+    }
+    const job = { origin };
+    this.pending.set(path, job);
+    this.settle(path)
+      .then((ok) => (ok ? this.onFile(path, job.origin) : undefined))
       .catch((e) => this.log(`failed on ${path}: ${(e as Error).message}`))
       .finally(() => this.pending.delete(path));
-    this.pending.set(path, job);
   }
 
   private async settle(path: string): Promise<boolean> {
