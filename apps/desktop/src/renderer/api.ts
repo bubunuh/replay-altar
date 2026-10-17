@@ -1,4 +1,12 @@
-import type { Config, GameDetail, GameRow, MetricDef, Paths, PerfGame } from "@w3stats/core/ui";
+import type { Config, GameDetail, GameRow, MetricDef, Paths, PerfGame, ReferenceGroup } from "@w3stats/core/ui";
+import type { RefProfile } from "@w3stats/reference/types";
+
+export type RefGroupInfo = {
+  group: ReferenceGroup;
+  profile: RefProfile | null;
+  state: { lastRefreshAt: string | null; lastResult: { kept: number; stopReason: string | null } | null } | null;
+  root: string;
+};
 
 type W3Api = {
   listGames(): Promise<GameRow[]>;
@@ -8,6 +16,7 @@ type W3Api = {
   getConfig(): Promise<{ config: Config; configPath: string; paths: Paths }>;
   setConfig(config: Config): Promise<void>;
   collectorStatus(): Promise<string>;
+  referenceProfiles(): Promise<RefGroupInfo[]>;
   showFile(file: string): Promise<void>;
   openPath(dir: string): Promise<void>;
   onDataChanged(fn: () => void): void;

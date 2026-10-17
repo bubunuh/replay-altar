@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Config, GameRow, Paths } from "@w3stats/core/ui";
-import { api } from "../api.ts";
+import { api, type RefGroupInfo } from "../api.ts";
 import { dateTime, mmss, SKIP, SOURCE } from "../format.ts";
 
 export function Skipped({ games, onOpen }: { games: GameRow[]; onOpen: (key: string) => void }) {
@@ -35,7 +35,7 @@ export function Skipped({ games, onOpen }: { games: GameRow[]; onOpen: (key: str
   );
 }
 
-export function Settings() {
+export function Settings({ refs }: { refs: RefGroupInfo[] }) {
   const [state, setState] = useState<{ config: Config; configPath: string; paths: Paths } | null>(null);
   const [accounts, setAccounts] = useState("");
   const [saved, setSaved] = useState(false);
@@ -74,6 +74,30 @@ export function Settings() {
           <label><input type="checkbox" checked={config.openWindowOnGameStart} onChange={(e) => save({ ...config, openWindowOnGameStart: e.target.checked })} />Open this window (without taking focus) when Warcraft III starts</label>
           <label><input type="checkbox" checked={config.notifyAfterGame} onChange={(e) => save({ ...config, notifyAfterGame: e.target.checked })} />Notify me after each analyzed game</label>
         </div>
+      </div>
+      <div className="card">
+        <h2>Reference games</h2>
+        <p className="sub">
+          Pro games downloaded from W3Champions (public replays), analyzed and simulated locally. Topped up every 6 hours until full, then
+          refreshed every {state.config.reference.refreshDays} days; never while Warcraft III is running. Only games from your current patch are kept.
+        </p>
+        <table>
+          <tbody>
+            {refs.map((r) => (
+              <tr key={r.group.id}>
+                <td>{r.group.label}</td>
+                <td className="small">
+                  {r.profile ? `${r.profile.games} games` : "no games yet"} of {r.group.target}
+                  {r.profile && ` (${Object.entries(r.profile.matchups).filter(([k]) => k !== "all").map(([k, v]) => `${k} ${v.n}`).join(", ")})`}
+                  {r.state?.lastRefreshAt && ` · last refresh ${new Date(r.state.lastRefreshAt).toLocaleString()}`}
+                  {r.state?.lastResult?.stopReason && ` · ${r.state.lastResult.stopReason}`}
+                </td>
+                <td><button className="btn" onClick={() => api.openPath(r.root)}>Open</button></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p className="sub" style={{ marginTop: 12 }}>Refresh now: <code>w3stats ref refresh</code> · status: <code>w3stats ref</code></p>
       </div>
       <div className="card">
         <h2>Where things live</h2>

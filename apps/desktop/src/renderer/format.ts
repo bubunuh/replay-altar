@@ -60,7 +60,6 @@ export const GROUP_LABEL: Record<string, string> = {
   supply: "Supply (simulated)",
   army: "Army",
   fights: "Fights (simulated)",
-  heroes_sim: "Heroes",
   scouting: "Scouting (simulated)",
   items: "Items",
 };

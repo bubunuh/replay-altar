@@ -3,6 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
-  "dependencies": { "@w3stats/core": "*", "@w3stats/sim": "*" }
+  "exports": {
+    ".": "./src/index.ts",
+    "./quantiles": "./src/quantiles.ts",
+    "./types": "./src/types.ts"
+  },
+  "dependencies": {
+    "@w3stats/core": "*",
+    "@w3stats/sim": "*"
+  }
 }

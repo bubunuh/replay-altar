@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { EChartsOption } from "echarts";
 import type { BuildEvent, GameDetail, GameRecord, MetricDef, PlayerRecord, SimSample } from "@w3stats/core/ui";
-import { api } from "../api.ts";
-import { base, Chart, esc, timeLines, type Tokens } from "../Chart.tsx";
+import { api, type RefGroupInfo } from "../api.ts";
+import { Chart, timeLines, type Band, type Tokens } from "../Chart.tsx";
+import { describeRef, pickProfile, standing } from "../compare.ts";
+import type { CurvePoint, MatchupProfile } from "@w3stats/reference/types";
 import { dateTime, GROUP_LABEL, metricValue, mmss, RACE, shortName, SOURCE } from "../format.ts";
 
 const WORKERS = new Set(["hpea", "opeo", "uaco", "ewsp"]);
@@ -57,7 +58,10 @@ function Heroes({ p }: { p: PlayerRecord }) {
 
 type SimOk = Extract<NonNullable<GameRecord["sim"]>, { status: "ok" }>;
 
-function EconomyCard({ record }: { record: GameRecord }) {
+const bandOf = (curve: CurvePoint[] | undefined, label: string): Band | null =>
+  curve && curve.length ? { label, points: curve.map((c) => [c.minute * 60_000, c.p25, c.p50, c.p75]) } : null;
+
+function EconomyCard({ record, refMp }: { record: GameRecord; refMp: MatchupProfile | null }) {
   const sim = record.sim;
   const me = record.players.find((p) => p.isMe);
   const opp = record.players.find((p) => p.playerId === record.classification.opponentId);
@@ -69,19 +73,20 @@ function EconomyCard({ record }: { record: GameRecord }) {
     { name: shortName(me?.name ?? "You"), color: t.series1, points: mine.map((s) => [s.t, pick(s)] as [number, number]) },
     { name: shortName(opp?.name ?? "Opponent"), color: t.series2, points: theirs.map((s) => [s.t, pick(s)] as [number, number]) },
   ];
-  const spent = useMemo(() => timeLines(both((s) => s.goldSpent + s.lumberSpent)), [mine, theirs]);
-  const workers = useMemo(() => timeLines(both((s) => s.workers)), [mine, theirs]);
+  const spent = useMemo(() => timeLines(both((s) => s.goldSpent + s.lumberSpent), undefined, bandOf(refMp?.curves.spent, "Pros")), [mine, theirs, refMp]);
+  const workers = useMemo(() => timeLines(both((s) => s.workers), undefined, bandOf(refMp?.curves.workers, "Pros")), [mine, theirs, refMp]);
   // The income model is only calibrated for the first 10 minutes (see packages/sim economy.ts).
   const bank = useMemo(
     () => timeLines((t) => both((s) => Math.max(0, s.estGoldBank) + Math.max(0, s.estLumberBank))(t).map((x) => ({ ...x, points: x.points.filter(([ms]) => ms <= 600_000) }))),
     [mine, theirs],
   );
-  const supplyFor = (p: PlayerRecord | undefined, series: SimSample[], mineColor: boolean) =>
+  const supplyFor = (p: PlayerRecord | undefined, series: SimSample[], mineColor: boolean, band: Band | null = null) =>
     timeLines((t) => [
       { name: "food used", color: mineColor ? t.series1 : t.series2, points: series.map((s) => [s.t, s.foodUsed] as [number, number]), step: true },
-      { name: "food cap", color: t.ink2, points: series.map((s) => [s.t, Math.min(100, s.foodMax)] as [number, number]), step: true, muted: true },
-    ]);
-  const mySupply = useMemo(() => supplyFor(me, mine, true), [mine]);
+      // Cap in the main text colour so it stays distinct from the grey pro reference.
+      { name: "food cap", color: t.ink, points: series.map((s) => [s.t, Math.min(100, s.foodMax)] as [number, number]), step: true, muted: true },
+    ], undefined, band);
+  const mySupply = useMemo(() => supplyFor(me, mine, true, bandOf(refMp?.curves.food, "Pros food used")), [mine, refMp]);
   const oppSupply = useMemo(() => supplyFor(opp, theirs, false), [theirs]);
 
   if (!sim) {
@@ -135,7 +140,7 @@ function EconomyCard({ record }: { record: GameRecord }) {
   );
 }
 
-export function Match({ gameKey, metrics, onBack }: { gameKey: string; metrics: MetricDef[]; onBack: () => void }) {
+export function Match({ gameKey, metrics, pros, onBack }: { gameKey: string; metrics: MetricDef[]; pros?: RefGroupInfo; onBack: () => void }) {
   const [detail, setDetail] = useState<GameDetail | undefined>();
   const [hideWorkers, setHideWorkers] = useState(true);
   const [kinds, setKinds] = useState(new Set(["building", "unit", "upgrade", "item"]));
@@ -147,39 +152,23 @@ export function Match({ gameKey, metrics, onBack }: { gameKey: string; metrics: 
   const r = detail?.record;
   const me = r?.players.find((p) => p.isMe);
   const opp = r?.players.find((p) => p.playerId === r.classification.opponentId);
+  const ref = me && opp ? pickProfile(pros?.profile, `${me.race}v${opp.race}`) : null;
 
   const apmOption = useMemo(
-    () => (t: Tokens): EChartsOption => {
-      const b = base(t);
-      const series = [me, opp].filter((p): p is PlayerRecord => !!p);
-      const minutes = Math.max(...series.map((p) => p.apmPerMinute.length));
-      return {
-        ...b,
-        grid: { left: 8, right: 16, top: 30, bottom: 8, containLabel: true },
-        legend: { top: 0, left: 0, textStyle: { color: t.ink2 }, icon: "rect", itemWidth: 14, itemHeight: 2, itemGap: 16 },
-        tooltip: {
-          ...(b.tooltip as object),
-          trigger: "axis",
-          axisPointer: { type: "line", lineStyle: { color: t.axis } },
-          formatter: (ps: unknown) =>
-            (ps as { axisValue: string; value: number; seriesName: string; color: string }[])
-              .map((p, i) => `${i === 0 ? `<span style="color:${t.ink2}">minute ${p.axisValue}</span><br/>` : ""}<span style="display:inline-block;width:12px;height:2px;background:${p.color};vertical-align:middle;margin-right:6px"></span><b>${p.value}</b> <span style="color:${t.ink2}">${esc(p.seriesName)}</span>`)
-              .join("<br/>"),
-        },
-        xAxis: { ...(b.xAxis as object), type: "category", boundaryGap: false, data: Array.from({ length: minutes }, (_, i) => String(i + 1)), splitLine: { show: false } },
-        yAxis: { ...(b.yAxis as object), type: "value" },
-        series: series.map((p) => ({
-          type: "line",
-          name: shortName(p.name),
-          data: p.apmPerMinute,
-          showSymbol: false,
-          symbolSize: 8,
-          lineStyle: { width: 2, cap: "round", join: "round" },
-          color: p.isMe ? t.series1 : t.series2,
-        })),
-      };
-    },
-    [me, opp],
+    () =>
+      timeLines(
+        (t) =>
+          [me, opp]
+            .filter((p): p is PlayerRecord => !!p)
+            .map((p) => ({
+              name: shortName(p.name),
+              color: p.isMe ? t.series1 : t.series2,
+              points: p.apmPerMinute.map((v, i) => [(i + 1) * 60_000, v] as [number, number]),
+            })),
+        undefined,
+        bandOf(ref?.mp.curves.apm, "Pros"),
+      ),
+    [me, opp, ref],
   );
 
   if (detail === undefined) return <div className="page"><div className="empty">Loading…</div></div>;
@@ -223,26 +212,31 @@ export function Match({ gameKey, metrics, onBack }: { gameKey: string; metrics: 
 
       <div className="card">
         <h2>Actions per minute</h2>
-        <p className="sub">Per minute of game time, both players.</p>
+        <p className="sub">Per minute of game time, both players{ref ? `; grey: pros (${describeRef(ref)}), median and middle 50%` : ""}.</p>
         <Chart option={apmOption} height={260} label="Actions per minute for both players over the game" />
       </div>
 
-      <EconomyCard record={r} />
+      <EconomyCard record={r} refMp={ref?.mp ?? null} />
 
       <div className="card">
         <h2>Key numbers</h2>
-        <p className="sub">Order times are when the order was issued (cancels included). Economy and supply rows come from the simulation; ≈ marks estimates. Hover a metric for its definition.</p>
+        <p className="sub">
+          Order times are when the order was issued (cancels included). Economy and supply rows come from the simulation; ≈ marks estimates.
+          {ref ? ` Pros: ${pros!.group.label}, ${describeRef(ref)}.` : ""} Hover a metric for its definition.
+        </p>
         <table>
           <thead>
             <tr>
               <th>Metric</th>
               <th className="num"><span className="key me" />{shortName(me?.name ?? "You")}</th>
               <th className="num"><span className="key opp" />{shortName(opp?.name ?? "Opponent")}</th>
+              {ref && <th className="num">Pros (median)</th>}
+              {ref && <th>This game vs pros</th>}
             </tr>
           </thead>
           <tbody>
             {groups.flatMap((g) => [
-              <tr key={g}><td colSpan={3} className="muted small" style={{ paddingTop: 14 }}>{GROUP_LABEL[g]}</td></tr>,
+              <tr key={g}><td colSpan={ref ? 5 : 3} className="muted small" style={{ paddingTop: 14 }}>{GROUP_LABEL[g]}</td></tr>,
               ...metrics
                 .filter((m) => m.group === g)
                 .map((m) => (
@@ -250,6 +244,8 @@ export function Match({ gameKey, metrics, onBack }: { gameKey: string; metrics: 
                     <td>{m.label}</td>
                     <td className="num">{metricValue(m, me?.metrics[m.key])}</td>
                     <td className="num">{metricValue(m, opp?.metrics[m.key])}</td>
+                    {ref && <td className="num muted">{metricValue(m, ref.mp.metrics[m.key]?.p50)}</td>}
+                    {ref && <td className="small">{standing(m, ref.mp, me?.metrics[m.key])}</td>}
                   </tr>
                 )),
             ])}

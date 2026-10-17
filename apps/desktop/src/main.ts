@@ -1,6 +1,6 @@
 // Electron main process: one window, read-mostly access to the W3Stats database.
 import { execFile } from "node:child_process";
-import { existsSync, mkdtempSync, watch, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, watch, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { app, BrowserWindow, ipcMain, nativeTheme, shell } from "electron";
@@ -13,6 +13,7 @@ import {
   openDb,
   paths,
   performanceData,
+  referencePaths,
   saveConfig,
   type Config,
 } from "@w3stats/core/ui";
@@ -129,6 +130,19 @@ if (!app.requestSingleInstanceLock()) {
       execFile("systemctl", ["--user", "is-active", "w3stats-collector.service"], (_err, out) => resolve(out.trim() || "not installed")),
     ),
   );
+  ipcMain.handle("ref:profiles", () => {
+    // profile.json of each configured reference group (missing until the first refresh).
+    return loadConfig().reference.groups.map((g) => {
+      const file = join(referencePaths(g.id).root, "profile.json");
+      const state = join(referencePaths(g.id).root, "state.json");
+      return {
+        group: g,
+        profile: existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : null,
+        state: existsSync(state) ? JSON.parse(readFileSync(state, "utf8")) : null,
+        root: referencePaths(g.id).root,
+      };
+    });
+  });
   ipcMain.handle("shell:showFile", (_e, file: string) => shell.showItemInFolder(file));
   ipcMain.handle("shell:openPath", (_e, dir: string) => shell.openPath(dir));
 }

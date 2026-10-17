@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import type { EChartsOption } from "echarts";
 import type { MetricDef, PerfGame } from "@w3stats/core/ui";
 import { base, Chart, esc, winrateBars, type Tokens } from "../Chart.tsx";
+import { describeRef, pickProfile, standing } from "../compare.ts";
+import type { RefGroupInfo } from "../api.ts";
 import { dateTime, GROUP_LABEL, mean, metricValue, mmss, pct, RACE, shortName, SOURCE } from "../format.ts";
 
 type Group = { label: string; wins: number; losses: number };
@@ -36,7 +38,19 @@ function BarCard({ title, sub, rows }: { title: string; sub: string; rows: Group
   );
 }
 
-function lineOption(points: { label: string; value: number | null; note: string }[], format: (v: number) => string, yMax?: number) {
+/** Round up to a clean axis value: 291 -> 300, 212000 -> 250000. */
+const niceCeil = (x: number) => {
+  if (x <= 0) return 1;
+  const step = 10 ** Math.floor(Math.log10(x)) / 2;
+  return Math.ceil(x / step) * step;
+};
+
+function lineOption(
+  points: { label: string; value: number | null; note: string }[],
+  format: (v: number) => string,
+  yMax?: number,
+  ref?: { label: string; p25: number; p50: number; p75: number } | null,
+) {
   return (t: Tokens): EChartsOption => {
     const b = base(t);
     return {
@@ -53,7 +67,14 @@ function lineOption(points: { label: string; value: number | null; note: string 
         },
       },
       xAxis: { ...(b.xAxis as object), type: "category", data: points.map((p) => p.label), splitLine: { show: false } },
-      yAxis: { ...(b.yAxis as object), type: "value", min: 0, max: yMax, axisLabel: { color: t.muted, fontSize: 11, formatter: (v: number) => format(v) } },
+      yAxis: {
+        ...(b.yAxis as object),
+        type: "value",
+        min: 0,
+        // Stretch to the reference band too, or it can sit entirely off-scale.
+        max: yMax ?? (ref ? (v: { max: number }) => niceCeil(Math.max(v.max, ref.p75) * 1.05) : undefined),
+        axisLabel: { color: t.muted, fontSize: 11, formatter: (v: number) => format(v) },
+      },
       series: [
         {
           type: "line",
@@ -64,6 +85,19 @@ function lineOption(points: { label: string; value: number | null; note: string 
           symbol: "circle",
           symbolSize: 8,
           itemStyle: { borderColor: t.surface, borderWidth: 2 },
+          // Reference: pros' middle 50% shaded, their median as a muted line.
+          markArea: ref
+            ? { silent: true, itemStyle: { color: t.ink2, opacity: 0.12 }, data: [[{ yAxis: ref.p25 }, { yAxis: ref.p75 }]] }
+            : undefined,
+          markLine: ref
+            ? {
+                silent: true,
+                symbol: "none",
+                lineStyle: { color: t.ink2, width: 1.5, type: "solid", opacity: 0.7 },
+                label: { formatter: `${ref.label} median`, color: t.ink2, fontSize: 11, position: "insideEndTop" },
+                data: [{ yAxis: ref.p50 }],
+              }
+            : undefined,
         },
       ],
     };
@@ -81,7 +115,7 @@ function Avg({ def, values }: { def: MetricDef; values: (number | null | undefin
   );
 }
 
-export function Performance({ games: all, metrics, onOpen }: { games: PerfGame[]; metrics: MetricDef[]; onOpen: (key: string) => void }) {
+export function Performance({ games: all, metrics, pros, onOpen }: { games: PerfGame[]; metrics: MetricDef[]; pros?: RefGroupInfo; onOpen: (key: string) => void }) {
   const [period, setPeriod] = useState("all");
   const [source, setSource] = useState("all");
   const [oppRace, setOppRace] = useState("all");
@@ -93,6 +127,10 @@ export function Performance({ games: all, metrics, onOpen }: { games: PerfGame[]
       .filter((g) => Date.parse(g.played_at) >= since && (source === "all" || g.source === source) && (oppRace === "all" || g.opp_race === oppRace))
       .sort((a, b) => a.played_at.localeCompare(b.played_at));
   }, [all, period, source, oppRace]);
+
+  // Pros to compare with: the matchup in view when it is a single one, else all of them.
+  const matchups = [...new Set(games.map((g) => g.matchup).filter(Boolean))] as string[];
+  const ref = pickProfile(pros?.profile, matchups.length === 1 ? matchups[0] : null);
 
   const decided = games.filter((g) => g.result === "win" || g.result === "loss");
   const wins = decided.filter((g) => g.result === "win");
@@ -122,8 +160,9 @@ export function Performance({ games: all, metrics, onOpen }: { games: PerfGame[]
       value: g.me[trendMetric] ?? null,
       note: `${dateTime(g.played_at)} · ${g.result} vs ${shortName(g.opp_name)} on ${g.map_name}`,
     }));
-    return lineOption(pts, (v) => metricValue(trendDef, v));
-  }, [games, trendMetric, trendDef]);
+    const st = ref?.mp.metrics[trendMetric];
+    return lineOption(pts, (v) => metricValue({ unit: trendDef.unit }, v), undefined, st ? { label: "Pros", p25: st.p25, p50: st.p50, p75: st.p75 } : null);
+  }, [games, trendMetric, trendDef, ref]);
 
   const heroes = useMemo(() => groupBy(games, (g) => g.first_hero), [games]);
   const opponents = useMemo(() => {
@@ -218,14 +257,18 @@ export function Performance({ games: all, metrics, onOpen }: { games: PerfGame[]
             </select>{" "}
             over time
           </h2>
-          <p className="sub">{trendDef.description}</p>
+          <p className="sub">{trendDef.description}{ref?.mp.metrics[trendMetric] ? ` Grey: pros (${describeRef(ref)}), median and middle 50%.` : ""}</p>
           <Chart option={trendOption} height={220} label={`${trendDef.label} per game over time`} />
         </div>
       </div>
 
       <div className="card">
         <h2>How you play in wins vs losses</h2>
-        <p className="sub">Averages over the filtered games; (3/6) means only 3 of 6 games had that event. The opponents column is everyone you faced. Hover a metric for its definition.</p>
+        <p className="sub">
+          Averages over the filtered games; (3/6) means only 3 of 6 games had that event. The opponents column is everyone you faced.
+          {ref ? ` Pros: ${pros!.group.label}, ${describeRef(ref)}; "where you stand" places your average among their games.` : " Pro comparison appears once reference games are downloaded (w3stats ref refresh)."}
+          {" "}Hover a metric for its definition.
+        </p>
         <table>
           <thead>
             <tr>
@@ -234,11 +277,13 @@ export function Performance({ games: all, metrics, onOpen }: { games: PerfGame[]
               <th className="num">In your losses ({losses.length})</th>
               <th className="num">All your games</th>
               <th className="num">Your opponents</th>
+              {ref && <th className="num">Pros (median)</th>}
+              {ref && <th>Where you stand</th>}
             </tr>
           </thead>
           <tbody>
             {groups.flatMap((grp) => [
-              <tr key={grp}><td colSpan={5} className="muted small" style={{ paddingTop: 14 }}>{GROUP_LABEL[grp]}</td></tr>,
+              <tr key={grp}><td colSpan={ref ? 7 : 5} className="muted small" style={{ paddingTop: 14 }}>{GROUP_LABEL[grp]}</td></tr>,
               ...metrics
                 .filter((m) => m.group === grp)
                 .map((m) => (
@@ -248,6 +293,8 @@ export function Performance({ games: all, metrics, onOpen }: { games: PerfGame[]
                     <td className="num"><Avg def={m} values={losses.map((g) => g.me[m.key])} /></td>
                     <td className="num"><Avg def={m} values={games.map((g) => g.me[m.key])} /></td>
                     <td className="num muted"><Avg def={m} values={games.map((g) => g.opp[m.key])} /></td>
+                    {ref && <td className="num muted">{metricValue(m, ref.mp.metrics[m.key]?.p50)}</td>}
+                    {ref && <td className="small">{standing(m, ref.mp, mean(games.map((g) => g.me[m.key])))}</td>}
                   </tr>
                 )),
             ])}

@@ -9,6 +9,7 @@ const api = {
   getConfig: () => ipcRenderer.invoke("config:get"),
   setConfig: (config: unknown) => ipcRenderer.invoke("config:set", config),
   collectorStatus: () => ipcRenderer.invoke("collector:status"),
+  referenceProfiles: () => ipcRenderer.invoke("ref:profiles"),
   showFile: (file: string) => ipcRenderer.invoke("shell:showFile", file),
   openPath: (dir: string) => ipcRenderer.invoke("shell:openPath", dir),
   onDataChanged: (fn: () => void) => ipcRenderer.on("data:changed", () => fn()),

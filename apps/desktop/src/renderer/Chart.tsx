@@ -121,42 +121,70 @@ export function winrateBars(rows: { label: string; wins: number; losses: number 
 
 export type TimeSeries = { name: string; color: string; points: [number, number][]; muted?: boolean; step?: boolean };
 
+/** A reference band (e.g. pros): middle 50% shaded, median as a muted line. Points: [t, p25, p50, p75]. */
+export type Band = { label: string; points: [number, number, number, number][] };
+
+const BAND_LO = "\u2063band-lo";
+const BAND_HI = "\u2063band-hi";
+
 const clock = (ms: number) => {
   const s = Math.round(ms / 1000);
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 };
 
 /** Lines over game time; one tooltip lists every series at the hovered time. */
-export function timeLines(series: (t: Tokens) => TimeSeries[], format: (v: number) => string = (v) => String(Math.round(v))) {
+export function timeLines(series: (t: Tokens) => TimeSeries[], format: (v: number) => string = (v) => String(Math.round(v)), band?: Band | null) {
   return (t: Tokens): echarts.EChartsOption => {
     const b = base(t);
     const list = series(t);
+    const medianName = band ? `${band.label} median` : "";
+    const bandSeries = band && band.points.length
+      ? [
+          // Stacked pair: an invisible lower edge, then the band height filled in neutral grey.
+          { type: "line", name: BAND_LO, data: band.points.map(([x, lo]) => [x, lo]), stack: "band", silent: true, showSymbol: false, lineStyle: { opacity: 0 }, tooltip: { show: false } },
+          { type: "line", name: BAND_HI, data: band.points.map(([x, lo, , hi]) => [x, hi - lo]), stack: "band", silent: true, showSymbol: false, lineStyle: { opacity: 0 }, areaStyle: { color: t.ink2, opacity: 0.12 } },
+          { type: "line", name: medianName, data: band.points.map(([x, , mid]) => [x, mid]), showSymbol: false, color: t.ink2, lineStyle: { width: 1.5, opacity: 0.7 } },
+        ]
+      : [];
     return {
       ...b,
-      grid: { left: 8, right: 16, top: list.length > 1 ? 30 : 12, bottom: 8, containLabel: true },
-      legend: list.length > 1 ? { top: 0, left: 0, textStyle: { color: t.ink2 }, icon: "rect", itemWidth: 14, itemHeight: 2, itemGap: 16 } : undefined,
+      grid: { left: 8, right: 16, top: list.length > 1 || band ? 30 : 12, bottom: 8, containLabel: true },
+      legend:
+        list.length > 1 || band
+          ? { top: 0, left: 0, textStyle: { color: t.ink2 }, icon: "rect", itemWidth: 14, itemHeight: 2, itemGap: 16, data: [...list.map((s) => s.name), ...(bandSeries.length ? [medianName] : [])] }
+          : undefined,
       tooltip: {
         ...(b.tooltip as object),
         trigger: "axis",
         axisPointer: { type: "line", lineStyle: { color: t.axis } },
         formatter: (ps: unknown) => {
-          const arr = ps as { value: [number, number]; seriesName: string; color: string }[];
-          if (!arr.length) return "";
-          const head = `<span style="color:${t.ink2}">${clock(arr[0].value[0])}</span>`;
-          return [head, ...arr.map((p) => `<span style="display:inline-block;width:12px;height:2px;background:${p.color};vertical-align:middle;margin-right:6px"></span><b>${format(p.value[1])}</b> <span style="color:${t.ink2}">${esc(p.seriesName)}</span>`)].join("<br/>");
+          const all = ps as { value: [number, number]; seriesName: string; color: string; dataIndex: number }[];
+          const arr = all.filter((p) => p.seriesName !== BAND_LO && p.seriesName !== BAND_HI && p.seriesName !== medianName);
+          if (!all.length) return "";
+          const head = `<span style="color:${t.ink2}">${clock(all[0].value[0])}</span>`;
+          const rows = arr.map((p) => `<span style="display:inline-block;width:12px;height:2px;background:${p.color};vertical-align:middle;margin-right:6px"></span><b>${format(p.value[1])}</b> <span style="color:${t.ink2}">${esc(p.seriesName)}</span>`);
+          const med = all.find((p) => p.seriesName === medianName);
+          if (band && med) {
+            const pt = band.points[med.dataIndex];
+            rows.push(`<span style="display:inline-block;width:12px;height:2px;background:${t.ink2};vertical-align:middle;margin-right:6px"></span><b>${format(pt[2])}</b> <span style="color:${t.ink2}">${esc(medianName)} (middle 50%: ${format(pt[1])}–${format(pt[3])})</span>`);
+          }
+          return [head, ...rows].join("<br/>");
         },
       },
       xAxis: { ...(b.xAxis as object), type: "value", min: 0, max: "dataMax", splitLine: { show: false }, axisLabel: { color: t.muted, fontSize: 11, formatter: (v: number) => clock(v) } },
       yAxis: { ...(b.yAxis as object), type: "value", axisLabel: { color: t.muted, fontSize: 11, formatter: (v: number) => format(v) } },
-      series: list.map((s) => ({
-        type: "line",
-        name: s.name,
-        data: s.points,
-        step: s.step ? "end" : undefined,
-        showSymbol: false,
-        color: s.color,
-        lineStyle: { width: s.muted ? 1.5 : 2, cap: "round", join: "round", opacity: s.muted ? 0.8 : 1 },
-      })),
+      series: [
+        ...bandSeries,
+        ...list.map((s) => ({
+          type: "line",
+          name: s.name,
+          data: s.points,
+          step: s.step ? "end" : undefined,
+          showSymbol: false,
+          color: s.color,
+          lineStyle: { width: s.muted ? 1.5 : 2, cap: "round", join: "round", opacity: s.muted ? 0.8 : 1 },
+        })),
+      ],
     } as echarts.EChartsOption;
   };
 }

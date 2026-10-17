@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readdirSync, writeFileSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import {
   addAnnotation,
@@ -16,7 +16,7 @@ import {
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { applySim, readRecord } from "@w3stats/core";
+import { applySim, readRecord, referencePaths, type RefLookup } from "@w3stats/core";
 import { CONSTANTS, gamedataDir, loadCosts, readSimOutput, simNotReady, simulateGame, summarize } from "@w3stats/sim";
 import { buildProfile, openReference, readState, refreshGroup } from "@w3stats/reference";
 import { currentReplayBuild } from "./reference.ts";
@@ -111,11 +111,22 @@ switch (cmd) {
   }
   case "export": {
     const c = ctx();
+    // Pro comparison from the first reference group's profile.json, when downloaded.
+    const group = c.config.reference.groups[0];
+    const profileFile = group ? join(referencePaths(group.id).root, "profile.json") : "";
+    const profile = profileFile && existsSync(profileFile) ? JSON.parse(readFileSync(profileFile, "utf8")) : null;
+    const refLookup: RefLookup | undefined = profile
+      ? (mu) => {
+          const key = mu && profile.matchups[mu]?.n >= 10 ? mu : "all";
+          const mp = profile.matchups[key];
+          return mp ? { label: group.label, matchup: key, games: mp.n, metrics: mp.metrics } : null;
+        }
+      : undefined;
     if (args[0] === "--md") {
-      const md = exportMarkdown(c.db, c.paths, resolveKey(c.db, args[1] ?? "latest"));
+      const md = exportMarkdown(c.db, c.paths, resolveKey(c.db, args[1] ?? "latest"), refLookup);
       console.log(md);
     } else {
-      const out = exportJsonl(c.db, c.paths);
+      const out = exportJsonl(c.db, c.paths, refLookup);
       const i = args.indexOf("--out");
       if (i >= 0) writeFileSync(args[i + 1], out + "\n");
       else console.log(out);

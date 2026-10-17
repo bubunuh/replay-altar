@@ -29,7 +29,7 @@ type MetricSpec = Omit<MetricDef, "better">;
 // Filled in by packages/sim once a game has been simulated; null until then.
 const SIM_SPECS: MetricSpec[] = [
   { key: "gold_spent_6m", label: "Gold spent by 6:00", unit: "count", group: "economy", source: "simulation", description: "Gold committed to units, buildings, upgrades, research and items in the first 6 minutes (starting buildings and workers excluded, first hero free)." },
-  { key: "gold_spent_10m", label: "Gold spent by 10:00", unit: "count", group: "economy", source: "simulation", description: "Same as above, first 10 minutes." },
+  { key: "gold_spent_10m", label: "Gold spent by 10:00", unit: "count", group: "economy", source: "simulation", description: "Gold committed in the first 10 minutes (same rules as Gold spent by 6:00)." },
   { key: "lumber_spent_10m", label: "Lumber spent by 10:00", unit: "count", group: "economy", source: "simulation", description: "Lumber committed in the first 10 minutes." },
   { key: "resources_spent_total", label: "Resources spent", unit: "count", group: "economy", source: "simulation", description: "Gold + lumber committed over the whole game." },
   { key: "resources_lost_total", label: "Resources lost", unit: "count", group: "economy", source: "estimate", description: "Gold + lumber value of your units and buildings the simulation marks as lost or possibly lost (heroes excluded). Deaths are inferred, not recorded." },
@@ -119,7 +119,7 @@ const REPLAY_SPECS: MetricSpec[] = [
   { key: "items_bought", label: "Items bought", unit: "count", group: "items", source: "replay", description: "Shop purchase orders over the whole game." },
   { key: "first_item_ms", label: "First item", unit: "ms", group: "items", source: "replay", description: "First shop purchase order." },
   { key: "hall_idle_6m_s", label: "Main hall idle by 6:00", unit: "count", group: "macro", source: "replay", description: "Seconds in the first 6 minutes your main hall was not training a worker or upgrading (worker orders queued back to back at their build time). All worker orders are treated as one queue, so after an expansion this can understate idle time." },
-  { key: "hall_idle_10m_s", label: "Main hall idle by 10:00", unit: "count", group: "macro", source: "replay", description: "Same, first 10 minutes." },
+  { key: "hall_idle_10m_s", label: "Main hall idle by 10:00", unit: "count", group: "macro", source: "replay", description: "Seconds in the first 10 minutes your main hall was not training a worker or upgrading (same queue model as by 6:00)." },
   { key: "tp_bought", label: "Town Portals bought", unit: "count", group: "items", source: "replay", description: "Scroll of Town Portal purchase orders." },
   { key: "potions_bought", label: "Potions bought", unit: "count", group: "items", source: "replay", description: "Healing, mana, clarity, restoration and similar potion purchase orders." },
 ];
