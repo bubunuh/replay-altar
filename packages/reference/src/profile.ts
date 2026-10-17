@@ -2,7 +2,7 @@
 // for the subject players of a reference group. Read by the desktop app and exports.
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { METRICS, readRecord, transaction, type DB, type GameRecord, type ReferenceGroup } from "@w3stats/core";
+import { METRICS, per10Minutes, readRecord, transaction, type DB, type GameRecord, type ReferenceGroup } from "@w3stats/core";
 import { summarizeValues, type Stat } from "./quantiles.ts";
 import type { RefPaths } from "./store.ts";
 
@@ -10,9 +10,12 @@ export const CURVES = ["apm", "workers", "spent", "food", "armyFood"] as const;
 export type CurveKey = (typeof CURVES)[number];
 export type CurvePoint = { minute: number; n: number; p25: number; p50: number; p75: number };
 
+export type StatWithValues = Stat & { values: number[] };
+
 export type MatchupProfile = {
   n: number;
-  metrics: Record<string, Stat & { values: number[] }>;
+  /** Per metric; whole-game totals (scalesWithLength) also carry per10, normalized per 10 minutes. */
+  metrics: Record<string, StatWithValues & { per10?: StatWithValues }>;
   curves: Record<CurveKey, CurvePoint[]>;
 };
 
@@ -54,10 +57,19 @@ function curveValues(s: Sample, key: CurveKey): Map<number, number> {
 
 function profileOf(samples: Sample[]): MatchupProfile {
   const metrics: MatchupProfile["metrics"] = {};
+  const withValues = (values: (number | null | undefined)[]): StatWithValues | null => {
+    const stat = summarizeValues(values);
+    return stat && { ...stat, values: values.filter((v): v is number => typeof v === "number" && Number.isFinite(v)).sort((a, b) => a - b) };
+  };
   for (const m of METRICS) {
     const values = samples.map((s) => s.record.players.find((p) => p.playerId === s.subjectId)?.metrics[m.key]);
-    const stat = summarizeValues(values);
-    if (stat) metrics[m.key] = { ...stat, values: values.filter((v): v is number => typeof v === "number").sort((a, b) => a - b) };
+    const stat = withValues(values);
+    if (!stat) continue;
+    metrics[m.key] = stat;
+    if (m.scalesWithLength) {
+      const per10 = withValues(samples.map((s, i) => (typeof values[i] === "number" ? per10Minutes(values[i]!, s.record.game.durationMs) : null)));
+      if (per10) metrics[m.key].per10 = per10;
+    }
   }
   const curves = {} as MatchupProfile["curves"];
   for (const key of CURVES) {

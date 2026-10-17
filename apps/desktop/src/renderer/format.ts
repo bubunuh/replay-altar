@@ -40,7 +40,7 @@ export function metricValue(def: Pick<MetricDef, "unit"> & { source?: MetricDef[
     case "per_min":
       return String(Math.round(v));
     default:
-      return Math.abs(v) >= 1000 ? Math.round(v).toLocaleString("en-US") : Number.isInteger(v) ? String(v) : v.toFixed(1);
+      return Math.abs(v) >= 100 ? Math.round(v).toLocaleString("en-US") : Number.isInteger(v) ? String(v) : v.toFixed(1);
   }
 }
 

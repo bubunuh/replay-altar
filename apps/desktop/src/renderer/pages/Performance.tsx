@@ -1,8 +1,10 @@
 import { useMemo, useState } from "react";
 import type { EChartsOption } from "echarts";
 import type { MetricDef, PerfGame } from "@w3stats/core/ui";
+import { per10Minutes } from "@w3stats/core/metrics";
 import { base, Chart, esc, winrateBars, type Tokens } from "../Chart.tsx";
-import { describeRef, pickProfile, standing } from "../compare.ts";
+import { assess, describeRef, pickProfile } from "../compare.ts";
+import { ProMedian, Standing } from "../Standing.tsx";
 import type { RefGroupInfo } from "../api.ts";
 import { dateTime, GROUP_LABEL, mean, metricValue, mmss, pct, RACE, shortName, SOURCE } from "../format.ts";
 
@@ -155,12 +157,18 @@ export function Performance({ games: all, metrics, pros, onOpen }: { games: Perf
 
   const trendDef = metrics.find((m) => m.key === trendMetric)!;
   const trendOption = useMemo(() => {
-    const pts = games.map((g) => ({
-      label: new Date(g.played_at).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
-      value: g.me[trendMetric] ?? null,
-      note: `${dateTime(g.played_at)} · ${g.result} vs ${shortName(g.opp_name)} on ${g.map_name}`,
-    }));
-    const st = ref?.mp.metrics[trendMetric];
+    // Whole-game totals are plotted per 10 minutes, so games (and the pros) of any length compare.
+    const scaled = trendDef.scalesWithLength;
+    const pts = games.map((g) => {
+      const v = g.me[trendMetric];
+      return {
+        label: new Date(g.played_at).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+        value: typeof v === "number" ? (scaled ? per10Minutes(v, g.duration_ms) : v) : null,
+        note: `${dateTime(g.played_at)} · ${g.result} vs ${shortName(g.opp_name)} on ${g.map_name}${scaled ? " · per 10 min" : ""}`,
+      };
+    });
+    const entry = ref?.mp.metrics[trendMetric];
+    const st = scaled ? entry?.per10 : entry;
     return lineOption(pts, (v) => metricValue({ unit: trendDef.unit }, v), undefined, st ? { label: "Pros", p25: st.p25, p50: st.p50, p75: st.p75 } : null);
   }, [games, trendMetric, trendDef, ref]);
 
@@ -257,7 +265,11 @@ export function Performance({ games: all, metrics, pros, onOpen }: { games: Perf
             </select>{" "}
             over time
           </h2>
-          <p className="sub">{trendDef.description}{ref?.mp.metrics[trendMetric] ? ` Grey: pros (${describeRef(ref)}), median and middle 50%.` : ""}</p>
+          <p className="sub">
+            {trendDef.description}
+            {trendDef.scalesWithLength ? " Shown per 10 minutes of game time." : ""}
+            {ref?.mp.metrics[trendMetric] ? ` Grey: pros (${describeRef(ref)}), median and middle 50%.` : ""}
+          </p>
           <Chart option={trendOption} height={220} label={`${trendDef.label} per game over time`} />
         </div>
       </div>
@@ -266,7 +278,9 @@ export function Performance({ games: all, metrics, pros, onOpen }: { games: Perf
         <h2>How you play in wins vs losses</h2>
         <p className="sub">
           Averages over the filtered games; (3/6) means only 3 of 6 games had that event. The opponents column is everyone you faced.
-          {ref ? ` Pros: ${pros!.group.label}, ${describeRef(ref)}; "where you stand" places your average among their games.` : " Pro comparison appears once reference games are downloaded (w3stats ref refresh)."}
+          {ref
+            ? ` Pros: ${pros!.group.label}, ${describeRef(ref)}. Green: pro level (better than at least a quarter of pro games). Yellow: not yet, but at least as good as your opponents. Red: below both. Whole-game totals are compared per 10 minutes.`
+            : " Pro comparison appears once reference games are downloaded (w3stats ref refresh)."}
           {" "}Hover a metric for its definition.
         </p>
         <table>
@@ -286,17 +300,29 @@ export function Performance({ games: all, metrics, pros, onOpen }: { games: Perf
               <tr key={grp}><td colSpan={ref ? 7 : 5} className="muted small" style={{ paddingTop: 14 }}>{GROUP_LABEL[grp]}</td></tr>,
               ...metrics
                 .filter((m) => m.group === grp)
-                .map((m) => (
-                  <tr key={m.key} title={m.description}>
-                    <td>{m.label}</td>
-                    <td className="num"><Avg def={m} values={wins.map((g) => g.me[m.key])} /></td>
-                    <td className="num"><Avg def={m} values={losses.map((g) => g.me[m.key])} /></td>
-                    <td className="num"><Avg def={m} values={games.map((g) => g.me[m.key])} /></td>
-                    <td className="num muted"><Avg def={m} values={games.map((g) => g.opp[m.key])} /></td>
-                    {ref && <td className="num muted">{metricValue(m, ref.mp.metrics[m.key]?.p50)}</td>}
-                    {ref && <td className="small">{standing(m, ref.mp, mean(games.map((g) => g.me[m.key])))}</td>}
-                  </tr>
-                )),
+                .map((m) => {
+                  const a = assess(
+                    m,
+                    ref?.mp ?? null,
+                    {
+                      value: mean(games.map((g) => g.me[m.key])),
+                      // Normalize each game before averaging: your games and the pros' differ in length.
+                      per10: mean(games.map((g) => (typeof g.me[m.key] === "number" ? per10Minutes(g.me[m.key]!, g.duration_ms) : null))),
+                    },
+                    mean(games.map((g) => g.opp[m.key])),
+                  );
+                  return (
+                    <tr key={m.key} title={m.description} className={ref && a.tier ? `tier-row-${a.tier}` : undefined}>
+                      <td>{m.label}</td>
+                      <td className="num"><Avg def={m} values={wins.map((g) => g.me[m.key])} /></td>
+                      <td className="num"><Avg def={m} values={losses.map((g) => g.me[m.key])} /></td>
+                      <td className="num"><Avg def={m} values={games.map((g) => g.me[m.key])} /></td>
+                      <td className="num muted"><Avg def={m} values={games.map((g) => g.opp[m.key])} /></td>
+                      {ref && <td className="num muted"><ProMedian def={m} a={a} /></td>}
+                      {ref && <td><Standing a={a} /></td>}
+                    </tr>
+                  );
+                }),
             ])}
           </tbody>
         </table>

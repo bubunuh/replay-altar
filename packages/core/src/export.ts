@@ -2,7 +2,7 @@
 // Effective results (with manual overrides) come from the DB; details from the game records.
 import type { DB } from "./db.ts";
 import { readRecord, type Paths } from "./store.ts";
-import { METRICS } from "./metrics.ts";
+import { METRICS, per10Minutes } from "./metrics.ts";
 import { RACE_NAMES } from "./gamedata.ts";
 import type { GameRecord, PlayerRecord } from "./record.ts";
 
@@ -15,19 +15,23 @@ export const mmss = (ms: number | null | undefined) => {
 type GameRow = { game_key: string; result: string };
 
 /** Reference distributions for one matchup (shape of profile.json's matchups[x].metrics). */
-export type RefMetrics = { label: string; matchup: string; games: number; metrics: Record<string, { p50: number; values: number[] }> };
+type RefStat = { p50: number; values: number[] };
+export type RefMetrics = { label: string; matchup: string; games: number; metrics: Record<string, RefStat & { per10?: RefStat }> };
 export type RefLookup = (matchup: string | null) => RefMetrics | null;
 
-function vsReference(metrics: Record<string, number | null>, ref: RefMetrics) {
-  const out: Record<string, { proMedian: number | string; shareOfProGamesBelow: number }> = {};
+function vsReference(metrics: Record<string, number | null>, durationMs: number, ref: RefMetrics) {
+  const out: Record<string, { proMedian: number | string; shareOfProGamesBelow: number; per10Minutes?: true }> = {};
   for (const m of METRICS) {
-    const x = metrics[m.key];
-    const r = ref.metrics[m.key];
-    if (x === null || x === undefined || !r || r.values.length < 5) continue;
+    const raw = metrics[m.key];
+    // Whole-game totals are compared per 10 minutes (pros' games have other lengths).
+    const r = m.scalesWithLength ? ref.metrics[m.key]?.per10 : ref.metrics[m.key];
+    if (raw === null || raw === undefined || !r || r.values.length < 5) continue;
+    const x = m.scalesWithLength ? per10Minutes(raw, durationMs) : raw;
     const below = r.values.filter((v) => v < x).length + r.values.filter((v) => v === x).length / 2;
     out[m.key] = {
       proMedian: m.unit === "ms" ? mmss(r.p50) : Math.round(r.p50 * 1000) / 1000,
       shareOfProGamesBelow: Math.round((below / r.values.length) * 100) / 100,
+      ...(m.scalesWithLength ? { per10Minutes: true as const } : {}),
     };
   }
   return { reference: `${ref.label}, ${ref.matchup === "all" ? "all matchups" : ref.matchup}, ${ref.games} games`, metrics: out };
@@ -63,7 +67,7 @@ export function gameDigest(r: GameRecord, effectiveResult: string, buildLimit = 
     resultConfidence: r.result.confidence,
     userLabel: r.userLabel,
     me: me && playerDigest(me, buildLimit),
-    meVsPros: me && ref ? vsReference(me.metrics, ref) : null,
+    meVsPros: me && ref ? vsReference(me.metrics, r.game.durationMs, ref) : null,
     opponent: opp && playerDigest(opp, buildLimit),
     caveats:
       "Replay metrics: times are when orders were issued (cancels included); heroes are timed by first skill learned. Economy, supply, fight and hero-level metrics come from simulating the replay (WC3V); metrics with source 'estimate' (losses, trades, mined/unspent resources) are approximate. See each metric's definition.",
@@ -103,7 +107,8 @@ export function exportMarkdown(db: DB, paths: Paths, gameKey: string, refLookup?
     "|---|---|---|---|---|---|",
     ...METRICS.map((m) => {
       const vp = d.meVsPros?.metrics[m.key];
-      return `| ${m.label} | ${d.me?.metrics[m.key] ?? "—"} | ${d.opponent?.metrics[m.key] ?? "—"} | ${vp ? vp.proMedian : "—"} | ${vp ? `${Math.round(vp.shareOfProGamesBelow * 100)}%` : "—"} | ${m.description} |`;
+      const unit = vp?.per10Minutes ? " per 10 min" : "";
+      return `| ${m.label} | ${d.me?.metrics[m.key] ?? "—"} | ${d.opponent?.metrics[m.key] ?? "—"} | ${vp ? `${vp.proMedian}${unit}` : "—"} | ${vp ? `${Math.round(vp.shareOfProGamesBelow * 100)}%${unit}` : "—"} | ${m.description} |`;
     }),
     "",
   ];

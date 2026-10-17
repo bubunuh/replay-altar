@@ -116,5 +116,15 @@ Each metric's `source` says how much to trust it:
   - `ref_skipped`: matches not kept, with the reason.
   - `ref_metric_stats`: per matchup (`HvO`…, `all`), each metric's n and p10/p25/p50/p75/p90.
 - **`profile.json`:** the same statistics, plus the sorted values used for percentiles and per-minute curves (p25/p50/p75; at least 5 games per minute) for APM, workers, spending, food and army food.
-- **"Where you stand":** the mid-rank percentile of your value among the pro games, worded by the metric's `better` direction.
+- **"Where you stand":** the mid-rank percentile of your value among the pro games.
+  - **Whole-game totals** (`scalesWithLength`: resources spent/lost/killed, units, items, fights, hero deaths, seconds supply-blocked…) are compared per 10 minutes. Each of your games is normalized first, then averaged.
+  - **Labels**, for metrics with a `better` direction:
+
+    | Label | Colour | Rule |
+    |---|---|---|
+    | Pro level | green | better than at least 25% of pro games |
+    | Above opponents | yellow | not pro level, but at least as good as your opponent(s) on the raw value |
+    | Below opponents | red | neither |
+
+  - **Neutral metrics** (strategy timings) get only "earlier/later than X%".
 - **Not a metric:** WC3V's dominance score (`sim_series.dominance`). It only counts units someone selected, so the player who clicks more looks ahead.

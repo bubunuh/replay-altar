@@ -13,6 +13,7 @@
   --series-1: #2a78d6; /* you */
   --series-2: #eb6834; /* opponent */
   --good: #0ca30c;
+  --warning: #fab219;
   --critical: #d03b3b;
   --good-text: #006300;
   --critical-text: #b42d2d;
@@ -123,3 +124,17 @@ details summary { cursor: pointer; color: var(--ink-2); }
 code { font-size: 12px; background: var(--surface-2); padding: 1px 5px; border-radius: 5px; word-break: break-all; }
 .chart-table { margin-top: 8px; }
 .chart-title { font-size: 13px; font-weight: 500; color: var(--ink-2); margin: 4px 0 2px; }
+
+/* Where-you-stand labels: status colour as a tint plus a solid dot; text stays in ink. */
+.standing { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tier { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px 2px 7px; border-radius: 999px; font-size: 12px; font-weight: 600; color: var(--ink); white-space: nowrap; }
+.tier::before { content: ""; width: 8px; height: 8px; border-radius: 50%; }
+.tier.pro { background: color-mix(in srgb, var(--good) 18%, transparent); }
+.tier.pro::before { background: var(--good); }
+.tier.above { background: color-mix(in srgb, var(--warning) 22%, transparent); }
+.tier.above::before { background: var(--warning); }
+.tier.below { background: color-mix(in srgb, var(--critical) 18%, transparent); }
+.tier.below::before { background: var(--critical); }
+tr.tier-row-pro td:first-child { box-shadow: inset 3px 0 0 var(--good); }
+tr.tier-row-above td:first-child { box-shadow: inset 3px 0 0 var(--warning); }
+tr.tier-row-below td:first-child { box-shadow: inset 3px 0 0 var(--critical); }

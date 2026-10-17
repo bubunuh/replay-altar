@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { BuildEvent, GameDetail, GameRecord, MetricDef, PlayerRecord, SimSample } from "@w3stats/core/ui";
+import { per10Minutes } from "@w3stats/core/metrics";
 import { api, type RefGroupInfo } from "../api.ts";
 import { Chart, timeLines, type Band, type Tokens } from "../Chart.tsx";
-import { describeRef, pickProfile, standing } from "../compare.ts";
+import { assess, describeRef, pickProfile } from "../compare.ts";
+import { ProMedian, Standing } from "../Standing.tsx";
 import type { CurvePoint, MatchupProfile } from "@w3stats/reference/types";
 import { dateTime, GROUP_LABEL, metricValue, mmss, RACE, shortName, SOURCE } from "../format.ts";
 
@@ -222,7 +224,10 @@ export function Match({ gameKey, metrics, pros, onBack }: { gameKey: string; met
         <h2>Key numbers</h2>
         <p className="sub">
           Order times are when the order was issued (cancels included). Economy and supply rows come from the simulation; ≈ marks estimates.
-          {ref ? ` Pros: ${pros!.group.label}, ${describeRef(ref)}.` : ""} Hover a metric for its definition.
+          {ref
+            ? ` Pros: ${pros!.group.label}, ${describeRef(ref)}. Pro level = better than at least a quarter of pro games; whole-game totals are compared per 10 minutes.`
+            : ""}{" "}
+          Hover a metric for its definition.
         </p>
         <table>
           <thead>
@@ -239,15 +244,19 @@ export function Match({ gameKey, metrics, pros, onBack }: { gameKey: string; met
               <tr key={g}><td colSpan={ref ? 5 : 3} className="muted small" style={{ paddingTop: 14 }}>{GROUP_LABEL[g]}</td></tr>,
               ...metrics
                 .filter((m) => m.group === g)
-                .map((m) => (
-                  <tr key={m.key} title={m.description}>
-                    <td>{m.label}</td>
-                    <td className="num">{metricValue(m, me?.metrics[m.key])}</td>
-                    <td className="num">{metricValue(m, opp?.metrics[m.key])}</td>
-                    {ref && <td className="num muted">{metricValue(m, ref.mp.metrics[m.key]?.p50)}</td>}
-                    {ref && <td className="small">{standing(m, ref.mp, me?.metrics[m.key])}</td>}
-                  </tr>
-                )),
+                .map((m) => {
+                  const mine = me?.metrics[m.key];
+                  const a = assess(m, ref?.mp ?? null, { value: mine, per10: typeof mine === "number" ? per10Minutes(mine, r.game.durationMs) : null }, opp?.metrics[m.key]);
+                  return (
+                    <tr key={m.key} title={m.description} className={ref && a.tier ? `tier-row-${a.tier}` : undefined}>
+                      <td>{m.label}</td>
+                      <td className="num">{metricValue(m, mine)}</td>
+                      <td className="num">{metricValue(m, opp?.metrics[m.key])}</td>
+                      {ref && <td className="num muted"><ProMedian def={m} a={a} /></td>}
+                      {ref && <td><Standing a={a} /></td>}
+                    </tr>
+                  );
+                }),
             ])}
           </tbody>
         </table>

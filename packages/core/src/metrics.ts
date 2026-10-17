@@ -21,10 +21,12 @@ export type MetricDef = {
   source: "replay" | "simulation" | "estimate";
   /** Which direction is generally better; null when it depends on strategy (e.g. tech timing). */
   better: "higher" | "lower" | null;
+  /** A whole-game total that grows with game length; compared with other games per 10 minutes. */
+  scalesWithLength: boolean;
   description: string;
 };
 
-type MetricSpec = Omit<MetricDef, "better">;
+type MetricSpec = Omit<MetricDef, "better" | "scalesWithLength">;
 
 // Filled in by packages/sim once a game has been simulated; null until then.
 const SIM_SPECS: MetricSpec[] = [
@@ -85,7 +87,18 @@ const BETTER: Record<string, "higher" | "lower"> = {
   army_food_6m: "higher", army_food_8m: "higher", army_food_10m: "higher",
   spells_per_min: "higher",
 };
-const withBetter = (m: MetricSpec): MetricDef => ({ ...m, better: BETTER[m.key] ?? null });
+// Whole-game totals: a 25-minute game simply has more of them than a 12-minute one.
+const SCALES_WITH_LENGTH = new Set([
+  "resources_spent_total", "resources_lost_total", "resources_killed_total",
+  "units_ordered", "upgrades_ordered", "items_bought", "towers_total", "tp_bought", "potions_bought",
+  "hero_deaths", "hero_levels_total", "fights_pitched", "fights_defending", "fights_creep",
+  "supply_blocked_s", "upkeep_low_s", "upkeep_high_s",
+]);
+
+const withBetter = (m: MetricSpec): MetricDef => ({ ...m, better: BETTER[m.key] ?? null, scalesWithLength: SCALES_WITH_LENGTH.has(m.key) });
+
+/** Value per 10 minutes of game time, for comparing whole-game totals across games of any length. */
+export const per10Minutes = (value: number, durationMs: number) => (durationMs > 0 ? value / (durationMs / 600_000) : value);
 
 export const SIM_METRICS: MetricDef[] = SIM_SPECS.map(withBetter);
 
