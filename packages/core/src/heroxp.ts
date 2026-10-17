@@ -3,21 +3,39 @@
 // data (3.0: NeedHeroXP=200, then +100 per level: 200, 500, 900, 1400, ... 5400).
 // Validated against W3Champions' official "experience gained" on 56 pro player-games:
 // correlation 0.96, median ratio 1.01 (see docs/DATA.md).
+import { HERO_ULTIMATES } from "./gamedata.ts";
 
 /** Total XP needed to reach each level (index = level). */
 export const HERO_XP_FOR_LEVEL = [0, 0, 200, 500, 900, 1400, 2000, 2700, 3500, 4400, 5400];
 const MAX_LEVEL = 10;
 
-type AbilityEntry = { type: "ability" | "retraining"; time: number };
+type AbilityEntry = { type: "ability" | "retraining"; time: number; value?: string };
 
-/** Level-up times of one hero: [time reached level 1 (acquired), level 2, ...]. Retraining re-picks are not level-ups. */
+/** Whether a hero of this level can learn this rank of the skill (game rules, see HERO_ULTIMATES). */
+function rankAllowed(code: string, rank: number, heroLevel: number) {
+  return HERO_ULTIMATES.has(code) ? rank === 1 && heroLevel >= 6 : rank <= 3 && heroLevel >= 2 * rank - 1;
+}
+
+/**
+ * Level-up times of one hero: [time reached level 1 (acquired), level 2, ...]. Retraining re-picks
+ * are not level-ups. The replay keeps every click on a skill, also the ones the game refused
+ * (e.g. clicking Divine Shield 12 times at level 1), so a pick only counts if the hero could have
+ * learned that rank at the level the pick would give it.
+ */
 export function levelUpTimes(abilityOrder: AbilityEntry[]): number[] {
   const times: number[] = [];
+  let ranks = new Map<string, number>();
   let relearn = 0;
   for (const a of abilityOrder) {
     if (a.type === "retraining") {
       relearn = times.length; // the hero re-learns this many skills without gaining levels
+      ranks = new Map();
       continue;
+    }
+    if (a.value !== undefined) {
+      const rank = (ranks.get(a.value) ?? 0) + 1;
+      if (!rankAllowed(a.value, rank, relearn > 0 ? times.length : times.length + 1)) continue;
+      ranks.set(a.value, rank);
     }
     if (relearn > 0) {
       relearn--;

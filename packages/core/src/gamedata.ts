@@ -117,6 +117,18 @@ export const CORE_UPGRADES: Record<RaceCode, { code: string; kind: UpgradeKind; 
 };
 
 /** Names of the tier-2 and tier-3 main halls. */
+/**
+ * Hero ultimates (abilitydata.slk: hero skills with reqLevel 6, one level). Other hero skills
+ * have 3 ranks, learnable from hero level 1, 3 and 5 (HeroAbilityLevelSkip 2).
+ */
+export const HERO_ULTIMATES = new Set([
+  "AHmt", "AHpx", "AHav", "AHre", // Archmage, Blood Mage, Mountain King, Paladin
+  "AOww", "AOeq", "AOre", "AOvd", // Blademaster, Far Seer, Tauren Chieftain, Shadow Hunter
+  "AUan", "AUdd", "AUin", "AUls", // Death Knight, Lich, Dreadlord, Crypt Lord
+  "AEme", "AEtq", "AEsf", "AEsv", // Demon Hunter, Keeper, Priestess, Warden
+  "ANst", "ANch", "ANef", "ANdo", "ANto", "ANtm", "ANrg", "ANvc", // tavern heroes
+]);
+
 export const TIER_NAMES: Record<RaceCode, [string, string]> = {
   H: ["Keep", "Castle"],
   O: ["Stronghold", "Fortress"],

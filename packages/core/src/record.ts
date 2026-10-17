@@ -173,7 +173,7 @@ export function buildRecord(input: {
             code: h.id,
             name: nameOf(h.id, "heroes"),
             level: h.level,
-            levelUps: levelUpTimes(h.abilityOrder as { type: "ability" | "retraining"; time: number }[]),
+            levelUps: levelUpTimes(h.abilityOrder as { type: "ability" | "retraining"; time: number; value?: string }[]),
             skills: h.abilityOrder
               .filter((x) => x.type === "ability")
               .map((x) => ({ ms: x.time, code: (x as { value: string }).value, name: abilityName((x as { value: string }).value) })),

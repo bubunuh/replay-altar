@@ -56,7 +56,7 @@ Each metric's `source` says how much to trust it:
 
 ## Hero experience (replay)
 
-- **Level-ups:** each level gives one skill point, so skill-pick times are the level-up times. Retraining re-picks don't count.
+- **Level-ups:** each level gives one skill point, so skill-pick times are the level-up times. Retraining re-picks don't count. The replay also keeps clicks the game refused (e.g. clicking a skill 12 times), so a pick only counts if the hero could learn that rank: ranks 1/2/3 at hero level 1/3/5, ultimates once at level 6. Against official XP on 58 player-games: correlation 0.95, median error 121 XP.
 - **XP per level:** game data, 200/500/900/1,400/2,000/… up to 5,400 for level 10.
 - **XP at time t:** linear between level-ups, and exact at each one. After the last level-up it grows to half the next level by the end of the game.
 - **Validation:** against W3Champions' official XP on 56 pro player-games, correlation 0.96, median ratio 1.01, mean error about 230 XP.

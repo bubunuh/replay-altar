@@ -5,7 +5,7 @@ import { CORE_UPGRADES, isRaceCode, POTION_ITEMS, RACES, researchLevels, TIER_NA
 import { heroesXpAt, levelUpTimes } from "./heroxp.ts";
 import type { RawReplay } from "./parse.ts";
 
-export const METRICS_VERSION = 7;
+export const METRICS_VERSION = 8;
 
 export type MetricUnit = "ms" | "count" | "apm" | "ratio" | "per_min";
 
@@ -231,7 +231,7 @@ export function hallIdleMs(race: RaceCode, orders: { id: string; ms: number }[],
   return idle;
 }
 
-function heroMetrics(heroes: { abilityOrder: { type: "ability" | "retraining"; time: number }[] }[], durationMs: number): Metrics {
+function heroMetrics(heroes: { abilityOrder: { type: "ability" | "retraining"; time: number; value?: string }[] }[], durationMs: number): Metrics {
   const levels = heroes.map((h) => levelUpTimes(h.abilityOrder));
   const levelAt = (t: number) => Math.max(0, ...levels.map((l) => l.filter((x) => x <= t).length));
   const firstReaching = (lvl: number) => {

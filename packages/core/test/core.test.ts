@@ -138,6 +138,15 @@ describe("hero experience", () => {
   test("level-ups are skill picks; a retraining's re-picks are not", () => {
     expect(levelUpTimes([a(60), a(200), { type: "retraining", time: 500 }, a(501), a(502), a(700)])).toEqual([60, 200, 700]);
   });
+  test("clicks the game refuses are not level-ups", () => {
+    const pick = (time: number, value: string) => ({ type: "ability" as const, time, value });
+    // Clicking Divine Shield 12 times on a new Paladin: rank 2 needs hero level 3.
+    expect(levelUpTimes(Array.from({ length: 12 }, (_, i) => pick(1_458_000 + i * 100, "AHds")))).toEqual([1_458_000]);
+    // Holy Light, Devotion, Holy Light (level 3: rank 2 allowed), a 4th rank of nothing, then the
+    // ultimate only from level 6.
+    const seq = [pick(1, "AHhb"), pick(2, "AHad"), pick(3, "AHhb"), pick(4, "AHre"), pick(5, "AHad"), pick(6, "AHhb"), pick(7, "AHhb"), pick(8, "AHre")];
+    expect(levelUpTimes(seq)).toEqual([1, 2, 3, 5, 6, 8]);
+  });
   test("exact at level-ups, linear in between", () => {
     const levels = [60_000, 200_000, 400_000]; // level 1, 2, 3
     expect(heroXpAt(levels, 200_000, 900_000)).toBe(200);
