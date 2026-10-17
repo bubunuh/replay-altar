@@ -2,11 +2,11 @@
 // for the subject players of a reference group. Read by the desktop app and exports.
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { METRICS, per10Minutes, readRecord, transaction, type DB, type GameRecord, type ReferenceGroup } from "@w3stats/core";
+import { heroesXpAt, METRICS, per10Minutes, readRecord, transaction, type DB, type GameRecord, type ReferenceGroup } from "@w3stats/core";
 import { summarizeValues, type Stat } from "./quantiles.ts";
 import type { RefPaths } from "./store.ts";
 
-export const CURVES = ["apm", "workers", "spent", "food", "armyFood"] as const;
+export const CURVES = ["apm", "workers", "spent", "food", "armyFood", "heroXp"] as const;
 export type CurveKey = (typeof CURVES)[number];
 export type CurvePoint = { minute: number; n: number; p25: number; p50: number; p75: number };
 
@@ -38,6 +38,11 @@ function curveValues(s: Sample, key: CurveKey): Map<number, number> {
   const fullMinutes = Math.floor(s.record.game.durationMs / 60_000);
   if (key === "apm") {
     p.apmPerMinute.slice(0, fullMinutes).forEach((v, i) => out.set(i + 1, v));
+    return out;
+  }
+  if (key === "heroXp") {
+    const levels = p.heroes.map((h) => h.levelUps ?? []);
+    for (let m = 1; m <= fullMinutes; m++) out.set(m, heroesXpAt(levels, m * 60_000, s.record.game.durationMs));
     return out;
   }
   const sim = s.record.sim?.status === "ok" ? s.record.sim.players.find((x) => x.playerId === s.subjectId) : null;

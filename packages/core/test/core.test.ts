@@ -4,6 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { beforeAll, describe, expect, test } from "vitest";
 import {
+  heroXpAt,
+  levelUpTimes,
   classify,
   computeMetrics,
   DEFAULT_CONFIG,
@@ -124,6 +126,26 @@ describe.skipIf(files.length === 0)("metrics", () => {
     // Peasant production stopped around 2:30 and only resumed after 10:00.
     expect(m.hall_idle_10m_s).toBeGreaterThan(m.hall_idle_6m_s! + 200);
     expect(m.tp_bought).toBe(0);
+    // Archmage at level 4 and Mountain King at level 4 by the end: 2 x (900 + 250).
+    expect(m.hero_xp_total).toBe(2300);
+    expect(m.hero_level3_ms).toBe(366_783);
+  });
+});
+
+describe("hero experience", () => {
+  const a = (time: number) => ({ type: "ability" as const, time });
+  test("level-ups are skill picks; a retraining's re-picks are not", () => {
+    expect(levelUpTimes([a(60), a(200), { type: "retraining", time: 500 }, a(501), a(502), a(700)])).toEqual([60, 200, 700]);
+  });
+  test("exact at level-ups, linear in between", () => {
+    const levels = [60_000, 200_000, 400_000]; // level 1, 2, 3
+    expect(heroXpAt(levels, 200_000, 900_000)).toBe(200);
+    expect(heroXpAt(levels, 300_000, 900_000)).toBe(350); // halfway from 200 to 500
+    expect(heroXpAt(levels, 30_000, 900_000)).toBe(0); // not acquired yet
+  });
+  test("after the last level-up it grows to half the next level by the end", () => {
+    const levels = [60_000, 200_000, 400_000];
+    expect(heroXpAt(levels, 900_000, 900_000)).toBe(500 + 200); // level 3 + half of 400
   });
 });
 

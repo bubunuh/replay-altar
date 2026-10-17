@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { BuildEvent, GameDetail, GameRecord, MetricDef, PlayerRecord, SimSample } from "@w3stats/core/ui";
 import { per10Minutes } from "@w3stats/core/metrics";
+import { heroesXpAt } from "@w3stats/core/heroxp";
 import { api, type RefGroupInfo } from "../api.ts";
 import { Chart, timeLines, type Band, type Tokens } from "../Chart.tsx";
 import { assess, describeRef, pickProfile } from "../compare.ts";
@@ -173,6 +174,25 @@ export function Match({ gameKey, metrics, pros, onBack }: { gameKey: string; met
     [me, opp, ref],
   );
 
+  const xpOption = useMemo(() => {
+    if (!r) return null;
+    const end = r.game.durationMs;
+    const curve = (p: PlayerRecord) => {
+      const levels = p.heroes.map((h) => h.levelUps ?? []);
+      const pts: [number, number][] = [];
+      for (let t = 0; t <= end; t += 30_000) pts.push([t, Math.round(heroesXpAt(levels, t, end))]);
+      return pts;
+    };
+    return timeLines(
+      (t) =>
+        [me, opp]
+          .filter((p): p is PlayerRecord => !!p)
+          .map((p) => ({ name: shortName(p.name), color: p.isMe ? t.series1 : t.series2, points: curve(p) })),
+      undefined,
+      bandOf(ref?.mp.curves.heroXp, "Pros"),
+    );
+  }, [r, me, opp, ref]);
+
   if (detail === undefined) return <div className="page"><div className="empty">Loading…</div></div>;
   if (detail === null || !r) return <div className="page"><div className="empty">Game not found.</div></div>;
   const { row } = detail;
@@ -264,7 +284,12 @@ export function Match({ gameKey, metrics, pros, onBack }: { gameKey: string; met
 
       <div className="card">
         <h2>Heroes</h2>
-        <p className="sub">Skill order; a hero's first skill marks roughly when it arrived.</p>
+        <p className="sub">
+          Hero experience over time (all heroes), from level-up times; levels are exact, the XP between them is interpolated. Creeps give no
+          experience to a hero of level 5 or more.{ref ? " Grey: pros." : ""}
+        </p>
+        {xpOption && <Chart option={xpOption} height={220} label="Hero experience over time for both players" />}
+        <p className="sub" style={{ marginTop: 12 }}>Skill order; a hero's first skill marks roughly when it arrived.</p>
         <div className="grid-2">
           {me && <Heroes p={me} />}
           {opp && <Heroes p={opp} />}

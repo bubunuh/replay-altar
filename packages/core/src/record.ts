@@ -3,6 +3,7 @@
 import { basename } from "node:path";
 import { classify, type Classification } from "./classify.ts";
 import { computeMetrics, METRICS_VERSION, SIM_METRICS, type Metrics } from "./metrics.ts";
+import { levelUpTimes } from "./heroxp.ts";
 import { abilityName, nameOf, NAMES_SOURCE } from "./names.ts";
 import type { RawReplay } from "./parse.ts";
 import { detectResult, type ResultInfo } from "./result.ts";
@@ -29,6 +30,8 @@ export type HeroRecord = {
   code: string;
   name: string;
   level: number;
+  /** When it reached level 1 (acquired), 2, 3, ... (retraining re-picks excluded). */
+  levelUps: number[];
   skills: { ms: number; code: string; name: string }[];
   retrainings: number;
 };
@@ -165,6 +168,7 @@ export function buildRecord(input: {
             code: h.id,
             name: nameOf(h.id, "heroes"),
             level: h.level,
+            levelUps: levelUpTimes(h.abilityOrder as { type: "ability" | "retraining"; time: number }[]),
             skills: h.abilityOrder
               .filter((x) => x.type === "ability")
               .map((x) => ({ ms: x.time, code: (x as { value: string }).value, name: abilityName((x as { value: string }).value) })),
@@ -181,6 +185,13 @@ export function buildRecord(input: {
     })
     // Me first, then by team, so "players[1]" is the opponent in a 1v1.
     .sort((a, b) => Number(b.isMe) - Number(a.isMe) || Number(a.teamId === meTeam) - Number(b.teamId === meTeam) || a.playerId - b.playerId);
+
+  // Hero XP share needs both sides of the game.
+  for (const p of players) {
+    const mine = p.metrics.hero_xp_total;
+    const theirs = players.filter((x) => x.teamId !== p.teamId).reduce((sum, x) => sum + (x.metrics.hero_xp_total ?? 0), 0);
+    p.metrics.hero_xp_share = typeof mine === "number" && mine + theirs > 0 ? mine / (mine + theirs) : null;
+  }
 
   return {
     schemaVersion: SCHEMA_VERSION,

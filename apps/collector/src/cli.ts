@@ -95,9 +95,27 @@ switch (cmd) {
     break;
   }
   case "reingest": {
-    const out = await reingestAll(ctx());
+    const c = ctx();
+    const out = await reingestAll(c);
     console.log(`rebuilt ${out.games} games`);
     for (const e of out.errors) console.error(e);
+    // Reference groups use the same pipeline: rebuild them and their statistics too.
+    const costs = simNotReady(c.paths.root) ? null : loadCosts(gamedataDir(c.paths.root));
+    for (const g of c.config.reference.groups) {
+      const ref = openReference(g.id, c.config);
+      const res = await reingestAll(ref);
+      if (costs) {
+        for (const { game_key } of ref.db.prepare("SELECT game_key FROM games WHERE sim_status = 'ok'").all() as { game_key: string }[]) {
+          const record = readRecord(ref.paths, game_key);
+          if (record?.sim?.status !== "ok") continue;
+          const { ranAt, runMs, outputPath } = record.sim;
+          applySim(ref, game_key, summarize(record, readSimOutput(outputPath), costs, CONSTANTS, { ranAt, runMs, outputPath }));
+        }
+      }
+      const p = buildProfile(ref.db, ref.paths, g, currentReplayBuild(c.db));
+      console.log(`reference ${g.id}: rebuilt ${res.games} games; profile from ${p.games}`);
+      for (const e of res.errors) console.error(e);
+    }
     break;
   }
   case "override": {

@@ -347,7 +347,6 @@ export function economyMetrics(
   }
   const camps = Object.values(o.world?.neutralGroups ?? {}).filter((g) => g.claimState === 2 && g.claimOwnerId === tl.teamId && typeof g.claimTime === "number");
   const campsBy = (ms: number) => camps.filter((g) => g.claimTime! <= ms).length;
-  const heroLevelAt = (ms: number) => tl.heroLevels.filter((h) => h.t <= ms).reduce((m, h) => Math.max(m, h.level), 0);
   const lost = last.goldLost + last.lumberLost;
   const killedSample = opponent ? opponent.income.series.at(-1)! : null;
   const killed = killedSample ? killedSample.goldLost + killedSample.lumberLost : null;
@@ -370,8 +369,6 @@ export function economyMetrics(
     expansions: tl.mines.filter((m) => m.activeFrom > 0 && m.activeFrom <= tl.endMs).length,
     creep_camps_6m: campsBy(360_000),
     creep_camps_10m: campsBy(600_000),
-    hero_level_6m: past(360_000) ? heroLevelAt(360_000) : null,
-    hero_level_10m: past(600_000) ? heroLevelAt(600_000) : null,
     supply_blocked_s: blocked,
     unused_supply_avg: seconds ? unused / seconds : null,
     upkeep_low_s: low,
@@ -395,7 +392,6 @@ function fightAndHeroMetrics(tl: Timeline, campTimes: number[]): Metrics {
   const x = tl.extra;
   // WC3V's dominance score is kept in the samples but not turned into metrics: it only sees
   // units someone selected, so the player who clicks more looks ahead (see docs/DATA.md).
-  const levelTime = (lvl: number) => tl.heroLevels.find((h) => h.level >= lvl)?.t ?? null;
   const minutes = tl.endMs / 60_000;
   return {
     eapm: x.eapm,
@@ -404,8 +400,6 @@ function fightAndHeroMetrics(tl: Timeline, campTimes: number[]): Metrics {
     fights_defending: x.battles.filter((b) => b.category === "base-defense" && b.role !== "initiator").length,
     fights_creep: x.battles.filter((b) => b.category === "creep-fight").length,
     hero_deaths: x.heroRevives + x.heroesDeadAtEnd,
-    hero_level3_ms: levelTime(3),
-    hero_level5_ms: levelTime(5),
     spells_per_min: minutes > 0 ? x.spellCasts / minutes : null,
     first_creep_ms: campTimes.length ? Math.min(...campTimes) : null,
     first_scout_ms: x.firstScoutMs,

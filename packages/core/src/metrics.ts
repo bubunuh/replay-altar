@@ -2,9 +2,10 @@
 // A replay holds commands, not game state: every "time" here is when an order was issued
 // (cancelled orders included), and heroes are timed by their first learned skill.
 import { isRaceCode, POTION_ITEMS, RACES, TOWN_PORTAL, type RaceCode } from "./gamedata.ts";
+import { heroesXpAt, levelUpTimes } from "./heroxp.ts";
 import type { RawReplay } from "./parse.ts";
 
-export const METRICS_VERSION = 3;
+export const METRICS_VERSION = 4;
 
 export type MetricUnit = "ms" | "count" | "apm" | "ratio" | "per_min";
 
@@ -44,8 +45,6 @@ const SIM_SPECS: MetricSpec[] = [
   { key: "expansions", label: "Expansions", unit: "count", group: "economy", source: "simulation", description: "Additional gold mines taken (new halls, or Haunted Gold Mines for Undead) that finished building." },
   { key: "creep_camps_6m", label: "Creep camps by 6:00", unit: "count", group: "economy", source: "simulation", description: "Neutral camps your side cleared in the first 6 minutes." },
   { key: "creep_camps_10m", label: "Creep camps by 10:00", unit: "count", group: "economy", source: "simulation", description: "Neutral camps your side cleared in the first 10 minutes." },
-  { key: "hero_level_6m", label: "Top hero level at 6:00", unit: "count", group: "heroes", source: "simulation", description: "Level of your highest hero at 6:00." },
-  { key: "hero_level_10m", label: "Top hero level at 10:00", unit: "count", group: "heroes", source: "simulation", description: "Level of your highest hero at 10:00." },
   { key: "supply_blocked_s", label: "Supply blocked", unit: "count", group: "supply", source: "simulation", description: "Seconds at the food cap (below 100), when you could not train anything." },
   { key: "unused_supply_avg", label: "Unused supply", unit: "count", group: "supply", source: "simulation", description: "Average food cap minus food used. High values mean idle production or floating resources." },
   { key: "upkeep_low_s", label: "Time in low upkeep", unit: "count", group: "supply", source: "simulation", description: "Seconds at 51–80 food (30% gold tax)." },
@@ -65,8 +64,6 @@ const SIM_SPECS: MetricSpec[] = [
   { key: "fights_defending", label: "Base defenses", unit: "count", group: "fights", source: "simulation", description: "Fights at a base that you did not start (defending against attacks or harassment)." },
   { key: "fights_creep", label: "Creep fights", unit: "count", group: "fights", source: "simulation", description: "Fights against neutral creeps." },
   { key: "hero_deaths", label: "Hero deaths", unit: "count", group: "heroes", source: "simulation", description: "Hero revives plus heroes dead at the end of the game." },
-  { key: "hero_level3_ms", label: "Hero level 3", unit: "ms", group: "heroes", source: "simulation", description: "When your first hero reached level 3." },
-  { key: "hero_level5_ms", label: "Hero level 5", unit: "ms", group: "heroes", source: "simulation", description: "When your first hero reached level 5." },
   { key: "spells_per_min", label: "Spells per minute", unit: "per_min", group: "heroes", source: "simulation", description: "Spell casts per minute of game time (heroes and casters)." },
   { key: "first_creep_ms", label: "First creep camp", unit: "ms", group: "heroes", source: "simulation", description: "When your side first cleared a neutral camp." },
   { key: "first_scout_ms", label: "First scout", unit: "ms", group: "scouting", source: "simulation", description: "When a unit of yours first reached the opponent's side of the map." },
@@ -82,6 +79,8 @@ const BETTER: Record<string, "higher" | "lower"> = {
   resources_lost_total: "lower", resources_killed_total: "higher", trade_efficiency: "higher",
   creep_camps_6m: "higher", creep_camps_10m: "higher", first_creep_ms: "lower",
   hero_level_6m: "higher", hero_level_10m: "higher", hero_levels_total: "higher", hero_level3_ms: "lower", hero_level5_ms: "lower", hero_deaths: "lower",
+  hero_xp_4m: "higher", hero_xp_6m: "higher", hero_xp_8m: "higher", hero_xp_10m: "higher", hero_xp_total: "higher", hero_xp_per_min: "higher", hero_xp_share: "higher",
+  fights_defending: "lower",
   supply_blocked_s: "lower", unused_supply_avg: "lower", est_bank_avg: "lower", est_bank_10m: "lower",
   est_gold_mined_10m: "higher", est_lumber_mined_10m: "higher",
   army_food_6m: "higher", army_food_8m: "higher", army_food_10m: "higher",
@@ -91,7 +90,7 @@ const BETTER: Record<string, "higher" | "lower"> = {
 const SCALES_WITH_LENGTH = new Set([
   "resources_spent_total", "resources_lost_total", "resources_killed_total",
   "units_ordered", "upgrades_ordered", "items_bought", "towers_total", "tp_bought", "potions_bought",
-  "hero_deaths", "hero_levels_total", "fights_pitched", "fights_defending", "fights_creep",
+  "hero_deaths", "hero_levels_total", "hero_xp_total", "fights_pitched", "fights_defending", "fights_creep",
   "supply_blocked_s", "upkeep_low_s", "upkeep_high_s",
 ]);
 
@@ -131,6 +130,17 @@ const REPLAY_SPECS: MetricSpec[] = [
   { key: "upgrades_ordered", label: "Upgrades ordered", unit: "count", group: "army", source: "replay", description: "Research orders over the whole game." },
   { key: "items_bought", label: "Items bought", unit: "count", group: "items", source: "replay", description: "Shop purchase orders over the whole game." },
   { key: "first_item_ms", label: "First item", unit: "ms", group: "items", source: "replay", description: "First shop purchase order." },
+  { key: "hero_level_6m", label: "Top hero level at 6:00", unit: "count", group: "heroes", source: "replay", description: "Level of your highest hero at 6:00 (from skill points learned)." },
+  { key: "hero_level_10m", label: "Top hero level at 10:00", unit: "count", group: "heroes", source: "replay", description: "Level of your highest hero at 10:00." },
+  { key: "hero_level3_ms", label: "Hero level 3", unit: "ms", group: "heroes", source: "replay", description: "When your first hero reached level 3 (its third skill point)." },
+  { key: "hero_level5_ms", label: "Hero level 5", unit: "ms", group: "heroes", source: "replay", description: "When your first hero reached level 5. From level 5 heroes get no more experience from creeps." },
+  { key: "hero_xp_4m", label: "Hero XP by 4:00", unit: "count", group: "heroes", source: "replay", description: "Experience of all your heroes at 4:00, from their level-up times (exact at each level-up, interpolated between)." },
+  { key: "hero_xp_6m", label: "Hero XP by 6:00", unit: "count", group: "heroes", source: "replay", description: "Experience of all your heroes at 6:00." },
+  { key: "hero_xp_8m", label: "Hero XP by 8:00", unit: "count", group: "heroes", source: "replay", description: "Experience of all your heroes at 8:00." },
+  { key: "hero_xp_10m", label: "Hero XP by 10:00", unit: "count", group: "heroes", source: "replay", description: "Experience of all your heroes at 10:00." },
+  { key: "hero_xp_total", label: "Hero XP total", unit: "count", group: "heroes", source: "replay", description: "Experience gained by all your heroes over the game: levels reached plus half of the next level (matched W3Champions' official XP within about 230 XP on pro games)." },
+  { key: "hero_xp_per_min", label: "Hero XP per minute", unit: "per_min", group: "heroes", source: "replay", description: "Hero XP total divided by game minutes." },
+  { key: "hero_xp_share", label: "Hero XP share", unit: "ratio", group: "heroes", source: "replay", description: "Your heroes' XP as a share of both players' hero XP. Above 50% means you out-levelled your opponent." },
   { key: "hall_idle_6m_s", label: "Main hall idle by 6:00", unit: "count", group: "macro", source: "replay", description: "Seconds in the first 6 minutes your main hall was not training a worker or upgrading (worker orders queued back to back at their build time). All worker orders are treated as one queue, so after an expansion this can understate idle time." },
   { key: "hall_idle_10m_s", label: "Main hall idle by 10:00", unit: "count", group: "macro", source: "replay", description: "Seconds in the first 10 minutes your main hall was not training a worker or upgrading (same queue model as by 6:00)." },
   { key: "tp_bought", label: "Town Portals bought", unit: "count", group: "items", source: "replay", description: "Scroll of Town Portal purchase orders." },
@@ -173,6 +183,30 @@ export function hallIdleMs(race: RaceCode, orders: { id: string; ms: number }[],
   }
   if (busyUntil < untilMs) idle += untilMs - busyUntil;
   return idle;
+}
+
+function heroMetrics(heroes: { abilityOrder: { type: "ability" | "retraining"; time: number }[] }[], durationMs: number): Metrics {
+  const levels = heroes.map((h) => levelUpTimes(h.abilityOrder));
+  const levelAt = (t: number) => Math.max(0, ...levels.map((l) => l.filter((x) => x <= t).length));
+  const firstReaching = (lvl: number) => {
+    const times = levels.map((l) => l[lvl - 1]).filter((x): x is number => x !== undefined);
+    return times.length ? Math.min(...times) : null;
+  };
+  const xpBy = (t: number) => (durationMs >= t ? Math.round(heroesXpAt(levels, t, durationMs)) : null);
+  const total = Math.round(heroesXpAt(levels, durationMs, durationMs));
+  return {
+    hero_level_6m: durationMs >= 360_000 ? levelAt(360_000) : null,
+    hero_level_10m: durationMs >= 600_000 ? levelAt(600_000) : null,
+    hero_level3_ms: firstReaching(3),
+    hero_level5_ms: firstReaching(5),
+    hero_xp_4m: xpBy(240_000),
+    hero_xp_6m: xpBy(360_000),
+    hero_xp_8m: xpBy(480_000),
+    hero_xp_10m: xpBy(600_000),
+    hero_xp_total: total,
+    hero_xp_per_min: durationMs > 0 ? total / (durationMs / 60_000) : null,
+    hero_xp_share: null, // needs both players: filled in by buildRecord
+  };
 }
 
 export function computeMetrics(raw: RawReplay, playerId: number): Metrics {
@@ -229,6 +263,7 @@ export function computeMetrics(raw: RawReplay, playerId: number): Metrics {
     upgrades_ordered: p.upgrades!.order.length,
     items_bought: p.items!.order.length,
     first_item_ms: p.items!.order[0]?.ms ?? null,
+    ...heroMetrics(p.heroes ?? [], durationMs),
     hall_idle_6m_s: rd && durationMs >= 360_000 ? Math.round(hallIdleMs(race as RaceCode, [...units, ...buildings], 360_000) / 1000) : null,
     hall_idle_10m_s: rd && durationMs >= 600_000 ? Math.round(hallIdleMs(race as RaceCode, [...units, ...buildings], 600_000) / 1000) : null,
     tp_bought: p.items!.order.filter((i) => i.id === TOWN_PORTAL).length,
