@@ -138,3 +138,6 @@ code { font-size: 12px; background: var(--surface-2); padding: 1px 5px; border-r
 tr.tier-row-pro td:first-child { box-shadow: inset 3px 0 0 var(--good); }
 tr.tier-row-above td:first-child { box-shadow: inset 3px 0 0 var(--warning); }
 tr.tier-row-below td:first-child { box-shadow: inset 3px 0 0 var(--critical); }
+.section-row td { padding-top: 18px; border-bottom: 1px solid var(--axis); }
+.more-metrics { margin-top: 16px; }
+.more-metrics summary { padding: 8px 0; color: var(--ink-2); }

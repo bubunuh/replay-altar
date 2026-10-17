@@ -5,6 +5,7 @@ import { per10Minutes } from "@w3stats/core/metrics";
 import { base, Chart, esc, winrateBars, type Tokens } from "../Chart.tsx";
 import { assess, describeRef, pickProfile } from "../compare.ts";
 import { ProMedian, Standing } from "../Standing.tsx";
+import { groupDetails, SECTION_INFO, splitMetrics } from "../sections.ts";
 import type { RefGroupInfo } from "../api.ts";
 import { dateTime, GROUP_LABEL, mean, metricValue, mmss, pct, RACE, shortName, SOURCE } from "../format.ts";
 
@@ -121,7 +122,7 @@ export function Performance({ games: all, metrics, pros, onOpen }: { games: Perf
   const [period, setPeriod] = useState("all");
   const [source, setSource] = useState("all");
   const [oppRace, setOppRace] = useState("all");
-  const [trendMetric, setTrendMetric] = useState("apm");
+  const [trendMetric, setTrendMetric] = useState("hero_xp_10m");
 
   const games = useMemo(() => {
     const since = period === "all" ? 0 : Date.now() - Number(period) * 86_400_000;
@@ -187,7 +188,6 @@ export function Performance({ games: all, metrics, pros, onOpen }: { games: Perf
   }, [games]);
 
   if (all.length === 0) return <div className="page"><div className="empty">No analyzed games yet.</div></div>;
-  const groups = [...new Set(metrics.map((m) => m.group))];
 
   return (
     <div className="page">
@@ -261,7 +261,11 @@ export function Performance({ games: all, metrics, pros, onOpen }: { games: Perf
         <div className="card">
           <h2>
             <select value={trendMetric} onChange={(e) => setTrendMetric(e.target.value)} aria-label="Metric to plot">
-              {metrics.map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}
+              {(["core", "mechanics", "details"] as const).map((sec) => (
+                <optgroup key={sec} label={SECTION_INFO[sec].title}>
+                  {splitMetrics(metrics)[sec].map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}
+                </optgroup>
+              ))}
             </select>{" "}
             over time
           </h2>
@@ -279,53 +283,81 @@ export function Performance({ games: all, metrics, pros, onOpen }: { games: Perf
         <p className="sub">
           Averages over the filtered games; (3/6) means only 3 of 6 games had that event. The opponents column is everyone you faced.
           {ref
-            ? ` Pros: ${pros!.group.label}, ${describeRef(ref)}. Green: pro level (at or above the pro median). Yellow: not yet, but at least as good as your opponents. Red: below both. Whole-game totals are compared per 10 minutes.`
+            ? ` Pros: ${pros!.group.label}, ${describeRef(ref)}. Core metrics get a verdict: green = pro level (at or above the pro median), yellow = not yet but at least as good as your opponents, red = below both. Whole-game totals are compared per 10 minutes.`
             : " Pro comparison appears once reference games are downloaded (w3stats ref refresh)."}
           {" "}Hover a metric for its definition.
         </p>
-        <table>
-          <thead>
-            <tr>
-              <th>Metric</th>
-              <th className="num">In your wins ({wins.length})</th>
-              <th className="num">In your losses ({losses.length})</th>
-              <th className="num">All your games</th>
-              <th className="num">Your opponents</th>
-              {ref && <th className="num">Pros (median)</th>}
-              {ref && <th>Where you stand</th>}
+        {(() => {
+          const cols = ref ? 7 : 5;
+          const row = (m: MetricDef, verdict: boolean) => {
+            const a = assess(
+              m,
+              ref?.mp ?? null,
+              {
+                value: mean(games.map((g) => g.me[m.key])),
+                // Normalize each game before averaging: your games and the pros' differ in length.
+                per10: mean(games.map((g) => (typeof g.me[m.key] === "number" ? per10Minutes(g.me[m.key]!, g.duration_ms) : null))),
+              },
+              mean(games.map((g) => g.opp[m.key])),
+            );
+            const shown = verdict ? a : { ...a, tier: null };
+            return (
+              <tr key={m.key} title={m.description} className={ref && shown.tier ? `tier-row-${shown.tier}` : undefined}>
+                <td>{m.label}</td>
+                <td className="num"><Avg def={m} values={wins.map((g) => g.me[m.key])} /></td>
+                <td className="num"><Avg def={m} values={losses.map((g) => g.me[m.key])} /></td>
+                <td className="num"><Avg def={m} values={games.map((g) => g.me[m.key])} /></td>
+                <td className="num muted"><Avg def={m} values={games.map((g) => g.opp[m.key])} /></td>
+                {ref && <td className="num muted"><ProMedian def={m} a={a} /></td>}
+                {ref && <td><Standing a={shown} /></td>}
+              </tr>
+            );
+          };
+          const head = (
+            <thead>
+              <tr>
+                <th>Metric</th>
+                <th className="num">In your wins ({wins.length})</th>
+                <th className="num">In your losses ({losses.length})</th>
+                <th className="num">All your games</th>
+                <th className="num">Your opponents</th>
+                {ref && <th className="num">Pros (median)</th>}
+                {ref && <th>Where you stand</th>}
+              </tr>
+            </thead>
+          );
+          const sectionRow = (id: keyof typeof SECTION_INFO) => (
+            <tr key={`s-${id}`} className="section-row">
+              <td colSpan={cols}><b>{SECTION_INFO[id].title}</b> <span className="muted small">{SECTION_INFO[id].note}</span></td>
             </tr>
-          </thead>
-          <tbody>
-            {groups.flatMap((grp) => [
-              <tr key={grp}><td colSpan={ref ? 7 : 5} className="muted small" style={{ paddingTop: 14 }}>{GROUP_LABEL[grp]}</td></tr>,
-              ...metrics
-                .filter((m) => m.group === grp)
-                .map((m) => {
-                  const a = assess(
-                    m,
-                    ref?.mp ?? null,
-                    {
-                      value: mean(games.map((g) => g.me[m.key])),
-                      // Normalize each game before averaging: your games and the pros' differ in length.
-                      per10: mean(games.map((g) => (typeof g.me[m.key] === "number" ? per10Minutes(g.me[m.key]!, g.duration_ms) : null))),
-                    },
-                    mean(games.map((g) => g.opp[m.key])),
-                  );
-                  return (
-                    <tr key={m.key} title={m.description} className={ref && a.tier ? `tier-row-${a.tier}` : undefined}>
-                      <td>{m.label}</td>
-                      <td className="num"><Avg def={m} values={wins.map((g) => g.me[m.key])} /></td>
-                      <td className="num"><Avg def={m} values={losses.map((g) => g.me[m.key])} /></td>
-                      <td className="num"><Avg def={m} values={games.map((g) => g.me[m.key])} /></td>
-                      <td className="num muted"><Avg def={m} values={games.map((g) => g.opp[m.key])} /></td>
-                      {ref && <td className="num muted"><ProMedian def={m} a={a} /></td>}
-                      {ref && <td><Standing a={a} /></td>}
-                    </tr>
-                  );
-                }),
-            ])}
-          </tbody>
-        </table>
+          );
+          const { core, mechanics, details } = splitMetrics(metrics);
+          return (
+            <>
+              <table>
+                {head}
+                <tbody>
+                  {sectionRow("core")}
+                  {core.map((m) => row(m, true))}
+                  {sectionRow("mechanics")}
+                  {mechanics.map((m) => row(m, false))}
+                </tbody>
+              </table>
+              <details className="more-metrics">
+                <summary>{SECTION_INFO.details.title}: {details.length} more metrics. {SECTION_INFO.details.note}</summary>
+                <table>
+                  {head}
+                  <tbody>
+                    {groupDetails(details).flatMap(([grp, list]) => [
+                      <tr key={grp}><td colSpan={cols} className="muted small" style={{ paddingTop: 14 }}>{GROUP_LABEL[grp]}</td></tr>,
+                      ...list.map((m) => row(m, false)),
+                    ])}
+                  </tbody>
+                </table>
+              </details>
+            </>
+          );
+        })()}
       </div>
 
       <div className="grid-2">

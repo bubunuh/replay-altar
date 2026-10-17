@@ -24,10 +24,16 @@ export type MetricDef = {
   better: "higher" | "lower" | null;
   /** A whole-game total that grows with game length; compared with other games per 10 minutes. */
   scalesWithLength: boolean;
+  /**
+   * core: separates winners from losers (tested on pro and own games); gets good/bad labels.
+   * mechanics: skill-level indicators (APM, hotkeys): compared with pros, no per-game verdict.
+   * details: everything else.
+   */
+  section: "core" | "mechanics" | "details";
   description: string;
 };
 
-type MetricSpec = Omit<MetricDef, "better" | "scalesWithLength">;
+type MetricSpec = Omit<MetricDef, "better" | "scalesWithLength" | "section">;
 
 // Filled in by packages/sim once a game has been simulated; null until then.
 const SIM_SPECS: MetricSpec[] = [
@@ -94,7 +100,25 @@ const SCALES_WITH_LENGTH = new Set([
   "supply_blocked_s", "upkeep_low_s", "upkeep_high_s",
 ]);
 
-const withBetter = (m: MetricSpec): MetricDef => ({ ...m, better: BETTER[m.key] ?? null, scalesWithLength: SCALES_WITH_LENGTH.has(m.key) });
+/**
+ * Core metrics, in display order. Chosen from a winner-vs-loser test on 28 pro games and 10 of the
+ * user's (2026-10-17): each was better for the winner in roughly 70% or more of games, or is a
+ * direct measure of a resource the game counts (hero XP, units killed, gold collected).
+ */
+export const CORE_METRICS = [
+  "workers_by_6m", "workers_alive_6m", "workers_alive_10m",
+  "hero_xp_6m", "hero_xp_10m", "hero_xp_share", "hero_level3_ms", "creep_camps_6m",
+  "resources_spent_total", "trade_efficiency",
+  "unused_supply_avg", "fights_defending", "hero_deaths", "expansions",
+];
+export const MECHANICS_METRICS = ["apm", "eapm", "useful_action_share", "hotkey_select_share", "control_groups_used", "control_group_recalls_per_min"];
+
+const withBetter = (m: MetricSpec): MetricDef => ({
+  ...m,
+  better: BETTER[m.key] ?? null,
+  scalesWithLength: SCALES_WITH_LENGTH.has(m.key),
+  section: CORE_METRICS.includes(m.key) ? "core" : MECHANICS_METRICS.includes(m.key) ? "mechanics" : "details",
+});
 
 /** Value per 10 minutes of game time, for comparing whole-game totals across games of any length. */
 export const per10Minutes = (value: number, durationMs: number) => (durationMs > 0 ? value / (durationMs / 600_000) : value);

@@ -6,6 +6,7 @@ import { api, type RefGroupInfo } from "../api.ts";
 import { Chart, timeLines, type Band, type Tokens } from "../Chart.tsx";
 import { assess, describeRef, pickProfile } from "../compare.ts";
 import { ProMedian, Standing } from "../Standing.tsx";
+import { groupDetails, SECTION_INFO, splitMetrics } from "../sections.ts";
 import type { CurvePoint, MatchupProfile } from "@w3stats/reference/types";
 import { dateTime, GROUP_LABEL, metricValue, mmss, RACE, shortName, SOURCE } from "../format.ts";
 
@@ -197,7 +198,6 @@ export function Match({ gameKey, metrics, pros, onBack }: { gameKey: string; met
   if (detail === null || !r) return <div className="page"><div className="empty">Game not found.</div></div>;
   const { row } = detail;
   const overridden = row.result !== row.result_detected;
-  const groups = [...new Set(metrics.map((m) => m.group))];
 
   return (
     <div className="page">
@@ -245,41 +245,69 @@ export function Match({ gameKey, metrics, pros, onBack }: { gameKey: string; met
         <p className="sub">
           Order times are when the order was issued (cancels included). Economy and supply rows come from the simulation; ≈ marks estimates.
           {ref
-            ? ` Pros: ${pros!.group.label}, ${describeRef(ref)}. Pro level = at or above the pro median; whole-game totals are compared per 10 minutes.`
+            ? ` Pros: ${pros!.group.label}, ${describeRef(ref)}. Core metrics get a verdict: green = pro level (at or above the pro median), yellow = at least as good as your opponent, red = below both. Whole-game totals are compared per 10 minutes.`
             : ""}{" "}
           Hover a metric for its definition.
         </p>
-        <table>
-          <thead>
-            <tr>
-              <th>Metric</th>
-              <th className="num"><span className="key me" />{shortName(me?.name ?? "You")}</th>
-              <th className="num"><span className="key opp" />{shortName(opp?.name ?? "Opponent")}</th>
-              {ref && <th className="num">Pros (median)</th>}
-              {ref && <th>This game vs pros</th>}
+        {(() => {
+          const cols = ref ? 5 : 3;
+          const row = (m: MetricDef, verdict: boolean) => {
+            const mine = me?.metrics[m.key];
+            const a = assess(m, ref?.mp ?? null, { value: mine, per10: typeof mine === "number" ? per10Minutes(mine, r.game.durationMs) : null }, opp?.metrics[m.key]);
+            const shown = verdict ? a : { ...a, tier: null };
+            return (
+              <tr key={m.key} title={m.description} className={ref && shown.tier ? `tier-row-${shown.tier}` : undefined}>
+                <td>{m.label}</td>
+                <td className="num">{metricValue(m, mine)}</td>
+                <td className="num">{metricValue(m, opp?.metrics[m.key])}</td>
+                {ref && <td className="num muted"><ProMedian def={m} a={a} /></td>}
+                {ref && <td><Standing a={shown} /></td>}
+              </tr>
+            );
+          };
+          const head = (
+            <thead>
+              <tr>
+                <th>Metric</th>
+                <th className="num"><span className="key me" />{shortName(me?.name ?? "You")}</th>
+                <th className="num"><span className="key opp" />{shortName(opp?.name ?? "Opponent")}</th>
+                {ref && <th className="num">Pros (median)</th>}
+                {ref && <th>This game vs pros</th>}
+              </tr>
+            </thead>
+          );
+          const sectionRow = (id: keyof typeof SECTION_INFO) => (
+            <tr key={`s-${id}`} className="section-row">
+              <td colSpan={cols}><b>{SECTION_INFO[id].title}</b> <span className="muted small">{SECTION_INFO[id].note}</span></td>
             </tr>
-          </thead>
-          <tbody>
-            {groups.flatMap((g) => [
-              <tr key={g}><td colSpan={ref ? 5 : 3} className="muted small" style={{ paddingTop: 14 }}>{GROUP_LABEL[g]}</td></tr>,
-              ...metrics
-                .filter((m) => m.group === g)
-                .map((m) => {
-                  const mine = me?.metrics[m.key];
-                  const a = assess(m, ref?.mp ?? null, { value: mine, per10: typeof mine === "number" ? per10Minutes(mine, r.game.durationMs) : null }, opp?.metrics[m.key]);
-                  return (
-                    <tr key={m.key} title={m.description} className={ref && a.tier ? `tier-row-${a.tier}` : undefined}>
-                      <td>{m.label}</td>
-                      <td className="num">{metricValue(m, mine)}</td>
-                      <td className="num">{metricValue(m, opp?.metrics[m.key])}</td>
-                      {ref && <td className="num muted"><ProMedian def={m} a={a} /></td>}
-                      {ref && <td><Standing a={a} /></td>}
-                    </tr>
-                  );
-                }),
-            ])}
-          </tbody>
-        </table>
+          );
+          const { core, mechanics, details } = splitMetrics(metrics);
+          return (
+            <>
+              <table>
+                {head}
+                <tbody>
+                  {sectionRow("core")}
+                  {core.map((m) => row(m, true))}
+                  {sectionRow("mechanics")}
+                  {mechanics.map((m) => row(m, false))}
+                </tbody>
+              </table>
+              <details className="more-metrics">
+                <summary>{SECTION_INFO.details.title}: {details.length} more metrics. {SECTION_INFO.details.note}</summary>
+                <table>
+                  {head}
+                  <tbody>
+                    {groupDetails(details).flatMap(([grp, list]) => [
+                      <tr key={grp}><td colSpan={cols} className="muted small" style={{ paddingTop: 14 }}>{GROUP_LABEL[grp]}</td></tr>,
+                      ...list.map((m) => row(m, false)),
+                    ])}
+                  </tbody>
+                </table>
+              </details>
+            </>
+          );
+        })()}
       </div>
 
       <div className="card">
