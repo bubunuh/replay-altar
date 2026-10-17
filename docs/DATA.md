@@ -107,3 +107,14 @@ Each metric's `source` says how much to trust it:
 
 - `w3stats export --jsonl`: one compact digest per analyzed game, containing metrics, heroes, the first 40 build orders, caveats and provenance.
 - `w3stats export --md <game>`: one game as Markdown, with a metric definition next to each value.
+
+## Reference groups (`reference/<group>/`)
+
+- **Layout:** the same files as your data (`archive/`, `games/`, `raw/`, `sim/out/`), plus `reference.sqlite`. Records are "observed", so both players have metrics.
+- **Tables:**
+  - `ref_matches`: W3Champions match id, the subject player (the Human compared with you) with MMR, opponent and race, replay build.
+  - `ref_skipped`: matches not kept, with the reason.
+  - `ref_metric_stats`: per matchup (`HvO`…, `all`), each metric's n and p10/p25/p50/p75/p90.
+- **`profile.json`:** the same statistics, plus the sorted values used for percentiles and per-minute curves (p25/p50/p75; at least 5 games per minute) for APM, workers, spending, food and army food.
+- **"Where you stand":** the mid-rank percentile of your value among the pro games, worded by the metric's `better` direction.
+- **Not a metric:** WC3V's dominance score (`sim_series.dominance`). It only counts units someone selected, so the player who clicks more looks ahead.

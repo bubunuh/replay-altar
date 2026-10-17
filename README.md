@@ -18,6 +18,7 @@ Local Warcraft III replay archive and stats. A background service saves every re
 | `w3stats export --jsonl` / `--md latest` | Data for an LLM or script |
 | `w3stats setup-sim` | One-time setup for the economy simulation (WC3V engine, its packages, unit costs from your WC3 install) |
 | `w3stats sim` | Simulation status; `--backfill`, `--retry-failed`, `--rerun`, `--resummarize` |
+| `w3stats ref` | Pro reference games: status. `ref refresh [--target N]` downloads more now, `ref profile` rebuilds the statistics |
 
 To remove everything, run `w3stats uninstall --purge` (this also deletes the `localhost/w3stats-casc` podman image), then delete `~/Projects/w3stats`.
 
@@ -34,6 +35,7 @@ To remove everything, run `w3stats uninstall --purge` (this also deletes the `lo
 | Simulation output per game | `~/.local/share/w3stats/sim/out/` |
 | Unit/item costs from your install (per game version) | `~/.local/share/w3stats/sim/gamedata/<version>/` |
 | Simulation engine and its map data | `~/Projects/w3stats/vendor/wc3v` (`mapdata/`, `client/maps/`, `helpers/UnitBalance.json` are generated there) |
+| Pro reference games (W3Champions downloads, own database, `profile.json`) | `~/.local/share/w3stats/reference/pros/` |
 | Game-data extractor | podman image `localhost/w3stats-casc` (reads your install through a throwaway overlay; never writes to it) |
 | Settings | `~/.config/w3stats/config.json` |
 | Background service | `~/.config/systemd/user/w3stats-collector.service` (logs: `journalctl --user -u w3stats-collector`) |
@@ -48,6 +50,17 @@ To remove everything, run `w3stats uninstall --purge` (this also deletes the `lo
 - **Turning both off:** Settings in the app (this restarts the collector).
 - **Kept but not counted:** custom maps, games against AI, team games and games you only observed are archived and listed under **Skipped**.
 - **A known game saved again:** saving a replay under a name ("Macro_loss") links it to the game that is already archived. The name becomes that game's label.
+
+## Pro comparison
+
+The collector downloads public replays of Human players rated 2400+ MMR from W3Champions and analyzes them locally with the same pipeline.
+
+- **Download pace:** one replay every 10 s, at most 15 per run, and it stops at the first "slow down" answer.
+- **Schedule:** it tops up every 6 hours until it has 50 games, then refreshes weekly. It never downloads while Warcraft III is running.
+- **Patch:** only games from your current patch (replay build) are kept.
+- **In the app:** charts show the pros' median and middle 50% in grey, and tables show where you stand.
+
+Matchup-specific numbers are used when the pros have 10 or more games of that matchup; otherwise all matchups are combined.
 
 ## Limits
 
