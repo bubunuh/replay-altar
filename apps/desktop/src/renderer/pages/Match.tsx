@@ -3,8 +3,10 @@ import type { BuildEvent, GameDetail, GameRecord, MetricDef, PlayerRecord, SimSa
 import { per10Minutes } from "@w3stats/core/metrics";
 import { heroesXpAt } from "@w3stats/core/heroxp";
 import { api, type RefGroupInfo } from "../api.ts";
+import { MIN_GAME_MS } from "@w3stats/ai/findings";
+import { AiCard } from "../AiCard.tsx";
 import { Chart, heroLevelsChart, timeLines, type Band, type HeroLine, type Tokens } from "../Chart.tsx";
-import { assess, describeRef, groupForRace, pickProfile } from "../compare.ts";
+import { assess, describeRef, groupForRace, pickProfile } from "@w3stats/reference/compare";
 import { ProMedian, Standing } from "../Standing.tsx";
 import { groupDetails, SECTION_INFO, splitMetrics } from "../sections.ts";
 import { proText, researchTimes, upgradeRows, upgradeStanding } from "../upgrades.ts";
@@ -236,6 +238,8 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
           <button className="btn" onClick={() => api.showFile(r.provenance.archivePath)}>Show replay file</button>
         </div>
       </div>
+
+      {row.analyzed === 1 && me && opp && r.game.durationMs >= MIN_GAME_MS && <AiCard key={r.gameKey} gameKey={r.gameKey} />}
 
       <GameCharts record={r} refMp={ref?.mp ?? null} refLabel="Pros" />
 

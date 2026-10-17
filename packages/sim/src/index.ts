@@ -2,7 +2,7 @@
 import { execFile } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
-import type { GameRecord, SimSummary } from "@w3stats/core";
+import type { GameRecord, SimFight, SimSummary } from "@w3stats/core";
 import { loadCosts, type CostTables } from "./costs.ts";
 import { buildTimelines, economyMetrics, ESTIMATE_HORIZON_MS, runIncome, type EconomyConstants, type WOutput } from "./economy.ts";
 import constantsJson from "./economy-constants.json" with { type: "json" };
@@ -68,8 +68,31 @@ export function summarize(record: GameRecord, o: WOutput, costs: CostTables, k: 
     model: { version: k.version, constants: k as unknown as Record<string, unknown> },
     ...meta,
     players,
+    fights: fightsOf(o),
     warnings,
   };
+}
+
+type WBattle = {
+  startTime: number;
+  endTime: number;
+  category: string;
+  startingPlayerId?: number | null;
+  participants?: { playerId: number }[];
+  flags?: { involvesHero?: boolean; involvesAir?: boolean };
+};
+
+function fightsOf(o: WOutput): SimFight[] {
+  const battles = ((o as unknown as { battles?: WBattle[] }).battles ?? []).filter((b) => Number.isFinite(b.startTime));
+  return battles.map((b) => ({
+    start: b.startTime,
+    end: b.endTime,
+    category: b.category,
+    initiatorId: b.startingPlayerId ?? null,
+    playerIds: [...new Set((b.participants ?? []).map((p) => p.playerId))],
+    involvesHero: !!b.flags?.involvesHero,
+    involvesAir: !!b.flags?.involvesAir,
+  }));
 }
 
 /**

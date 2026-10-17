@@ -6,7 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./quantiles": "./src/quantiles.ts",
-    "./types": "./src/types.ts"
+    "./types": "./src/types.ts",
+    "./compare": "./src/compare.ts"
   },
   "dependencies": {
     "@w3stats/core": "*",

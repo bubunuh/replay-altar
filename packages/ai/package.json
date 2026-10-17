@@ -1,0 +1,15 @@
+{
+  "name": "@w3stats/ai",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types.ts",
+    "./findings": "./src/findings.ts"
+  },
+  "dependencies": {
+    "@w3stats/core": "*",
+    "@w3stats/reference": "*"
+  }
+}

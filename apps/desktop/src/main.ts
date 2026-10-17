@@ -4,10 +4,12 @@ import { existsSync, mkdtempSync, readFileSync, watch, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { app, BrowserWindow, ipcMain, nativeTheme, shell } from "electron";
+import { aiNotReady, analyzeGame, ModelServer, readAnalysis } from "@w3stats/ai";
 import {
   addAnnotation,
   configPath,
   getGame,
+  isWarcraftRunning,
   listGames,
   loadConfig,
   openDb,
@@ -111,6 +113,39 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   app.on("window-all-closed", () => app.quit());
+
+  // AI analysis: one game at a time; the model server is started on demand and stopped when idle
+  // or when the app quits.
+  let model: { key: string; server: ModelServer } | null = null;
+  let queue: Promise<unknown> = Promise.resolve();
+  const runningAi = new Set<string>();
+  app.on("will-quit", () => model?.server.stop());
+  ipcMain.handle("ai:get", (_e, key: string) => readAnalysis(p, key));
+  ipcMain.handle("ai:status", () => ({ problem: aiNotReady(loadConfig().ai), warcraftRunning: isWarcraftRunning(), running: [...runningAi] }));
+  ipcMain.handle("ai:run", (e, key: string) => {
+    if (runningAi.has(key)) return null;
+    runningAi.add(key);
+    const send = (channel: string, ...args: unknown[]) => {
+      if (!e.sender.isDestroyed()) e.sender.send(channel, ...args);
+    };
+    send("ai:progress", key, "Waiting for another analysis to finish");
+    const job = queue.then(async () => {
+      const cfg = loadConfig().ai;
+      // A settings change gets a fresh server; the old one stops.
+      if (!model || model.key !== JSON.stringify(cfg)) {
+        model?.server.stop();
+        model = { key: JSON.stringify(cfg), server: new ModelServer(cfg, p.ai) };
+      }
+      try {
+        return await analyzeGame(db, p, cfg, model.server, key, (stage) => send("ai:progress", key, stage));
+      } finally {
+        runningAi.delete(key);
+        send("ai:done", key);
+      }
+    });
+    queue = job.catch(() => {});
+    return job;
+  });
 
   ipcMain.handle("games:list", () => listGames(db));
   ipcMain.handle("games:get", (_e, key: string) => getGame(db, p, key));

@@ -1,5 +1,8 @@
 import type { Config, GameDetail, GameRow, MetricDef, Paths, PerfGame, ReferenceGroup } from "@w3stats/core/ui";
 import type { RefProfile } from "@w3stats/reference/types";
+import type { AiAnalysis } from "@w3stats/ai/types";
+
+export type AiStatus = { problem: string | null; warcraftRunning: boolean; running: string[] };
 
 export type RefGroupInfo = {
   group: ReferenceGroup;
@@ -19,6 +22,10 @@ type W3Api = {
   referenceProfiles(): Promise<RefGroupInfo[]>;
   showFile(file: string): Promise<void>;
   openPath(dir: string): Promise<void>;
+  aiGet(key: string): Promise<AiAnalysis | null>;
+  aiStatus(): Promise<AiStatus>;
+  aiRun(key: string): Promise<AiAnalysis | null>;
+  onAi(fn: (event: "progress" | "done", key: string, stage?: string) => void): () => void;
   onDataChanged(fn: () => void): void;
   onNavGame(fn: (key: string) => void): void;
   onNavPage(fn: (page: string) => void): void;

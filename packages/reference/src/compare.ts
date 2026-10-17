@@ -1,7 +1,8 @@
-// Comparing your numbers with a reference group (pros) from profile.json.
+// Comparing your numbers with a reference group (pros) from profile.json. Browser-safe: the
+// window and the AI fact sheet (packages/ai) use the same verdicts.
 import type { MetricDef } from "@w3stats/core/ui";
-import { percentileOf } from "@w3stats/reference/quantiles";
-import type { MatchupProfile, RefProfile } from "@w3stats/reference/types";
+import { percentileOf } from "./quantiles.ts";
+import type { MatchupProfile, RefProfile } from "./types.ts";
 
 const MIN_MATCHUP_GAMES = 10;
 const MIN_REFERENCE_VALUES = 5;

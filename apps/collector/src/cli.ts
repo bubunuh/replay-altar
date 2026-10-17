@@ -19,6 +19,7 @@ import { join } from "node:path";
 import { activeReferenceGroups, applyOfficial, applySim, readRecord, referencePaths, type RefLookup } from "@w3stats/core";
 import { CONSTANTS, gamedataDir, loadCosts, readSimOutput, simNotReady, simulateGame, summarize } from "@w3stats/sim";
 import { buildProfile, officialForMatch, officialForOwnGame, openReference, readState, refreshGroup, w3cClient } from "@w3stats/reference";
+import { analyzeGame, buildPrompt, ModelServer } from "@w3stats/ai";
 import { currentReplayBuild, racesPlayed } from "./reference.ts";
 import { runCollector } from "./collector.ts";
 import { isReplayFile } from "./watcher.ts";
@@ -49,6 +50,8 @@ const HELP = `w3stats — Warcraft III replay archive & stats
   w3stats ref profile         rebuild the reference statistics from stored games
   w3stats official            fetch the game's own end-of-game stats from W3Champions for W3C games
                               (yours and reference games) that don't have them yet
+  w3stats ai <game|latest>    AI analysis of one game with the local model (also: button in the window)
+  w3stats ai <game> --facts   print what the model would be given, without running it
   w3stats collector           run the collector in the foreground (what the service runs)
 `;
 
@@ -301,6 +304,35 @@ switch (cmd) {
       console.log(
         `${new Date(String(g.played_at)).toLocaleString("sv-SE").slice(0, 16)}  ${g.analyzed ? String(g.result).padEnd(7) : `skip:${g.skip_reason}`.padEnd(7)} ${String(g.matchup ?? "").padEnd(4)} ${String(g.map_name).padEnd(16)} ${String(g.opp_name ?? "").padEnd(20)} ${mmss(Number(g.duration_ms))}  ${g.source}`,
       );
+    }
+    break;
+  }
+  case "ai": {
+    const c = ctx();
+    const target = args.find((a) => !a.startsWith("--")) ?? "latest";
+    const key =
+      target === "latest"
+        ? (c.db.prepare("SELECT game_key FROM games WHERE analyzed = 1 ORDER BY played_at DESC LIMIT 1").get() as { game_key: string }).game_key
+        : resolveKey(c.db, target);
+    if (args.includes("--facts")) {
+      console.log(buildPrompt(c.db, c.paths, key).prompt);
+      break;
+    }
+    const server = new ModelServer(c.config.ai, c.paths.ai);
+    try {
+      const a = await analyzeGame(c.db, c.paths, c.config.ai, server, key, (stage) => console.error(`${stage}…`));
+      if (a.error || !a.review) throw new Error(a.error ?? "no review");
+      const r = a.review;
+      console.log(`${r.recap}\n\nOpponent: ${r.opponent_strategy}\n`);
+      for (const f of a.findings) {
+        const w = r.findings[f.id];
+        console.log(`## ${w?.title ?? f.headline}\n${w?.explanation ?? ""}\nNext time: ${w?.next_time ?? ""}\n  evidence: ${f.evidence.join("\n            ")}\n`);
+      }
+      if (r.strengths) console.log(`Went well: ${r.strengths}`);
+      console.log(`One thing: ${r.one_thing}\n`);
+      console.log(`${(a.timings.totalMs / 1000).toFixed(0)} s, ${a.model.file}; numbers not found in the facts: ${a.unverified.length ? a.unverified.join(", ") : "none"}`);
+    } finally {
+      server.stop();
     }
     break;
   }

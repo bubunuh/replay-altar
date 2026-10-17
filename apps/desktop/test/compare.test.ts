@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { METRICS } from "@w3stats/core/metrics";
 import type { MatchupProfile } from "@w3stats/reference/types";
-import { assess } from "../src/renderer/compare.ts";
+import { assess } from "@w3stats/reference/compare";
 
 const def = (key: string) => METRICS.find((m) => m.key === key)!;
 const stat = (values: number[]) => {

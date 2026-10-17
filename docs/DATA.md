@@ -151,6 +151,17 @@ Each metric has a `section`:
 - **Identifying an LLM run:** an LLM writes `model` and `prompt_hash`, so every generated claim can be traced back to the model and prompt that produced it.
 - **`game_key`:** `NULL` means the annotation is about your whole history.
 
+## AI analyses (`ai/<gameKey>.json`)
+
+One file per analyzed game, written by `w3stats ai` or the button. `reingest` never touches these files.
+
+- **`findings`:** what mattered, decided by rules in `packages/ai/src/findings.ts`. Each has an `id` (`window`, `exposed`, `economy`, `heroes`, `fights`, `supply` or `mechanics`), a `severity` (0–1) and `evidence` lines.
+- **`strengths`:** core metrics at pro level.
+- **`facts`:** exactly what the model was given: the findings, strengths and opponent's plan, then the fact sheet (heroes, builds, trends, a table every 2 minutes, fights, key numbers with the app's verdicts).
+- **`review`:** the model's JSON. Its shape is enforced while it is generated: `recap`, `opponent_strategy`, one `{title, explanation, next_time}` per finding id, `strengths` and `one_thing`.
+- **`unverified`:** numbers and times in the review that appear nowhere in `facts`.
+- **Provenance:** `model` (file, drafter, chat template), `promptVersion` and `timings`.
+
 ## Exports
 
 - `w3stats export --jsonl`: one compact digest per analyzed game, containing metrics, heroes, the first 40 build orders, caveats and provenance.

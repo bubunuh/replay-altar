@@ -1,24 +1,12 @@
 // The desktop side: is Warcraft III running, notifications, opening the window.
 import { spawn } from "node:child_process";
-import { readdirSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { isWarcraftRunning } from "@w3stats/core";
+
+export { isWarcraftRunning };
 
 const POLL_MS = 5000;
-
-/** Under Wine/Proton the game's argv[0] is its Windows path: C:\…\_retail_\x86_64\Warcraft III.exe */
-export function isWarcraftRunning(): boolean {
-  for (const pid of readdirSync("/proc")) {
-    if (!/^\d+$/.test(pid)) continue;
-    try {
-      const argv0 = readFileSync(`/proc/${pid}/cmdline`, "latin1").split("\0")[0];
-      if (/[\\/]Warcraft III\.exe$/i.test(argv0)) return true;
-    } catch {
-      // process exited while we looked
-    }
-  }
-  return false;
-}
 
 export function watchWarcraft(onStart: () => void, onStop: () => void) {
   let running = isWarcraftRunning();

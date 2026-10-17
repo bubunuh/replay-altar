@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { appendFileSync, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { gzipSync } from "node:zlib";
 import type { Config } from "./config.ts";
@@ -9,7 +9,7 @@ import { parseReplay, type RawReplay } from "./parse.ts";
 import { mergeOfficial, type OfficialStats } from "./official.ts";
 import { buildRecord, endTimeOf, mergeSim, type GameRecord, type SourceFile } from "./record.ts";
 import type { SimSummary } from "./sim.ts";
-import { rawPath, readRaw, readRecord, recordPath, type Paths } from "./store.ts";
+import { type Paths, logEvent, rawPath, readRaw, readRecord, recordPath } from "./store.ts";
 
 export type IngestContext = { db: DB; config: Config; paths: Paths };
 
@@ -47,10 +47,6 @@ function save(ctx: IngestContext, record: GameRecord, raw: RawReplay, archiveSha
   writeGame(ctx.db, record, archiveSha);
 }
 
-export function logEvent(paths: Paths, event: Record<string, unknown>) {
-  mkdirSync(paths.root, { recursive: true });
-  appendFileSync(paths.events, JSON.stringify({ at: new Date().toISOString(), ...event }) + "\n");
-}
 
 /**
  * Archive and analyze one replay file. Safe to call repeatedly on the same file:

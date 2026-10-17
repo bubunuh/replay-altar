@@ -17,6 +17,22 @@ export type ReferenceGroup = {
   onlyIfPlayed?: boolean;
 };
 
+/** The local language model behind "AI analysis" (llama.cpp's llama-server, started on demand). */
+export type AiConfig = {
+  serverPath: string;
+  model: string;
+  /** Multi-token-prediction drafter for faster generation (optional). */
+  draftModel: string | null;
+  /** Chat template file overriding the one inside the model file (optional). */
+  chatTemplate: string | null;
+  port: number;
+  contextSize: number;
+  /** Stop the server after this many idle minutes, to give the GPU memory back. */
+  idleMinutes: number;
+  /** Extra llama-server arguments (device, offloading). */
+  extraArgs: string[];
+};
+
 export type Config = {
   /** Battletags that are you. Games where none of them played are archived as "observed". */
   accounts: string[];
@@ -28,9 +44,11 @@ export type Config = {
   notifyAfterGame: boolean;
   /** Reference games downloaded from W3Champions to compare against. */
   reference: { refreshDays: number; groups: ReferenceGroup[] };
+  ai: AiConfig;
 };
 
 const home = homedir();
+const gemma = join(home, "models/unsloth/gemma-4-26B-A4B-it-GGUF");
 
 export const DEFAULT_CONFIG: Config = {
   accounts: ["Pedrovisk#1486"],
@@ -45,6 +63,16 @@ export const DEFAULT_CONFIG: Config = {
       { id: "pros-undead", label: "Undead pros (2400+ MMR)", minMmr: 2400, race: "U", target: 50, gateways: [20, 10], onlyIfPlayed: true },
       { id: "pros-nightelf", label: "Night Elf pros (2400+ MMR)", minMmr: 2400, race: "N", target: 50, gateways: [20, 10], onlyIfPlayed: true },
     ],
+  },
+  ai: {
+    serverPath: join(home, ".local/bin/llama-server"),
+    model: join(gemma, "gemma-4-26B-A4B-it-UD-Q5_K_XL.gguf"),
+    draftModel: join(gemma, "mtp-gemma-4-26B-A4B-it-Q8_0.gguf"),
+    chatTemplate: join(gemma, "chat_template-2026-07-17.jinja"),
+    port: 8089,
+    contextSize: 16384,
+    idleMinutes: 10,
+    extraArgs: ["--device", "Vulkan0", "--fit", "on", "-fa", "on"],
   },
 };
 
@@ -63,6 +91,7 @@ export const paths = (root = dataDir()) => {
     games: join(root, "games"),
     raw: join(root, "raw"),
     events: join(root, "events.jsonl"),
+    ai: join(root, "ai"),
   };
 };
 
@@ -79,7 +108,8 @@ export function loadConfig(): Config {
     writeFileSync(file, JSON.stringify(DEFAULT_CONFIG, null, 2) + "\n");
     return { ...DEFAULT_CONFIG };
   }
-  return { ...DEFAULT_CONFIG, ...JSON.parse(readFileSync(file, "utf8")) };
+  const saved = JSON.parse(readFileSync(file, "utf8")) as Partial<Config>;
+  return { ...DEFAULT_CONFIG, ...saved, ai: { ...DEFAULT_CONFIG.ai, ...saved.ai } };
 }
 
 export function saveConfig(config: Config) {

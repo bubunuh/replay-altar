@@ -20,6 +20,7 @@ Local Warcraft III replay archive and stats. A background service saves every re
 | `w3stats sim` | Simulation status; `--backfill`, `--retry-failed`, `--rerun`, `--resummarize` |
 | `w3stats official` | Fetch the game's own end-of-game stats from W3Champions for W3C games that lack them (the collector does this by itself for new games) |
 | `w3stats ref` | Pro reference games: status. `ref refresh [--target N]` downloads more now, `ref profile` rebuilds the statistics |
+| `w3stats ai <game\|latest>` | AI analysis of one game with the local model (same as the button in a match). `--facts` prints what the model would get |
 
 To remove everything, run `w3stats uninstall --purge` (this also deletes the `localhost/w3stats-casc` podman image), then delete `~/Projects/w3stats`.
 
@@ -38,6 +39,8 @@ To remove everything, run `w3stats uninstall --purge` (this also deletes the `lo
 | Simulation engine and its map data | `~/Projects/w3stats/vendor/wc3v` (`mapdata/`, `client/maps/`, `helpers/UnitBalance.json` are generated there) |
 | Pro reference games (W3Champions downloads, own database, `profile.json`) | `~/.local/share/w3stats/reference/pros/` |
 | Game-data extractor | podman image `localhost/w3stats-casc` (reads your install through a throwaway overlay; never writes to it) |
+| AI analyses (review + everything the model was given) | `~/.local/share/w3stats/ai/<game>.json`, model server log `ai/server.log` |
+| Local model (not part of W3Stats) | `~/models/unsloth/gemma-4-26B-A4B-it-GGUF/` (model, MTP drafter, chat template), run by `~/.local/bin/llama-server` |
 | Settings | `~/.config/w3stats/config.json` |
 | Background service | `~/.config/systemd/user/w3stats-collector.service` (logs: `journalctl --user -u w3stats-collector`) |
 | Commands | `~/.local/bin/w3stats`, `~/.local/bin/w3stats-desktop` |
@@ -63,6 +66,16 @@ The collector downloads public replays of Human players rated 2400+ MMR from W3C
 - **Your race:** you're compared with pros of the race you played. Orc, Undead and Night Elf pro games are only downloaded once you've played that race.
 
 Matchup-specific numbers are used when the pros have 10 or more games of that matchup; otherwise all matchups are combined.
+
+## AI analysis
+
+Each match has an **Analyze with AI** button. It runs on demand only, because it uses most of the graphics card for about 30 seconds.
+
+- **Who decides what:** W3Stats' rules decide what mattered in the game, by comparing with pros and spotting windows the opponent left open. They also write the opponent's plan from their orders. The local model only writes the review around those findings.
+- **Why it works this way:** tested on its own, Gemma 4 26B restated facts correctly but couldn't tell what decided a game, and it gets unit facts wrong.
+- **Checking:** every number in the review is checked against the data the model was given. Each finding shows its evidence.
+- **Model:** set in the `ai` section of the settings file: `llama-server` path, model, MTP drafter, chat template, port 8089, extra arguments. W3Stats starts the server when needed and stops it after 10 idle minutes or when the window closes. A server you started yourself with the same model on that port is reused.
+- **While Warcraft III runs:** the button warns you, since the model takes most of the graphics card's memory.
 
 ## Which metrics matter
 

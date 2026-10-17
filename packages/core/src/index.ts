@@ -1,5 +1,6 @@
 export * from "./classify.ts";
 export * from "./config.ts";
+export * from "./process.ts";
 export * from "./db.ts";
 export * from "./gamedata.ts";
 export * from "./ingest.ts";

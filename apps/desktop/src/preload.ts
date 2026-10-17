@@ -12,6 +12,20 @@ const api = {
   referenceProfiles: () => ipcRenderer.invoke("ref:profiles"),
   showFile: (file: string) => ipcRenderer.invoke("shell:showFile", file),
   openPath: (dir: string) => ipcRenderer.invoke("shell:openPath", dir),
+  aiGet: (key: string) => ipcRenderer.invoke("ai:get", key),
+  aiStatus: () => ipcRenderer.invoke("ai:status"),
+  aiRun: (key: string) => ipcRenderer.invoke("ai:run", key),
+  /** Progress of AI analyses; returns a function that stops listening. */
+  onAi: (fn: (event: "progress" | "done", key: string, stage?: string) => void) => {
+    const progress = (_e: unknown, key: string, stage: string) => fn("progress", key, stage);
+    const done = (_e: unknown, key: string) => fn("done", key);
+    ipcRenderer.on("ai:progress", progress);
+    ipcRenderer.on("ai:done", done);
+    return () => {
+      ipcRenderer.removeListener("ai:progress", progress);
+      ipcRenderer.removeListener("ai:done", done);
+    };
+  },
   onDataChanged: (fn: () => void) => ipcRenderer.on("data:changed", () => fn()),
   onNavGame: (fn: (key: string) => void) => ipcRenderer.on("nav:game", (_e, key: string) => fn(key)),
   onNavPage: (fn: (page: string) => void) => ipcRenderer.on("nav:page", (_e, page: string) => fn(page)),

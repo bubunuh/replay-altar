@@ -34,6 +34,19 @@ export type HeroTimeline = {
   deaths: { diedAt: number; revivedAt: number | null }[];
 };
 
+/** A fight WC3V detected (times only: its own loss tracking is unreliable, use the series). */
+export type SimFight = {
+  start: number;
+  end: number;
+  /** WC3V category: pitched-battle, tower-dive, creep-fight, harass, engagement, expansion-fight, base-defense, ... */
+  category: string;
+  /** Player who started it, when WC3V could tell. */
+  initiatorId: number | null;
+  playerIds: number[];
+  involvesHero: boolean;
+  involvesAir: boolean;
+};
+
 export type SimPlayer = {
   playerId: number;
   parseConfidence: number;
@@ -53,6 +66,7 @@ export type SimSummary =
       runMs: number;
       outputPath: string;
       players: SimPlayer[];
+      fights?: SimFight[];
       /** Sanity checks that failed, e.g. spending more than the model says was mined. */
       warnings: string[];
     }

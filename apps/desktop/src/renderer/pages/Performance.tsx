@@ -3,7 +3,7 @@ import type { EChartsOption } from "echarts";
 import type { MetricDef, PerfGame } from "@w3stats/core/ui";
 import { per10Minutes } from "@w3stats/core/metrics";
 import { base, Chart, esc, winrateBars, type Tokens } from "../Chart.tsx";
-import { assess, describeRef, groupForRace, pickProfile } from "../compare.ts";
+import { assess, describeRef, groupForRace, pickProfile } from "@w3stats/reference/compare";
 import { ProMedian, Standing } from "../Standing.tsx";
 import { groupDetails, SECTION_INFO, splitMetrics } from "../sections.ts";
 import { proText, researchTimes, upgradeRows, upgradeStanding } from "../upgrades.ts";
