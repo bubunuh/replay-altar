@@ -13,6 +13,11 @@ import {
   reingestAll,
   replayDirs,
 } from "@w3stats/core";
+import { execFileSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { applySim, readRecord } from "@w3stats/core";
+import { CONSTANTS, gamedataDir, loadCosts, readSimOutput, simNotReady, simulateGame, summarize } from "@w3stats/sim";
 import { runCollector } from "./collector.ts";
 import { isReplayFile } from "./watcher.ts";
 import { install, resume, suspend, uninstall } from "./install.ts";
@@ -30,6 +35,13 @@ const HELP = `w3stats — Warcraft III replay archive & stats
   w3stats override <game> win|loss   correct a detected result (kept as an annotation)
   w3stats export --jsonl [--out f]   one JSON line per analyzed game (for LLMs/scripts)
   w3stats export --md <game|latest>  one game as Markdown
+  w3stats setup-sim           prepare the economy simulation (WC3V, its packages, game data from your install)
+  w3stats sim                 simulation status
+  w3stats sim --backfill      simulate analyzed games that have no simulation yet
+  w3stats sim --retry-failed  simulate games whose simulation failed
+  w3stats sim --rerun         simulate every analyzed game again
+  w3stats sim --resummarize   recompute economy numbers from stored simulations (after a model update)
+  w3stats sim <game>          simulate one game
   w3stats collector           run the collector in the foreground (what the service runs)
 `;
 
@@ -102,6 +114,60 @@ switch (cmd) {
       const i = args.indexOf("--out");
       if (i >= 0) writeFileSync(args[i + 1], out + "\n");
       else console.log(out);
+    }
+    break;
+  }
+  case "setup-sim": {
+    const root = join(import.meta.dirname, "../../..");
+    const run = (cmd: string, cmdArgs: string[], cwd = root) => {
+      console.log(`$ ${cmd} ${cmdArgs.join(" ")}`);
+      execFileSync(cmd, cmdArgs, { cwd, stdio: "inherit" });
+    };
+    if (!existsSync(join(root, "vendor/wc3v/wc3v.js"))) run("git", ["submodule", "update", "--init", "--depth", "1", "vendor/wc3v"]);
+    if (!existsSync(join(root, "vendor/wc3v/node_modules/w3gjs"))) run("npm", ["ci", "--omit=dev", "--no-audit", "--no-fund"], join(root, "vendor/wc3v"));
+    run(join(root, "scripts/extract-gamedata.sh"), []);
+    const problem = simNotReady(paths().root);
+    console.log(problem ? `Not ready: ${problem}` : "Simulation ready. Run `w3stats sim --backfill` to simulate existing games.");
+    break;
+  }
+  case "sim": {
+    const c = ctx();
+    const flag = args[0];
+    if (!flag) {
+      const rows = c.db.prepare("SELECT COALESCE(sim_status, 'not simulated') status, COUNT(*) n FROM games WHERE analyzed = 1 GROUP BY 1").all() as { status: string; n: number }[];
+      console.log(simNotReady(c.paths.root) ?? "simulation ready");
+      for (const r of rows) console.log(`${String(r.n).padStart(4)}  ${r.status}`);
+      const failed = c.db.prepare("SELECT game_key, sim_reason FROM games WHERE sim_status = 'failed' LIMIT 10").all() as { game_key: string; sim_reason: string }[];
+      for (const f of failed) console.log(`      ${f.game_key.slice(0, 8)} failed: ${f.sim_reason}`);
+      break;
+    }
+    if (flag === "--resummarize") {
+      const costs = loadCosts(gamedataDir(c.paths.root));
+      const rows = c.db.prepare("SELECT game_key FROM games WHERE sim_status = 'ok'").all() as { game_key: string }[];
+      for (const { game_key } of rows) {
+        const record = readRecord(c.paths, game_key);
+        if (!record || record.sim?.status !== "ok") continue;
+        const { ranAt, runMs, outputPath } = record.sim;
+        applySim(c, game_key, summarize(record, readSimOutput(outputPath), costs, CONSTANTS, { ranAt, runMs, outputPath }));
+      }
+      console.log(`re-summarized ${rows.length} games with economy model v${CONSTANTS.version}`);
+      break;
+    }
+    const where =
+      flag === "--backfill" ? "analyzed = 1 AND sim_status IS NULL"
+      : flag === "--retry-failed" ? "analyzed = 1 AND sim_status = 'failed'"
+      : flag === "--rerun" ? "analyzed = 1"
+      : null;
+    const keys = where
+      ? (c.db.prepare(`SELECT game_key FROM games WHERE ${where} ORDER BY played_at`).all() as { game_key: string }[]).map((r) => r.game_key)
+      : [resolveKey(c.db, flag)];
+    let i = 0;
+    for (const key of keys) {
+      const record = readRecord(c.paths, key);
+      if (!record) continue;
+      const sim = await simulateGame(record, { dataRoot: c.paths.root, warcraftDocuments: c.config.warcraftDocuments });
+      applySim(c, key, sim);
+      console.log(`[${++i}/${keys.length}] ${key.slice(0, 8)} ${sim.status === "ok" ? `ok in ${(sim.runMs / 1000).toFixed(1)}s${sim.warnings.length ? ` (${sim.warnings.join("; ")})` : ""}` : `failed: ${sim.reason}`}`);
     }
     break;
   }

@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "bin": { "w3stats": "./src/cli.ts" },
-  "dependencies": { "@w3stats/core": "*" }
+  "bin": {
+    "w3stats": "./src/cli.ts"
+  },
+  "dependencies": {
+    "@w3stats/core": "*",
+    "@w3stats/sim": "*"
+  }
 }

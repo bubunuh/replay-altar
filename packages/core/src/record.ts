@@ -2,10 +2,11 @@
 // the SQLite tables are a queryable projection of these files.
 import { basename } from "node:path";
 import { classify, type Classification } from "./classify.ts";
-import { computeMetrics, METRICS_VERSION, type Metrics } from "./metrics.ts";
+import { computeMetrics, METRICS_VERSION, SIM_METRICS, type Metrics } from "./metrics.ts";
 import { abilityName, nameOf, NAMES_SOURCE } from "./names.ts";
 import type { RawReplay } from "./parse.ts";
 import { detectResult, type ResultInfo } from "./result.ts";
+import type { SimSummary } from "./sim.ts";
 
 export const SCHEMA_VERSION = 1;
 
@@ -68,6 +69,8 @@ export type GameRecord = {
   result: ResultInfo;
   players: PlayerRecord[];
   chat: { ms: number; player: string; mode: string; message: string }[];
+  /** Economy from the simulation layer; absent until the game has been simulated. */
+  sim?: SimSummary;
   provenance: {
     gameKeyMethod: string;
     canonicalFile: SourceFile;
@@ -172,7 +175,8 @@ export function buildRecord(input: {
         build: buildEvents(p),
         actions: Object.fromEntries(Object.entries(p.actions!).filter(([k]) => k !== "timed")) as Record<string, number>,
         controlGroups: p.groupHotkeys as Record<string, { assigned: number; used: number }>,
-        metrics: computeMetrics(raw, seat.playerId),
+        // Simulation metrics stay null until mergeSim() fills them in.
+        metrics: { ...computeMetrics(raw, seat.playerId), ...Object.fromEntries(SIM_METRICS.map((m) => [m.key, null])) },
       };
     })
     // Me first, then by team, so "players[1]" is the opponent in a 1v1.
@@ -210,4 +214,17 @@ export function buildRecord(input: {
       ingestedAt: input.ingestedAt,
     },
   };
+}
+
+/** Attach a simulation result to a record and copy its metrics into the players. */
+export function mergeSim(record: GameRecord, sim: SimSummary | undefined): GameRecord {
+  if (!sim) return record;
+  record.sim = sim;
+  if (sim.status === "ok") {
+    for (const sp of sim.players) {
+      const p = record.players.find((x) => x.playerId === sp.playerId);
+      if (p) p.metrics = { ...p.metrics, ...sp.metrics };
+    }
+  }
+  return record;
 }

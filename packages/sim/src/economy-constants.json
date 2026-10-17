@@ -1,0 +1,53 @@
+{
+  "version": 2,
+  "startGold": 500,
+  "startLumber": 150,
+  "workersPerMine": 5,
+  "goldPerMine": 12500,
+  "goldPerWorkerSecond": 2.252,
+  "lumberPerWorkerSecond": {
+    "H": 0.452,
+    "O": 0.613,
+    "U": 0.85,
+    "N": 1.067
+  },
+  "upkeep": [
+    {
+      "aboveFood": 50,
+      "goldFactor": 0.7
+    },
+    {
+      "aboveFood": 80,
+      "goldFactor": 0.4
+    }
+  ],
+  "calibration": {
+    "method": "median over player-games of the smallest rate that keeps start + mined - spent >= 0 after 60 s, clamped to [0.6x, 1.6x] of the harvest-data prior; races with < 3 samples use the prior",
+    "priors": {
+      "gold": 2,
+      "lumber": {
+        "H": 0.5,
+        "O": 0.5,
+        "U": 0.85,
+        "N": 0.667
+      }
+    },
+    "rawMedians": {
+      "gold": 2.2519622395280745,
+      "lumber": {
+        "H": 0.4520893577719107,
+        "O": 0.6132075494620945,
+        "U": 0.8080808122642338,
+        "N": 2.5000000035855923
+      }
+    },
+    "at": "2026-10-17T18:00:17.895Z",
+    "playerGames": 18,
+    "perRaceSamples": {
+      "H": 11,
+      "O": 3,
+      "U": 1,
+      "N": 3
+    }
+  }
+}

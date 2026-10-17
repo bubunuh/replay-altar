@@ -7,3 +7,4 @@ export * from "./queries.ts";
 export * from "./store.ts";
 export { mmss } from "./export.ts";
 export type { GameRecord, PlayerRecord, BuildEvent, HeroRecord } from "./record.ts";
+export type { SimSample, SimPlayer, SimSummary } from "./sim.ts";

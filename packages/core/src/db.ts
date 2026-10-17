@@ -7,7 +7,7 @@ import { DatabaseSync } from "node:sqlite";
 import { METRICS } from "./metrics.ts";
 import type { GameRecord } from "./record.ts";
 
-export const DB_VERSION = 1;
+export const DB_VERSION = 2;
 
 const SCHEMA_V1 = `
 CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -157,6 +157,21 @@ FROM v_analyzed g
 JOIN player_metrics m ON m.game_key = g.game_key AND m.player_id = g.me_player_id;
 `;
 
+// v2: economy from the simulation layer.
+const SCHEMA_V2 = `
+ALTER TABLE games ADD COLUMN sim_status TEXT;      -- ok | failed | NULL (not simulated yet)
+ALTER TABLE games ADD COLUMN sim_reason TEXT;      -- why it failed
+CREATE TABLE sim_series (
+  game_key TEXT NOT NULL REFERENCES games ON DELETE CASCADE,
+  player_id INTEGER NOT NULL, t_ms INTEGER NOT NULL,
+  gold_spent INTEGER, lumber_spent INTEGER, gold_lost INTEGER, lumber_lost INTEGER,
+  food_used INTEGER, food_max INTEGER, workers INTEGER,
+  est_gold_mined INTEGER, est_lumber_mined INTEGER,   -- estimates (income model)
+  est_gold_bank INTEGER, est_lumber_bank INTEGER,
+  PRIMARY KEY (game_key, player_id, t_ms)
+);
+`;
+
 export type DB = DatabaseSync;
 
 export function openDb(file: string, opts: { readOnly?: boolean } = {}): DB {
@@ -170,7 +185,13 @@ export function openDb(file: string, opts: { readOnly?: boolean } = {}): DB {
   if (version < 1) {
     transaction(db, () => {
       db.exec(SCHEMA_V1);
-      db.prepare("INSERT INTO meta (key, value) VALUES ('db_version', ?)").run(String(DB_VERSION));
+      db.prepare("INSERT INTO meta (key, value) VALUES ('db_version', '1')").run();
+    });
+  }
+  if (version < 2) {
+    transaction(db, () => {
+      db.exec(SCHEMA_V2);
+      db.prepare("UPDATE meta SET value = '2' WHERE key = 'db_version'").run();
     });
   }
   // Metric definitions are code; refresh them every start so the DB documents itself.
@@ -212,19 +233,46 @@ export function writeGame(db: DB, r: GameRecord, archiveSha256: string) {
   transaction(db, () => {
     // Child rows go with it (ON DELETE CASCADE); annotations are not linked and survive.
     db.prepare("DELETE FROM games WHERE game_key = ?").run(r.gameKey);
-    db.prepare(`INSERT INTO games VALUES (${Array(34).fill("?").join(", ")})`).run(
-      r.gameKey, r.game.playedAt, r.game.endedAt, r.game.timeSource, r.game.durationMs,
-      r.classification.source, r.classification.category, r.classification.analyzed ? 1 : 0, r.classification.skipReason,
-      r.game.map.file, mapName(r.game.map.file), r.game.map.checksum,
-      r.game.gameName, r.game.gameTypeRaw, r.game.version, r.game.build,
-      me?.playerId ?? null, me?.name ?? null, me?.race ?? null,
-      opp?.playerId ?? null, opp?.name ?? null, opp?.race ?? null,
-      me && opp ? `${me.race}v${opp.race}` : null,
-      r.result.me, r.result.method, r.result.confidence,
-      r.userLabel, r.provenance.archivePath, archiveSha256,
-      `${r.provenance.parser.name}@${r.provenance.parser.version}`,
-      r.provenance.classifierVersion, r.provenance.metricsVersion, r.schemaVersion, r.provenance.ingestedAt,
-    );
+    const row: Record<string, string | number | null> = {
+      game_key: r.gameKey,
+      played_at: r.game.playedAt,
+      ended_at: r.game.endedAt,
+      time_source: r.game.timeSource,
+      duration_ms: r.game.durationMs,
+      source: r.classification.source,
+      category: r.classification.category,
+      analyzed: r.classification.analyzed ? 1 : 0,
+      skip_reason: r.classification.skipReason,
+      map_file: r.game.map.file,
+      map_name: mapName(r.game.map.file),
+      map_checksum: r.game.map.checksum,
+      game_name: r.game.gameName,
+      game_type_raw: r.game.gameTypeRaw,
+      version: r.game.version,
+      build: r.game.build,
+      me_player_id: me?.playerId ?? null,
+      me_name: me?.name ?? null,
+      me_race: me?.race ?? null,
+      opp_player_id: opp?.playerId ?? null,
+      opp_name: opp?.name ?? null,
+      opp_race: opp?.race ?? null,
+      matchup: me && opp ? `${me.race}v${opp.race}` : null,
+      result_detected: r.result.me,
+      result_method: r.result.method,
+      result_confidence: r.result.confidence,
+      user_label: r.userLabel,
+      archive_path: r.provenance.archivePath,
+      sha256: archiveSha256,
+      parser: `${r.provenance.parser.name}@${r.provenance.parser.version}`,
+      classifier_version: r.provenance.classifierVersion,
+      metrics_version: r.provenance.metricsVersion,
+      schema_version: r.schemaVersion,
+      ingested_at: r.provenance.ingestedAt,
+      sim_status: r.sim?.status ?? null,
+      sim_reason: r.sim?.status === "failed" ? r.sim.reason : null,
+    };
+    const cols = Object.keys(row);
+    db.prepare(`INSERT INTO games (${cols.join(", ")}) VALUES (${cols.map(() => "?").join(", ")})`).run(...Object.values(row));
     const insPlayer = db.prepare("INSERT INTO game_players VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
     const insMetric = db.prepare("INSERT INTO player_metrics VALUES (?, ?, ?, ?)");
     const insBuild = db.prepare("INSERT INTO build_events VALUES (?, ?, ?, ?, ?, ?)");
@@ -247,6 +295,14 @@ export function writeGame(db: DB, r: GameRecord, archiveSha256: string) {
     for (const f of r.provenance.files) insFile.run(f.path, f.sha256, f.size, f.mtime, r.gameKey, f.durationMs, f.timeSource);
     const insRule = db.prepare("INSERT INTO classification_reasons VALUES (?, ?, ?, ?, ?)");
     r.classification.rules.forEach((x, i) => insRule.run(r.gameKey, i, x.rule, x.passed ? 1 : 0, x.evidence));
+    if (r.sim?.status === "ok") {
+      const insSim = db.prepare("INSERT INTO sim_series VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+      for (const p of r.sim.players) {
+        for (const x of p.series) {
+          insSim.run(r.gameKey, p.playerId, x.t, x.goldSpent, x.lumberSpent, x.goldLost, x.lumberLost, x.foodUsed, x.foodMax, x.workers, x.estGoldMined, x.estLumberMined, x.estGoldBank, x.estLumberBank);
+        }
+      }
+    }
   });
 }
 

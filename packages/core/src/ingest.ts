@@ -4,14 +4,17 @@ import { basename, dirname, join } from "node:path";
 import { gzipSync } from "node:zlib";
 import type { Config } from "./config.ts";
 import { mapName, writeGame, type DB } from "./db.ts";
+import { SIM_METRIC_KEYS } from "./metrics.ts";
 import { parseReplay, type RawReplay } from "./parse.ts";
-import { buildRecord, endTimeOf, type GameRecord, type SourceFile } from "./record.ts";
+import { buildRecord, endTimeOf, mergeSim, type GameRecord, type SourceFile } from "./record.ts";
+import type { SimSummary } from "./sim.ts";
 import { rawPath, readRaw, readRecord, recordPath, type Paths } from "./store.ts";
 
 export type IngestContext = { db: DB; config: Config; paths: Paths };
 
 export type IngestOutcome =
-  | { status: "new" | "updated"; path: string; record: GameRecord }
+  /** needsSim: the game has no simulation for its current canonical file yet. */
+  | { status: "new" | "updated"; path: string; record: GameRecord; needsSim: boolean }
   | { status: "duplicate"; path: string; gameKey: string }
   | { status: "error"; path: string; error: string };
 
@@ -103,6 +106,9 @@ export async function ingestFile(ctx: IngestContext, path: string): Promise<Inge
     ingestedAt: existing?.provenance.ingestedAt ?? new Date().toISOString(),
   });
 
+  // A simulation belongs to the canonical file; keep it unless that file changed.
+  if (!replacesCanonical) mergeSim(record, existing?.sim);
+
   if (replacesCanonical) {
     if (existing && existsSync(existing.provenance.archivePath)) {
       mkdirSync(paths.superseded, { recursive: true });
@@ -114,7 +120,7 @@ export async function ingestFile(ctx: IngestContext, path: string): Promise<Inge
   }
   save(ctx, record, canonicalRaw, canonical.sha256);
   logEvent(paths, { type: "ingested", status: existing ? "updated" : "new", gameKey: key, path, analyzed: record.classification.analyzed });
-  return { status: existing ? "updated" : "new", path, record };
+  return { status: existing ? "updated" : "new", path, record, needsSim: record.classification.analyzed && !record.sim };
 }
 
 /**
@@ -139,6 +145,7 @@ export async function reingestAll(ctx: IngestContext): Promise<{ games: number; 
         archivePath: old.provenance.archivePath,
         ingestedAt: old.provenance.ingestedAt,
       });
+      mergeSim(record, old.sim);
       save(ctx, record, raw, sha256(buffer));
       games++;
     } catch (e) {
@@ -146,4 +153,19 @@ export async function reingestAll(ctx: IngestContext): Promise<{ games: number; 
     }
   }
   return { games, errors };
+}
+
+/** Store a finished simulation with its game (record JSON + DB rows). */
+export function applySim(ctx: IngestContext, gameKey: string, sim: SimSummary): GameRecord | null {
+  const record = readRecord(ctx.paths, gameKey);
+  if (!record) return null;
+  delete record.sim;
+  for (const p of record.players) {
+    for (const k of Object.keys(p.metrics)) if (SIM_METRIC_KEYS.has(k)) p.metrics[k] = null;
+  }
+  mergeSim(record, sim);
+  const raw = readRaw(ctx.paths, gameKey);
+  save(ctx, record, raw, record.provenance.canonicalFile.sha256);
+  logEvent(ctx.paths, { type: "simulated", gameKey, status: sim.status, reason: sim.status === "failed" ? sim.reason : undefined });
+  return record;
 }

@@ -1,0 +1,8 @@
+{
+  "name": "@w3stats/sim",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": { "@w3stats/core": "*" }
+}

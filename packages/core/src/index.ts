@@ -11,3 +11,4 @@ export * from "./result.ts";
 export * from "./export.ts";
 export * from "./store.ts";
 export * from "./queries.ts";
+export * from "./sim.ts";
