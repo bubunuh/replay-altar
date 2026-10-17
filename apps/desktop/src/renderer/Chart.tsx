@@ -188,3 +188,103 @@ export function timeLines(series: (t: Tokens) => TimeSeries[], format: (v: numbe
     } as echarts.EChartsOption;
   };
 }
+
+export type HeroLine = {
+  name: string;
+  /** player colour key; heroes of one player share the colour, symbols tell them apart */
+  side: "me" | "opp";
+  order: number;
+  appearAt: number | null;
+  levelUps: number[];
+  deaths: { diedAt: number; revivedAt: number | null }[];
+};
+
+const HERO_SYMBOLS = ["circle", "rect", "triangle", "diamond"];
+const CROSS = "path://M2,0 L5,3 L8,0 L10,2 L7,5 L10,8 L8,10 L5,7 L2,10 L0,8 L3,5 L0,2 Z";
+
+/**
+ * Hero level over time: one stepped line per hero from when it appeared; a gap while dead,
+ * ✕ where it died (approximate), an open circle where it came back.
+ */
+export function heroLevelsChart(heroes: HeroLine[], endMs: number) {
+  return (t: Tokens): echarts.EChartsOption => {
+    const b = base(t);
+    const colour = (h: HeroLine) => (h.side === "me" ? t.series1 : t.series2);
+    const levelAt = (h: HeroLine, at: number) => Math.max(1, h.levelUps.filter((x) => x <= at).length);
+    const lines = heroes.map((h) => {
+      const pts: ([number, number] | [number, null])[] = [];
+      if (h.appearAt === null) return { h, pts };
+      // Events in time order: level-ups, deaths (break the line), revives (resume it).
+      const events = [
+        ...h.levelUps.filter((x) => x > h.appearAt!).map((x) => ({ at: x, kind: "level" as const })),
+        ...h.deaths.flatMap((d) => [{ at: d.diedAt, kind: "die" as const }, ...(d.revivedAt !== null ? [{ at: d.revivedAt, kind: "back" as const }] : [])]),
+      ].sort((a, b) => a.at - b.at);
+      let alive = true;
+      pts.push([h.appearAt, levelAt(h, h.appearAt)]);
+      for (const e of events) {
+        if (e.kind === "die") {
+          pts.push([e.at, levelAt(h, e.at)]);
+          pts.push([e.at, null]);
+          alive = false;
+        } else if (e.kind === "back") {
+          pts.push([e.at, levelAt(h, e.at)]);
+          alive = true;
+        } else if (alive) {
+          pts.push([e.at, levelAt(h, e.at)]);
+        }
+      }
+      if (alive) pts.push([endMs, levelAt(h, endMs)]);
+      return { h, pts };
+    });
+    const tip = (lines: string[]) => lines.map((l) => esc(l)).join("<br/>");
+    return {
+      ...b,
+      grid: { left: 8, right: 16, top: 34, bottom: 8, containLabel: true },
+      // Names live in the legend (with each hero's marker shape): end labels collide when two
+      // heroes finish at the same level.
+      legend: { top: 0, left: 0, textStyle: { color: t.ink2 }, itemWidth: 14, itemHeight: 8, itemGap: 16, data: heroes.map((h) => h.name) },
+      tooltip: { ...(b.tooltip as object), trigger: "item" },
+      xAxis: { ...(b.xAxis as object), type: "value", min: 0, max: endMs, splitLine: { show: false }, axisLabel: { color: t.muted, fontSize: 11, formatter: (v: number) => clock(v) } },
+      yAxis: { ...(b.yAxis as object), type: "value", min: 0, max: 10, interval: 1 },
+      series: [
+        ...lines.map(({ h, pts }) => ({
+          type: "line" as const,
+          name: h.name,
+          data: pts,
+          step: "end" as const,
+          connectNulls: false,
+          color: colour(h),
+          symbol: HERO_SYMBOLS[(h.order - 1) % HERO_SYMBOLS.length],
+          symbolSize: 7,
+          lineStyle: { width: 2 },
+          tooltip: { formatter: (p: unknown) => tip([`${h.name}`, `level ${(p as { value: [number, number] }).value[1]} at ${clock((p as { value: [number, number] }).value[0])}`]) },
+        })),
+        // Deaths and revives as separate marks so they read even where lines overlap.
+        ...heroes.flatMap((h) => [
+          {
+            type: "scatter" as const,
+            name: h.name,
+            data: h.deaths.map((d) => [d.diedAt, levelAt(h, d.diedAt)]),
+            symbol: CROSS,
+            symbolSize: 11,
+            color: colour(h),
+            itemStyle: { borderColor: t.surface, borderWidth: 1 },
+            z: 5,
+            tooltip: { formatter: (p: unknown) => tip([`${h.name} died (about ${clock((p as { value: [number, number] }).value[0])})`]) },
+          },
+          {
+            type: "scatter" as const,
+            name: h.name,
+            data: h.deaths.filter((d) => d.revivedAt !== null).map((d) => [d.revivedAt!, levelAt(h, d.revivedAt!)]),
+            symbol: "emptyCircle",
+            symbolSize: 10,
+            color: colour(h),
+            itemStyle: { borderWidth: 2 },
+            z: 5,
+            tooltip: { formatter: (p: unknown) => tip([`${h.name} back at ${clock((p as { value: [number, number] }).value[0])}`]) },
+          },
+        ]),
+      ],
+    } as echarts.EChartsOption;
+  };
+}

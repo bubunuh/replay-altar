@@ -57,6 +57,8 @@ export type EconomyConstants = {
   lumberPerWorkerSecond: Record<RaceCode, number>;
   /** Gold income multiplier above each food threshold (engine defaults: 50 → 0.7, 80 → 0.4). */
   upkeep: { aboveFood: number; goldFactor: number }[];
+  /** units killed ≈ (enemy units seen dying + creeps in cleared camps) × this; fitted to official stats. */
+  unitsKilledFactor?: number;
 };
 
 // --- Timeline: everything the income model needs, independent of its constants -----------

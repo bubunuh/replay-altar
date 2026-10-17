@@ -62,6 +62,18 @@ Each metric's `source` says how much to trust it:
 - **Validation:** against W3Champions' official XP on 56 pro player-games, correlation 0.96, median ratio 1.01, mean error about 230 XP.
 - **Official override:** W3Champions games use the official total instead (`metricSources`).
 
+## Army, heroes and kills (`packages/sim/src/army.ts`)
+
+- **Army food:** food used minus workers minus heroes (5 each), from the simulated supply. The game's "largest army" is counted in food: our maximum, heroes included, matched it at 0.95× (correlation 0.90).
+- **Army value (estimate):** army food × the average resource cost per food of the army units you'd finished training by then, taken from your orders. Stored as `series[].armyValue`; the pro curve is `armyValue`.
+- **Hero timelines** (`sim.players[].heroes`):
+  - **Appearance:** WC3V's training-finished time.
+  - **Levels:** from the replay (exact).
+  - **Deaths (approximate):** the last movement before each revive order. A dead hero can't be ordered around.
+  - **Revives:** the revive order plus the game's revive time, `min(150 s, build × level × 0.6, build × 2)`. This was checked against a hero's path: it moved again within 1 s of the formula.
+  - **Never revived:** a hero WC3V marks `lost` at the end counts as dead from then on.
+- **Units killed:** the game's count includes creeps. Without official stats it's estimated as (enemy units the simulation saw die + creeps in camps your side cleared) × `unitsKilledFactor`, fitted to official numbers (1.48, correlation 0.90).
+
 ## Official end-of-game stats (`record.official`)
 
 - **Source:** the game's score sheet as W3Champions stores it (`api/matches/{id}` → `playerScores`). It has units produced/killed, largest army, heroes killed, items obtained, mercenaries, XP gained, gold and lumber collected, and gold lost to upkeep.
@@ -79,6 +91,7 @@ Each metric has a `section`:
   - It also holds the 2nd and 3rd hero timing and tier 2/3 started, by request. These are strategy-dependent (`better: null`), so they get no colour.
   - Tier metrics carry `raceLabels` (Keep/Castle, Stronghold/Fortress, …).
 - **mechanics:** APM, effective APM, useful actions, hotkeys, control groups, supply blocked. These get green/yellow/red like core.
+- **Typicality labels:** metrics without a better direction (2nd/3rd hero, tier timings, expansions) are labelled by how typical they are for pros. Green "Like pros" means inside their middle 50%, yellow "Unusual" means inside the middle 80%, and red "Far from pros" means outside that.
 - **details:** everything else.
 
 **Upgrades section** (not metrics):
@@ -144,6 +157,9 @@ Each metric has a `section`:
 - `w3stats export --md <game>`: one game as Markdown, with a metric definition next to each value.
 
 ## Reference groups (`reference/<group>/`)
+
+- **One group per race:** Human pros (`pros`), plus Orc, Undead and Night Elf groups that only download once you have played that race (`onlyIfPlayed`).
+- **Matching:** pages and exports compare you with the group for the race you played.
 
 - **Layout:** the same files as your data (`archive/`, `games/`, `raw/`, `sim/out/`), plus `reference.sqlite`. Records are "observed", so both players have metrics.
 - **Tables:**

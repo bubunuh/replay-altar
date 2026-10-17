@@ -3,7 +3,7 @@ import type { EChartsOption } from "echarts";
 import type { MetricDef, PerfGame } from "@w3stats/core/ui";
 import { per10Minutes } from "@w3stats/core/metrics";
 import { base, Chart, esc, winrateBars, type Tokens } from "../Chart.tsx";
-import { assess, describeRef, pickProfile } from "../compare.ts";
+import { assess, describeRef, groupForRace, pickProfile } from "../compare.ts";
 import { ProMedian, Standing } from "../Standing.tsx";
 import { groupDetails, SECTION_INFO, splitMetrics } from "../sections.ts";
 import { proText, researchTimes, upgradeRows, upgradeStanding } from "../upgrades.ts";
@@ -120,7 +120,7 @@ function Avg({ def, values }: { def: MetricDef; values: (number | null | undefin
   );
 }
 
-export function Performance({ games: all, metrics, pros, onOpen }: { games: PerfGame[]; metrics: MetricDef[]; pros?: RefGroupInfo; onOpen: (key: string) => void }) {
+export function Performance({ games: all, metrics, refs, onOpen }: { games: PerfGame[]; metrics: MetricDef[]; refs: RefGroupInfo[]; onOpen: (key: string) => void }) {
   const [period, setPeriod] = useState("all");
   const [source, setSource] = useState("all");
   const [oppRace, setOppRace] = useState("all");
@@ -133,7 +133,12 @@ export function Performance({ games: all, metrics, pros, onOpen }: { games: Perf
       .sort((a, b) => a.played_at.localeCompare(b.played_at));
   }, [all, period, source, oppRace]);
 
-  // Pros to compare with: the matchup in view when it is a single one, else all of them.
+  // Pros of your race (the one you played most in view); the matchup in view when it is a
+  // single one, else all of their games.
+  const raceCount = new Map<string, number>();
+  for (const g of games) if (g.me_race) raceCount.set(g.me_race, (raceCount.get(g.me_race) ?? 0) + 1);
+  const race = ([...raceCount.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "") as RaceCode;
+  const pros = groupForRace(refs, race);
   const matchups = [...new Set(games.map((g) => g.matchup).filter(Boolean))] as string[];
   const ref = pickProfile(pros?.profile, matchups.length === 1 ? matchups[0] : null);
 
@@ -285,16 +290,12 @@ export function Performance({ games: all, metrics, pros, onOpen }: { games: Perf
         <p className="sub">
           Averages over the filtered games; (3/6) means only 3 of 6 games had that event. The opponents column is everyone you faced.
           {ref
-            ? ` Pros: ${pros!.group.label}, ${describeRef(ref)}. Core and Mechanics get a verdict: green = pro level (at or above the pro median), yellow = not yet but at least as good as your opponents, red = below both. Whole-game totals are compared per 10 minutes.`
+            ? ` Pros: ${pros!.group.label}, ${describeRef(ref)}. Core and Mechanics get a verdict: green = pro level (at or above the pro median), yellow = not yet but at least as good as your opponents, red = below both; for timings with no better direction (heroes, tiers, expansions): green = like pros (their middle 50%), yellow = unusual, red = far from pros. Whole-game totals are compared per 10 minutes.`
             : " Pro comparison appears once reference games are downloaded (w3stats ref refresh)."}
           {" "}Hover a metric for its definition.
         </p>
         {(() => {
           const cols = ref ? 7 : 5;
-          // Your race in view (the most common one), for race names and the Upgrades section.
-          const raceCount = new Map<string, number>();
-          for (const g of games) if (g.me_race) raceCount.set(g.me_race, (raceCount.get(g.me_race) ?? 0) + 1);
-          const race = ([...raceCount.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "") as RaceCode;
           const row = (m: MetricDef, verdict: boolean) => {
             const a = assess(
               m,

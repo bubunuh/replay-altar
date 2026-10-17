@@ -3,8 +3,8 @@ import type { BuildEvent, GameDetail, GameRecord, MetricDef, PlayerRecord, SimSa
 import { per10Minutes } from "@w3stats/core/metrics";
 import { heroesXpAt } from "@w3stats/core/heroxp";
 import { api, type RefGroupInfo } from "../api.ts";
-import { Chart, timeLines, type Band, type Tokens } from "../Chart.tsx";
-import { assess, describeRef, pickProfile } from "../compare.ts";
+import { Chart, heroLevelsChart, timeLines, type Band, type HeroLine, type Tokens } from "../Chart.tsx";
+import { assess, describeRef, groupForRace, pickProfile } from "../compare.ts";
 import { ProMedian, Standing } from "../Standing.tsx";
 import { groupDetails, SECTION_INFO, splitMetrics } from "../sections.ts";
 import { proText, researchTimes, upgradeRows, upgradeStanding } from "../upgrades.ts";
@@ -67,86 +67,105 @@ type SimOk = Extract<NonNullable<GameRecord["sim"]>, { status: "ok" }>;
 const bandOf = (curve: CurvePoint[] | undefined, label: string): Band | null =>
   curve && curve.length ? { label, points: curve.map((c) => [c.minute * 60_000, c.p25, c.p50, c.p75]) } : null;
 
-function EconomyCard({ record, refMp }: { record: GameRecord; refMp: MatchupProfile | null }) {
+function GameCharts({ record, refMp, refLabel }: { record: GameRecord; refMp: MatchupProfile | null; refLabel: string }) {
   const sim = record.sim;
   const me = record.players.find((p) => p.isMe);
   const opp = record.players.find((p) => p.playerId === record.classification.opponentId);
   const ok = sim?.status === "ok" ? (sim as SimOk) : null;
-  const seriesOf = (p?: PlayerRecord) => ok?.players.find((x) => x.playerId === p?.playerId)?.series ?? [];
-  const mine = seriesOf(me);
-  const theirs = seriesOf(opp);
+  const simOf = (p?: PlayerRecord) => ok?.players.find((x) => x.playerId === p?.playerId);
+  const mine = simOf(me)?.series ?? [];
+  const theirs = simOf(opp)?.series ?? [];
+  const end = record.game.durationMs;
   const both = (pick: (s: SimSample) => number) => (t: Tokens) => [
     { name: shortName(me?.name ?? "You"), color: t.series1, points: mine.map((s) => [s.t, pick(s)] as [number, number]) },
     { name: shortName(opp?.name ?? "Opponent"), color: t.series2, points: theirs.map((s) => [s.t, pick(s)] as [number, number]) },
   ];
-  const spent = useMemo(() => timeLines(both((s) => s.goldSpent + s.lumberSpent), undefined, bandOf(refMp?.curves.spent, "Pros")), [mine, theirs, refMp]);
-  const workers = useMemo(() => timeLines(both((s) => s.workers), undefined, bandOf(refMp?.curves.workers, "Pros")), [mine, theirs, refMp]);
-  // The income model is only calibrated for the first 10 minutes (see packages/sim economy.ts).
-  const bank = useMemo(
-    () => timeLines((t) => both((s) => Math.max(0, s.estGoldBank))(t).map((x) => ({ ...x, points: x.points.filter(([ms]) => ms <= 600_000) }))),
-    [mine, theirs],
-  );
-  const supplyFor = (p: PlayerRecord | undefined, series: SimSample[], mineColor: boolean, band: Band | null = null) =>
+  const army = useMemo(() => timeLines(both((s) => s.armyValue ?? 0), undefined, bandOf(refMp?.curves.armyValue, refLabel)), [mine, theirs, refMp]);
+  const spent = useMemo(() => timeLines(both((s) => s.goldSpent + s.lumberSpent), undefined, bandOf(refMp?.curves.spent, refLabel)), [mine, theirs, refMp]);
+  const workers = useMemo(() => timeLines(both((s) => s.workers), undefined, bandOf(refMp?.curves.workers, refLabel)), [mine, theirs, refMp]);
+  const supplyFor = (series: SimSample[], mineColor: boolean, band: Band | null = null) =>
     timeLines((t) => [
       { name: "food used", color: mineColor ? t.series1 : t.series2, points: series.map((s) => [s.t, s.foodUsed] as [number, number]), step: true },
       // Cap in the main text colour so it stays distinct from the grey pro reference.
       { name: "food cap", color: t.ink, points: series.map((s) => [s.t, Math.min(100, s.foodMax)] as [number, number]), step: true, muted: true },
     ], undefined, band);
-  const mySupply = useMemo(() => supplyFor(me, mine, true, bandOf(refMp?.curves.food, "Pros food used")), [mine, refMp]);
-  const oppSupply = useMemo(() => supplyFor(opp, theirs, false), [theirs]);
+  const mySupply = useMemo(() => supplyFor(mine, true, bandOf(refMp?.curves.food, `${refLabel} food used`)), [mine, refMp]);
+  const oppSupply = useMemo(() => supplyFor(theirs, false), [theirs]);
+  const apm = useMemo(
+    () =>
+      timeLines(
+        (t) =>
+          [me, opp]
+            .filter((p): p is PlayerRecord => !!p)
+            .map((p) => ({ name: shortName(p.name), color: p.isMe ? t.series1 : t.series2, points: p.apmPerMinute.map((v, i) => [(i + 1) * 60_000, v] as [number, number]) })),
+        undefined,
+        bandOf(refMp?.curves.apm, refLabel),
+      ),
+    [me, opp, refMp],
+  );
+  // Heroes: from the simulation when there is one (appearance, deaths, revives); otherwise the
+  // replay's level-ups alone.
+  const heroLines = useMemo(() => {
+    const lines: HeroLine[] = [];
+    for (const [p, side] of [[me, "me"], [opp, "opp"]] as const) {
+      if (!p) continue;
+      const timelines = simOf(p)?.heroes ?? p.heroes.map((h) => ({ code: h.code, name: h.name, appearAt: h.levelUps?.[0] ?? null, levelUps: h.levelUps ?? [], deaths: [] }));
+      timelines.forEach((h, i) => lines.push({ name: `${h.name} (${shortName(p.name)})`, side, order: i + 1, appearAt: h.appearAt, levelUps: h.levelUps, deaths: h.deaths }));
+    }
+    return lines;
+  }, [record]);
+  const heroes = useMemo(() => heroLevelsChart(heroLines, end), [heroLines, end]);
 
-  if (!sim) {
-    return (
-      <div className="card">
-        <h2>Economy</h2>
-        <p className="sub">Not simulated yet. New games are simulated about a minute after they end; older ones with <code>w3stats sim --backfill</code>.</p>
-      </div>
-    );
-  }
-  if (!ok) {
-    return (
-      <div className="card">
-        <h2>Economy</h2>
-        <p className="sub">Simulation failed: {(sim as { reason: string }).reason}</p>
-      </div>
-    );
-  }
+  const note = !sim
+    ? "Not simulated yet: army, resources, workers and supply appear about a minute after a game ends (older games: w3stats sim --backfill)."
+    : !ok
+      ? `Simulation failed: ${(sim as { reason: string }).reason}`
+      : null;
   return (
     <div className="card">
-      <h2>Economy</h2>
+      <h2>Game over time</h2>
       <p className="sub">
-        Reconstructed by simulating the replay (WC3V). Spending is priced from your orders with the game's own costs. Unspent gold is an
-        estimate from a mining model fitted to the game's official gold totals (typical error ~11%); shown for the first 10 minutes as a trend, not an exact count.
+        You in blue, your opponent in orange{refMp ? `; grey: ${refLabel.toLowerCase()} (median and middle 50%)` : ""}. Army and resources are
+        reconstructed by simulating the replay (WC3V); army value is an estimate.
       </p>
-      <div className="grid-2">
-        <div>
-          <h3 className="chart-title">Resources spent (gold + lumber)</h3>
-          <Chart option={spent} height={200} label="Cumulative gold plus lumber spent by both players" />
-        </div>
-        <div>
-          <h3 className="chart-title">Workers alive</h3>
-          <Chart option={workers} height={200} label="Workers alive over time for both players" />
-        </div>
-        <div>
-          <h3 className="chart-title">≈ Unspent gold, first 10 minutes (estimate)</h3>
-          <Chart option={bank} height={200} label="Estimated unspent gold plus lumber for both players" />
-        </div>
-        <div>
-          <h3 className="chart-title">Supply: {shortName(me?.name ?? "You")}</h3>
-          <Chart option={mySupply} height={200} label="Your food used against food cap" />
-        </div>
-        {opp && (
+      {note && <p className="sub">{note}</p>}
+      {ok && (
+        <>
+          <h3 className="chart-title">≈ Army value (resources in living army units, heroes excluded)</h3>
+          <Chart option={army} height={240} label="Estimated army value over time for both players" />
+        </>
+      )}
+      <h3 className="chart-title">Heroes: level over time (✕ died, ○ back after revive; death times are approximate)</h3>
+      <Chart option={heroes} height={260} label="Hero levels over time for both players, with deaths and revives" />
+      {ok && (
+        <div className="grid-2">
           <div>
-            <h3 className="chart-title">Supply: {shortName(opp.name)}</h3>
-            <Chart option={oppSupply} height={200} label="Opponent food used against food cap" />
+            <h3 className="chart-title">Resources spent (gold + lumber)</h3>
+            <Chart option={spent} height={200} label="Cumulative gold plus lumber spent by both players" />
           </div>
-        )}
-      </div>
+          <div>
+            <h3 className="chart-title">Workers alive</h3>
+            <Chart option={workers} height={200} label="Workers alive over time for both players" />
+          </div>
+          <div>
+            <h3 className="chart-title">Supply: {shortName(me?.name ?? "You")}</h3>
+            <Chart option={mySupply} height={200} label="Your food used against food cap" />
+          </div>
+          {opp && (
+            <div>
+              <h3 className="chart-title">Supply: {shortName(opp.name)}</h3>
+              <Chart option={oppSupply} height={200} label="Opponent food used against food cap" />
+            </div>
+          )}
+        </div>
+      )}
+      <h3 className="chart-title">Actions per minute</h3>
+      <Chart option={apm} height={220} label="Actions per minute for both players over the game" />
     </div>
   );
 }
 
-export function Match({ gameKey, metrics, pros, onBack }: { gameKey: string; metrics: MetricDef[]; pros?: RefGroupInfo; onBack: () => void }) {
+export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; metrics: MetricDef[]; refs: RefGroupInfo[]; onBack: () => void }) {
   const [detail, setDetail] = useState<GameDetail | undefined>();
   const [hideWorkers, setHideWorkers] = useState(true);
   const [kinds, setKinds] = useState(new Set(["building", "unit", "upgrade", "item"]));
@@ -158,24 +177,8 @@ export function Match({ gameKey, metrics, pros, onBack }: { gameKey: string; met
   const r = detail?.record;
   const me = r?.players.find((p) => p.isMe);
   const opp = r?.players.find((p) => p.playerId === r.classification.opponentId);
+  const pros = groupForRace(refs, me?.race);
   const ref = me && opp ? pickProfile(pros?.profile, `${me.race}v${opp.race}`) : null;
-
-  const apmOption = useMemo(
-    () =>
-      timeLines(
-        (t) =>
-          [me, opp]
-            .filter((p): p is PlayerRecord => !!p)
-            .map((p) => ({
-              name: shortName(p.name),
-              color: p.isMe ? t.series1 : t.series2,
-              points: p.apmPerMinute.map((v, i) => [(i + 1) * 60_000, v] as [number, number]),
-            })),
-        undefined,
-        bandOf(ref?.mp.curves.apm, "Pros"),
-      ),
-    [me, opp, ref],
-  );
 
   const xpOption = useMemo(() => {
     if (!r) return null;
@@ -234,27 +237,23 @@ export function Match({ gameKey, metrics, pros, onBack }: { gameKey: string; met
         </div>
       </div>
 
-      <div className="card">
-        <h2>Actions per minute</h2>
-        <p className="sub">Per minute of game time, both players{ref ? `; grey: pros (${describeRef(ref)}), median and middle 50%` : ""}.</p>
-        <Chart option={apmOption} height={260} label="Actions per minute for both players over the game" />
-      </div>
-
-      <EconomyCard record={r} refMp={ref?.mp ?? null} />
+      <GameCharts record={r} refMp={ref?.mp ?? null} refLabel="Pros" />
 
       <div className="card">
         <h2>Key numbers</h2>
         <p className="sub">
           Order times are when the order was issued (cancels included). Economy and supply rows come from the simulation; ≈ marks estimates.
           {ref
-            ? ` Pros: ${pros!.group.label}, ${describeRef(ref)}. Core and Mechanics get a verdict: green = pro level (at or above the pro median), yellow = at least as good as your opponent, red = below both. Whole-game totals are compared per 10 minutes.`
+            ? ` Pros: ${pros!.group.label}, ${describeRef(ref)}. Core and Mechanics get a verdict: green = pro level (at or above the pro median), yellow = at least as good as your opponent, red = below both; for timings with no better direction (heroes, tiers, expansions): green = like pros (their middle 50%), yellow = unusual, red = far from pros. Whole-game totals are compared per 10 minutes.`
             : ""}{" "}
           Hover a metric for its definition.
         </p>
         {(() => {
           const cols = ref ? 5 : 3;
           const race = (me?.race ?? "") as RaceCode;
-          const row = (m: MetricDef, verdict: boolean) => {
+          const row = (metric: MetricDef, verdict: boolean) => {
+            // An official number is not an estimate: drop the ≈ for it.
+            const m: MetricDef = r.metricSources?.[metric.key] === "official" ? { ...metric, source: "official" } : metric;
             const mine = me?.metrics[m.key];
             const a = assess(m, ref?.mp ?? null, { value: mine, per10: typeof mine === "number" ? per10Minutes(mine, r.game.durationMs) : null }, opp?.metrics[m.key]);
             const shown = verdict ? a : { ...a, tier: null };

@@ -45,7 +45,6 @@ function App() {
   }, [load]);
 
   const open = (key: string) => setGame(key);
-  const pros = refs.find((r) => r.group.id === "pros") ?? refs[0];
   const analyzed = games.filter((g) => g.analyzed === 1).length;
   const simulating = games.filter((g) => g.analyzed === 1 && g.sim_status === null).length;
 
@@ -74,11 +73,11 @@ function App() {
       </header>
       <main>
         {game ? (
-          <Match key={`${game}:${version}`} gameKey={game} metrics={perf.metrics} pros={pros} onBack={() => setGame(null)} />
+          <Match key={`${game}:${version}`} gameKey={game} metrics={perf.metrics} refs={refs} onBack={() => setGame(null)} />
         ) : page === "matches" ? (
           <Matches games={games} onOpen={open} />
         ) : page === "performance" ? (
-          <Performance games={perf.games} metrics={perf.metrics} pros={pros} onOpen={open} />
+          <Performance games={perf.games} metrics={perf.metrics} refs={refs} onOpen={open} />
         ) : page === "skipped" ? (
           <Skipped games={games} onOpen={open} />
         ) : (

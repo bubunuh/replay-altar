@@ -17,7 +17,7 @@
 import { readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { loadConfig, paths, readRecord, referencePaths, type GameRecord } from "@w3stats/core";
-import { buildTimelines, CONSTANTS, gamedataDir, loadCosts, readSimOutput, runIncome, type EconomyConstants, type Timeline } from "@w3stats/sim";
+import { buildTimelines, CONSTANTS, gamedataDir, loadCosts, readSimOutput, runIncome, unitsKilledEstimate, type EconomyConstants, type Timeline } from "@w3stats/sim";
 
 const MIN_OFFICIAL = 20;
 const SKIP_FIRST_MS = 60_000;
@@ -87,11 +87,29 @@ if (official.length >= MIN_OFFICIAL) {
   calibration = { method: "median smallest rate keeping start + mined - spent >= 0 (fallback: fewer than 20 official samples)", playerGames: samples.length };
 }
 
+// Units killed: official count / (enemy units seen dying + creeps in cleared camps), median.
+const killRatios: number[] = [];
+for (const p of roots) {
+  for (const f of readdirSync(p.games)) {
+    const r = readRecord(p, f.replace(/\.json$/, "")) as GameRecord | null;
+    if (!r || r.sim?.status !== "ok" || r.official?.status !== "ok") continue;
+    const o = readSimOutput(r.sim.outputPath);
+    for (const op of r.official.players) {
+      const pl = r.players.find((x) => x.playerId === op.playerId);
+      if (!pl) continue;
+      const base = unitsKilledEstimate(o, op.playerId, pl.teamId, 1, costs);
+      if (base > 0) killRatios.push(op.unitsKilled / base);
+    }
+  }
+}
+const unitsKilledFactor = killRatios.length >= MIN_OFFICIAL ? Math.round(median(killRatios) * 100) / 100 : CONSTANTS.unitsKilledFactor ?? 1.49;
+
 const next = {
   ...CONSTANTS,
+  unitsKilledFactor,
   version: CONSTANTS.version + 1,
   goldPerWorkerSecond: Math.round(gold * 1000) / 1000,
-  calibration: { ...calibration, priorGold: PRIOR_GOLD, at: new Date().toISOString() },
+  calibration: { ...calibration, priorGold: PRIOR_GOLD, unitsKilledSamples: killRatios.length, at: new Date().toISOString() },
 };
 console.log(`gold per worker-second: ${next.goldPerWorkerSecond}`, next.calibration);
 if (process.argv.includes("--write")) {

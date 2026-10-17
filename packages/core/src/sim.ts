@@ -19,6 +19,19 @@ export type SimSample = {
   estLumberBank: number;
   /** WC3V dominance score (0–100, 50 = even); null when WC3V had none. */
   dominance: number | null;
+  /** Food in army units (food used minus workers and heroes). */
+  armyFood?: number;
+  /** Estimated resource value of that army (see packages/sim/src/army.ts). */
+  armyValue?: number;
+};
+
+/** A hero's life in the game: when it appeared, levelled, died (approximate) and was revived. */
+export type HeroTimeline = {
+  code: string;
+  name: string;
+  appearAt: number | null;
+  levelUps: number[];
+  deaths: { diedAt: number; revivedAt: number | null }[];
 };
 
 export type SimPlayer = {
@@ -27,6 +40,7 @@ export type SimPlayer = {
   validationWarnings: string[];
   series: SimSample[];
   metrics: Metrics;
+  heroes?: HeroTimeline[];
 };
 
 export type SimSummary =

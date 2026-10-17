@@ -6,7 +6,7 @@ import { heroesXpAt, METRICS, per10Minutes, readRecord, researchLevels, transact
 import { summarizeValues, type Stat } from "./quantiles.ts";
 import type { RefPaths } from "./store.ts";
 
-export const CURVES = ["apm", "workers", "spent", "food", "armyFood", "heroXp"] as const;
+export const CURVES = ["apm", "workers", "spent", "food", "armyFood", "heroXp", "armyValue"] as const;
 export type CurveKey = (typeof CURVES)[number];
 export type CurvePoint = { minute: number; n: number; p25: number; p50: number; p75: number };
 
@@ -59,6 +59,7 @@ function curveValues(s: Sample, key: CurveKey): Map<number, number> {
       key === "workers" ? sample.workers
       : key === "spent" ? sample.goldSpent + sample.lumberSpent
       : key === "food" ? sample.foodUsed
+      : key === "armyValue" ? sample.armyValue ?? 0
       : Math.max(0, sample.foodUsed - sample.workers);
     out.set(m, v);
   }

@@ -41,8 +41,9 @@ describe("where you stand", () => {
     expect(assess(def("apm"), mp, { value: 235 }, 150)).toMatchObject({ text: "worse than 60% of pro games", tier: "above" }); // above 4 of 10: below the median
     expect(assess(def("apm"), mp, { value: 250 }, 150)).toMatchObject({ text: "better than 55% of pro games", tier: "pro" }); // the median itself
   });
-  test("strategy timings get neutral words and no colour", () => {
-    const a = assess(def("tier2_ms"), mp, { value: 271_000 }, 230_000);
-    expect(a).toMatchObject({ text: "later than every pro game", tier: null });
+  test("strategy timings get neutral words and a typicality verdict", () => {
+    expect(assess(def("tier2_ms"), mp, { value: 271_000 }, 230_000)).toMatchObject({ text: "later than every pro game", tier: "below", typicality: true });
+    expect(assess(def("tier2_ms"), mp, { value: 225_000 }, 230_000)).toMatchObject({ tier: "pro", typicality: true }); // middle of the pros
+    expect(assess(def("tier2_ms"), mp, { value: 192_000 }, 230_000)).toMatchObject({ tier: "above" }); // early, still inside 10-90%
   });
 });

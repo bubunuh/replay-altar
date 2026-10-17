@@ -60,6 +60,7 @@ The collector downloads public replays of Human players rated 2400+ MMR from W3C
 - **Schedule:** it tops up every 6 hours until it has 50 games, then refreshes weekly. It never downloads while Warcraft III is running.
 - **Patch:** only games from your current patch (replay build) are kept.
 - **In the app:** charts show the pros' median and middle 50% in grey, and tables show where you stand.
+- **Your race:** you're compared with pros of the race you played. Orc, Undead and Night Elf pro games are only downloaded once you've played that race.
 
 Matchup-specific numbers are used when the pros have 10 or more games of that matchup; otherwise all matchups are combined.
 

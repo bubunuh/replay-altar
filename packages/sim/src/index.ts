@@ -7,12 +7,14 @@ import { loadCosts, type CostTables } from "./costs.ts";
 import { buildTimelines, economyMetrics, ESTIMATE_HORIZON_MS, runIncome, type EconomyConstants, type WOutput } from "./economy.ts";
 import constantsJson from "./economy-constants.json" with { type: "json" };
 import { ensureMapData } from "./maps.ts";
+import { armyAt, heroTimelines, unitsKilledEstimate } from "./army.ts";
 import { DRIVER, gamedataDir, simNotReady, simOutputPath, wc3vCommit } from "./paths.ts";
 
 export { buildTimelines, runIncome, economyMetrics, loadCosts, simNotReady, simOutputPath, gamedataDir, ESTIMATE_HORIZON_MS };
 export type { EconomyConstants, WOutput, CostTables };
 export type { Timeline } from "./economy.ts";
 export { mapDataName, ensureMapData } from "./maps.ts";
+export { armyAt, heroTimelines, unitsKilledEstimate } from "./army.ts";
 
 export const CONSTANTS = constantsJson as unknown as EconomyConstants;
 const RUN_TIMEOUT_MS = 180_000;
@@ -51,7 +53,13 @@ export function summarize(record: GameRecord, o: WOutput, costs: CostTables, k: 
       warnings.push(`player ${tl.playerId}: spent ${-worst.estGoldBank} more gold than the income model estimates by ${Math.floor(worst.t / 60000)}:${String(Math.floor((worst.t % 60000) / 1000)).padStart(2, "0")}`);
     }
     const pw = (o.validation?.warnings ?? []).filter((w) => String(w.player) === String(tl.playerId)).map((w) => `${w.type ?? "warning"}: ${w.message ?? ""}`.trim());
-    return { playerId: tl.playerId, parseConfidence: tl.parseConfidence, validationWarnings: pw, series: incomes[i].series, metrics };
+    const rp = record.players.find((p) => p.playerId === tl.playerId)!;
+    const series = incomes[i].series.map((s) => ({ ...s, ...armyAt(s.t, s.foodUsed, s.workers, rp, costs) }));
+    metrics.units_killed = unitsKilledEstimate(o, tl.playerId, tl.teamId, k.unitsKilledFactor ?? 1.49, costs);
+    // The game counts its "largest army" in food, heroes included.
+    metrics.largest_army = Math.max(0, ...series.map((s) => s.foodUsed - s.workers));
+    const heroes = heroTimelines(o, tl.playerId, rp, costs, record.game.durationMs);
+    return { playerId: tl.playerId, parseConfidence: tl.parseConfidence, validationWarnings: pw, series, metrics, heroes };
   });
   return {
     status: "ok",

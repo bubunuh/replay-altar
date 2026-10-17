@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "startGold": 500,
   "startLumber": 150,
   "workersPerMine": 5,
@@ -28,6 +28,8 @@
     "medianRatioUnder15Min": 1.1,
     "medianRatioFrom15Min": 0.87,
     "priorGold": 2,
-    "at": "2026-10-17T20:27:09.552Z"
-  }
+    "unitsKilledSamples": 58,
+    "at": "2026-10-17T20:58:35.454Z"
+  },
+  "unitsKilledFactor": 1.48
 }

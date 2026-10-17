@@ -16,10 +16,10 @@ import {
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { applyOfficial, applySim, readRecord, referencePaths, type RefLookup } from "@w3stats/core";
+import { activeReferenceGroups, applyOfficial, applySim, readRecord, referencePaths, type RefLookup } from "@w3stats/core";
 import { CONSTANTS, gamedataDir, loadCosts, readSimOutput, simNotReady, simulateGame, summarize } from "@w3stats/sim";
 import { buildProfile, officialForMatch, officialForOwnGame, openReference, readState, refreshGroup, w3cClient } from "@w3stats/reference";
-import { currentReplayBuild } from "./reference.ts";
+import { currentReplayBuild, racesPlayed } from "./reference.ts";
 import { runCollector } from "./collector.ts";
 import { isReplayFile } from "./watcher.ts";
 import { install, resume, suspend, uninstall } from "./install.ts";
@@ -103,7 +103,7 @@ switch (cmd) {
     for (const e of out.errors) console.error(e);
     // Reference groups use the same pipeline: rebuild them and their statistics too.
     const costs = simNotReady(c.paths.root) ? null : loadCosts(gamedataDir(c.paths.root));
-    for (const g of c.config.reference.groups) {
+    for (const g of activeReferenceGroups(c.config, racesPlayed(c.db))) {
       const ref = openReference(g.id, c.config);
       const res = await reingestAll(ref);
       if (costs) {
@@ -131,17 +131,20 @@ switch (cmd) {
   }
   case "export": {
     const c = ctx();
-    // Pro comparison from the first reference group's profile.json, when downloaded.
-    const group = c.config.reference.groups[0];
-    const profileFile = group ? join(referencePaths(group.id).root, "profile.json") : "";
-    const profile = profileFile && existsSync(profileFile) ? JSON.parse(readFileSync(profileFile, "utf8")) : null;
-    const refLookup: RefLookup | undefined = profile
-      ? (mu) => {
-          const key = mu && profile.matchups[mu]?.n >= 10 ? mu : "all";
-          const mp = profile.matchups[key];
-          return mp ? { label: group.label, matchup: key, games: mp.n, metrics: mp.metrics } : null;
-        }
-      : undefined;
+    // Pro comparison: the profile of pros playing the race you played in that game.
+    const profiles = new Map(
+      c.config.reference.groups.flatMap((g) => {
+        const file = join(referencePaths(g.id).root, "profile.json");
+        return existsSync(file) ? [[g.race, { label: g.label, profile: JSON.parse(readFileSync(file, "utf8")) }] as const] : [];
+      }),
+    );
+    const refLookup: RefLookup = (mu) => {
+      const found = mu ? profiles.get(mu[0] as "H" | "O" | "U" | "N") : undefined;
+      if (!found) return null;
+      const key = mu && found.profile.matchups[mu]?.n >= 10 ? mu : "all";
+      const mp = found.profile.matchups[key];
+      return mp ? { label: found.label, matchup: key, games: mp.n, metrics: mp.metrics } : null;
+    };
     if (args[0] === "--md") {
       const md = exportMarkdown(c.db, c.paths, resolveKey(c.db, args[1] ?? "latest"), refLookup);
       console.log(md);
@@ -211,7 +214,8 @@ switch (cmd) {
     const config = loadConfig();
     const sub = args[0];
     const gi = args.indexOf("--group");
-    const groups = config.reference.groups.filter((g) => gi < 0 || g.id === args[gi + 1]);
+    // With --group: that group; otherwise the groups for races you play.
+    const groups = gi >= 0 ? config.reference.groups.filter((g) => g.id === args[gi + 1]) : activeReferenceGroups(config, racesPlayed(openDb(paths().db)));
     const build = currentReplayBuild(openDb(paths().db));
     if (sub === "refresh") {
       const ti = args.indexOf("--target");
@@ -265,7 +269,7 @@ switch (cmd) {
       await pause();
     }
     // Reference groups: the W3C match id is known.
-    for (const g of c.config.reference.groups) {
+    for (const g of activeReferenceGroups(c.config, racesPlayed(c.db))) {
       const ref = openReference(g.id, c.config);
       for (const { game_key, w3c_match_id } of ref.db.prepare("SELECT game_key, w3c_match_id FROM ref_matches").all() as { game_key: string; w3c_match_id: string }[]) {
         const record = readRecord(ref.paths, game_key);

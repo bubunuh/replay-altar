@@ -1,12 +1,12 @@
 import type { MetricDef } from "@w3stats/core/ui";
-import { TIER_LABEL, type Assessment } from "./compare.ts";
+import { TIER_LABEL, TYPICAL_LABEL, type Assessment } from "./compare.ts";
 import { metricValue } from "./format.ts";
 
 /** Coloured label (with words, never colour alone) plus the plain-language comparison. */
 export function Standing({ a }: { a: Assessment }) {
   return (
     <span className="standing">
-      {a.tier && <span className={`tier ${a.tier}`}>{TIER_LABEL[a.tier]}</span>}
+      {a.tier && <span className={`tier ${a.tier}`}>{(a.typicality ? TYPICAL_LABEL : TIER_LABEL)[a.tier]}</span>}
       <span className="muted small">{a.text}</span>
     </span>
   );

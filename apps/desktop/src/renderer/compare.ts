@@ -8,6 +8,11 @@ const MIN_REFERENCE_VALUES = 5;
 /** At or above the pro median: as good as at least half of the pro games (ties count half). */
 const PRO_LEVEL_SHARE = 0.5;
 
+/** The reference group whose players play this race (pros compared with you play your race). */
+export function groupForRace<T extends { group: { race: string } }>(refs: T[], race: string | null | undefined): T | undefined {
+  return race ? refs.find((r) => r.group.race === race) : undefined;
+}
+
 /** The matchup's profile when it has enough games, else all of the group's games. */
 export function pickProfile(profile: RefProfile | null | undefined, matchup: string | null): { key: string; mp: MatchupProfile } | null {
   if (!profile) return null;
@@ -35,6 +40,8 @@ export type Assessment = {
   per10: boolean;
   text: string;
   tier: Tier;
+  /** The tier says how typical the value is for pros (metrics with no better direction). */
+  typicality?: boolean;
 };
 
 const pct = (v: number) => `${Math.round(v * 100)}%`;
@@ -66,7 +73,9 @@ export function assess(
       : below <= 0.005 ? `${less} than every pro game`
       : below >= 0.5 ? `${more} than ${pct(below)} of pro games`
       : `${less} than ${pct(1 - below)} of pro games`;
-    return { ...none, text };
+    // No better direction (e.g. tech timing): judge how typical it is for pros instead.
+    const tier: Tier = below >= 0.25 && below <= 0.75 ? "pro" : below >= 0.1 && below <= 0.9 ? "above" : "below";
+    return { ...none, text, tier, typicality: true };
   }
   const good = def.better === "higher" ? below : 1 - below; // share of pro games you beat
   // The words follow the label: at pro level, say how many pro games you beat; below it, how many beat you.
@@ -83,6 +92,13 @@ export function assess(
   else tier = "below";
   return { proMedian: stat.p50, per10, text, tier };
 }
+
+/** Labels when the tier is about typicality (no better direction). */
+export const TYPICAL_LABEL: Record<Exclude<Tier, null>, string> = {
+  pro: "Like pros",
+  above: "Unusual",
+  below: "Far from pros",
+};
 
 export const TIER_LABEL: Record<Exclude<Tier, null>, string> = {
   pro: "Pro level",

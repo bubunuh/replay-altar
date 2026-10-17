@@ -13,6 +13,8 @@ export type ReferenceGroup = {
   target: number;
   /** W3Champions gateways to search: 20 = Europe, 10 = Americas. */
   gateways: number[];
+  /** Only download for this group once you have played a game as its race. */
+  onlyIfPlayed?: boolean;
 };
 
 export type Config = {
@@ -37,7 +39,12 @@ export const DEFAULT_CONFIG: Config = {
   notifyAfterGame: true,
   reference: {
     refreshDays: 7,
-    groups: [{ id: "pros", label: "Pros (2400+ MMR)", minMmr: 2400, race: "H", target: 50, gateways: [20, 10] }],
+    groups: [
+      { id: "pros", label: "Human pros (2400+ MMR)", minMmr: 2400, race: "H", target: 50, gateways: [20, 10] },
+      { id: "pros-orc", label: "Orc pros (2400+ MMR)", minMmr: 2400, race: "O", target: 50, gateways: [20, 10], onlyIfPlayed: true },
+      { id: "pros-undead", label: "Undead pros (2400+ MMR)", minMmr: 2400, race: "U", target: 50, gateways: [20, 10], onlyIfPlayed: true },
+      { id: "pros-nightelf", label: "Night Elf pros (2400+ MMR)", minMmr: 2400, race: "N", target: 50, gateways: [20, 10], onlyIfPlayed: true },
+    ],
   },
 };
 
@@ -96,4 +103,9 @@ export function replayDirs(config: Config): string[] {
     }
   }
   return dirs;
+}
+
+/** Reference groups worth keeping stocked: always-on ones, and races you have played. */
+export function activeReferenceGroups(config: Config, racesPlayed: Set<string>): ReferenceGroup[] {
+  return config.reference.groups.filter((g) => !g.onlyIfPlayed || racesPlayed.has(g.race));
 }

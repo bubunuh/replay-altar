@@ -5,7 +5,7 @@ import { CORE_UPGRADES, isRaceCode, POTION_ITEMS, RACES, researchLevels, TIER_NA
 import { heroesXpAt, levelUpTimes } from "./heroxp.ts";
 import type { RawReplay } from "./parse.ts";
 
-export const METRICS_VERSION = 6;
+export const METRICS_VERSION = 7;
 
 export type MetricUnit = "ms" | "count" | "apm" | "ratio" | "per_min";
 
@@ -75,9 +75,9 @@ const SIM_SPECS: MetricSpec[] = [
   { key: "gold_collected", label: "Gold collected", unit: "count", group: "economy", source: "simulation", description: "Gold your workers brought in over the game. W3Champions games: the game's own number. Otherwise estimated as gold spent minus the 500 starting gold (within ~3% of the official number on pro games)." },
   { key: "lumber_collected", label: "Lumber collected", unit: "count", group: "economy", source: "official", description: "Lumber harvested over the game (W3Champions games only)." },
   { key: "upkeep_gold_lost", label: "Gold lost to upkeep", unit: "count", group: "economy", source: "official", description: "Gold the upkeep tax took (W3Champions games only)." },
-  { key: "units_killed", label: "Units killed", unit: "count", group: "fights", source: "official", description: "Enemy units you killed, as the game counts them (W3Champions games only)." },
+  { key: "units_killed", label: "Units killed", unit: "count", group: "fights", source: "estimate", description: "Units you killed, creeps included, as the game's score screen counts them. W3Champions games: the official number. Otherwise ≈ (enemy units the simulation saw die + creeps in camps you cleared) × 1.49, which matched the official count with correlation 0.90 on pro games." },
   { key: "units_produced", label: "Units produced", unit: "count", group: "army", source: "official", description: "Units you produced, as the game counts them (W3Champions games only)." },
-  { key: "largest_army", label: "Largest army", unit: "count", group: "army", source: "official", description: "Your largest army during the game, as the game counts it (W3Champions games only)." },
+  { key: "largest_army", label: "Largest army", unit: "count", group: "army", source: "simulation", description: "Your largest army in food (heroes included), as the game counts it. W3Champions games: the official number; otherwise the simulated supply (0.95x official on median, correlation 0.90)." },
   { key: "heroes_killed", label: "Heroes killed", unit: "count", group: "fights", source: "official", description: "Enemy heroes you killed (W3Champions games only)." },
   { key: "items_obtained", label: "Items obtained", unit: "count", group: "items", source: "official", description: "Items your heroes obtained, bought or dropped (W3Champions games only)." },
   { key: "first_scout_ms", label: "First scout", unit: "ms", group: "scouting", source: "simulation", description: "When a unit of yours first reached the opponent's side of the map." },
