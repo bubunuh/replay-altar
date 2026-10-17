@@ -225,7 +225,7 @@ export function Match({ gameKey, metrics, pros, onBack }: { gameKey: string; met
         <p className="sub">
           Order times are when the order was issued (cancels included). Economy and supply rows come from the simulation; ≈ marks estimates.
           {ref
-            ? ` Pros: ${pros!.group.label}, ${describeRef(ref)}. Pro level = better than at least a quarter of pro games; whole-game totals are compared per 10 minutes.`
+            ? ` Pros: ${pros!.group.label}, ${describeRef(ref)}. Pro level = at or above the pro median; whole-game totals are compared per 10 minutes.`
             : ""}{" "}
           Hover a metric for its definition.
         </p>

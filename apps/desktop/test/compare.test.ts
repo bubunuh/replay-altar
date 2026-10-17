@@ -30,7 +30,7 @@ describe("where you stand", () => {
   test("losing less than your opponent but more than pros is yellow", () => {
     expect(assess(def("resources_lost_total"), mp, { value: 1500, per10: 1450 }, 2000).tier).toBe("above");
   });
-  test("inside the pros' normal range is green", () => {
+  test("at or above the pro median is green", () => {
     const a = assess(def("resources_lost_total"), mp, { value: 900, per10: 800 }, 2000);
     expect(a.tier).toBe("pro");
     expect(a.text).toBe("better than 65% of pro games");
@@ -38,7 +38,8 @@ describe("where you stand", () => {
   test("higher-is-better metrics", () => {
     expect(assess(def("apm"), mp, { value: 134 }, 108)).toMatchObject({ text: "worse than every pro game", tier: "above" });
     expect(assess(def("apm"), mp, { value: 134 }, 150).tier).toBe("below");
-    expect(assess(def("apm"), mp, { value: 235 }, 150)).toMatchObject({ text: "better than 40% of pro games", tier: "pro" }); // above 4 of 10
+    expect(assess(def("apm"), mp, { value: 235 }, 150)).toMatchObject({ text: "worse than 60% of pro games", tier: "above" }); // above 4 of 10: below the median
+    expect(assess(def("apm"), mp, { value: 250 }, 150)).toMatchObject({ text: "better than 55% of pro games", tier: "pro" }); // the median itself
   });
   test("strategy timings get neutral words and no colour", () => {
     const a = assess(def("tier2_ms"), mp, { value: 271_000 }, 230_000);

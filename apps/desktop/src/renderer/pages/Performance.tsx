@@ -279,7 +279,7 @@ export function Performance({ games: all, metrics, pros, onOpen }: { games: Perf
         <p className="sub">
           Averages over the filtered games; (3/6) means only 3 of 6 games had that event. The opponents column is everyone you faced.
           {ref
-            ? ` Pros: ${pros!.group.label}, ${describeRef(ref)}. Green: pro level (better than at least a quarter of pro games). Yellow: not yet, but at least as good as your opponents. Red: below both. Whole-game totals are compared per 10 minutes.`
+            ? ` Pros: ${pros!.group.label}, ${describeRef(ref)}. Green: pro level (at or above the pro median). Yellow: not yet, but at least as good as your opponents. Red: below both. Whole-game totals are compared per 10 minutes.`
             : " Pro comparison appears once reference games are downloaded (w3stats ref refresh)."}
           {" "}Hover a metric for its definition.
         </p>

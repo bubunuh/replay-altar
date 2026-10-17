@@ -5,8 +5,8 @@ import type { MatchupProfile, RefProfile } from "@w3stats/reference/types";
 
 const MIN_MATCHUP_GAMES = 10;
 const MIN_REFERENCE_VALUES = 5;
-/** Better than at least this share of pro games = inside the pros' normal range. */
-const PRO_LEVEL_SHARE = 0.25;
+/** At or above the pro median: as good as at least half of the pro games (ties count half). */
+const PRO_LEVEL_SHARE = 0.5;
 
 /** The matchup's profile when it has enough games, else all of the group's games. */
 export function pickProfile(profile: RefProfile | null | undefined, matchup: string | null): { key: string; mp: MatchupProfile } | null {
@@ -22,7 +22,7 @@ export function describeRef(p: { key: string; mp: MatchupProfile }) {
 }
 
 /**
- * pro: within the pros' normal range (better than at least a quarter of their games).
+ * pro: at or above the pro median (as good as at least half of their games).
  * above: not there yet, but at least as good as your opponents.
  * below: worse than the pros' normal range and than your opponents.
  * null: no better direction for this metric, or too little data.

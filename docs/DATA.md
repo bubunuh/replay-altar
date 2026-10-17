@@ -122,7 +122,7 @@ Each metric's `source` says how much to trust it:
 
     | Label | Colour | Rule |
     |---|---|---|
-    | Pro level | green | better than at least 25% of pro games |
+    | Pro level | green | at or above the pro median (as good as at least half the pro games; ties count half) |
     | Above opponents | yellow | not pro level, but at least as good as your opponent(s) on the raw value |
     | Below opponents | red | neither |
 
