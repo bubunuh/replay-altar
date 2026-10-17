@@ -6,6 +6,7 @@ import { beforeAll, describe, expect, test } from "vitest";
 import {
   classify,
   computeMetrics,
+  hallIdleMs,
   detectResult,
   endTimeOf,
   ingestFile,
@@ -119,6 +120,22 @@ describe.skipIf(files.length === 0)("metrics", () => {
     expect(m.heroes_count).toBe(2);
     expect(m.hotkey_select_share).toBeCloseTo(619 / (619 + 475), 6);
     expect(m.control_groups_used).toBe(4); // groups 1, 2, 4, 5
+    // Peasant production stopped around 2:30 and only resumed after 10:00.
+    expect(m.hall_idle_10m_s).toBeGreaterThan(m.hall_idle_6m_s! + 200);
+    expect(m.tp_bought).toBe(0);
+  });
+});
+
+describe("main hall idle time", () => {
+  const w = (s: number) => ({ id: "hpea", ms: s * 1000 });
+  test("back-to-back workers leave the hall idle only before the first order", () => {
+    expect(hallIdleMs("H", [w(2), w(3), w(4), w(5)], 60_000)).toBe(2000); // busy 2 s → 62 s
+  });
+  test("gaps between queues count", () => {
+    expect(hallIdleMs("H", [w(0), w(30)], 60_000)).toBe(15_000 + 15_000); // idle 15–30 s and 45–60 s
+  });
+  test("a tier upgrade keeps the hall busy", () => {
+    expect(hallIdleMs("H", [w(0), { id: "hkee", ms: 15_000 }], 120_000)).toBe(0);
   });
 });
 

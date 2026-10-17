@@ -17,6 +17,8 @@ export type SimSample = {
   estLumberMined: number;
   estGoldBank: number;
   estLumberBank: number;
+  /** WC3V dominance score (0–100, 50 = even); null when WC3V had none. */
+  dominance: number | null;
 };
 
 export type SimPlayer = {

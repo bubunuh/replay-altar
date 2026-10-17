@@ -35,7 +35,9 @@ describe("income model", () => {
   const base = (over: Partial<Timeline>): Timeline => ({
     playerId: 1, race: "H", teamId: 0, endMs: 100_000, spend: [], losses: [],
     food: [{ t: 0, used: 10, max: 12 }], workers: [{ t: 0, total: 5, onBuild: 0, ghoulsOnLumber: 0 }],
-    mines: [{ activeFrom: 0, until: Infinity }], tierStarts: { 2: null, 3: null }, heroLevels: [], parseConfidence: 1, ...over,
+    mines: [{ activeFrom: 0, until: Infinity }], tierStarts: { 2: null, 3: null }, heroLevels: [], parseConfidence: 1,
+    extra: { eapm: null, usefulShare: null, dominance: [], battles: [], spellCasts: 0, firstScoutMs: null, heroRevives: 0, heroesDeadAtEnd: 0, firstAttackUpgradeMs: null, firstArmorUpgradeMs: null },
+    ...over,
   });
   const k = { ...CONSTANTS, goldPerWorkerSecond: 2, lumberPerWorkerSecond: { H: 0.5, O: 0.5, U: 1, N: 0.5 } };
 
@@ -98,5 +100,13 @@ describe.skipIf(!ready || !existsSync(FIXTURE))("simulating a real replay", () =
     const me = sim.players.find((p) => p.playerId === record.classification.meId)!;
     expect(me.metrics.gold_spent_10m).toBeGreaterThan(4000);
     expect(me.metrics.workers_alive_10m).toBeGreaterThanOrEqual(10);
+    // Effective APM (WC3V's counting) is plausible, and removing spam keeps only part of the actions.
+    expect(me.metrics.eapm).toBeGreaterThan(20);
+    expect(me.metrics.eapm).toBeLessThan(400);
+    expect(me.metrics.useful_action_share).toBeGreaterThan(0.2);
+    expect(me.metrics.useful_action_share).toBeLessThan(1);
+    expect(me.metrics.army_food_10m).toBeGreaterThan(0);
+    expect(me.metrics.hero_level3_ms).toBeLessThan(me.metrics.hero_level5_ms ?? Infinity);
+    expect(me.series.some((s) => s.dominance !== null)).toBe(true);
   });
 });

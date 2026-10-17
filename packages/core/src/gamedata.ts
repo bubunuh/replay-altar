@@ -13,6 +13,9 @@ export const RACE_NAMES: Record<string, string> = {
 
 type RaceData = {
   worker: string;
+  /** Worker train time and tier-upgrade time in ms (base melee table, game 3.0.0.24268). */
+  workerBuildMs: number;
+  tierBuildMs: number;
   townHalls: string[]; // tier 1 hall; building a second one is an expansion
   tier2: string;
   tier3: string;
@@ -24,6 +27,8 @@ type RaceData = {
 export const RACES: Record<RaceCode, RaceData> = {
   H: {
     worker: "hpea",
+    workerBuildMs: 15_000,
+    tierBuildMs: 140_000,
     townHalls: ["htow"],
     tier2: "hkee",
     tier3: "hcas",
@@ -33,6 +38,8 @@ export const RACES: Record<RaceCode, RaceData> = {
   },
   O: {
     worker: "opeo",
+    workerBuildMs: 15_000,
+    tierBuildMs: 140_000,
     townHalls: ["ogre"],
     tier2: "ostr",
     tier3: "ofrt",
@@ -42,6 +49,8 @@ export const RACES: Record<RaceCode, RaceData> = {
   },
   U: {
     worker: "uaco",
+    workerBuildMs: 15_000,
+    tierBuildMs: 140_000,
     townHalls: ["unpl", "ugol"], // Undead usually expand with just a Haunted Gold Mine
     tier2: "unp1",
     tier3: "unp2",
@@ -51,6 +60,8 @@ export const RACES: Record<RaceCode, RaceData> = {
   },
   N: {
     worker: "ewsp",
+    workerBuildMs: 14_000,
+    tierBuildMs: 140_000,
     townHalls: ["etol"],
     tier2: "etoa",
     tier3: "etoe",
@@ -68,3 +79,7 @@ export const observerTeamFor = (subheaderVersion: number) => (subheaderVersion >
 
 // Host accounts that sit in the observer slot of ladder games.
 export const LADDER_HOSTS = { bnet: "Blizzard", w3c: "FLO" } as const;
+
+/** Consumables counted as potions: healing, mana, clarity, restoration, invulnerability, speed, invisibility, omniscience. */
+export const POTION_ITEMS = new Set(["phea", "pman", "pnvl", "plcl", "pghe", "pgma", "pres", "pdiv", "pinv", "pspd", "pomn", "pclr"]);
+export const TOWN_PORTAL = "stwp";

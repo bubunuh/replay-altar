@@ -1,10 +1,10 @@
 // Per-player numbers derived from the parsed command stream.
 // A replay holds commands, not game state: every "time" here is when an order was issued
 // (cancelled orders included), and heroes are timed by their first learned skill.
-import { isRaceCode, RACES } from "./gamedata.ts";
+import { isRaceCode, POTION_ITEMS, RACES, TOWN_PORTAL, type RaceCode } from "./gamedata.ts";
 import type { RawReplay } from "./parse.ts";
 
-export const METRICS_VERSION = 2;
+export const METRICS_VERSION = 3;
 
 export type MetricUnit = "ms" | "count" | "apm" | "ratio" | "per_min";
 
@@ -12,18 +12,22 @@ export type MetricDef = {
   key: string;
   label: string;
   unit: MetricUnit;
-  group: "speed" | "control" | "heroes" | "macro" | "army" | "items" | "economy" | "supply";
+  group: "speed" | "control" | "heroes" | "macro" | "army" | "items" | "economy" | "supply" | "fights" | "scouting";
   /**
    * replay: counted directly from the replay's commands.
    * simulation: from WC3V's reconstruction of the game (inferred, usually reliable).
    * estimate: from our income model on top of the simulation (approximate; shown with ≈).
    */
   source: "replay" | "simulation" | "estimate";
+  /** Which direction is generally better; null when it depends on strategy (e.g. tech timing). */
+  better: "higher" | "lower" | null;
   description: string;
 };
 
+type MetricSpec = Omit<MetricDef, "better">;
+
 // Filled in by packages/sim once a game has been simulated; null until then.
-export const SIM_METRICS: MetricDef[] = [
+const SIM_SPECS: MetricSpec[] = [
   { key: "gold_spent_6m", label: "Gold spent by 6:00", unit: "count", group: "economy", source: "simulation", description: "Gold committed to units, buildings, upgrades, research and items in the first 6 minutes (starting buildings and workers excluded, first hero free)." },
   { key: "gold_spent_10m", label: "Gold spent by 10:00", unit: "count", group: "economy", source: "simulation", description: "Same as above, first 10 minutes." },
   { key: "lumber_spent_10m", label: "Lumber spent by 10:00", unit: "count", group: "economy", source: "simulation", description: "Lumber committed in the first 10 minutes." },
@@ -48,10 +52,45 @@ export const SIM_METRICS: MetricDef[] = [
   { key: "est_lumber_mined_10m", label: "Lumber harvested by 10:00", unit: "count", group: "economy", source: "estimate", description: "Income model: workers not on gold (ghouls for Undead) × calibrated per-race rate." },
   { key: "est_bank_avg", label: "Unspent resources (avg, first 10 min)", unit: "count", group: "economy", source: "estimate", description: "Average over the first 10 minutes of starting resources + estimated income − spent (gold + lumber). Lower is better macro. Not reported past 10:00, where the income model is not calibrated." },
   { key: "est_bank_10m", label: "Unspent resources at 10:00", unit: "count", group: "economy", source: "estimate", description: "Estimated gold + lumber banked at 10:00." },
+  { key: "eapm", label: "Effective APM", unit: "apm", group: "speed", source: "simulation", description: "WC3V's effective actions per minute: repeated and redundant commands (spam clicks, reselecting the same units) removed. WC3V counts actions differently from the APM row above, so compare it with other EAPM values, not with APM." },
+  { key: "useful_action_share", label: "Useful actions", unit: "ratio", group: "speed", source: "simulation", description: "WC3V effective actions / all WC3V-counted actions: the share of your actions that were not spam or redundant." },
+  { key: "army_food_6m", label: "Army food at 6:00", unit: "count", group: "economy", source: "simulation", description: "Food used minus workers at 6:00 (army size, heroes included)." },
+  { key: "army_food_8m", label: "Army food at 8:00", unit: "count", group: "economy", source: "simulation", description: "Food used minus workers at 8:00." },
+  { key: "army_food_10m", label: "Army food at 10:00", unit: "count", group: "economy", source: "simulation", description: "Food used minus workers at 10:00." },
+  { key: "first_attack_upgrade_ms", label: "1st attack upgrade", unit: "ms", group: "army", source: "simulation", description: "When the first weapon/attack research started." },
+  { key: "first_armor_upgrade_ms", label: "1st armor upgrade", unit: "ms", group: "army", source: "simulation", description: "When the first armor/defense research started." },
+  { key: "fights_pitched", label: "Pitched battles", unit: "count", group: "fights", source: "simulation", description: "Army-vs-army fights you took part in." },
+  { key: "fights_defending", label: "Base defenses", unit: "count", group: "fights", source: "simulation", description: "Fights at a base that you did not start (defending against attacks or harassment)." },
+  { key: "fights_creep", label: "Creep fights", unit: "count", group: "fights", source: "simulation", description: "Fights against neutral creeps." },
+  { key: "hero_deaths", label: "Hero deaths", unit: "count", group: "heroes", source: "simulation", description: "Hero revives plus heroes dead at the end of the game." },
+  { key: "hero_level3_ms", label: "Hero level 3", unit: "ms", group: "heroes", source: "simulation", description: "When your first hero reached level 3." },
+  { key: "hero_level5_ms", label: "Hero level 5", unit: "ms", group: "heroes", source: "simulation", description: "When your first hero reached level 5." },
+  { key: "spells_per_min", label: "Spells per minute", unit: "per_min", group: "heroes", source: "simulation", description: "Spell casts per minute of game time (heroes and casters)." },
+  { key: "first_creep_ms", label: "First creep camp", unit: "ms", group: "heroes", source: "simulation", description: "When your side first cleared a neutral camp." },
+  { key: "first_scout_ms", label: "First scout", unit: "ms", group: "scouting", source: "simulation", description: "When a unit of yours first reached the opponent's side of the map." },
 ];
 
+// Directions for wording comparisons ("better than 70% of pros"); unlisted metrics are neutral.
+const BETTER: Record<string, "higher" | "lower"> = {
+  apm: "higher", apm_early: "higher", apm_mid: "higher", apm_late: "higher", eapm: "higher", useful_action_share: "higher",
+  hotkey_select_share: "higher", control_groups_used: "higher", control_group_recalls_per_min: "higher",
+  workers_by_3m: "higher", workers_by_6m: "higher", workers_by_10m: "higher", workers_alive_6m: "higher", workers_alive_10m: "higher",
+  hall_idle_6m_s: "lower", hall_idle_10m_s: "lower",
+  gold_spent_6m: "higher", gold_spent_10m: "higher", lumber_spent_10m: "higher", resources_spent_total: "higher",
+  resources_lost_total: "lower", resources_killed_total: "higher", trade_efficiency: "higher",
+  creep_camps_6m: "higher", creep_camps_10m: "higher", first_creep_ms: "lower",
+  hero_level_6m: "higher", hero_level_10m: "higher", hero_levels_total: "higher", hero_level3_ms: "lower", hero_level5_ms: "lower", hero_deaths: "lower",
+  supply_blocked_s: "lower", unused_supply_avg: "lower", est_bank_avg: "lower", est_bank_10m: "lower",
+  est_gold_mined_10m: "higher", est_lumber_mined_10m: "higher",
+  army_food_6m: "higher", army_food_8m: "higher", army_food_10m: "higher",
+  spells_per_min: "higher",
+};
+const withBetter = (m: MetricSpec): MetricDef => ({ ...m, better: BETTER[m.key] ?? null });
+
+export const SIM_METRICS: MetricDef[] = SIM_SPECS.map(withBetter);
+
 // The registry is the single definition of each metric: the UI, docs/DATA.md and exports read it.
-export const METRICS: MetricDef[] = [
+const REPLAY_SPECS: MetricSpec[] = [
   { key: "apm", label: "APM", unit: "apm", group: "speed", source: "replay", description: "Actions per minute over the time the player was in the game (w3gjs definition: selections, orders, hotkeys; excludes some non-APM actions)." },
   { key: "apm_early", label: "APM 0–5 min", unit: "apm", group: "speed", source: "replay", description: "Mean actions per minute over complete minutes 0–4." },
   { key: "apm_mid", label: "APM 5–15 min", unit: "apm", group: "speed", source: "replay", description: "Mean actions per minute over complete minutes 5–14." },
@@ -79,8 +118,13 @@ export const METRICS: MetricDef[] = [
   { key: "upgrades_ordered", label: "Upgrades ordered", unit: "count", group: "army", source: "replay", description: "Research orders over the whole game." },
   { key: "items_bought", label: "Items bought", unit: "count", group: "items", source: "replay", description: "Shop purchase orders over the whole game." },
   { key: "first_item_ms", label: "First item", unit: "ms", group: "items", source: "replay", description: "First shop purchase order." },
-  ...SIM_METRICS,
+  { key: "hall_idle_6m_s", label: "Main hall idle by 6:00", unit: "count", group: "macro", source: "replay", description: "Seconds in the first 6 minutes your main hall was not training a worker or upgrading (worker orders queued back to back at their build time). All worker orders are treated as one queue, so after an expansion this can understate idle time." },
+  { key: "hall_idle_10m_s", label: "Main hall idle by 10:00", unit: "count", group: "macro", source: "replay", description: "Same, first 10 minutes." },
+  { key: "tp_bought", label: "Town Portals bought", unit: "count", group: "items", source: "replay", description: "Scroll of Town Portal purchase orders." },
+  { key: "potions_bought", label: "Potions bought", unit: "count", group: "items", source: "replay", description: "Healing, mana, clarity, restoration and similar potion purchase orders." },
 ];
+
+export const METRICS: MetricDef[] = [...REPLAY_SPECS.map(withBetter), ...SIM_METRICS];
 
 export const SIM_METRIC_KEYS = new Set(SIM_METRICS.map((m) => m.key));
 
@@ -95,6 +139,27 @@ const countBy = (orders: { id: string; ms: number }[], ids: string[], ms = Infin
 
 function meanOf(values: number[]): number | null {
   return values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
+}
+
+/**
+ * Seconds the main hall had nothing to do before `untilMs`: worker orders queue back to back
+ * (each takes the race's worker build time) and a tier upgrade occupies the hall while it runs.
+ */
+export function hallIdleMs(race: RaceCode, orders: { id: string; ms: number }[], untilMs: number): number {
+  const r = RACES[race];
+  const jobs = orders
+    .filter((o) => o.id === r.worker || o.id === r.tier2 || o.id === r.tier3)
+    .map((o) => ({ at: o.ms, takes: o.id === r.worker ? r.workerBuildMs : r.tierBuildMs }))
+    .sort((a, b) => a.at - b.at);
+  let busyUntil = 0;
+  let idle = 0;
+  for (const job of jobs) {
+    if (job.at >= untilMs) break;
+    if (job.at > busyUntil) idle += job.at - busyUntil;
+    busyUntil = Math.max(busyUntil, job.at) + job.takes;
+  }
+  if (busyUntil < untilMs) idle += untilMs - busyUntil;
+  return idle;
 }
 
 export function computeMetrics(raw: RawReplay, playerId: number): Metrics {
@@ -151,5 +216,9 @@ export function computeMetrics(raw: RawReplay, playerId: number): Metrics {
     upgrades_ordered: p.upgrades!.order.length,
     items_bought: p.items!.order.length,
     first_item_ms: p.items!.order[0]?.ms ?? null,
+    hall_idle_6m_s: rd && durationMs >= 360_000 ? Math.round(hallIdleMs(race as RaceCode, [...units, ...buildings], 360_000) / 1000) : null,
+    hall_idle_10m_s: rd && durationMs >= 600_000 ? Math.round(hallIdleMs(race as RaceCode, [...units, ...buildings], 600_000) / 1000) : null,
+    tp_bought: p.items!.order.filter((i) => i.id === TOWN_PORTAL).length,
+    potions_bought: p.items!.order.filter((i) => POTION_ITEMS.has(i.id)).length,
   };
 }

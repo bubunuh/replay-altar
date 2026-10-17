@@ -19,6 +19,7 @@ type WUnit = {
   levelStream?: { gameTime: number; newLevel: number }[];
 };
 type WEvent = {
+  key?: string;
   gameTime: number;
   supplyUsed?: number;
   supplyMax?: number;
@@ -32,7 +33,10 @@ type WPlayer = {
   units?: WUnit[];
   eventStream?: WEvent[];
   tierStream?: { gameTime: number; tier: number }[];
-  researchStream?: { gameTime: number; goldCost?: number; lumberCost?: number }[];
+  researchStream?: { gameTime: number; category?: string; goldCost?: number; lumberCost?: number }[];
+  apmData?: { raw?: { total?: number; average?: number }; effective?: { total?: number; average?: number } };
+  dominanceSeries?: { samples?: { t: number; score: number }[] };
+  battleParticipation?: { category: string; role: string; startTime: number }[];
 };
 export type WOutput = {
   players: Record<string, WPlayer>;
@@ -72,6 +76,19 @@ export type Timeline = {
   tierStarts: Record<2 | 3, number | null>;
   heroLevels: { t: number; level: number }[];
   parseConfidence: number;
+  /** Straight from WC3V, for the fight/hero/scouting metrics. */
+  extra: {
+    eapm: number | null;
+    usefulShare: number | null;
+    dominance: { t: number; score: number }[];
+    battles: { category: string; role: string }[];
+    spellCasts: number;
+    firstScoutMs: number | null;
+    heroRevives: number;
+    heroesDeadAtEnd: number;
+    firstAttackUpgradeMs: number | null;
+    firstArmorUpgradeMs: number | null;
+  };
 };
 
 const toRace = (r: string): RaceCode => (r === "E" ? "N" : (r as RaceCode)); // WC3V uses E for Night Elf
@@ -182,7 +199,22 @@ export function buildTimelines(o: WOutput, record: GameRecord, costs: CostTables
       .map((l) => ({ t: l.gameTime, level: l.newLevel }))
       .sort((a, b) => a.t - b.t);
 
+    const research = (p.researchStream ?? []).slice().sort((a, b) => a.gameTime - b.gameTime);
+    const extra: Timeline["extra"] = {
+      eapm: p.apmData?.effective?.average ?? null,
+      usefulShare: p.apmData?.raw?.total && p.apmData.effective?.total !== undefined ? p.apmData.effective.total / p.apmData.raw.total : null,
+      dominance: (p.dominanceSeries?.samples ?? []).map((d) => ({ t: d.t, score: d.score })),
+      battles: (p.battleParticipation ?? []).map((b) => ({ category: b.category, role: b.role })),
+      spellCasts: events.filter((e) => e.key === "spellCast").length,
+      firstScoutMs: events.find((e) => e.key === "scout")?.gameTime ?? null,
+      heroRevives: events.filter((e) => e.key === "heroRevive").length,
+      heroesDeadAtEnd: units.filter((u) => costOf(costs, u.itemId).isHero && u.lostState?.state === "lost").length,
+      firstAttackUpgradeMs: research.find((r) => r.category === "attack")?.gameTime ?? null,
+      firstArmorUpgradeMs: research.find((r) => r.category === "defense")?.gameTime ?? null,
+    };
+
     out.push({
+      extra,
       playerId: rp.playerId,
       race,
       teamId: p.teamId,
@@ -278,6 +310,7 @@ export function runIncome(tl: Timeline, k: EconomyConstants): IncomeResult {
         estLumberMined: Math.round(lumberMined),
         estGoldBank: Math.round(k.startGold + goldMined - spentGold),
         estLumberBank: Math.round(k.startLumber + lumberMined - spentLumber),
+        dominance: tl.extra.dominance.length ? stepAt(tl.extra.dominance, t).score : null,
       });
     }
   }
@@ -349,5 +382,34 @@ export function economyMetrics(
     // Night Elf wisps WC3V under-counts) it drifts, so bank figures stop at 10:00.
     est_bank_avg: early.length ? early.reduce((sum, s) => sum + bankAt(s), 0) / early.length : null,
     est_bank_10m: past(600_000) ? bankAt(at(series, 600_000)) : null,
+    ...fightAndHeroMetrics(tl, camps.map((g) => g.claimTime!)),
+    army_food_6m: past(360_000) ? armyFoodAt(tl, 360_000) : null,
+    army_food_8m: past(480_000) ? armyFoodAt(tl, 480_000) : null,
+    army_food_10m: past(600_000) ? armyFoodAt(tl, 600_000) : null,
+  };
+}
+
+const armyFoodAt = (tl: Timeline, t: number) => Math.max(0, stepAt(tl.food, t).used - stepAt(tl.workers, t).total);
+
+function fightAndHeroMetrics(tl: Timeline, campTimes: number[]): Metrics {
+  const x = tl.extra;
+  // WC3V's dominance score is kept in the samples but not turned into metrics: it only sees
+  // units someone selected, so the player who clicks more looks ahead (see docs/DATA.md).
+  const levelTime = (lvl: number) => tl.heroLevels.find((h) => h.level >= lvl)?.t ?? null;
+  const minutes = tl.endMs / 60_000;
+  return {
+    eapm: x.eapm,
+    useful_action_share: x.usefulShare,
+    fights_pitched: x.battles.filter((b) => b.category === "pitched-battle").length,
+    fights_defending: x.battles.filter((b) => b.category === "base-defense" && b.role !== "initiator").length,
+    fights_creep: x.battles.filter((b) => b.category === "creep-fight").length,
+    hero_deaths: x.heroRevives + x.heroesDeadAtEnd,
+    hero_level3_ms: levelTime(3),
+    hero_level5_ms: levelTime(5),
+    spells_per_min: minutes > 0 ? x.spellCasts / minutes : null,
+    first_creep_ms: campTimes.length ? Math.min(...campTimes) : null,
+    first_scout_ms: x.firstScoutMs,
+    first_attack_upgrade_ms: x.firstAttackUpgradeMs,
+    first_armor_upgrade_ms: x.firstArmorUpgradeMs,
   };
 }

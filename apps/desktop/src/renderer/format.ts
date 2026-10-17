@@ -55,9 +55,12 @@ export const GROUP_LABEL: Record<string, string> = {
   speed: "Speed",
   control: "Control",
   heroes: "Heroes",
-  macro: "Macro (orders)",
+  macro: "Macro",
   economy: "Economy (simulated)",
   supply: "Supply (simulated)",
   army: "Army",
+  fights: "Fights (simulated)",
+  heroes_sim: "Heroes",
+  scouting: "Scouting (simulated)",
   items: "Items",
 };

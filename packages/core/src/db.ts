@@ -7,7 +7,7 @@ import { DatabaseSync } from "node:sqlite";
 import { METRICS } from "./metrics.ts";
 import type { GameRecord } from "./record.ts";
 
-export const DB_VERSION = 2;
+export const DB_VERSION = 3;
 
 const SCHEMA_V1 = `
 CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -172,6 +172,9 @@ CREATE TABLE sim_series (
 );
 `;
 
+// v3: who-was-ahead score per sample.
+const SCHEMA_V3 = `ALTER TABLE sim_series ADD COLUMN dominance REAL;`;
+
 export type DB = DatabaseSync;
 
 export function openDb(file: string, opts: { readOnly?: boolean } = {}): DB {
@@ -192,6 +195,12 @@ export function openDb(file: string, opts: { readOnly?: boolean } = {}): DB {
     transaction(db, () => {
       db.exec(SCHEMA_V2);
       db.prepare("UPDATE meta SET value = '2' WHERE key = 'db_version'").run();
+    });
+  }
+  if (version < 3) {
+    transaction(db, () => {
+      db.exec(SCHEMA_V3);
+      db.prepare("UPDATE meta SET value = '3' WHERE key = 'db_version'").run();
     });
   }
   // Metric definitions are code; refresh them every start so the DB documents itself.
@@ -296,10 +305,12 @@ export function writeGame(db: DB, r: GameRecord, archiveSha256: string) {
     const insRule = db.prepare("INSERT INTO classification_reasons VALUES (?, ?, ?, ?, ?)");
     r.classification.rules.forEach((x, i) => insRule.run(r.gameKey, i, x.rule, x.passed ? 1 : 0, x.evidence));
     if (r.sim?.status === "ok") {
-      const insSim = db.prepare("INSERT INTO sim_series VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+      const insSim = db.prepare(
+        "INSERT INTO sim_series (game_key, player_id, t_ms, gold_spent, lumber_spent, gold_lost, lumber_lost, food_used, food_max, workers, est_gold_mined, est_lumber_mined, est_gold_bank, est_lumber_bank, dominance) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      );
       for (const p of r.sim.players) {
         for (const x of p.series) {
-          insSim.run(r.gameKey, p.playerId, x.t, x.goldSpent, x.lumberSpent, x.goldLost, x.lumberLost, x.foodUsed, x.foodMax, x.workers, x.estGoldMined, x.estLumberMined, x.estGoldBank, x.estLumberBank);
+          insSim.run(r.gameKey, p.playerId, x.t, x.goldSpent, x.lumberSpent, x.goldLost, x.lumberLost, x.foodUsed, x.foodMax, x.workers, x.estGoldMined, x.estLumberMined, x.estGoldBank, x.estLumberBank, x.dominance ?? null);
         }
       }
     }
