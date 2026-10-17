@@ -1,6 +1,7 @@
 // Electron main process: one window, read-mostly access to the W3Stats database.
 import { execFile } from "node:child_process";
-import { existsSync, watch, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, watch, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { app, BrowserWindow, ipcMain, nativeTheme, shell } from "electron";
 import {
@@ -27,6 +28,12 @@ const parseArgs = (argv: string[]): Launch => ({
   // Dev/test: render without ever showing a window (pair with --ozone-platform=headless), save a PNG, quit.
   screenshot: arg(argv, "screenshot"),
 });
+
+// A screenshot run (dev/test) gets its own profile, and so its own single-instance lock:
+// it must never hand its arguments to, resize, or quit the real W3Stats window.
+if (parseArgs(process.argv).screenshot) {
+  app.setPath("userData", mkdtempSync(join(tmpdir(), "w3stats-shot-")));
+}
 
 if (!app.requestSingleInstanceLock()) {
   app.quit();
@@ -60,7 +67,7 @@ if (!app.requestSingleInstanceLock()) {
     }
   };
 
-  app.on("second-instance", (_e, argv) => show(parseArgs(argv)));
+  app.on("second-instance", (_e, argv) => show({ ...parseArgs(argv), screenshot: null }));
 
   app.whenReady().then(() => {
     const launch = parseArgs(process.argv);

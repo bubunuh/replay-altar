@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import type { EChartsOption } from "echarts";
 import type { MetricDef, PerfGame } from "@w3stats/core/ui";
 import { base, Chart, esc, winrateBars, type Tokens } from "../Chart.tsx";
-import { dateTime, mean, metricValue, mmss, pct, RACE, shortName, SOURCE } from "../format.ts";
+import { dateTime, GROUP_LABEL, mean, metricValue, mmss, pct, RACE, shortName, SOURCE } from "../format.ts";
 
 type Group = { label: string; wins: number; losses: number };
 
@@ -24,7 +24,6 @@ function groupBy(games: PerfGame[], keyOf: (g: PerfGame) => string | null, order
 
 const LENGTHS = ["Under 10 min", "10–20 min", "Over 20 min"];
 const lengthBucket = (ms: number) => (ms < 600_000 ? LENGTHS[0] : ms <= 1_200_000 ? LENGTHS[1] : LENGTHS[2]);
-const GROUP_LABEL: Record<string, string> = { speed: "Speed", control: "Control", heroes: "Heroes", macro: "Macro", army: "Army", items: "Items" };
 
 function BarCard({ title, sub, rows }: { title: string; sub: string; rows: Group[] }) {
   const option = useMemo(() => winrateBars(rows), [rows]);
@@ -187,6 +186,11 @@ export function Performance({ games: all, metrics, onOpen }: { games: PerfGame[]
           <div className="label">Average game length</div>
           <div className="value">{mmss(mean(games.map((g) => g.duration_ms)))}</div>
           <div className="note">wins {mmss(mean(wins.map((g) => g.duration_ms)))} · losses {mmss(mean(losses.map((g) => g.duration_ms)))}</div>
+        </div>
+        <div className="card tile">
+          <div className="label">Supply blocked per game</div>
+          <div className="value">{metricValue({ unit: "count" }, mean(games.map((g) => g.me.supply_blocked_s)))} s</div>
+          <div className="note">opponents {metricValue({ unit: "count" }, mean(games.map((g) => g.opp.supply_blocked_s)))} s · from the simulation</div>
         </div>
         <div className="card tile">
           <div className="label">Tier 2 started</div>

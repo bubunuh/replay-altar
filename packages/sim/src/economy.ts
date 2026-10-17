@@ -284,6 +284,9 @@ export function runIncome(tl: Timeline, k: EconomyConstants): IncomeResult {
   return { series, perSecond };
 }
 
+/** Income estimates are only reported up to here (see economyMetrics). */
+export const ESTIMATE_HORIZON_MS = 600_000;
+
 const at = (series: SimSample[], t: number) => series.filter((s) => s.t <= t).at(-1) ?? series[0];
 
 /** The per-player metrics registered in core's SIM_METRICS. */
@@ -317,6 +320,7 @@ export function economyMetrics(
   const killed = killedSample ? killedSample.goldLost + killedSample.lumberLost : null;
   const past = (ms: number) => tl.endMs >= ms;
   const bankAt = (s: SimSample) => Math.max(0, s.estGoldBank) + Math.max(0, s.estLumberBank);
+  const early = series.filter((s) => s.t <= ESTIMATE_HORIZON_MS);
 
   return {
     gold_spent_6m: past(360_000) ? at(series, 360_000).goldSpent : null,
@@ -341,7 +345,9 @@ export function economyMetrics(
     upkeep_high_s: high,
     est_gold_mined_10m: past(600_000) ? at(series, 600_000).estGoldMined : null,
     est_lumber_mined_10m: past(600_000) ? at(series, 600_000).estLumberMined : null,
-    est_bank_avg: series.length ? series.reduce((sum, s) => sum + bankAt(s), 0) / series.length : null,
+    // The income model is calibrated mostly on single-mine play; past ~10 minutes (more mines,
+    // Night Elf wisps WC3V under-counts) it drifts, so bank figures stop at 10:00.
+    est_bank_avg: early.length ? early.reduce((sum, s) => sum + bankAt(s), 0) / early.length : null,
     est_bank_10m: past(600_000) ? bankAt(at(series, 600_000)) : null,
   };
 }

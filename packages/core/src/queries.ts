@@ -22,6 +22,7 @@ export type GameRow = {
   result_confidence: string;
   user_label: string | null;
   apm: number | null;
+  sim_status: "ok" | "failed" | null;
 };
 
 export function listGames(db: DB): GameRow[] {
@@ -29,7 +30,7 @@ export function listGames(db: DB): GameRow[] {
     .prepare(
       `SELECT g.game_key, g.played_at, g.duration_ms, g.source, g.category, g.analyzed, g.skip_reason,
               g.map_name, g.matchup, g.me_race, g.opp_name, g.opp_race, g.result, g.result_detected,
-              g.result_confidence, g.user_label, p.apm
+              g.result_confidence, g.user_label, p.apm, g.sim_status
        FROM v_games g LEFT JOIN game_players p ON p.game_key = g.game_key AND p.player_id = g.me_player_id
        ORDER BY g.played_at DESC`,
     )

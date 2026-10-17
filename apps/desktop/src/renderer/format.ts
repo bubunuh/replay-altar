@@ -27,8 +27,10 @@ export const dateTime = (iso: string) =>
 
 export const pct = (x: number | null) => (x === null ? "—" : `${Math.round(x * 100)}%`);
 
-export function metricValue(def: Pick<MetricDef, "unit">, v: number | null | undefined): string {
+/** Formats a metric; estimates (income model, inferred deaths) get a leading ≈. */
+export function metricValue(def: Pick<MetricDef, "unit"> & { source?: MetricDef["source"] }, v: number | null | undefined): string {
   if (v === null || v === undefined || Number.isNaN(v)) return "—";
+  if (def.source === "estimate") return `≈${metricValue({ unit: def.unit }, v)}`;
   switch (def.unit) {
     case "ms":
       return mmss(v);
@@ -38,7 +40,7 @@ export function metricValue(def: Pick<MetricDef, "unit">, v: number | null | und
     case "per_min":
       return String(Math.round(v));
     default:
-      return Number.isInteger(v) ? String(v) : v.toFixed(1);
+      return Math.abs(v) >= 1000 ? Math.round(v).toLocaleString("en-US") : Number.isInteger(v) ? String(v) : v.toFixed(1);
   }
 }
 
@@ -48,3 +50,14 @@ export const mean = (xs: (number | null | undefined)[]): number | null => {
 };
 
 export const shortName = (battletag: string | null) => (battletag ?? "?").replace(/#\d+$/, "");
+
+export const GROUP_LABEL: Record<string, string> = {
+  speed: "Speed",
+  control: "Control",
+  heroes: "Heroes",
+  macro: "Macro (orders)",
+  economy: "Economy (simulated)",
+  supply: "Supply (simulated)",
+  army: "Army",
+  items: "Items",
+};

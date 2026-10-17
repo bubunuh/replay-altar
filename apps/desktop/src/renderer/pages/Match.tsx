@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { EChartsOption } from "echarts";
-import type { BuildEvent, GameDetail, MetricDef, PlayerRecord } from "@w3stats/core/ui";
+import type { BuildEvent, GameDetail, GameRecord, MetricDef, PlayerRecord, SimSample } from "@w3stats/core/ui";
 import { api } from "../api.ts";
-import { base, Chart, esc, type Tokens } from "../Chart.tsx";
-import { dateTime, metricValue, mmss, RACE, shortName, SOURCE } from "../format.ts";
+import { base, Chart, esc, timeLines, type Tokens } from "../Chart.tsx";
+import { dateTime, GROUP_LABEL, metricValue, mmss, RACE, shortName, SOURCE } from "../format.ts";
 
 const WORKERS = new Set(["hpea", "opeo", "uaco", "ewsp"]);
-const GROUP_LABEL: Record<string, string> = { speed: "Speed", control: "Control", heroes: "Heroes", macro: "Macro", army: "Army", items: "Items" };
 
 /** Collapse runs of the same order issued close together: "Peasant ×3". */
 function compress(events: BuildEvent[]) {
@@ -52,6 +51,86 @@ function Heroes({ p }: { p: PlayerRecord }) {
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+type SimOk = Extract<NonNullable<GameRecord["sim"]>, { status: "ok" }>;
+
+function EconomyCard({ record }: { record: GameRecord }) {
+  const sim = record.sim;
+  const me = record.players.find((p) => p.isMe);
+  const opp = record.players.find((p) => p.playerId === record.classification.opponentId);
+  const ok = sim?.status === "ok" ? (sim as SimOk) : null;
+  const seriesOf = (p?: PlayerRecord) => ok?.players.find((x) => x.playerId === p?.playerId)?.series ?? [];
+  const mine = seriesOf(me);
+  const theirs = seriesOf(opp);
+  const both = (pick: (s: SimSample) => number) => (t: Tokens) => [
+    { name: shortName(me?.name ?? "You"), color: t.series1, points: mine.map((s) => [s.t, pick(s)] as [number, number]) },
+    { name: shortName(opp?.name ?? "Opponent"), color: t.series2, points: theirs.map((s) => [s.t, pick(s)] as [number, number]) },
+  ];
+  const spent = useMemo(() => timeLines(both((s) => s.goldSpent + s.lumberSpent)), [mine, theirs]);
+  const workers = useMemo(() => timeLines(both((s) => s.workers)), [mine, theirs]);
+  // The income model is only calibrated for the first 10 minutes (see packages/sim economy.ts).
+  const bank = useMemo(
+    () => timeLines((t) => both((s) => Math.max(0, s.estGoldBank) + Math.max(0, s.estLumberBank))(t).map((x) => ({ ...x, points: x.points.filter(([ms]) => ms <= 600_000) }))),
+    [mine, theirs],
+  );
+  const supplyFor = (p: PlayerRecord | undefined, series: SimSample[], mineColor: boolean) =>
+    timeLines((t) => [
+      { name: "food used", color: mineColor ? t.series1 : t.series2, points: series.map((s) => [s.t, s.foodUsed] as [number, number]), step: true },
+      { name: "food cap", color: t.ink2, points: series.map((s) => [s.t, Math.min(100, s.foodMax)] as [number, number]), step: true, muted: true },
+    ]);
+  const mySupply = useMemo(() => supplyFor(me, mine, true), [mine]);
+  const oppSupply = useMemo(() => supplyFor(opp, theirs, false), [theirs]);
+
+  if (!sim) {
+    return (
+      <div className="card">
+        <h2>Economy</h2>
+        <p className="sub">Not simulated yet. New games are simulated about a minute after they end; older ones with <code>w3stats sim --backfill</code>.</p>
+      </div>
+    );
+  }
+  if (!ok) {
+    return (
+      <div className="card">
+        <h2>Economy</h2>
+        <p className="sub">Simulation failed: {(sim as { reason: string }).reason}</p>
+      </div>
+    );
+  }
+  return (
+    <div className="card">
+      <h2>Economy</h2>
+      <p className="sub">
+        Reconstructed by simulating the replay (WC3V). Spending is priced from your orders with the game's own costs. Unspent resources are an
+        estimate from a mining model calibrated on your games; it is shown for the first 10 minutes only and is a trend, not an exact count.
+      </p>
+      <div className="grid-2">
+        <div>
+          <h3 className="chart-title">Resources spent (gold + lumber)</h3>
+          <Chart option={spent} height={200} label="Cumulative gold plus lumber spent by both players" />
+        </div>
+        <div>
+          <h3 className="chart-title">Workers alive</h3>
+          <Chart option={workers} height={200} label="Workers alive over time for both players" />
+        </div>
+        <div>
+          <h3 className="chart-title">≈ Unspent resources, first 10 minutes (estimate)</h3>
+          <Chart option={bank} height={200} label="Estimated unspent gold plus lumber for both players" />
+        </div>
+        <div>
+          <h3 className="chart-title">Supply: {shortName(me?.name ?? "You")}</h3>
+          <Chart option={mySupply} height={200} label="Your food used against food cap" />
+        </div>
+        {opp && (
+          <div>
+            <h3 className="chart-title">Supply: {shortName(opp.name)}</h3>
+            <Chart option={oppSupply} height={200} label="Opponent food used against food cap" />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -148,9 +227,11 @@ export function Match({ gameKey, metrics, onBack }: { gameKey: string; metrics: 
         <Chart option={apmOption} height={260} label="Actions per minute for both players over the game" />
       </div>
 
+      <EconomyCard record={r} />
+
       <div className="card">
         <h2>Key numbers</h2>
-        <p className="sub">Times are when the order was issued (cancels included). Hover a metric for its definition.</p>
+        <p className="sub">Order times are when the order was issued (cancels included). Economy and supply rows come from the simulation; ≈ marks estimates. Hover a metric for its definition.</p>
         <table>
           <thead>
             <tr>
@@ -246,6 +327,17 @@ export function Match({ gameKey, metrics, onBack }: { gameKey: string; metrics: 
                 <tr key={i}><td>{i === 0 ? "seen as" : ""}</td><td className="small"><code>{f.path}</code> <span className="muted">({f.timeSource})</span></td></tr>
               ))}
               <tr><td>parser</td><td className="small">{r.provenance.parser.name}@{r.provenance.parser.version}, classifier v{r.provenance.classifierVersion}, metrics v{r.provenance.metricsVersion}</td></tr>
+              {r.sim?.status === "ok" && (
+                <>
+                  <tr><td>simulation</td><td className="small">WC3V {r.sim.engine.commit}, game data {r.sim.gameData.version}, income model v{r.sim.model.version}, ran in {(r.sim.runMs / 1000).toFixed(1)} s</td></tr>
+                  {r.sim.players.map((p) => (
+                    <tr key={p.playerId}><td /><td className="small">{shortName(r.players.find((x) => x.playerId === p.playerId)?.name ?? String(p.playerId))}: parse confidence {Math.round(p.parseConfidence * 100)}%{p.validationWarnings.length ? `, ${p.validationWarnings.length} validator note(s)` : ""}</td></tr>
+                  ))}
+                  {r.sim.warnings.map((w, i) => <tr key={`w${i}`}><td className="rule-fail">model check</td><td className="small">{w}</td></tr>)}
+                  <tr><td>simulation output</td><td><code>{r.sim.outputPath}</code></td></tr>
+                </>
+              )}
+              {r.sim?.status === "failed" && <tr><td className="rule-fail">simulation</td><td className="small">failed: {r.sim.reason}</td></tr>}
             </tbody>
           </table>
         </details>

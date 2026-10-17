@@ -122,3 +122,4 @@ details summary { cursor: pointer; color: var(--ink-2); }
 .rule-fail { color: var(--critical-text); }
 code { font-size: 12px; background: var(--surface-2); padding: 1px 5px; border-radius: 5px; word-break: break-all; }
 .chart-table { margin-top: 8px; }
+.chart-title { font-size: 13px; font-weight: 500; color: var(--ink-2); margin: 4px 0 2px; }

@@ -44,6 +44,7 @@ function App() {
 
   const open = (key: string) => setGame(key);
   const analyzed = games.filter((g) => g.analyzed === 1).length;
+  const simulating = games.filter((g) => g.analyzed === 1 && g.sim_status === null).length;
 
   return (
     <div className="app">
@@ -64,7 +65,9 @@ function App() {
             </button>
           ))}
         </nav>
-        <span className="status">{analyzed} analyzed · {games.length - analyzed} skipped</span>
+        <span className="status">
+          {analyzed} analyzed · {games.length - analyzed} skipped{simulating ? ` · ${simulating} waiting for simulation` : ""}
+        </span>
       </header>
       <main>
         {game ? (

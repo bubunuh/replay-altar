@@ -4,12 +4,12 @@ import { existsSync, readFileSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
 import type { GameRecord, SimSummary } from "@w3stats/core";
 import { loadCosts, type CostTables } from "./costs.ts";
-import { buildTimelines, economyMetrics, runIncome, type EconomyConstants, type WOutput } from "./economy.ts";
+import { buildTimelines, economyMetrics, ESTIMATE_HORIZON_MS, runIncome, type EconomyConstants, type WOutput } from "./economy.ts";
 import constantsJson from "./economy-constants.json" with { type: "json" };
 import { ensureMapData } from "./maps.ts";
 import { DRIVER, gamedataDir, simNotReady, simOutputPath, wc3vCommit } from "./paths.ts";
 
-export { buildTimelines, runIncome, economyMetrics, loadCosts, simNotReady, simOutputPath, gamedataDir };
+export { buildTimelines, runIncome, economyMetrics, loadCosts, simNotReady, simOutputPath, gamedataDir, ESTIMATE_HORIZON_MS };
 export type { EconomyConstants, WOutput, CostTables };
 export type { Timeline } from "./economy.ts";
 export { mapDataName, ensureMapData } from "./maps.ts";
@@ -45,7 +45,8 @@ export function summarize(record: GameRecord, o: WOutput, costs: CostTables, k: 
   const players = timelines.map((tl, i) => {
     const oppIndex = timelines.findIndex((x) => x.teamId !== tl.teamId);
     const metrics = economyMetrics(tl, incomes[i], oppIndex >= 0 ? { tl: timelines[oppIndex], income: incomes[oppIndex] } : null, o, costs);
-    const worst = incomes[i].series.reduce((m, s) => (s.estGoldBank < m.estGoldBank ? s : m), incomes[i].series[0]);
+    const early = incomes[i].series.filter((s) => s.t <= ESTIMATE_HORIZON_MS);
+    const worst = early.reduce((m, s) => (s.estGoldBank < m.estGoldBank ? s : m), early[0]);
     if (worst && worst.estGoldBank < -200) {
       warnings.push(`player ${tl.playerId}: spent ${-worst.estGoldBank} more gold than the income model estimates by ${Math.floor(worst.t / 60000)}:${String(Math.floor((worst.t % 60000) / 1000)).padStart(2, "0")}`);
     }

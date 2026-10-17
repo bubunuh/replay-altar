@@ -46,7 +46,7 @@ export const SIM_METRICS: MetricDef[] = [
   { key: "upkeep_high_s", label: "Time in high upkeep", unit: "count", group: "supply", source: "simulation", description: "Seconds above 80 food (60% gold tax)." },
   { key: "est_gold_mined_10m", label: "Gold mined by 10:00", unit: "count", group: "economy", source: "estimate", description: "Income model: workers alive × mine rules (5 per mine, 12,500 gold per mine, upkeep) × calibrated rate." },
   { key: "est_lumber_mined_10m", label: "Lumber harvested by 10:00", unit: "count", group: "economy", source: "estimate", description: "Income model: workers not on gold (ghouls for Undead) × calibrated per-race rate." },
-  { key: "est_bank_avg", label: "Unspent resources (avg)", unit: "count", group: "economy", source: "estimate", description: "Average of starting resources + estimated income − spent (gold + lumber). Lower is better macro." },
+  { key: "est_bank_avg", label: "Unspent resources (avg, first 10 min)", unit: "count", group: "economy", source: "estimate", description: "Average over the first 10 minutes of starting resources + estimated income − spent (gold + lumber). Lower is better macro. Not reported past 10:00, where the income model is not calibrated." },
   { key: "est_bank_10m", label: "Unspent resources at 10:00", unit: "count", group: "economy", source: "estimate", description: "Estimated gold + lumber banked at 10:00." },
 ];
 
