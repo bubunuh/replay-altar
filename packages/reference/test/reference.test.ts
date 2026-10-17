@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { afterAll, describe, expect, test } from "vitest";
 import { DEFAULT_CONFIG, paths } from "@w3stats/core";
 import { simNotReady } from "@w3stats/sim";
-import { percentileOf, pickSubject, quantile, RateLimited, refreshGroup, summarizeValues, w3cClient, type Fetch, type W3cClient, type W3cMatch } from "../src/index.ts";
+import { percentileOf, pickSubject, quantile, RateLimited, refreshDue, refreshGroup, summarizeValues, w3cClient, type Fetch, type W3cClient, type W3cMatch } from "../src/index.ts";
 
 const FIX = join(import.meta.dirname, "../../../fixtures/replays");
 const match = (id: string, a: [string, number, number], b: [string, number, number], extra: Partial<W3cMatch> = {}): W3cMatch => ({
@@ -24,6 +24,22 @@ describe("choosing the player to compare with", () => {
   });
   test("Human mirror: the higher-rated Human", () => {
     expect(pickSubject(match("1", ["A#1", 1, 2450], ["B#2", 1, 2600]), "H", 2400)?.subject.battleTag).toBe("B#2");
+  });
+});
+
+describe("when to refresh", () => {
+  const H = 3600_000;
+  const now = Date.parse("2026-10-20T12:00:00Z");
+  const at = (hoursAgo: number) => new Date(now - hoursAgo * H).toISOString();
+  const base = { kept: 50, target: 50, refreshDays: 7, checkEveryMs: 6 * H, now };
+  test("never refreshed: now", () => expect(refreshDue({ ...base, lastRefreshAt: null })).toBe(true));
+  test("full: only after a week", () => {
+    expect(refreshDue({ ...base, lastRefreshAt: at(24 * 6) })).toBe(false);
+    expect(refreshDue({ ...base, lastRefreshAt: at(24 * 7 + 1) })).toBe(true);
+  });
+  test("still filling: every check, but not right after the last attempt", () => {
+    expect(refreshDue({ ...base, kept: 28, lastRefreshAt: at(6) })).toBe(true);
+    expect(refreshDue({ ...base, kept: 28, lastRefreshAt: at(2) })).toBe(false);
   });
 });
 

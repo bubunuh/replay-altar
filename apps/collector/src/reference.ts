@@ -1,6 +1,6 @@
 // Weekly reference refresh inside the collector: quiet, slow, and never while you play.
 import { openDb, paths, type Config, type DB } from "@w3stats/core";
-import { openReference, readState, refreshGroup } from "@w3stats/reference";
+import { openReference, readState, refreshDue, refreshGroup } from "@w3stats/reference";
 import { isWarcraftRunning } from "./system.ts";
 
 const CHECK_EVERY_MS = 6 * 3600_000;
@@ -18,11 +18,11 @@ export function scheduleReferenceRefresh(config: Config, log: (m: string) => voi
     running = true;
     try {
       for (const group of config.reference.groups) {
-        const st = readState(openReference(group.id, config).paths.root);
-        const age = st.lastRefreshAt ? Date.now() - Date.parse(st.lastRefreshAt) : Infinity;
-        // Weekly once full; while still filling up (or after a rate limit), keep going every check.
-        const filling = (st.lastResult?.kept ?? 0) < group.target;
-        const due = age > config.reference.refreshDays * 86_400_000 || (filling && age > CHECK_EVERY_MS - 60_000);
+        const ref = openReference(group.id, config);
+        const st = readState(ref.paths.root);
+        const kept = (ref.db.prepare("SELECT COUNT(*) n FROM ref_matches").get() as { n: number }).n;
+        const due = refreshDue({ lastRefreshAt: st.lastRefreshAt, kept, target: group.target, refreshDays: config.reference.refreshDays, checkEveryMs: CHECK_EVERY_MS, now: Date.now() });
+        ref.db.close();
         if (!due) continue;
         log(`reference ${group.id}: weekly refresh`);
         const res = await refreshGroup(group, {

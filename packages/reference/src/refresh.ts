@@ -44,6 +44,18 @@ export type RefreshResult = {
 
 export type RefState = { lastRefreshAt: string | null; lastResult: Omit<RefreshResult, "profile"> | null };
 
+/**
+ * Whether a group should refresh now: weekly (refreshDays) once full; while still below target
+ * (or after a rate limit stopped a run), at every check that is at least checkEveryMs after the
+ * last attempt.
+ */
+export function refreshDue(a: { lastRefreshAt: string | null; kept: number; target: number; refreshDays: number; checkEveryMs: number; now: number }): boolean {
+  if (!a.lastRefreshAt) return true;
+  const age = a.now - Date.parse(a.lastRefreshAt);
+  if (age > a.refreshDays * 86_400_000) return true;
+  return a.kept < a.target && age >= a.checkEveryMs - 60_000;
+}
+
 export const readState = (root: string): RefState =>
   existsSync(join(root, "state.json")) ? JSON.parse(readFileSync(join(root, "state.json"), "utf8")) : { lastRefreshAt: null, lastResult: null };
 
