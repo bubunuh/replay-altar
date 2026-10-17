@@ -13,3 +13,4 @@ export * from "./store.ts";
 export * from "./queries.ts";
 export * from "./sim.ts";
 export * from "./heroxp.ts";
+export * from "./official.ts";

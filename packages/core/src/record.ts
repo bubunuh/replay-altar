@@ -7,6 +7,7 @@ import { levelUpTimes } from "./heroxp.ts";
 import { abilityName, nameOf, NAMES_SOURCE } from "./names.ts";
 import type { RawReplay } from "./parse.ts";
 import { detectResult, type ResultInfo } from "./result.ts";
+import type { OfficialStats } from "./official.ts";
 import type { SimSummary } from "./sim.ts";
 
 export const SCHEMA_VERSION = 1;
@@ -74,6 +75,10 @@ export type GameRecord = {
   chat: { ms: number; player: string; mode: string; message: string }[];
   /** Economy from the simulation layer; absent until the game has been simulated. */
   sim?: SimSummary;
+  /** The game's own end-of-game stats (W3Champions games only). */
+  official?: OfficialStats;
+  /** Metrics whose value came from the official stats instead of our estimate. */
+  metricSources?: Record<string, "official">;
   provenance: {
     gameKeyMethod: string;
     canonicalFile: SourceFile;

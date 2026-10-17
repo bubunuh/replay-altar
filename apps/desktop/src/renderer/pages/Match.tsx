@@ -257,7 +257,10 @@ export function Match({ gameKey, metrics, pros, onBack }: { gameKey: string; met
             const shown = verdict ? a : { ...a, tier: null };
             return (
               <tr key={m.key} title={m.description} className={ref && shown.tier ? `tier-row-${shown.tier}` : undefined}>
-                <td>{m.label}</td>
+                <td>
+                  {m.label}
+                  {r.metricSources?.[m.key] === "official" && <span className="tag" style={{ marginLeft: 8 }} title="The game's own end-of-game number (from W3Champions)">official</span>}
+                </td>
                 <td className="num">{metricValue(m, mine)}</td>
                 <td className="num">{metricValue(m, opp?.metrics[m.key])}</td>
                 {ref && <td className="num muted"><ProMedian def={m} a={a} /></td>}
@@ -396,6 +399,10 @@ export function Match({ gameKey, metrics, pros, onBack }: { gameKey: string; met
                 </>
               )}
               {r.sim?.status === "failed" && <tr><td className="rule-fail">simulation</td><td className="small">failed: {r.sim.reason}</td></tr>}
+              {r.official?.status === "ok" && (
+                <tr><td>official stats</td><td className="small">W3Champions match {r.official.matchId}, fetched {dateTime(r.official.fetchedAt)}</td></tr>
+              )}
+              {r.official?.status === "missing" && <tr><td>official stats</td><td className="small">not available: {r.official.reason}</td></tr>}
             </tbody>
           </table>
         </details>

@@ -1,7 +1,8 @@
 // Keeps a reference group stocked with current-patch games from W3Champions.
 import { existsSync, mkdirSync, readFileSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { applySim, ingestFile, parseReplay, readRecord, type Config, type ReferenceGroup } from "@w3stats/core";
+import { applyOfficial, applySim, ingestFile, parseReplay, readRecord, type Config, type ReferenceGroup } from "@w3stats/core";
+import { officialForMatch } from "./official.ts";
 import { simulateGame } from "@w3stats/sim";
 import { buildProfile, type RefProfile } from "./profile.ts";
 import { openReference } from "./store.ts";
@@ -170,6 +171,10 @@ export async function refreshGroup(group: ReferenceGroup, opts: RefreshOptions):
             );
             const sim = await simulateGame(record, { dataRoot: paths.root, warcraftDocuments: opts.config.warcraftDocuments, gamedataRoot: opts.gamedataRoot });
             applySim(ref, record.gameKey, sim);
+            // The game's own score sheet: replaces our estimates where it has the number.
+            await sleep(BETWEEN_PAGES_MS);
+            const fresh = readRecord(paths, record.gameKey);
+            if (fresh) applyOfficial(ref, record.gameKey, await officialForMatch(client, m.id, fresh));
             downloaded++;
             kept++;
             log(`${group.id}: ${kept}/${target} ${pick.subject.battleTag} (${pick.subject.oldMmr}) vs ${pick.opponent.battleTag} on ${m.mapName ?? m.map}${sim.status === "ok" ? "" : ` (simulation failed: ${sim.reason})`}`);

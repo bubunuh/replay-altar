@@ -6,6 +6,7 @@ import type { Config } from "./config.ts";
 import { mapName, writeGame, type DB } from "./db.ts";
 import { SIM_METRIC_KEYS } from "./metrics.ts";
 import { parseReplay, type RawReplay } from "./parse.ts";
+import { mergeOfficial, type OfficialStats } from "./official.ts";
 import { buildRecord, endTimeOf, mergeSim, type GameRecord, type SourceFile } from "./record.ts";
 import type { SimSummary } from "./sim.ts";
 import { rawPath, readRaw, readRecord, recordPath, type Paths } from "./store.ts";
@@ -106,8 +107,10 @@ export async function ingestFile(ctx: IngestContext, path: string): Promise<Inge
     ingestedAt: existing?.provenance.ingestedAt ?? new Date().toISOString(),
   });
 
-  // A simulation belongs to the canonical file; keep it unless that file changed.
+  // A simulation belongs to the canonical file; keep it unless that file changed. Official stats
+  // belong to the game, so they always carry over.
   if (!replacesCanonical) mergeSim(record, existing?.sim);
+  mergeOfficial(record, existing?.official);
 
   if (replacesCanonical) {
     if (existing && existsSync(existing.provenance.archivePath)) {
@@ -146,6 +149,7 @@ export async function reingestAll(ctx: IngestContext): Promise<{ games: number; 
         ingestedAt: old.provenance.ingestedAt,
       });
       mergeSim(record, old.sim);
+      mergeOfficial(record, old.official);
       save(ctx, record, raw, sha256(buffer));
       games++;
     } catch (e) {
@@ -164,8 +168,19 @@ export function applySim(ctx: IngestContext, gameKey: string, sim: SimSummary): 
     for (const k of Object.keys(p.metrics)) if (SIM_METRIC_KEYS.has(k)) p.metrics[k] = null;
   }
   mergeSim(record, sim);
+  mergeOfficial(record, record.official); // official numbers win over fresh estimates
   const raw = readRaw(ctx.paths, gameKey);
   save(ctx, record, raw, record.provenance.canonicalFile.sha256);
   logEvent(ctx.paths, { type: "simulated", gameKey, status: sim.status, reason: sim.status === "failed" ? sim.reason : undefined });
+  return record;
+}
+
+/** Store official end-of-game stats with a game (or a "missing" note for retries). */
+export function applyOfficial(ctx: IngestContext, gameKey: string, official: OfficialStats): GameRecord | null {
+  const record = readRecord(ctx.paths, gameKey);
+  if (!record) return null;
+  mergeOfficial(record, official);
+  save(ctx, record, readRaw(ctx.paths, gameKey), record.provenance.canonicalFile.sha256);
+  logEvent(ctx.paths, { type: "official", gameKey, status: official.status });
   return record;
 }

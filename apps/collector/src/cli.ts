@@ -16,9 +16,9 @@ import {
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { applySim, readRecord, referencePaths, type RefLookup } from "@w3stats/core";
+import { applyOfficial, applySim, readRecord, referencePaths, type RefLookup } from "@w3stats/core";
 import { CONSTANTS, gamedataDir, loadCosts, readSimOutput, simNotReady, simulateGame, summarize } from "@w3stats/sim";
-import { buildProfile, openReference, readState, refreshGroup } from "@w3stats/reference";
+import { buildProfile, officialForMatch, officialForOwnGame, openReference, readState, refreshGroup, w3cClient } from "@w3stats/reference";
 import { currentReplayBuild } from "./reference.ts";
 import { runCollector } from "./collector.ts";
 import { isReplayFile } from "./watcher.ts";
@@ -47,6 +47,8 @@ const HELP = `w3stats — Warcraft III replay archive & stats
   w3stats ref                 reference groups (pro games from W3Champions): status
   w3stats ref refresh [--target N] [--group id]   download/simulate missing reference games now
   w3stats ref profile         rebuild the reference statistics from stored games
+  w3stats official            fetch the game's own end-of-game stats from W3Champions for W3C games
+                              (yours and reference games) that don't have them yet
   w3stats collector           run the collector in the foreground (what the service runs)
 `;
 
@@ -242,6 +244,41 @@ switch (cmd) {
         console.log(`  last refresh: ${st.lastRefreshAt ?? "never"}; data in ${ref.paths.root}`);
       }
     }
+    break;
+  }
+  case "official": {
+    const c = ctx();
+    const client = w3cClient({ log: (m) => console.log(m) });
+    const pause = () => new Promise((r) => setTimeout(r, 2000)); // gentle on W3Champions
+    let ok = 0;
+    let missing = 0;
+    // Yours: W3Champions games without stats (or with a not-yet-found note).
+    for (const { game_key } of c.db.prepare("SELECT game_key FROM games WHERE source = 'w3champions' AND analyzed = 1").all() as { game_key: string }[]) {
+      const record = readRecord(c.paths, game_key);
+      if (!record || record.official?.status === "ok") continue;
+      const prev = record.official?.status === "missing" ? record.official.attempts : 0;
+      const off = await officialForOwnGame(client, record, prev);
+      applyOfficial(c, game_key, off);
+      if (off.status === "ok") ok++;
+      else missing++;
+      console.log(`${game_key.slice(0, 8)} ${off.status === "ok" ? `match ${off.matchId}` : off.reason}`);
+      await pause();
+    }
+    // Reference groups: the W3C match id is known.
+    for (const g of c.config.reference.groups) {
+      const ref = openReference(g.id, c.config);
+      for (const { game_key, w3c_match_id } of ref.db.prepare("SELECT game_key, w3c_match_id FROM ref_matches").all() as { game_key: string; w3c_match_id: string }[]) {
+        const record = readRecord(ref.paths, game_key);
+        if (!record || record.official?.status === "ok") continue;
+        const off = await officialForMatch(client, w3c_match_id, record);
+        applyOfficial(ref, game_key, off);
+        if (off.status === "ok") ok++;
+        else missing++;
+        await pause();
+      }
+      buildProfile(ref.db, ref.paths, g, currentReplayBuild(c.db));
+    }
+    console.log(`official stats: ${ok} fetched, ${missing} not available`);
     break;
   }
   case "status": {

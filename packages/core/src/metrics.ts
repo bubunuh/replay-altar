@@ -5,7 +5,7 @@ import { isRaceCode, POTION_ITEMS, RACES, TOWN_PORTAL, type RaceCode } from "./g
 import { heroesXpAt, levelUpTimes } from "./heroxp.ts";
 import type { RawReplay } from "./parse.ts";
 
-export const METRICS_VERSION = 4;
+export const METRICS_VERSION = 5;
 
 export type MetricUnit = "ms" | "count" | "apm" | "ratio" | "per_min";
 
@@ -18,8 +18,9 @@ export type MetricDef = {
    * replay: counted directly from the replay's commands.
    * simulation: from WC3V's reconstruction of the game (inferred, usually reliable).
    * estimate: from our income model on top of the simulation (approximate; shown with ≈).
+   * official: the game's own end-of-game stats (W3Champions games only; empty otherwise).
    */
-  source: "replay" | "simulation" | "estimate";
+  source: "replay" | "simulation" | "estimate" | "official";
   /** Which direction is generally better; null when it depends on strategy (e.g. tech timing). */
   better: "higher" | "lower" | null;
   /** A whole-game total that grows with game length; compared with other games per 10 minutes. */
@@ -72,6 +73,14 @@ const SIM_SPECS: MetricSpec[] = [
   { key: "hero_deaths", label: "Hero deaths", unit: "count", group: "heroes", source: "simulation", description: "Hero revives plus heroes dead at the end of the game." },
   { key: "spells_per_min", label: "Spells per minute", unit: "per_min", group: "heroes", source: "simulation", description: "Spell casts per minute of game time (heroes and casters)." },
   { key: "first_creep_ms", label: "First creep camp", unit: "ms", group: "heroes", source: "simulation", description: "When your side first cleared a neutral camp." },
+  { key: "gold_collected", label: "Gold collected", unit: "count", group: "economy", source: "simulation", description: "Gold your workers brought in over the game. W3Champions games: the game's own number. Otherwise estimated as gold spent minus the 500 starting gold (within ~3% of the official number on pro games)." },
+  { key: "lumber_collected", label: "Lumber collected", unit: "count", group: "economy", source: "official", description: "Lumber harvested over the game (W3Champions games only)." },
+  { key: "upkeep_gold_lost", label: "Gold lost to upkeep", unit: "count", group: "economy", source: "official", description: "Gold the upkeep tax took (W3Champions games only)." },
+  { key: "units_killed", label: "Units killed", unit: "count", group: "fights", source: "official", description: "Enemy units you killed, as the game counts them (W3Champions games only)." },
+  { key: "units_produced", label: "Units produced", unit: "count", group: "army", source: "official", description: "Units you produced, as the game counts them (W3Champions games only)." },
+  { key: "largest_army", label: "Largest army", unit: "count", group: "army", source: "official", description: "Your largest army during the game, as the game counts it (W3Champions games only)." },
+  { key: "heroes_killed", label: "Heroes killed", unit: "count", group: "fights", source: "official", description: "Enemy heroes you killed (W3Champions games only)." },
+  { key: "items_obtained", label: "Items obtained", unit: "count", group: "items", source: "official", description: "Items your heroes obtained, bought or dropped (W3Champions games only)." },
   { key: "first_scout_ms", label: "First scout", unit: "ms", group: "scouting", source: "simulation", description: "When a unit of yours first reached the opponent's side of the map." },
 ];
 
@@ -87,6 +96,7 @@ const BETTER: Record<string, "higher" | "lower"> = {
   hero_level_6m: "higher", hero_level_10m: "higher", hero_levels_total: "higher", hero_level3_ms: "lower", hero_level5_ms: "lower", hero_deaths: "lower",
   hero_xp_4m: "higher", hero_xp_6m: "higher", hero_xp_8m: "higher", hero_xp_10m: "higher", hero_xp_total: "higher", hero_xp_per_min: "higher", hero_xp_share: "higher",
   fights_defending: "lower",
+  gold_collected: "higher", units_killed: "higher", heroes_killed: "higher", largest_army: "higher", lumber_collected: "higher",
   supply_blocked_s: "lower", unused_supply_avg: "lower", est_bank_avg: "lower", est_bank_10m: "lower",
   est_gold_mined_10m: "higher", est_lumber_mined_10m: "higher",
   army_food_6m: "higher", army_food_8m: "higher", army_food_10m: "higher",
@@ -97,6 +107,7 @@ const SCALES_WITH_LENGTH = new Set([
   "resources_spent_total", "resources_lost_total", "resources_killed_total",
   "units_ordered", "upgrades_ordered", "items_bought", "towers_total", "tp_bought", "potions_bought",
   "hero_deaths", "hero_levels_total", "hero_xp_total", "fights_pitched", "fights_defending", "fights_creep",
+  "gold_collected", "lumber_collected", "upkeep_gold_lost", "units_killed", "units_produced", "heroes_killed", "items_obtained",
   "supply_blocked_s", "upkeep_low_s", "upkeep_high_s",
 ]);
 
@@ -108,7 +119,7 @@ const SCALES_WITH_LENGTH = new Set([
 export const CORE_METRICS = [
   "workers_by_6m", "workers_alive_6m", "workers_alive_10m",
   "hero_xp_6m", "hero_xp_10m", "hero_xp_share", "hero_level3_ms", "creep_camps_6m",
-  "resources_spent_total", "trade_efficiency",
+  "gold_collected", "units_killed", "trade_efficiency",
   "unused_supply_avg", "fights_defending", "hero_deaths", "expansions",
 ];
 export const MECHANICS_METRICS = ["apm", "eapm", "useful_action_share", "hotkey_select_share", "control_groups_used", "control_group_recalls_per_min"];

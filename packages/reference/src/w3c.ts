@@ -22,8 +22,19 @@ export type W3cMatch = {
 
 export type Fetch = (url: string, init?: { headers?: Record<string, string> }) => Promise<{ status: number; headers: { get(name: string): string | null }; json(): Promise<unknown>; arrayBuffer(): Promise<ArrayBuffer> }>;
 
+export type W3cScore = {
+  battleTag: string;
+  unitScore: { unitsProduced: number; unitsKilled: number; largestArmy: number };
+  heroScore: { heroesKilled: number; itemsObtained: number; mercsHired: number; expGained: number };
+  resourceScore: { goldCollected: number; lumberCollected: number; goldUpkeepLost: number };
+};
+
 export type W3cClient = {
   currentSeason(): Promise<number>;
+  /** The game's end-of-game stats for a match (null if unknown). */
+  matchDetail(matchId: string): Promise<{ match: W3cMatch; playerScores: W3cScore[] } | null>;
+  /** A player's 1v1 matches against one opponent in a season. */
+  searchPlayerMatches(q: { playerTag: string; opponentTag: string; gateway: number; season: number }): Promise<W3cMatch[]>;
   listMatches(q: { gateway: number; season: number; minMmr: number; offset: number; pageSize: number }): Promise<{ count: number; matches: W3cMatch[] }>;
   downloadReplay(matchId: string): Promise<Buffer | null>;
 };
@@ -64,6 +75,18 @@ export function w3cClient(opts: { fetch?: Fetch; sleep?: (ms: number) => Promise
       const res = await get(url);
       if (res.status !== 200) throw new Error(`match list failed: HTTP ${res.status}`);
       return (await res.json()) as { count: number; matches: W3cMatch[] };
+    },
+    async matchDetail(matchId) {
+      const res = await get(`${W3C_API}matches/${encodeURIComponent(matchId)}`);
+      if (res.status === 404) return null;
+      if (res.status !== 200) throw new Error(`match ${matchId} failed: HTTP ${res.status}`);
+      return (await res.json()) as { match: W3cMatch; playerScores: W3cScore[] };
+    },
+    async searchPlayerMatches(q) {
+      const url = `${W3C_API}matches/search?playerId=${encodeURIComponent(q.playerTag)}&gateway=${q.gateway}&offset=0&opponentId=${encodeURIComponent(q.opponentTag)}&pageSize=50&gameMode=1&season=${q.season}`;
+      const res = await get(url);
+      if (res.status !== 200) return [];
+      return ((await res.json()) as { matches: W3cMatch[] }).matches ?? [];
     },
     async downloadReplay(matchId) {
       const res = await get(`${W3C_API}replays/${encodeURIComponent(matchId)}`);

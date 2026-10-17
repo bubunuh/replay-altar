@@ -359,6 +359,8 @@ export function economyMetrics(
     gold_spent_10m: past(600_000) ? at(series, 600_000).goldSpent : null,
     lumber_spent_10m: past(600_000) ? at(series, 600_000).lumberSpent : null,
     resources_spent_total: last.goldSpent + last.lumberSpent,
+    // Replaced by the official number in W3Champions games (core/official.ts).
+    gold_collected: Math.max(0, last.goldSpent - 500),
     resources_lost_total: lost,
     resources_killed_total: killed,
     trade_efficiency: killed !== null && killed + lost > 0 ? killed / (killed + lost) : null,

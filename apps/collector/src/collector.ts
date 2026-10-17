@@ -1,5 +1,6 @@
 // The always-on service: archive + analyze new replays, react to Warcraft III starting.
 import { ingestFile, loadConfig, mmss, openDb, paths, replayDirs, type GameRecord } from "@w3stats/core";
+import { OfficialQueue } from "./officialqueue.ts";
 import { scheduleReferenceRefresh } from "./reference.ts";
 import { SimQueue } from "./simqueue.ts";
 import { notify, openDesktop, watchWarcraft } from "./system.ts";
@@ -24,6 +25,7 @@ export async function runCollector() {
   const db = openDb(p.db);
   const ctx = { db, config, paths: p };
   const sims = new SimQueue(ctx, log);
+  const officials = new OfficialQueue(ctx, log);
   const dirs = replayDirs(config);
   if (dirs.length === 0) log(`no replay folders found under ${config.warcraftDocuments.join(", ")}`);
 
@@ -36,6 +38,7 @@ export async function runCollector() {
       const r = out.record;
       log(`${out.status} ${r.gameKey.slice(0, 8)} ${r.classification.source}/${r.classification.category} analyzed=${r.classification.analyzed} from ${path}`);
       if (out.needsSim) sims.add(r.gameKey);
+      if (out.status === "new" && r.classification.source === "w3champions" && r.classification.analyzed) officials.add(r.gameKey);
       // Notify only for a game that just ended while we were watching. A rescan can find a
       // game from minutes ago, and its notification would land in the middle of the next match.
       const fresh = Date.now() - Date.parse(r.game.endedAt) < 10 * 60_000;

@@ -4,7 +4,8 @@ import { join } from "node:path";
 import { afterAll, describe, expect, test } from "vitest";
 import { DEFAULT_CONFIG, paths } from "@w3stats/core";
 import { simNotReady } from "@w3stats/sim";
-import { percentileOf, pickSubject, quantile, RateLimited, refreshDue, refreshGroup, summarizeValues, w3cClient, type Fetch, type W3cClient, type W3cMatch } from "../src/index.ts";
+import { officialForOwnGame, percentileOf, pickSubject, quantile, RateLimited, refreshDue, refreshGroup, summarizeValues, w3cClient, type Fetch, type W3cClient, type W3cMatch, type W3cScore } from "../src/index.ts";
+import { mergeOfficial, type GameRecord } from "@w3stats/core";
 
 const FIX = join(import.meta.dirname, "../../../fixtures/replays");
 const match = (id: string, a: [string, number, number], b: [string, number, number], extra: Partial<W3cMatch> = {}): W3cMatch => ({
@@ -40,6 +41,49 @@ describe("when to refresh", () => {
   test("still filling: every check, but not right after the last attempt", () => {
     expect(refreshDue({ ...base, kept: 28, lastRefreshAt: at(6) })).toBe(true);
     expect(refreshDue({ ...base, kept: 28, lastRefreshAt: at(2) })).toBe(false);
+  });
+});
+
+describe("official end-of-game stats", () => {
+  const score = (tag: string, xp: number, gold: number): W3cScore => ({
+    battleTag: tag,
+    unitScore: { unitsProduced: 40, unitsKilled: 30, largestArmy: 50 },
+    heroScore: { heroesKilled: 1, itemsObtained: 5, mercsHired: 0, expGained: xp },
+    resourceScore: { goldCollected: gold, lumberCollected: 2000, goldUpkeepLost: 300 },
+  });
+  const record = (): GameRecord =>
+    ({
+      gameKey: "k",
+      game: { playedAt: "2026-10-12T21:05:51Z", durationMs: 851_000 },
+      classification: { opponentId: 1 },
+      players: [
+        { playerId: 2, name: "Me#1", isMe: true, teamId: 1, metrics: { hero_xp_total: 1800, gold_collected: 7000 } },
+        { playerId: 1, name: "Opp#1", isMe: false, teamId: 0, metrics: { hero_xp_total: 900, gold_collected: 6000 } },
+      ],
+    }) as unknown as GameRecord;
+  const client = (startTime: string): W3cClient => ({
+    currentSeason: async () => 25,
+    listMatches: async () => ({ count: 0, matches: [] }),
+    downloadReplay: async () => null,
+    searchPlayerMatches: async (q) => (q.gateway === 20 && q.season === 25 ? [match("w3c-1", ["Me#1", 1, 1500], ["Opp#1", 2, 1500], { startTime })] : []),
+    matchDetail: async () => ({ match: match("w3c-1", ["Me#1", 1, 1500], ["Opp#1", 2, 1500]), playerScores: [score("Me#1", 2411, 7956), score("Opp#1", 866, 6500)] }),
+  });
+
+  test("your game is found by opponent and start time; official numbers replace estimates", async () => {
+    const r = record();
+    const off = await officialForOwnGame(client("2026-10-12T21:05:37Z"), r);
+    expect(off).toMatchObject({ status: "ok", matchId: "w3c-1" });
+    mergeOfficial(r, off);
+    const me = r.players[0];
+    expect(me.metrics.hero_xp_total).toBe(2411);
+    expect(me.metrics.gold_collected).toBe(7956);
+    expect(me.metrics.units_killed).toBe(30);
+    expect(me.metrics.hero_xp_share).toBeCloseTo(2411 / (2411 + 866));
+    expect(r.metricSources?.hero_xp_total).toBe("official");
+  });
+  test("a match far from the replay's start time is not taken", async () => {
+    const off = await officialForOwnGame(client("2026-10-12T23:30:00Z"), record(), 1);
+    expect(off).toMatchObject({ status: "missing", attempts: 2 });
   });
 });
 
@@ -91,6 +135,8 @@ describe.skipIf(!canRun)("refreshing a reference group (fake W3Champions, real s
   const downloads: string[] = [];
   const client: W3cClient = {
     currentSeason: async () => 25,
+    matchDetail: async () => null,
+    searchPlayerMatches: async () => [],
     listMatches: async (q) => ({ count: fakeMatches.length, matches: q.offset === 0 && q.gateway === 20 ? fakeMatches : [] }),
     downloadReplay: async (id) => {
       downloads.push(id);
