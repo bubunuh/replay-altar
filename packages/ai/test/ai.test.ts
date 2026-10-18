@@ -161,7 +161,8 @@ describe("report without the model", () => {
     expect(tp.text).toMatch(/turned at 8:15: a pitched battle where you lost ≈900 and they lost ≈0/);
     expect(tp.text).toMatch(/from 8:00/);
     expect(turningPoint(r, me, opp, "win")).toBeNull();
-    expect(recapOf(r, opp, "loss", findings(r, null), [])).toMatch(/^You lost in 14:00 against Human\. The biggest problem: they left a window open/);
+    // You still had the bigger army when this loss ended: the recap says so before the findings.
+    expect(recapOf(r, opp, "loss", findings(r, null), [])).toMatch(/^You lost in 14:00 against Human\. The game ended while your army was bigger \(1500 vs 700\).* The biggest problem: they left a window open/);
   });
 
   test("composition: attack types against armor, and anti-air", async () => {

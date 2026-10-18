@@ -870,7 +870,7 @@ function becauseFor(f: Finding, c: Ctx): string[] {
     const R = RACES[c.opp.race as RaceCode];
     const t2 = R ? c.opp.build.find((b) => b.code === R.tier2)?.ms : undefined;
     const towers = R ? c.opp.build.filter((b) => R.towers.includes(b.code) && b.ms <= 600_000).length : 0;
-    if (t2 !== undefined && t2 <= 600_000) out.push(`They put the resources into tech instead (tier 2 at ${mmss(t2)}${towers ? `, ${towers} tower orders by 10:00` : ""}): that is when an expansion is safest.`);
+    if (t2 !== undefined && t2 <= 600_000) out.push(`They put the resources into tech instead (tier 2 at ${mmss(t2)}${towers ? `, ${towers} tower order${towers === 1 ? "" : "s"} by 10:00` : ""}): that is when an expansion is safest.`);
   }
   if (f.id === "hero_deaths" && (m.tp_bought ?? 0) === 0) out.push("You had no Town Portal to save them.");
   return out;
