@@ -14,7 +14,8 @@ export type Finding = {
   id:
     | "window" | "exposed" | "economy" | "heroes" | "fights" | "supply" | "mechanics" | "hero_deaths" | "no_heroes" | "upkeep" | "expansion" | "creeping"
     // basics: beginner mistakes, rare at higher levels (thresholds well outside what pros do)
-    | "first_creep" | "upgrades" | "one_hero" | "no_items" | "floating" | "unanswered_expansion" | "just_over_50" | "towers" | "workers_lost" | "goal_3360";
+    | "first_creep" | "upgrades" | "one_hero" | "no_items" | "floating" | "unanswered_expansion" | "just_over_50" | "towers" | "workers_lost" | "goal_3360"
+    | "unused_spike" | "upkeep_before_upgrades" | "mine_dry";
   /** 0–1: how much it likely cost (problems) or how well it went (strengths). */
   severity: number;
   /** Fallback title when the model is not available. */
@@ -509,6 +510,64 @@ function goal3360Finding(c: Ctx): Finding | null {
   };
 }
 
+const MINE_GOLD = 12_500;
+const tier3Of = (p: PlayerRecord) => p.build.find((b) => b.code === RACES[p.race as RaceCode]?.tier3)?.ms ?? null;
+
+/**
+ * Warcraft 3 Gym (all races): "the goal is always to reach 50 supply with level 3 on both heroes",
+ * then attack, expand, or tech to tier 3 (Rifle Caster guide; Grubby: "then seek a fight").
+ * Fires when 4 minutes after first reaching 50 food you had done none of the three.
+ */
+function unusedSpikeFinding(c: Ctx): Finding | null {
+  const t50 = seriesOf(c.r, c.me).find((s) => s.foodUsed >= 50)?.t ?? null;
+  const until = t50 === null ? null : t50 + 240_000;
+  if (t50 === null || until === null || c.r.game.durationMs < until) return null;
+  const attacked = fightsNear(c, t50, until).some((f) => f.initiatorId === c.me.playerId && f.playerIds.includes(c.opp.playerId));
+  const expanded = expansionTimes(c.me).some((t) => t >= t50 - 60_000 && t <= until);
+  const t3 = tier3Of(c.me);
+  const teched = t3 !== null && t3 <= until;
+  if (attacked || expanded || teched) return null;
+  return {
+    id: "unused_spike",
+    severity: BASIC + 0.05,
+    headline: "You reached 50 food and waited",
+    evidence: [`You first had 50 food at ${mmss(t50)}. In the next 4 minutes you started no fight with the opponent, took no expansion and didn't start tier 3. Guides: at 50 food (heroes level 3), attack, expand or tech.`],
+  };
+}
+
+/**
+ * Warcraft 3 Gym (Orc auras guide) and Grubby: don't go over 50 food before investing (attack/armor
+ * upgrades), unless you have an expansion.
+ */
+function upkeepBeforeUpgradesFinding(c: Ctx): Finding | null {
+  const over = seriesOf(c.r, c.me).find((s) => s.foodUsed > 50)?.t ?? null;
+  if (over === null) return null;
+  const m = c.me.metrics;
+  const upgraded = Math.min(m.first_attack_upgrade_ms ?? Infinity, m.first_armor_upgrade_ms ?? Infinity) <= over;
+  const expanded = expansionTimes(c.me).some((t) => t <= over);
+  if (upgraded || expanded) return null;
+  return {
+    id: "upkeep_before_upgrades",
+    severity: BASIC,
+    headline: "Into upkeep before any upgrade",
+    evidence: [`You went over 50 food at ${mmss(over)} with no attack or armor upgrade and no expansion yet (first upgrade: ${mmss(Math.min(m.first_attack_upgrade_ms ?? Infinity, m.first_armor_upgrade_ms ?? Infinity) === Infinity ? null : Math.min(m.first_attack_upgrade_ms ?? Infinity, m.first_armor_upgrade_ms ?? Infinity))}). Guides: invest at 50 food (upgrades, items, a production building), then break upkeep.`],
+  };
+}
+
+/** Warcraft 3 Gym: "expand when your gold mine runs out". A mine holds 12,500 gold. */
+function mineDryFinding(c: Ctx): Finding | null {
+  const collected = c.me.metrics.gold_collected;
+  if (collected === null || collected === undefined || collected < MINE_GOLD - 1000) return null;
+  const exp = expansionTimes(c.me);
+  if (exp.length) return null;
+  return {
+    id: "mine_dry",
+    severity: BASIC + 0.1,
+    headline: "Your gold mine ran dry with no second base",
+    evidence: [`You collected ≈${Math.round(collected)} gold from one base; a mine holds ${MINE_GOLD}. No expansion was ordered.`],
+  };
+}
+
 /** Every rule that fires, most costly first. */
 /** Every rule that fires, most costly first. */
 export function allFindings(r: GameRecord, ref: FactsRef | null, subjectId?: number): Finding[] {
@@ -539,6 +598,9 @@ export function allFindings(r: GameRecord, ref: FactsRef | null, subjectId?: num
     towersFinding(c),
     workersLostFinding(c),
     goal3360Finding(c),
+    unusedSpikeFinding(c),
+    upkeepBeforeUpgradesFinding(c),
+    mineDryFinding(c),
   ]
     .filter((f): f is Finding => !!f && f.severity >= MIN_SEVERITY)
     .sort((a, b) => b.severity - a.severity);

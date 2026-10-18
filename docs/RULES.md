@@ -39,11 +39,15 @@ Thresholds sit outside what the pro games show, so they rarely fire for good pla
 | `just_over_50` | 2+ minutes at 51-54 food without fighting | Grubby #3: 51 food is "almost no benefit for maximum disadvantage" |
 | `towers` | more than 6 tower build/upgrade orders per base | Grubby, Human guide 2026: an arcane tower and maybe a guard tower per base |
 | `workers_lost` | 5+ workers lost by 12:00 | Grubby, Human guide: losing ~5 peasants while expanding puts you far behind |
+| `unused_spike` | 4 minutes after first reaching 50 food: no fight started against the opponent, no expansion, no tier 3 | Warcraft 3 Gym (all races): "reach 50 supply with level 3 on both heroes", then attack, expand or tech (Rifle Caster guide); Grubby's 3360 |
+| `upkeep_before_upgrades` | went over 50 food with no attack/armor upgrade and no expansion (pro wins 14%, losses 21%) | Warcraft 3 Gym (Orc auras guide): don't go over 50 before upgrades unless you have an expansion; Rifle Caster: stay at 50 while teching; Grubby #3 |
+| `mine_dry` | ≈ 11,500+ gold collected from one base and no expansion | Warcraft 3 Gym (Pit Lord guide): expand when your gold mine runs out (a mine holds 12,500) |
 
 ## Also from the sources
 
 - **Opening labels** (`openings.ts`): each player's opening named after Liquipedia's build-order pages.
 - **Tested and dropped:** "late expansion vs pros" (fired for half the pros, wins and losses alike), "turtling" (fired only for pros who won), "unanswered expansion vs pros" as a main rule (pros leave expansions alone half the time either way).
+- **Possible next step:** Warcraft 3 Gym's build orders are written as food-keyed steps (e.g. "Death Knight at 8 food… tech at 30… at 50 food: 6 Fiends, 2 Statues, 3 heroes"). A build-order matcher could recognise which build you were following and show where you drifted from it.
 - **Not measurable from a replay:** creep-camp micro (aggro pulls, purge, ensnare), spell and mana use, positioning, unit counters by armor type (possible later from game data).
 
 ## Sources
@@ -55,3 +59,4 @@ Thresholds sit outside what the pro games show, so they rarely fire for good pla
 - Liquipedia Warcraft: Experience, Creeps, Upkeep, Militia, race and hero pages, build-order pages (read through its API).
 - Warcraft3.info "How To Basic" race guides.
 - StrategyWiki, Blizzard forums (upkeep discussion).
+- Warcraft 3 Gym guides and build orders (57 pages, all races; authors include GotQuail, Gym Coaches, AllSupGoToHeaven, Kaiser, randombadgamer, HoT), saved by hand: their site blocks automated access.

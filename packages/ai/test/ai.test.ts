@@ -75,6 +75,11 @@ describe("findings", () => {
     const f = findings(game({ yourWorkers: 9 }), null).find((x) => x.id === "economy");
     expect(f?.evidence[0]).toBe("Workers at 6:00: 9 of the 14 your base needs (5 on gold per base + lumber crew).");
   });
+  test("reaching 50 food and then doing nothing with it", () => {
+    const f = findings(game({ yourFood: (t) => (t >= 300_000 ? 52 : 30) }), null).find((x) => x.id === "unused_spike");
+    expect(f?.evidence[0]).toContain("first had 50 food at 5:00");
+    expect(findings(game({ yourFood: (t) => (t >= 300_000 ? 52 : 30), youExpandAt: 400_000 }), null).find((x) => x.id === "unused_spike")).toBeUndefined();
+  });
   test("expanding in the window counts as using it", () => {
     expect(findings(game({ youExpandAt: 400_000 }), null).find((x) => x.id === "window")).toBeUndefined();
   });
