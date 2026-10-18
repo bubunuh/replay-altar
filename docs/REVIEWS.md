@@ -243,6 +243,14 @@ units disappearing.
 
 **9fd60b64 · win, 1564 vs 1540, UvH, 15:03.** App: they had more bases from 8:00 (expansion at 5:33, none of yours); mechanics (130 APM, 29% hotkey selections). Turning point 7:19 (≈255 vs 1015). Strengths: 74% of the hero XP, 71% trades. Replay: one-base Fiends into 7 Statues/Destroyers broke a Footman/Shadow Priest army with 27 Peasants and 9 towers. **Good.**
 
+#### High (2000-2300)
+
+**a3de68d6 · loss, 2008 vs 2011, UvO, 11:16.** App: supply blocked 111 s; fights cost more (≈1335 vs 915; one under their towers at 6:10, Lich died ≈8:07). Strengths: 65% of the hero XP. Replay: Ghouls into 5 Crypt Fiends with no research at all, against Headhunters, 5 Watch Towers and Demolishers; the Undead attacked into the towers at 6:10 and lost the trade and the Lich. **Good.**
+
+**21de9bf5 · loss, 2030 vs 2069, UvO, 14:56.** App: the recap flags a probable disconnect (your army 3150 vs 925 at the end); hero deaths (Death Knight and Lich, no Town Portal). Strengths: 3-3-60 at 11:40. Replay: Crypt Fiends with Web against a Wind Rider fast tech that had no army for 5 minutes; the Undead won the only big fight (11:36, ≈255 vs 1440) and led in army from 4:00. **Good**: the disconnect note is the right headline.
+
+**5a941295 · loss, 2006 vs 1950, UvU, 21:20.** App: hero deaths (Forsaken Paladin 2x, no Town Portal); their heroes out-levelled yours (44% of the XP; two level-5 heroes against 4, 4 and 2); fights cost more (two lost fights under their towers, 14:12 and 19:08). Turning point 19:08 (≈1650 vs 0). Replay: Ghouls and 13 Gargoyles against 16 Crypt Fiends with Web and Statues; the opponent led in army from 10:00. **Good.** Two weak spots, not changed: the fact sheet's "hero levels (sum)" said you led from 8:00 because three heroes sum higher than two (the XP share is the better measure, and the report uses it); and "workers by 6:00: 9 vs 2, better than 100% of pros" is listed as a strength, though for Undead it means an unusual early expansion of Acolytes, not better play.
+
 #### Pros
 
 **d9617f59 · loss, UvO, 4:15.** App: nothing stood out (game over at 4:15, ahead in army). Probably a disconnect or an early leave; nothing to judge. **Fine.**
