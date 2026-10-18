@@ -155,7 +155,10 @@ Each metric has a `section`:
 
 One file per analyzed game, written by `w3stats ai` or the button. `reingest` never touches these files.
 
-- **`findings`:** what mattered, decided by rules in `packages/ai/src/findings.ts`. Each has an `id` (`window`, `exposed`, `economy`, `heroes`, `fights`, `supply` or `mechanics`), a `severity` (0–1) and `evidence` lines.
+- **`findings`:** what mattered, decided by rules in `packages/ai/src/findings.ts`. Each has an `id`, a `severity` (0–1) and `evidence` lines:
+  - From the pro comparison: `window` (the opponent had no army and you didn't use it), `exposed`, `economy`, `heroes`, `fights`, `supply`, `mechanics` (only when little else stands out).
+  - From Warcraft III guides: `hero_deaths` (official basics: keep heroes alive, carry a Town Portal), `no_heroes` (fighting while all heroes are dead), `upkeep` (above 80 food for 2+ minutes with fewer than 2 expansions), `expansion` (none in a 20+ minute game while the opponent expanded), `creeping` (creeping after all heroes reached level 5, which gives no XP).
+  - **Scoring:** `node scripts/eval-findings.ts` scores every rule on the pro games, from each player of the group's race. A useful rule fires more often in losses than in wins. Two candidates were dropped this way: "late expansion" (fired for half of the pros either way) and "turtling" (fired only for pros who won).
 - **`strengths`:** core metrics at pro level.
 - **`facts`:** exactly what the model was given: the findings, strengths and opponent's plan, then the fact sheet (heroes, builds, trends, a table every 2 minutes, fights, key numbers with the app's verdicts).
 - **`review`:** the model's JSON. Its shape is enforced while it is generated: `recap`, `opponent_strategy`, one `{title, explanation, next_time}` per finding id, `strengths` and `one_thing`.

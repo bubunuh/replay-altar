@@ -10,7 +10,7 @@ import { metricValue, type FactsRef } from "./facts.ts";
 import { at, fightLosses, mmss, sampleBoth, seriesOf, STEP_MS } from "./series.ts";
 
 export type Finding = {
-  id: "window" | "exposed" | "economy" | "heroes" | "fights" | "supply" | "mechanics";
+  id: "window" | "exposed" | "economy" | "heroes" | "fights" | "supply" | "mechanics" | "hero_deaths" | "no_heroes" | "upkeep" | "turtling" | "expansion" | "creeping";
   /** 0–1: how much it likely cost (problems) or how well it went (strengths). */
   severity: number;
   /** Fallback title when the model is not available. */
@@ -49,6 +49,7 @@ const vsPros = (c: Ctx, key: string, fmt: (v: number) => string = num) => {
   return g ? ` (pros median ${fmt(g.median)}; worse than ${Math.round(g.worseThan * 100)}% of pro games)` : "";
 };
 
+const heroLevelSum = (p: PlayerRecord, t: number) => p.heroes.reduce((n, h) => n + h.levelUps.filter((x) => x <= t).length, 0);
 const heroLevels = (p: PlayerRecord, t: number) => p.heroes.map((h) => `${h.name} level ${Math.max(1, h.levelUps.filter((x) => x <= t).length)}`).join(", ") || "no heroes";
 
 /** Opponent had no army units for at least two samples (4 minutes) while you had one. */
@@ -81,6 +82,9 @@ function windowFinding(c: Ctx, mine: boolean): Finding | null {
       ],
     };
   }
+  // Not a window when they put the resources into heroes instead (a hero rush): their heroes
+  // were ahead of yours by then.
+  if (heroLevelSum(c.opp, to) > heroLevelSum(c.me, to) + 1) return null;
   const halls = RACES[c.me.race as RaceCode]?.townHalls ?? [];
   const expansions = c.me.build.filter((b) => b.kind === "building" && halls.includes(b.code));
   const expandedInWindow = expansions.some((b) => b.ms >= since && b.ms <= to);
@@ -200,17 +204,183 @@ function mechanicsFinding(c: Ctx): Finding | null {
   };
 }
 
-/** The most important problems in a game, most costly first (at most 3). */
-export function findings(r: GameRecord, ref: FactsRef | null): Finding[] {
-  const me = r.players.find((p) => p.isMe);
-  const opp = r.players.find((p) => p.playerId === r.classification.opponentId);
+
+/** Share of pro games with a lower value (per 10 minutes for whole-game totals); null without data. */
+function proShareBelow(c: Ctx, key: string): number | null {
+  const def = METRICS.find((m) => m.key === key);
+  const raw = c.me.metrics[key];
+  const entry = c.ref?.mp.metrics[key];
+  if (!def || raw === null || raw === undefined || !entry) return null;
+  const stat = def.scalesWithLength && entry.per10 ? entry.per10 : entry;
+  if (stat.values.length < 5) return null;
+  return percentileOf(stat.values, def.scalesWithLength && entry.per10 ? per10Minutes(raw, c.r.game.durationMs) : raw);
+}
+
+const simHeroes = (c: Ctx, p: PlayerRecord) => (c.r.sim?.status === "ok" ? (c.r.sim.players.find((x) => x.playerId === p.playerId)?.heroes ?? []) : []);
+const expansionTimes = (p: PlayerRecord) => {
+  const halls = RACES[p.race as RaceCode]?.townHalls ?? [];
+  return p.build.filter((b) => b.kind === "building" && halls.includes(b.code)).map((b) => b.ms);
+};
+
+/** Official basics: keep heroes alive "at all costs"; a Town Portal is the way out. */
+function heroDeathsFinding(c: Ctx): Finding | null {
+  const mine = simHeroes(c, c.me).flatMap((h) => h.deaths.map((d) => ({ h, d })));
+  const theirs = simHeroes(c, c.opp).reduce((n, h) => n + h.deaths.length, 0);
+  if (mine.length < 2 || mine.length <= theirs) return null;
+  const m = c.me.metrics;
+  return {
+    id: "hero_deaths",
+    severity: Math.min(0.9, 0.55 + 0.1 * (mine.length - theirs)),
+    headline: "You lost your heroes too often",
+    evidence: [
+      `Your heroes died ${mine.length} times, opp's ${theirs}: ${mine
+        .sort((a, b) => a.d.diedAt - b.d.diedAt)
+        .map(({ h, d }) => `${h.name} ≈${mmss(d.diedAt)}${d.revivedAt !== null && d.revivedAt <= c.r.game.durationMs ? ` (back ${mmss(d.revivedAt)})` : " (not back before the end)"}`)
+        .join(", ")}.`,
+      `Town Portals bought: you ${num(m.tp_bought)}, opp ${num(c.opp.metrics.tp_bought)}. Potions bought: you ${num(m.potions_bought)}, opp ${num(c.opp.metrics.potions_bought)}.`,
+    ],
+  };
+}
+
+/** Official basics: when all your heroes are dead, retreat (no experience, no spells). */
+function noHeroesFinding(c: Ctx): Finding | null {
+  const heroes = simHeroes(c, c.me).filter((h) => h.appearAt !== null);
+  if (!heroes.length) return null;
+  const allDead = (t: number) =>
+    heroes.every((h) => h.appearAt! > t || h.deaths.some((d) => d.diedAt <= t && (d.revivedAt === null || d.revivedAt > t))) && heroes.some((h) => h.appearAt! <= t);
+  const losses = fightLosses(c.r, c.me, c.opp).filter((x) => allDead(x.f.start) || allDead((x.f.start + x.f.end) / 2));
+  const lost = losses.reduce((n, x) => n + x.me, 0);
+  if (lost < 300) return null;
+  return {
+    id: "no_heroes",
+    severity: Math.min(0.85, 0.55 + lost / 4000),
+    headline: "You kept fighting with all heroes dead",
+    evidence: [
+      ...losses.map((x) => `${mmss(x.f.start)}–${mmss(x.f.end)} ${x.f.category.replace(/-/g, " ")} while all your heroes were dead: you lost ≈${x.me}, opp ≈${x.opp}.`),
+    ],
+  };
+}
+
+/** Official upkeep page: above 80 food you keep 40% of mined gold; avoid it unless you have 2-3 expansions. */
+function upkeepFinding(c: Ctx): Finding | null {
+  const series = seriesOf(c.r, c.me);
+  const exp = expansionTimes(c.me);
+  let seconds = 0;
+  let first: number | null = null;
+  for (let i = 1; i < series.length; i++) {
+    const s = series[i];
+    const bases = exp.filter((t) => t <= s.t).length; // expansions ordered by then
+    if (s.foodUsed > 80 && bases < 2) {
+      seconds += (s.t - series[i - 1].t) / 1000;
+      first ??= s.t;
+    }
+  }
+  if (seconds < 120) return null;
+  const top = Math.max(...series.map((s) => s.foodUsed));
+  return {
+    id: "upkeep",
+    severity: Math.min(0.8, 0.5 + seconds / 1200),
+    headline: "You sat in high upkeep on too few bases",
+    evidence: [
+      `You were above 80 food (high upkeep: you keep 40% of the gold your workers mine) for ${Math.round(seconds)} s, from ${mmss(first)}; at most ${top} food.`,
+      `Expansions by ${mmss(first)}: ${exp.filter((t) => t <= (first ?? 0)).length} (your expansions: ${exp.length ? exp.map((t) => mmss(t)).join(", ") : "none"}).`,
+      `Opp's highest food: ${Math.max(0, ...seriesOf(c.r, c.opp).map((s) => s.foodUsed))}.`,
+    ],
+  };
+}
+
+/** StrategyWiki: building static defense concedes map control. Many towers plus a passive map game. */
+function turtlingFinding(c: Ctx): Finding | null {
+  const towers = c.me.metrics.towers_total ?? 0;
+  const share = proShareBelow(c, "towers_total");
+  if (towers < 6 || share === null || share < 0.85) return null;
+  const xp = proGap(c, "hero_xp_10m");
+  const exp = proShareBelow(c, "expansion_ms");
+  const passive = (xp && xp.worseThan >= 0.7) || c.me.metrics.expansion_ms === null || (exp !== null && exp >= 0.75);
+  if (!passive) return null;
+  return {
+    id: "turtling",
+    severity: 0.6 + (share - 0.85),
+    headline: "Towers instead of map control",
+    evidence: [
+      `Tower build/upgrade orders: you ${towers}, opp ${num(c.opp.metrics.towers_total)} (more than ${Math.round(share * 100)}% of pro games, per 10 minutes).`,
+      `Your first expansion: ${mmss(c.me.metrics.expansion_ms)}${c.ref?.mp.metrics.expansion_ms ? ` (pros median ${mmss(c.ref.mp.metrics.expansion_ms.p50)})` : ""}.`,
+      ...(c.me.metrics.hero_xp_10m !== null && c.me.metrics.hero_xp_10m !== undefined ? [`Your hero XP by 10:00: ${num(c.me.metrics.hero_xp_10m)}${vsPros(c, "hero_xp_10m")}.`] : []),
+    ],
+  };
+}
+
+/** Liquipedia: Human (and most races) expand early when safe. No expansion, or much later than pros. */
+function expansionFinding(c: Ctx): Finding | null {
+  const ms = c.me.metrics.expansion_ms;
+  const pro = c.ref?.mp.metrics.expansion_ms;
+  if (!pro || pro.values.length < 5) return null;
+  const p75 = [...pro.values].sort((a, b) => a - b)[Math.floor(pro.values.length * 0.75)];
+  // Tested on 56 pro perspectives: "later than 3 in 4 pros" fired for half of them, wins and
+  // losses alike. Only the extreme case is worth saying: a long game on one base while the
+  // opponent expanded.
+  const late = (ms === null || ms === undefined) && c.r.game.durationMs >= 20 * 60_000 && c.opp.metrics.expansion_ms !== null && c.opp.metrics.expansion_ms !== undefined;
+  if (!late) return null;
+  return {
+    id: "expansion",
+    severity: ms === null || ms === undefined ? 0.65 : 0.55,
+    headline: ms === null || ms === undefined ? "You never expanded" : "You expanded late",
+    evidence: [
+      `Your first expansion: ${ms === null || ms === undefined ? "none" : mmss(ms)}; pros who expanded did it by ${mmss(pro.p50)} (median) and ${mmss(p75)} (three in four).`,
+      `Opp's first expansion: ${mmss(c.opp.metrics.expansion_ms)}.`,
+    ],
+  };
+}
+
+/** Official basics: heroes of level 5 and above get no experience from creeps. */
+function creepingFinding(c: Ctx): Finding | null {
+  const fights = c.r.sim?.status === "ok" ? (c.r.sim.fights ?? []) : [];
+  const heroes = c.me.heroes;
+  const wasted = fights.filter((f) => {
+    if (f.category !== "creep-fight" || !f.playerIds.includes(c.me.playerId)) return false;
+    const present = heroes.filter((h) => (h.levelUps[0] ?? Infinity) <= f.start);
+    return present.length > 0 && present.every((h) => h.levelUps.filter((x) => x <= f.start).length >= 5);
+  });
+  if (wasted.length < 2) return null;
+  return {
+    id: "creeping",
+    severity: 0.5,
+    headline: "Creeping with heroes that no longer gain XP from it",
+    evidence: [`Creep fights after all your heroes reached level 5 (no experience from creeps from then on): ${wasted.map((f) => mmss(f.start)).join(", ")}.`],
+  };
+}
+
+/** Every rule that fires, most costly first. */
+/** Every rule that fires, most costly first. */
+export function allFindings(r: GameRecord, ref: FactsRef | null, subjectId?: number): Finding[] {
+  const me = subjectId === undefined ? r.players.find((p) => p.isMe) : r.players.find((p) => p.playerId === subjectId);
+  const opp = r.players.find((p) => p.playerId !== me?.playerId && p.teamId !== me?.teamId);
   if (!me || !opp || r.game.durationMs < MIN_GAME_MS) return [];
   const c: Ctx = { r, me, opp, ref };
-  return [windowFinding(c, true), windowFinding(c, false), economyFinding(c), heroFinding(c), fightFinding(c), supplyFinding(c), mechanicsFinding(c)]
+  const window = windowFinding(c, true);
+  const found = [
+    window,
+    windowFinding(c, false),
+    economyFinding(c),
+    heroFinding(c),
+    fightFinding(c),
+    supplyFinding(c),
+    heroDeathsFinding(c),
+    noHeroesFinding(c),
+    upkeepFinding(c),
+    window ? null : expansionFinding(c), // the window finding already says whether you expanded
+    creepingFinding(c),
+  ]
     .filter((f): f is Finding => !!f && f.severity >= MIN_SEVERITY)
-    .sort((a, b) => b.severity - a.severity)
-    .slice(0, MAX_FINDINGS);
+    .sort((a, b) => b.severity - a.severity);
+  // Mechanics are a real but constant, slow-to-fix gap: shown only when the game itself had
+  // little else to point at.
+  const mech = found.length < 2 ? mechanicsFinding(c) : null;
+  return [...found, ...(mech ? [mech] : [])];
 }
+
+/** The most important problems in a game, most costly first (at most 3). */
+export const findings = (r: GameRecord, ref: FactsRef | null, subjectId?: number) => allFindings(r, ref, subjectId).slice(0, MAX_FINDINGS);
 
 /** Core metrics at pro level, best first: what went well (at most 2). */
 export function strengths(r: GameRecord, ref: FactsRef | null): string[] {

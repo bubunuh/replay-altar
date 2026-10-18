@@ -24,14 +24,14 @@ describe("leads", () => {
 });
 
 // A 14-minute HvH game: the opponent makes no army until 10:00 while you have one.
-function game(opts: { youExpandAt?: number }): GameRecord {
-  const series = (army: (t: number) => number, workers: number): SimSample[] =>
+function game(opts: { youExpandAt?: number; yourFood?: (t: number) => number; theirHeroLevelUps?: number[] }): GameRecord {
+  const series = (army: (t: number) => number, workers: number, food: (t: number) => number = () => 10): SimSample[] =>
     Array.from({ length: 85 }, (_, i) => {
       const t = i * 10_000;
-      return { t, goldSpent: 0, lumberSpent: 0, goldLost: 0, lumberLost: 0, foodUsed: 10, foodMax: 30, workers, estGoldMined: 0, estLumberMined: 0, estGoldBank: 0, estLumberBank: 0, dominance: null, armyFood: army(t) / 70, armyValue: army(t) };
+      return { t, goldSpent: 0, lumberSpent: 0, goldLost: 0, lumberLost: 0, foodUsed: food(t), foodMax: 30, workers, estGoldMined: 0, estLumberMined: 0, estGoldBank: 0, estLumberBank: 0, dominance: null, armyFood: army(t) / 70, armyValue: army(t) };
     });
-  const player = (id: number, isMe: boolean, build: GameRecord["players"][number]["build"]) =>
-    ({ playerId: id, isMe, name: isMe ? "Me#1" : "Them#2", race: "H", build, heroes: [{ order: 1, code: "Hamg", name: "Archmage", level: 2, levelUps: [120_000, 400_000], skills: [], retrainings: 0 }], metrics: {} }) as unknown as GameRecord["players"][number];
+  const player = (id: number, isMe: boolean, build: GameRecord["players"][number]["build"], levelUps = [120_000, 400_000]) =>
+    ({ playerId: id, teamId: id, isMe, name: isMe ? "Me#1" : "Them#2", race: "H", build, heroes: [{ order: 1, code: "Hamg", name: "Archmage", level: 2, levelUps, skills: [], retrainings: 0 }], metrics: {} }) as unknown as GameRecord["players"][number];
   const myBuild = [{ ms: 200_000, kind: "unit" as const, code: "hrif", name: "Rifleman" }, ...(opts.youExpandAt ? [{ ms: opts.youExpandAt, kind: "building" as const, code: "htow", name: "Town Hall" }] : [])];
   const theirBuild = [
     { ms: 180_000, kind: "building" as const, code: "hkee", name: "Keep" },
@@ -42,11 +42,11 @@ function game(opts: { youExpandAt?: number }): GameRecord {
     gameKey: "k",
     game: { durationMs: 840_000 },
     classification: { opponentId: 2 },
-    players: [player(1, true, myBuild), player(2, false, theirBuild)],
+    players: [player(1, true, myBuild), player(2, false, theirBuild, opts.theirHeroLevelUps)],
     sim: {
       status: "ok",
       players: [
-        { playerId: 1, series: series((t) => (t >= 200_000 ? 1500 : 0), 13), heroes: [] },
+        { playerId: 1, series: series((t) => (t >= 200_000 ? 1500 : 0), 13, opts.yourFood), heroes: [] },
         { playerId: 2, series: series((t) => (t >= 620_000 ? 700 : 0), 12), heroes: [] },
       ],
       fights: [],
@@ -60,6 +60,15 @@ describe("findings", () => {
     const w = f.find((x) => x.id === "window");
     expect(w?.evidence[0]).toContain("from 4:00 to 10:00");
     expect(w?.evidence[1]).toContain("You did not expand");
+  });
+  test("not a window when they put it into heroes instead (hero rush)", () => {
+    const rush = game({ theirHeroLevelUps: [60_000, 150_000, 240_000, 330_000, 420_000] });
+    expect(findings(rush, null).find((x) => x.id === "window")).toBeUndefined();
+  });
+  test("over 80 food on one base for minutes is high upkeep", () => {
+    const f = findings(game({ yourFood: (t) => (t >= 500_000 ? 90 : 40) }), null).find((x) => x.id === "upkeep");
+    expect(f?.evidence[0]).toContain("from 8:20");
+    expect(findings(game({ yourFood: (t) => (t >= 780_000 ? 90 : 40) }), null).find((x) => x.id === "upkeep")).toBeUndefined(); // brief: before an attack
   });
   test("expanding in the window counts as using it", () => {
     expect(findings(game({ youExpandAt: 400_000 }), null).find((x) => x.id === "window")).toBeUndefined();
