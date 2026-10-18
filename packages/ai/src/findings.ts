@@ -11,7 +11,10 @@ import { openingOf } from "./openings.ts";
 import { at, fightLosses, mmss, sampleBoth, seriesOf, STEP_MS } from "./series.ts";
 
 export type Finding = {
-  id: "window" | "exposed" | "economy" | "heroes" | "fights" | "supply" | "mechanics" | "hero_deaths" | "no_heroes" | "upkeep" | "turtling" | "expansion" | "creeping";
+  id:
+    | "window" | "exposed" | "economy" | "heroes" | "fights" | "supply" | "mechanics" | "hero_deaths" | "no_heroes" | "upkeep" | "expansion" | "creeping"
+    // basics: beginner mistakes, rare at higher levels (thresholds well outside what pros do)
+    | "first_creep" | "upgrades" | "one_hero" | "no_items" | "floating" | "unanswered_expansion";
   /** 0–1: how much it likely cost (problems) or how well it went (strengths). */
   severity: number;
   /** Fallback title when the model is not available. */
@@ -290,27 +293,6 @@ function upkeepFinding(c: Ctx): Finding | null {
   };
 }
 
-/** StrategyWiki: building static defense concedes map control. Many towers plus a passive map game. */
-function turtlingFinding(c: Ctx): Finding | null {
-  const towers = c.me.metrics.towers_total ?? 0;
-  const share = proShareBelow(c, "towers_total");
-  if (towers < 6 || share === null || share < 0.85) return null;
-  const xp = proGap(c, "hero_xp_10m");
-  const exp = proShareBelow(c, "expansion_ms");
-  const passive = (xp && xp.worseThan >= 0.7) || c.me.metrics.expansion_ms === null || (exp !== null && exp >= 0.75);
-  if (!passive) return null;
-  return {
-    id: "turtling",
-    severity: 0.6 + (share - 0.85),
-    headline: "Towers instead of map control",
-    evidence: [
-      `Tower build/upgrade orders: you ${towers}, opp ${num(c.opp.metrics.towers_total)} (more than ${Math.round(share * 100)}% of pro games, per 10 minutes).`,
-      `Your first expansion: ${mmss(c.me.metrics.expansion_ms)}${c.ref?.mp.metrics.expansion_ms ? ` (pros median ${mmss(c.ref.mp.metrics.expansion_ms.p50)})` : ""}.`,
-      ...(c.me.metrics.hero_xp_10m !== null && c.me.metrics.hero_xp_10m !== undefined ? [`Your hero XP by 10:00: ${num(c.me.metrics.hero_xp_10m)}${vsPros(c, "hero_xp_10m")}.`] : []),
-    ],
-  };
-}
-
 /** Liquipedia: Human (and most races) expand early when safe. No expansion, or much later than pros. */
 function expansionFinding(c: Ctx): Finding | null {
   const ms = c.me.metrics.expansion_ms;
@@ -351,6 +333,94 @@ function creepingFinding(c: Ctx): Finding | null {
   };
 }
 
+
+// ---- Basics: clear beginner mistakes. Thresholds sit outside what the pro games show, so these
+// stay quiet for good players and speak up for new ones (they rank below the findings above).
+const BASIC = 0.5;
+
+/** Every race's standard opening (Liquipedia): creep as soon as the hero leaves the altar. Pros: median 9 s, 90% within 67 s. */
+function firstCreepFinding(c: Ctx): Finding | null {
+  const hero = Math.min(...simHeroes(c, c.me).map((h) => h.appearAt ?? Infinity));
+  const creep = c.me.metrics.first_creep_ms;
+  if (!Number.isFinite(hero) || creep === null || creep === undefined || creep - hero <= 90_000) return null;
+  return {
+    id: "first_creep",
+    severity: BASIC,
+    headline: "Your hero waited before creeping",
+    evidence: [`Your first hero appeared at ${mmss(hero)} and first fought creeps at ${mmss(creep)}: ${Math.round((creep - hero) / 1000)} s later (pros: within about 10 s, almost always within 70 s).`],
+  };
+}
+
+/** Pros order their first attack upgrade by about 9:00 (90% by 12:00). None by 15:00 in a longer game is a gap. */
+function upgradesFinding(c: Ctx): Finding | null {
+  const m = c.me.metrics;
+  const first = Math.min(m.first_attack_upgrade_ms ?? Infinity, m.first_armor_upgrade_ms ?? Infinity);
+  if (c.r.game.durationMs < 15 * 60_000 || first <= 15 * 60_000) return null;
+  return {
+    id: "upgrades",
+    severity: BASIC + 0.05,
+    headline: "No attack or armor upgrades for 15 minutes",
+    evidence: [
+      `Your first attack upgrade: ${mmss(m.first_attack_upgrade_ms)}; first armor upgrade: ${mmss(m.first_armor_upgrade_ms)} (pros: first attack upgrade around 9:00).`,
+      `Opp's: attack ${mmss(c.opp.metrics.first_attack_upgrade_ms)}, armor ${mmss(c.opp.metrics.first_armor_upgrade_ms)}.`,
+    ],
+  };
+}
+
+/** A long game on one hero while the opponent had more (one-hero builds exist, so only then). */
+function oneHeroFinding(c: Ctx): Finding | null {
+  if (c.r.game.durationMs < 15 * 60_000 || c.me.heroes.length !== 1 || c.opp.heroes.length < 2) return null;
+  return {
+    id: "one_hero",
+    severity: BASIC,
+    headline: "One hero against several",
+    evidence: [`You played ${mmss(c.r.game.durationMs)} with one hero (${c.me.heroes[0].name}); opp had ${c.opp.heroes.length} (${c.opp.heroes.map((h) => h.name).join(", ")}). Pros get their second hero around 7:00.`],
+  };
+}
+
+/** Items (potions, scrolls, Town Portal) keep heroes alive; most pros buy a few. */
+function noItemsFinding(c: Ctx): Finding | null {
+  if (c.r.game.durationMs < 12 * 60_000 || (c.me.metrics.items_bought ?? 0) > 0) return null;
+  return {
+    id: "no_items",
+    severity: BASIC,
+    headline: "You never used the shop",
+    evidence: [`Items bought: you 0, opp ${num(c.opp.metrics.items_bought)} (pros: about 5 a game). Potions, healing scrolls and a Town Portal save heroes and units.`],
+  };
+}
+
+/** Unspent gold in the first 10 minutes (estimate): money in the bank is army or tech you don't have. */
+function floatingFinding(c: Ctx): Finding | null {
+  const avg = c.me.metrics.est_bank_avg;
+  const pro = c.ref?.mp.metrics.est_bank_avg;
+  if (avg === null || avg === undefined || !pro || pro.values.length < 10) return null;
+  const p90 = [...pro.values].sort((a, b) => a - b)[Math.floor(pro.values.length * 0.9)];
+  if (avg <= Math.max(p90, 400)) return null;
+  return {
+    id: "floating",
+    severity: BASIC,
+    headline: "Gold sat unspent",
+    evidence: [`Average unspent gold over the first 10 minutes: ≈${Math.round(avg)} (pros median ≈${Math.round(pro.p50)}; 9 in 10 below ≈${Math.round(p90)}). Estimated from your workers and spending.`],
+  };
+}
+
+/** The opponent started an expansion while your army was bigger, and you left it alone for 4 minutes. */
+function unansweredExpansionFinding(c: Ctx): Finding | null {
+  const t = expansionTimes(c.opp).find((x) => x > 60_000);
+  if (t === undefined || c.r.sim?.status !== "ok") return null;
+  const mine = at(seriesOf(c.r, c.me), t)?.armyValue ?? 0;
+  const theirs = at(seriesOf(c.r, c.opp), t)?.armyValue ?? 0;
+  if (mine <= theirs || mine === 0) return null;
+  const fought = (c.r.sim.fights ?? []).some((f) => f.start >= t && f.start <= t + 240_000 && f.playerIds.includes(c.me.playerId) && f.playerIds.includes(c.opp.playerId));
+  if (fought) return null;
+  return {
+    id: "unanswered_expansion",
+    severity: BASIC,
+    headline: "Their expansion went unchallenged",
+    evidence: [`Opp started an expansion at ${mmss(t)} while your army was bigger (≈${mine} vs ≈${theirs}); no fight between you in the next 4 minutes.`],
+  };
+}
+
 /** Every rule that fires, most costly first. */
 /** Every rule that fires, most costly first. */
 export function allFindings(r: GameRecord, ref: FactsRef | null, subjectId?: number): Finding[] {
@@ -371,6 +441,12 @@ export function allFindings(r: GameRecord, ref: FactsRef | null, subjectId?: num
     upkeepFinding(c),
     window ? null : expansionFinding(c), // the window finding already says whether you expanded
     creepingFinding(c),
+    firstCreepFinding(c),
+    upgradesFinding(c),
+    oneHeroFinding(c),
+    noItemsFinding(c),
+    floatingFinding(c),
+    unansweredExpansionFinding(c),
   ]
     .filter((f): f is Finding => !!f && f.severity >= MIN_SEVERITY)
     .sort((a, b) => b.severity - a.severity);
