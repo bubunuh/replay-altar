@@ -40,6 +40,8 @@ const MAX_FINDINGS = 3;
 export const MIN_GAME_MS = 180_000;
 /** Core metrics that are not skills worth praising (being attacked less is not your doing). */
 const NOT_STRENGTHS = new Set(["fights_defending"]);
+/** Per race: Undead mine with 5 Acolytes, so more early Acolytes mean an expansion, not better play. */
+const NOT_STRENGTHS_FOR: Partial<Record<RaceCode, Set<string>>> = { U: new Set(["workers_by_6m"]) };
 
 export type Ctx = { r: GameRecord; me: PlayerRecord; opp: PlayerRecord; ref: FactsRef | null };
 
@@ -943,7 +945,7 @@ export function strengths(r: GameRecord, ref: FactsRef | null): string[] {
   const opp = r.players.find((p) => p.playerId === r.classification.opponentId);
   if (!me || !opp || !ref || r.game.durationMs < MIN_GAME_MS) return [];
   const c: Ctx = { r, me, opp, ref };
-  return METRICS.filter((m) => m.section === "core" && m.better && !NOT_STRENGTHS.has(m.key))
+  return METRICS.filter((m) => m.section === "core" && m.better && !NOT_STRENGTHS.has(m.key) && !NOT_STRENGTHS_FOR[me.race as RaceCode]?.has(m.key))
     .map((m) => ({ m, g: proGap(c, m.key) }))
     .filter((x) => x.g && x.g.worseThan <= 0.4)
     .sort((a, b) => a.g!.worseThan - b.g!.worseThan)

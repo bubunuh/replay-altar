@@ -1,6 +1,7 @@
 // Small helpers over a game's simulated series, shared by the fact sheet and the findings.
 import type { GameRecord, PlayerRecord, SimFight, SimSample } from "@replay-altar/core/ui";
 import { RACES, type RaceCode } from "@replay-altar/core/gamedata";
+import { HERO_XP_FOR_LEVEL } from "@replay-altar/core/heroxp";
 
 export const STEP_MS = 120_000;
 
@@ -17,6 +18,8 @@ export const seriesOf = (r: GameRecord, p: PlayerRecord) => (r.sim?.status === "
 
 /** Sum of a player's hero levels at t. */
 export const levelSum = (p: PlayerRecord, t: number) => p.heroes.reduce((n, h) => n + h.levelUps.filter((x) => x <= t).length, 0);
+/** Experience the heroes' levels stand for at t: two level-5 heroes beat level 4, 4 and 2. */
+export const levelXp = (p: PlayerRecord, t: number) => p.heroes.reduce((n, h) => n + (HERO_XP_FOR_LEVEL[h.levelUps.filter((x) => x <= t).length] ?? 0), 0);
 
 /** Resources a player lost between two times (from the cumulative loss series). */
 export const lostBetween = (series: SimSample[], from: number, to: number) => {

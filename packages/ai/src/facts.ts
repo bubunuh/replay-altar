@@ -10,7 +10,7 @@ import type { MatchupProfile } from "@replay-altar/reference/types";
 import { openingOf } from "./openings.ts";
 import { deviationsFromPros, matchBuilds } from "./builds.ts";
 import { proBuildOf, type Principles } from "./principles.ts";
-import { at, fightLabel, fightLosses, leads, levelSum, mmss, sampleBoth, seriesOf, STEP_MS, type Sampled } from "./series.ts";
+import { at, fightLabel, fightLosses, leads, levelSum, levelXp, mmss, sampleBoth, seriesOf, STEP_MS, type Sampled } from "./series.ts";
 
 export type FactsRef = { label: string; key: string; mp: MatchupProfile; principles?: Principles | null };
 
@@ -116,7 +116,7 @@ function trendLines(r: GameRecord, me: PlayerRecord, opp: PlayerRecord): string[
   const biggest = [...army].sort((a, b) => Math.abs(b.me - b.opp) - Math.abs(a.me - a.opp))[0];
   const lines = [
     `- Army value: ${leads(army)}. Biggest gap: ${biggest ? `${biggest.me} vs ${biggest.opp} at ${mmss(biggest.t)}` : "—"}.`,
-    `- Hero levels (sum): ${leads(army.map(({ t }) => ({ t, me: levelSum(me, t), opp: levelSum(opp, t) })))}.`,
+    `- Hero experience (from levels reached): ${leads(army.map(({ t }) => ({ t, me: levelXp(me, t), opp: levelXp(opp, t) })))}.`,
     `- Workers: ${leads(sampleBoth(r, me, opp, (s) => s.workers))}.`,
   ];
   // Stretches where one side had no army units at all (only heroes and towers).
