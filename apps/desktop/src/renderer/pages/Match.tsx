@@ -12,6 +12,7 @@ import { MapView } from "../MapView.tsx";
 import { Tip } from "../Tip.tsx";
 import { RaceIcon } from "../RaceIcon.tsx";
 import { HeroIcons } from "../HeroIcons.tsx";
+import { ScorePanel } from "../ScorePanel.tsx";
 import { Chart, heroLevelsChart, timeLines, type Band, type HeroLine, type Tokens } from "../Chart.tsx";
 import { assess, describeRef, groupForRace, pickProfile } from "@replay-altar/reference/compare";
 import { ProMedian, Standing } from "../Standing.tsx";
@@ -235,7 +236,7 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
     <div className="page">
       <div><button className="btn" onClick={onBack}>← All matches</button></div>
       <div className="card match-card">
-        <div className="match-side" />
+        <div className="match-side">{me && opp && <ScorePanel record={r} me={me} opp={opp} metrics={metrics} mp={ref?.mp ?? null} />}</div>
         <div className="match-head">
           <div className={`big ${row.result}`}>{row.result === "win" ? "Victory" : row.result === "loss" ? "Defeat" : "Result unknown"}</div>
           <div className="versus">
