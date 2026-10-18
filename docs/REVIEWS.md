@@ -279,6 +279,14 @@ units disappearing.
 
 ### Night Elf
 
+#### Low (1000-1300)
+
+**054e0963 · loss, 1187 vs 1228, NvU, 27:28.** App: fights cost far more (≈4045 vs 1380; a dive into their towers at 23:26, Naga Sea Witch died); too few workers (9 Wisps at 6:00 and 10:00; Tree of Life idle 94 s); supply blocked 114 s. Turning point 22:18 (expansion fight, ≈860 vs 255). Strengths: 3-3-60 at 9:49, hero XP. Replay: the Night Elf's heroes led until 24:00, but Archers, Hippogryphs, Dryads and 2 Mountain Giants lost fight after fight to Fiends and Abominations on a small economy. **Good.**
+
+**f2faab3a · loss, 1025 vs 972, NvH, 11:15.** App: fights cost far more (≈810 vs 0; a dive at 9:27 lost ≈670 with both heroes); mechanics (70 APM). Turning point 9:27. Strengths: 4 camps by 6:00, hero level 3 at 5:04. Replay: 6 Archers and 4 Druids of the Claw attacked a Rifleman/Priest Human under its Arcane Tower with half the army value (475 vs 1275). **Good.** Two small fixes: the fight evidence listed a 0-vs-0 fight among "your losing fights" (now only fights you lost more in), and "your Demon Hunter and your Naga Sea Witch and their Blood Mage died" now reads "A, B and C".
+
+**22073328 · loss, 1096 vs 1075, NvU, 25:17.** App: too few workers (9 at 10:00); hero deaths (Keeper 2x, with 2 Town Portals: the advice says to use them); their heroes out-levelled yours (35%; Forsaken Paladin level 3 from 9:47 to the end while their Lich went 2 to 5). Replay: Dryads, Druids of the Claw and late Hippogryphs against Fiends, Statues and Abominations that led in army all game; the fights traded evenly (≈1870 each), so economy and hero levels are the story. **Good.**
+
 #### Pros
 
 **057ae56c · loss, NvH, 25:50.** App: their heroes out-levelled yours (your own pace at pro level; their Archmage reached 6); no attack/armor upgrades by 15:00. Turning point 16:48 (≈1880 vs 860, going in 3230 vs 1755). Replay: fast expansion 2:36, Bears + Dryads against Knights, Mortars and casters with Swords 2 by 9:00; the 16:48 attack with the bigger army was lost. **Good.** Note: the Night Elf "expansions" list (2:36, 4:04, 5:26, 13:53) counts every Tree of Life order; counts of bases from orders are unreliable for Night Elf and Undead.

@@ -241,7 +241,7 @@ function fightFinding(c: Ctx): Finding | null {
   // contradicts "your fights cost far more"; seen in reviews of pro games.
   if (trade && trade.worseThan < 0.5) return null;
   const sim = c.r.sim?.status === "ok" ? c.r.sim.players.find((p) => p.playerId === c.me.playerId)?.heroes ?? [] : [];
-  const worst = [...losses].sort((a, b) => b.me - b.opp - (a.me - a.opp)).slice(0, 3).sort((a, b) => a.f.start - b.f.start);
+  const worst = losses.filter((x) => x.me > x.opp).sort((a, b) => b.me - b.opp - (a.me - a.opp)).slice(0, 3).sort((a, b) => a.f.start - b.f.start);
   const deathsNear = (from: number, to: number) => sim.flatMap((h) => h.deaths.filter((d) => d.diedAt >= from - 30_000 && d.diedAt <= to + 30_000).map((d) => `your ${h.name} died ≈${mmss(d.diedAt)}`));
   return {
     id: "fights",

@@ -50,7 +50,7 @@ export function turningPoint(r: GameRecord, me: PlayerRecord, opp: PlayerRecord,
   }
   const category = fightLabel(top.f.category);
   const text = [
-    `The game turned at ${mmss(top.f.start)}: ${/^[aeiou]/.test(category) ? "an" : "a"} ${category} where you lost ≈${top.me} and they lost ≈${top.opp}${died.length ? `; ${died.join(" and ")} died` : ""}.`,
+    `The game turned at ${mmss(top.f.start)}: ${/^[aeiou]/.test(category) ? "an" : "a"} ${category} where you lost ≈${top.me} and they lost ≈${top.opp}${died.length ? `; ${died.length > 1 ? `${died.slice(0, -1).join(", ")} and ${died.at(-1)}` : died[0]} died` : ""}.`,
     // Only "before": units trained during and right after the fight make the value after it misleading.
     before[0] !== undefined && before[1] !== undefined ? `Army value going in: you ${before[0]}, opp ${before[1]}.` : "",
     built,
