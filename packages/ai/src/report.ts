@@ -59,10 +59,18 @@ export function turningPoint(r: GameRecord, me: PlayerRecord, opp: PlayerRecord,
   return { start: top.f.start, end: top.f.end, category, youLost: top.me, theyLost: top.opp, text };
 }
 
+/** What the report can't see: no simulation, or a long game in which it detected no fights. */
+function blindSpot(r: GameRecord): string {
+  if (r.sim?.status !== "ok") return " The replay couldn't be simulated, so fights and army sizes aren't judged.";
+  const fights = (r.sim.fights ?? []).filter((f) => f.category !== "creep-fight" && f.playerIds.length >= 2);
+  if (r.game.durationMs >= 10 * 60_000 && !fights.length) return " The simulation detected no fights in this game, so fights aren't judged.";
+  return "";
+}
+
 /** One or two sentences: the result, the main problem and its first cause, the next problem. */
 export function recapOf(r: GameRecord, opp: PlayerRecord, result: string, found: Finding[], strengths: string[]): string {
   const outcome = result === "win" ? "You won" : result === "loss" ? "You lost" : "The game lasted";
-  const head = `${outcome} ${result === "win" || result === "loss" ? "in " : ""}${mmss(r.game.durationMs)} against ${RACE_NAMES[opp.race] ?? opp.race}.`;
+  const head = `${outcome} ${result === "win" || result === "loss" ? "in " : ""}${mmss(r.game.durationMs)} against ${RACE_NAMES[opp.race] ?? opp.race}.${blindSpot(r)}`;
   if (!found.length) return `${head} No clear problem stood out${strengths.length ? `; best: ${clause(strengths[0])}` : ""}.`;
   // Lost while clearly ahead at the end: usually a leave or a disconnect, not the findings.
   const me = r.players.find((p) => p.playerId !== opp.playerId && p.teamId !== opp.teamId);

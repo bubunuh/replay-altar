@@ -22,7 +22,7 @@ Shown per game (top 3): 1.50 findings in pro wins, 2.23 in pro losses.
 | Rule | Fires when | Source | Pro wins / losses | Lift (H O U N) |
 |---|---|---|---|---|
 | `heroes` | hero XP by 6:00/10:00 worse than 75% of pros, or under 45% of both players' XP ("their heroes out-levelled yours" when your own pace was at pro level) | metric research on W3C score sheets | 30% / 68% | 2.3 (2.1 3.4 2.3 2.1) |
-| `fights` | you lost 1.5x more than the opponent in fights (detected, or inferred from loss bursts; 800+), unless your whole-game trade beats the pro median | metric research | 13% / 29% | 2.2 (2.5 3.3 2.2 1.6) |
+| `fights` | you lost 1.3x more than the opponent in fights (detected, or inferred from loss bursts; 800+), unless your whole-game trade beats the pro median. Overlapping fights split the losses (they used to count them twice: 1.5x then gave 2.2) | metric research | 18% / 33% | 1.8 (2.0 3.3 2.3 1.1) |
 | `hero_deaths` | your heroes died more often than theirs (2+) | Blizzard hero basics: keep heroes alive, carry a Town Portal | 5% / 14% | 2.6 (1.2 4.0 7.2 2.2) |
 | `expansion` | no expansion in a 20+ minute game while the opponent expanded | Liquipedia: expand early when safe | 3% / 8% | 2.5 |
 | `out_expanded` | they had more bases standing than you for 4+ minutes before 20:00 | reviews (REVIEWS.md); Grubby #3 (economy) | 12% / 21% | 1.8 (1.0 1.6 2.0 2.6) |
@@ -49,7 +49,7 @@ near 1 here means "pros rarely do this either way", not that the advice is wrong
 | `mine_dry` | ≈ 11,500+ gold collected from one base and no expansion | Warcraft 3 Gym (Pit Lord guide) | 9% / 14% | 1.6 |
 | `goal_3360` | first hero level 3, second hero level 3 and 60 food later than 3 in 4 pros, or never in a long game | Grubby, Beginner's Guide #6 | 14% / 20% | 1.4 |
 | `floating` | ≈ unspent gold in the first 10 minutes above the pros' 90th percentile | pro data | 5% / 7% | 1.2 |
-| `upkeep_before_upgrades` | went over 50 food with no attack/armor upgrade (ordered within 30 s), no expansion and no tier 3 | Warcraft 3 Gym (Orc auras guide); Grubby #3 | 14% / 15% | 1.1 |
+| `upkeep_before_upgrades` | went over 50 food with no attack/armor upgrade or caster training (ordered within 30 s), no expansion and no tier 3 | Warcraft 3 Gym (Orc auras guide); Grubby #3 | 8% / 8% | 1.0 |
 | `upkeep` | above 80 food with fewer than 2 expansions for longer than 9 in 10 pros (2+ minutes); a basic since 2026-10-18 (food counts in long games are uncertain) | Blizzard's upkeep page; Grubby #3 | 10% / 10% | 1.0 |
 | `no_sustain` | a hero died after 6:00 with no potion, healing scroll or Town Portal bought before it | Blizzard hero basics; Grubby | 6% / 7% | 1.0 |
 | `one_hero` | one hero all game (15+ min) against two or more | Grubby #6 | 1% / 1% | 1.0 |

@@ -34,6 +34,11 @@ units disappearing.
 - Small-sample artifacts: 13 s of supply block in a 5-minute game scaled to "26 s per 10 min";
   upgrades ordered seconds after passing 50 food.
 - Repetition: the late first creep reported twice; wording ("1 camps", "a engagement").
+- Fight losses counted twice when WC3V reported overlapping battles (e0898513); a turning point
+  that only finished an existing lead (024039ee); battle-summary hero deaths filed under the
+  wrong side (244499b5); Crypt Fiends with Web counted as unable to hit air (bb0d8935);
+  "kept fighting with all heroes dead" for defending your own base (e1f508dc); "carry a Town
+  Portal" to players who had one (9c73463f).
 
 **Open (not fixed yet):**
 - *They out-expanded you* was the story of several losses (276f7a1a, 08c1cc36). **Done:** the
@@ -49,8 +54,11 @@ units disappearing.
 - Fixed after more pro reviews: "your fights cost far more" next to a whole-game trade better than pros (d8946bf3, b3244d52); upkeep demoted to a basic (lift 1.0 with accurate bases).
 - A late second hero has no rule of its own (only through 3-3-60). Tested a basic ("second hero later than 9 in 10 pros of the matchup, or none in 12+ minutes"): 8% of pro wins and 8% of losses (lift 1.0; Night Elf 0.4 — solo-hero builds), so not added.
 - "No attack/armor upgrades" fires for caster armies and Orc builds whose research went
-  elsewhere; consider counting caster training.
-- Games with no detected fights at all should carry a low-confidence note.
+  elsewhere. **Tested:** caster training now counts for "into upkeep before upgrades"
+  (5c1b123e), but not for the upgrades rule: excusing it kept the lift (1.7) and only made the
+  rule rarer.
+- Games with no detected fights at all should carry a low-confidence note. **Done:** the recap
+  says when the replay couldn't be simulated or a 10+ minute game had no detected fights.
 - Food counts late in long games are uncertain both ways: the simulation's supply counter keeps
   dead units (pros "at 100 food" after losing half their army), while counting only units it
   hasn't marked lost undercounts badly (units that sit without orders get "possibly lost": one
@@ -163,6 +171,12 @@ units disappearing.
 
 **73f5d018 · loss, HvO, 27:25.** App: hero deaths (4 vs 1); their heroes out-levelled yours (Far Seer 6; your Paladin level 3 from 9:28 to 20:54); fights ≈12900 vs 6075 with three tower dives. Turning point 12:19 (≈1440 vs 300, Paladin died). Replay: you out-mined them (20505 gold vs 13315) and led in army most of the game, but kept attacking into their base and lost the units. **Good.**
 
+**e0898513 · win, HvN, 26:41.** App: no attack or armor upgrade until 18:16; high upkeep 822 s on one expansion; 16 tower orders for 2 bases. Turning point 23:36. Replay: a tower-heavy Human (9 Scout, 3 Arcane, 4 Guard Towers) with 45 Peasants into Riflemen, Priests and Spell Breakers against Huntresses, Dryads and Druids of the Claw; won from 18:00. **Good**, but the fight totals were inflated: WC3V reported two battles at 23:36 and 23:39 and each counted the same ≈1790 of losses (the opponent's total read ≈10150). Fixed: overlapping fights now split the losses (a fight's window starts where the previous one ended); totals here are now ≈6700 vs ≈7140. The fights rule was re-tuned on the honest numbers (1.3× instead of 1.5×: lift 1.8, fires in 33% of pro losses).
+
+**5c1b123e · win, HvO, 14:32.** App: they had more bases from 10:00 (their expansion 7:22); into upkeep before upgrades. Replay: a caster build (Priests, Sorceresses, 11 Spell Breakers, with Priest and Sorceress Training) against Raiders, Shamans and Kodos. **Partial**: caster training is this build's investment at 50 food. Fixed: caster training (any race) now counts for "into upkeep before upgrades". It doesn't excuse "no attack or armor upgrades for 15 minutes": counting it there kept the same lift (1.7) and only made the rule rarer, so caster players without upgrades still lose more often.
+
+**16b90693 · win, HvU, 16:11 (MMR 2555 vs 2316).** App: heroes fell behind (Archmage level 3 from 4:59 to 14:09); hero deaths (Mountain King 2x, no Town Portal); supply blocked 78 s. Turning point 14:35 (≈0 vs 640). Replay: towers and Footmen, then Flying Machines and Knights with 2/2 upgrades against Fiends and Statues that led in army from 8:00; the Human won at the end. **Good.**
+
 ### Orc
 
 #### Low (1000-1300)
@@ -204,6 +218,12 @@ units disappearing.
 **26652a59 · loss, OvN, 28:50.** App: heroes fell behind (1 camp by 6:00); never expanded; no army 4:00-6:00. Turning point 9:27 (≈800 vs 0). Replay: a one-hero Far Seer build with 19 Batriders and 7 Watch Towers on one base against a two-hero Night Elf who expanded at 9:59 and switched to Hippogryphs. **Good**, except the advice told a one-hero player to "bring the second hero creeping" — fixed (only with two heroes).
 
 **cf4440d4 · loss, OvH, 11:33.** App: heroes fell behind. Replay: you led in army (2750 vs 1920 at the end) and trades (82%) when the game ended at 11:33 — a leave or disconnect, not a lost game on the map. **Misleading**: the recap now says when a loss ended with your army clearly bigger ("if you didn't leave on purpose, it may have been a disconnect").
+
+**b77adad4 · loss, OvU, 31:59.** App: heroes fell behind; never expanded; never reached 3-3-60. The replay could not be simulated, which the report didn't say. Replay: Stronghold at 1:47 with no army for 5 minutes, into Wind Riders and later Spirit Walkers and Tauren, on one base against an Undead who expanded at 4:36 and built 9 Necromancers and 18 Fiends. **Good** as far as it goes. Fixed: the recap now says when the replay couldn't be simulated ("fights and army sizes aren't judged") and when a 10+ minute game had no detected fights.
+
+**28678b57 · win, OvU, 26:14.** App: heroes fell behind (Blademaster level 3 only at 12:31); fights cost more (≈2550 vs 965, one under their towers at 19:40); never expanded. Turning point 17:00 (≈160 vs 770). Replay: an air opening (Wind Riders at 5:53) that did little, then Headhunters and Kodos; the Undead led in army all game and the game ended in the Orc's favour, probably a leave. **Fine** for a strange game.
+
+**423b2ca3 · win, OvH, 11:46.** App: nothing stood out; strengths 14 workers at 10:00, gold 8370 vs 5750. Replay: Grunts, Raiders with Ensnare and Shamans broke a Rifleman/Priest/Sorceress Human at 8:56 (≈220 vs 400 there, ≈1120 in total). **Good.**
 
 ### Undead
 

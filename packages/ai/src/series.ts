@@ -87,7 +87,15 @@ export function fightLosses(r: GameRecord, me: PlayerRecord, opp: PlayerRecord) 
   const fights = r.sim.fights ?? [];
   // WC3V's battle summaries estimate losses too, but taking them made the fights rule fire in
   // more pro wins (holdout lift 1.9 -> 1.5); only their hero kills are used (report.ts).
-  const seen = fights.map((f) => ({ f, me: lostBetween(sm, f.start - 10_000, f.end + 10_000), opp: lostBetween(so, f.start - 10_000, f.end + 10_000) }));
+  // Overlapping fights split the losses instead of each counting them: a fight's window starts
+  // where the previous one's ended.
+  let prevTo = -Infinity;
+  const seen = [...fights].sort((a, b) => a.start - b.start).map((f) => {
+    const from = Math.max(f.start - 10_000, prevTo);
+    const to = Math.max(from, f.end + 10_000);
+    prevTo = to;
+    return { f, me: lostBetween(sm, from, to), opp: lostBetween(so, from, to) };
+  });
   // Same 10 s margin as the losses counted for a detected fight, so a later burst isn't lost.
   const near = (b: { start: number; end: number }) => fights.some((f) => b.start <= f.end + 10_000 && b.end >= f.start - 10_000);
   const bursts = [...lossBursts(sm), ...lossBursts(so)].filter((b) => b.value >= UNSEEN_FIGHT_MIN && !near(b)).sort((a, b) => a.start - b.start);

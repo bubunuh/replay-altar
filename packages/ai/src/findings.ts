@@ -234,7 +234,7 @@ function fightFinding(c: Ctx): Finding | null {
   const youLost = losses.reduce((n, x) => n + x.me, 0);
   const theyLost = losses.reduce((n, x) => n + x.opp, 0);
   const trade = proGap(c, "trade_efficiency");
-  if (youLost <= theyLost * 1.5 || youLost < 800) return null;
+  if (youLost <= theyLost * 1.3 || youLost < 800) return null;
   // The whole-game trade (all losses, not only detected fights) at or above the pro median
   // contradicts "your fights cost far more"; seen in reviews of pro games.
   if (trade && trade.worseThan < 0.5) return null;
@@ -435,9 +435,15 @@ function firstCreepFinding(c: Ctx): Finding | null {
   };
 }
 
+/** Caster trainings: caster builds invest in these instead of attack and armor upgrades. */
+const CASTER_TRAINING = new Set(["Rhpt", "Rhst", "Redt", "Redc", "Rowd", "Rost", "Rowt", "Rune", "Ruba"]);
+const firstCasterTraining = (p: PlayerRecord) => Math.min(...p.build.filter((b) => b.kind === "upgrade" && CASTER_TRAINING.has(b.code)).map((b) => b.ms));
+
 /** Pros order their first attack upgrade by about 9:00 (90% by 12:00). None by 15:00 in a longer game is a gap. */
 function upgradesFinding(c: Ctx): Finding | null {
   const m = c.me.metrics;
+  // Caster training doesn't excuse it: counting it kept the lift (1.7) and dropped the rule from
+  // 24% to 9% of pro losses.
   const first = Math.min(m.first_attack_upgrade_ms ?? Infinity, m.first_armor_upgrade_ms ?? Infinity);
   if (c.r.game.durationMs < 15 * 60_000 || first <= 15 * 60_000) return null;
   return {
@@ -600,8 +606,9 @@ function upkeepBeforeUpgradesFinding(c: Ctx): Finding | null {
   const over = seriesOf(c.r, c.me).find((s) => s.foodUsed > 50)?.t ?? null;
   if (over === null) return null;
   const m = c.me.metrics;
-  // An upgrade ordered in the next 30 s counts: the food crossing and the click are seconds apart.
-  const upgraded = Math.min(m.first_attack_upgrade_ms ?? Infinity, m.first_armor_upgrade_ms ?? Infinity) <= over + 30_000;
+  // An upgrade (or caster training) ordered in the next 30 s counts: the food crossing and the
+  // click are seconds apart.
+  const upgraded = Math.min(m.first_attack_upgrade_ms ?? Infinity, m.first_armor_upgrade_ms ?? Infinity, firstCasterTraining(c.me)) <= over + 30_000;
   const expanded = expansionTimes(c.r, c.me).some((t) => t <= over);
   // Tier 3 is an investment too. (Excusing a fight around that time silenced the rule: the
   // simulation sees some fight nearly all the time.)
