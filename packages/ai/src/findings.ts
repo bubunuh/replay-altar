@@ -809,9 +809,12 @@ const basesAt = (r: GameRecord, p: PlayerRecord, t: number) => {
   return 1 + sim.filter((b) => b.at + TOWN_HALL_BUILD_MS <= t && (b.lostAt === null || b.lostAt > t)).length;
 };
 
-/** They had more standing bases than you for 4+ minutes before 20:00. */
+/**
+ * They had more standing bases than you for 4+ minutes. (Only before 20:00 at first; counting the
+ * whole game kept the lift at 1.8 and caught 26% of pro losses instead of 21%.)
+ */
 function outExpandedFinding(c: Ctx): Finding | null {
-  const times = sampleTimes(Math.min(c.r.game.durationMs, 20 * 60_000));
+  const times = sampleTimes(c.r.game.durationMs);
   const rows = times.map((t) => ({ t, me: basesAt(c.r, c.me, t), opp: basesAt(c.r, c.opp, t) }));
   if (rows.some((x) => x.me === null || x.opp === null)) return null;
   let run = 0;
@@ -874,7 +877,7 @@ function becauseFor(f: Finding, c: Ctx): string[] {
       const v = mixValue(idle);
       if (v >= 400) out.push(`≈${v} of what you ordered in the 6 minutes before it went into ${idle.map((e) => `${e.name} ×${e.count}`).join(", ")}, which only attack buildings.`);
     }
-    const dives = fightLosses(c.r, c.me, c.opp).filter((x) => x.f.category === "tower-dive" && x.me > x.opp && x.me >= 300);
+    const dives = fightLosses(c.r, c.me, c.opp).filter((x) => x.f.category === "tower-dive" && x.f.initiatorId === c.me.playerId && x.me > x.opp && x.me >= 300);
     if (dives.length) out.push(`${dives.length === 1 ? "One" : dives.length} of your losing fights ${dives.length === 1 ? "was" : "were"} under their towers (${dives.map((x) => mmss(x.f.start)).join(", ")}).`);
   }
   if (f.id === "window") {

@@ -25,7 +25,7 @@ Shown per game (top 3): 1.50 findings in pro wins, 2.23 in pro losses.
 | `fights` | you lost 1.3x more than the opponent in fights (detected, or inferred from loss bursts; 800+), unless your whole-game trade beats the pro median. Overlapping fights split the losses (they used to count them twice: 1.5x then gave 2.2) | metric research | 18% / 33% | 1.8 (2.0 3.3 2.3 1.1) |
 | `hero_deaths` | your heroes died more often than theirs (2+) | Blizzard hero basics: keep heroes alive, carry a Town Portal | 5% / 14% | 2.6 (1.2 4.0 7.2 2.2) |
 | `expansion` | no expansion in a 20+ minute game while the opponent expanded | Liquipedia: expand early when safe | 3% / 8% | 2.5 |
-| `out_expanded` | they had more bases standing than you for 4+ minutes before 20:00 | reviews (REVIEWS.md); Grubby #3 (economy) | 12% / 21% | 1.8 (1.0 1.6 2.0 2.6) |
+| `out_expanded` | they had more bases standing than you for 4+ minutes (whole game; was before 20:00 only: 12% / 21%) | reviews (REVIEWS.md); Grubby #3 (economy) | 15% / 26% | 1.8 (0.9 2.1 2.2 1.9) |
 | `economy` | workers at 6:00 / 10:00 below what your bases need (5 on gold per base + lumber crew) by 3 / 2, and below 9 in 10 pros of your race | Grubby, Beginner's Guide #3 and Human guides; pro data | 4% / 7% | 1.7 |
 | `army_mismatch` | your recent units did ≤80% damage on average against their armor and your race had units doing 40+ points better | game data (`data/gamedata/combat.json`) | 2% / 5% | 2.5 |
 | `supply` | supply blocked longer than 75% of pros (and 30+ s) | metric research | 19% / 26% | 1.4 |

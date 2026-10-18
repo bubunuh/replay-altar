@@ -225,6 +225,12 @@ units disappearing.
 
 **423b2ca3 · win, OvH, 11:46.** App: nothing stood out; strengths 14 workers at 10:00, gold 8370 vs 5750. Replay: Grunts, Raiders with Ensnare and Shamans broke a Rifleman/Priest/Sorceress Human at 8:56 (≈220 vs 400 there, ≈1120 in total). **Good.**
 
+**d2dc5ccd · loss, OvN, 27:54.** App: fights cost far more (≈5710 vs 3450; at 23:57 your heroes had 8 levels, theirs 10); their heroes out-levelled yours (34% of the XP although your own pace was far above pros'); never expanded. Turning point 23:57 (≈1600 vs 280). Replay: one base, 8 Watch Towers and 10 Demolishers against 38 Archers and 45 Wisps on two bases. **Good**, except the "why" said "3 of your losing fights were under their towers": the Night Elf had no towers; those were their attacks into the Orc's own Watch Towers. Fixed: the tower cause only counts dives you started.
+
+**908ce93b · loss, OvN, 30:54.** App: high upkeep 774 s with no expansion; late 3-3-60. Replay: Grunts, Raiders and Spirit Walkers led in army from 6:00 and won the trades (≈5225 vs 9405), but stayed on one base (an expansion at 10:04 never stood) while the Night Elf took bases at 16:10, 19:03 and 23:19 with Druids of the Claw and Dryads. **Missed the story**: "they had more bases" didn't fire because it only looked before 20:00, and the Night Elf's second base finished at about 18:10. Fixed: the rule now looks at the whole game (same lift 1.8; 26% of pro losses instead of 21%), and here it is the top finding (4 bases vs 2 at the end).
+
+**12ba05d2 · loss, OvU, 10:40.** Not simulated (the recap says so). App: heroes fell behind (XP by 10:00 978, pros 1332). Replay: Headhunters into Raiders against a fast-expanding Ghoul Undead (expansion 3:03, 16 Ghouls); the Orc had more hero XP (54%). **Thin**, nothing better to say without the simulation.
+
 ### Undead
 
 #### Low (1000-1300)
