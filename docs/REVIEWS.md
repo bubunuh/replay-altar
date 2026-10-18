@@ -159,6 +159,10 @@ units disappearing.
 
 **9a7df917 · loss, HvN, 15:16.** App: "heroes fell behind" because your share of hero XP was 44%; advice to creep from the altar. **Wrong**: your XP was better than 91% of pros at 6:00; the opponent had one hero (Warden) who took all their XP and reached level 6. First fix (a low share only counts when you were also behind pros) cost the heroes rule most of its value on pro games (68% → 47% of losses), so instead the finding now says "Their heroes out-levelled yours" with advice about denying experience when your own pace was at pro level. The game was lost in two fights at 12:52-13:33 (≈1175 vs 0) against Bears and a level-6 Warden.
 
+**7b53cabe · loss, 2411 vs 2721, HvN, 14:12.** App: hero deaths (Paladin twice, no Town Portal); their heroes out-levelled yours (your pace at pro level, share 38%, Archmage level 3 from 5:50 to 12:36); fights (5 items vs 21, their heroes 7 levels vs 5 at 10:51). Turning point 10:51 (≈700 vs 0). Replay: fast expansion 4:15 and 22 Peasants vs a Night Elf fast expansion with 34 Wisps, three heroes and 10 Orbs of Venom. **Good.**
+
+**73f5d018 · loss, HvO, 27:25.** App: hero deaths (4 vs 1); their heroes out-levelled yours (Far Seer 6; your Paladin level 3 from 9:28 to 20:54); fights ≈12900 vs 6075 with three tower dives. Turning point 12:19 (≈1440 vs 300, Paladin died). Replay: you out-mined them (20505 gold vs 13315) and led in army most of the game, but kept attacking into their base and lost the units. **Good.**
+
 ### Orc
 
 #### Low (1000-1300)
@@ -194,6 +198,12 @@ units disappearing.
 **21e6e0d9 · loss, OvN, 17:09.** App: mine ran dry with no expansion; no upgrades; reached 50 food at 10:00 and waited. Replay: one-base Raiders/Spirit Walkers vs 24 Wisps, Dryads and Bears; both heroes behind from 4:00; lost two creep-fight ambushes at 14:48 and 15:06 (≈735 each, inferred). **Good.**
 
 **b5150703 · loss, OvH, 18:47.** App: heroes fell behind (0 camps by 6:00; first hero waited 377 s); no upgrades; and the same late creep again as a separate basic. **Good** content, **repetitive** form: the first-creep basic now stays out when the heroes finding fires (it already names the late first creep). Fixed "1 camps".
+
+**9bd71eb9 · loss, OvH, 14:04.** App: only "into upkeep before upgrades". Replay: you led in army at the end (3300 vs 2075) after winning the 11:50 fight (≈300 vs 1155); the replay doesn't show why the game ended. **Thin, nothing better to say.**
+
+**26652a59 · loss, OvN, 28:50.** App: heroes fell behind (1 camp by 6:00); never expanded; no army 4:00-6:00. Turning point 9:27 (≈800 vs 0). Replay: a one-hero Far Seer build with 19 Batriders and 7 Watch Towers on one base against a two-hero Night Elf who expanded at 9:59 and switched to Hippogryphs. **Good**, except the advice told a one-hero player to "bring the second hero creeping" — fixed (only with two heroes).
+
+**cf4440d4 · loss, OvH, 11:33.** App: heroes fell behind. Replay: you led in army (2750 vs 1920 at the end) and trades (82%) when the game ended at 11:33 — a leave or disconnect, not a lost game on the map. **Misleading**: the recap now says when a loss ended with your army clearly bigger ("if you didn't leave on purpose, it may have been a disconnect").
 
 ### Undead
 

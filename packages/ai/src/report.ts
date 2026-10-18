@@ -47,8 +47,14 @@ export function recapOf(r: GameRecord, opp: PlayerRecord, result: string, found:
   const outcome = result === "win" ? "You won" : result === "loss" ? "You lost" : "The game lasted";
   const head = `${outcome} ${result === "win" || result === "loss" ? "in " : ""}${mmss(r.game.durationMs)} against ${RACE_NAMES[opp.race] ?? opp.race}.`;
   if (!found.length) return `${head} No clear problem stood out${strengths.length ? `; best: ${clause(strengths[0])}` : ""}.`;
+  // Lost while clearly ahead at the end: usually a leave or a disconnect, not the findings.
+  const me = r.players.find((p) => p.playerId !== opp.playerId && p.teamId !== opp.teamId);
+  const last = (p?: PlayerRecord) => (p ? (seriesOf(r, p).at(-1)?.armyValue ?? 0) : 0);
+  const aheadAtEnd = result === "loss" && me && last(me) >= 1.3 * last(opp) && last(me) - last(opp) >= 500;
+  const ended = aheadAtEnd ? ` The game ended while your army was bigger (${last(me)} vs ${last(opp)}): if you didn't leave on purpose, it may have been a disconnect.` : "";
+  if (aheadAtEnd && !found.length) return `${head}${ended}`;
   const [top, next] = found;
   const cause = top.because?.[0];
   const lead = result === "win" ? "Still worth fixing" : "The biggest problem";
-  return `${head} ${lead}: ${clause(top.headline)}${cause ? ` (${clause(cause)})` : ""}${next ? `; also, ${clause(next.headline)}` : ""}.`;
+  return `${head}${ended} ${lead}: ${clause(top.headline)}${cause ? ` (${clause(cause)})` : ""}${next ? `; also, ${clause(next.headline)}` : ""}.`;
 }
