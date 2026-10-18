@@ -28,6 +28,8 @@ const api = {
   aiGet: (key: string) => ipcRenderer.invoke("ai:get", key),
   rules: (key: string) => ipcRenderer.invoke("rules:get", key),
   mapImage: (mapFile: string) => ipcRenderer.invoke("map:image", mapFile),
+  mapMarkers: (mapFile: string) => ipcRenderer.invoke("map:markers", mapFile),
+  raceIcons: () => ipcRenderer.invoke("race:icons"),
   aiStatus: () => ipcRenderer.invoke("ai:status"),
   aiRun: (key: string) => ipcRenderer.invoke("ai:run", key),
   /** Progress of AI analyses; returns a function that stops listening. */

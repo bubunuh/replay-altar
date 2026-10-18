@@ -6,9 +6,11 @@ import { join } from "node:path";
 import { app, BrowserWindow, ipcMain, nativeTheme, shell } from "electron";
 import { aiNotReady, analyzeGame, ModelServer, readAnalysis, rulesBook } from "@replay-altar/ai";
 import { mapDataName } from "@replay-altar/sim/mapname";
+import { mapMarkers } from "./mapOverlay.ts";
 import {
   addAnnotation,
   configPath,
+  dataDir,
   getGame,
   isWarcraftRunning,
   listGames,
@@ -154,6 +156,19 @@ if (!app.requestSingleInstanceLock()) {
   ipcMain.handle("ai:get", (_e, key: string) => readAnalysis(p, key));
   ipcMain.handle("rules:get", (_e, key: string) => rulesBook(db, p, key));
   // The map's minimap, as WC3V's data tool extracts it when a game on that map is first simulated.
+  ipcMain.handle("map:markers", (_e, mapFile: string) => mapMarkers(join(import.meta.dirname, "../../../vendor/wc3v"), mapDataName(mapFile)));
+  // Race crests from the game's own menu art, copied out of the install by
+  // scripts/extract-gamedata.sh (never shipped in the repo).
+  ipcMain.handle("race:icons", () => {
+    const dir = join(dataDir(), "ui/races");
+    const files: Record<string, string> = { H: "human", O: "orc", U: "undead", N: "nightelf", R: "random" };
+    return Object.fromEntries(
+      Object.entries(files)
+        .map(([code, name]) => [code, join(dir, `${name}-resting.png`)] as const)
+        .filter(([, f]) => existsSync(f))
+        .map(([code, f]) => [code, `data:image/png;base64,${readFileSync(f).toString("base64")}`]),
+    );
+  });
   ipcMain.handle("map:image", (_e, mapFile: string) => {
     const file = join(import.meta.dirname, "../../../vendor/wc3v/client/maps", mapDataName(mapFile), "map.jpg");
     return existsSync(file) ? `data:image/jpeg;base64,${readFileSync(file).toString("base64")}` : null;

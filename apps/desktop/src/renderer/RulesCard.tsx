@@ -1,9 +1,10 @@
 // "Findings" on a match: a recap, what the rules found (most important first) with the facts
-// that explain each and what to do next time, the fight that turned the game and the one thing
-// to work on; strengths, the opponent's plan and the full fact sheet behind "Show more".
+// that explain each and what to do next time, the fight that turned the game, the one thing to
+// work on and the strengths; the opponent's plan and the full fact sheet behind "Show more".
 import { useEffect, useState } from "react";
 import type { RulesBook } from "@replay-altar/ai/types";
 import { api } from "./api.ts";
+import { Tip } from "./Tip.tsx";
 
 export function RulesCard({ gameKey }: { gameKey: string }) {
   const [book, setBook] = useState<RulesBook | null>(null);
@@ -23,10 +24,10 @@ export function RulesCard({ gameKey }: { gameKey: string }) {
   }
   return (
     <div className="card rules-card">
-      <h2>Findings</h2>
-      <p className="sub">Computed by Replay Altar's rules from the replay and the pro games, most important first.</p>
+      <h2>
+        Findings <Tip text="Computed by Replay Altar's rules from the replay, compared with pro games of your matchup. Most important first; no AI involved." />
+      </h2>
       <p className="rules-recap">{book.recap}</p>
-      {book.findings.length === 0 && <p className="muted">No clear problem stood out in this game.</p>}
       <ol className="rules-findings">
         {book.findings.map((f) => (
           <li key={f.id}>
@@ -38,12 +39,12 @@ export function RulesCard({ gameKey }: { gameKey: string }) {
             </ul>
             {!!f.because?.length && (
               <p className="small rules-why">
-                <b>Why:</b> {f.because.join(" ")}
+                <b data-tip="Facts from elsewhere in the game that explain this finding.">Why</b> {f.because.join(" ")}
               </p>
             )}
             {f.advice && (
               <p className="small">
-                <b>Next time:</b> {f.advice}
+                <b>Next time</b> {f.advice}
               </p>
             )}
           </li>
@@ -51,30 +52,32 @@ export function RulesCard({ gameKey }: { gameKey: string }) {
       </ol>
       {book.turningPoint && (
         <p className="small">
-          <b>Turning point.</b> {book.turningPoint}
+          <b data-tip="The fight with the biggest swing against the side that lost; jump to it in the replay.">Turning point</b> {book.turningPoint}
         </p>
       )}
       {book.oneThing && (
         <p className="ai-one">
-          <b>One thing for next game:</b> {book.oneThing}
+          <b>One thing for next game</b> {book.oneThing}
         </p>
       )}
-      <button className="btn" onClick={() => setMore((x) => !x)}>
+      {book.strengths.length > 0 && (
+        <div className="rules-strengths">
+          <h3>
+            Strengths <Tip text="Where this game beat most pro games of your matchup (and nothing a finding above contradicts)." />
+          </h3>
+          <ul className="small">
+            {book.strengths.map((s) => (
+              <li key={s}>{s}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <button className="btn" onClick={() => setMore((x) => !x)} data-tip="The opponent's plan from their orders, and every number the rules used.">
         {more ? "Show less" : "Show more"}
       </button>
       {more && (
         <div className="rules-more">
-          <h3>Strengths</h3>
-          {book.strengths.length ? (
-            <ul className="small">
-              {book.strengths.map((s) => (
-                <li key={s}>{s}</li>
-              ))}
-            </ul>
-          ) : (
-            <p className="muted small">None stood out.</p>
-          )}
-          <h3>Opponent's plan (from their orders)</h3>
+          <h3>Opponent's plan</h3>
           <ul className="small">
             {book.opponentPlan.map((s) => (
               <li key={s}>{s}</li>

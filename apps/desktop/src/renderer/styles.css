@@ -107,15 +107,39 @@ td.num, th.num { text-align: right; }
 .tile .note { color: var(--muted); font-size: 12.5px; }
 
 .match-card::after { content: ""; display: block; clear: both; }
-.map-image { float: right; width: 168px; height: 168px; margin: 0 0 8px 16px; border-radius: 6px; border: 1px solid var(--border); object-fit: cover; }
-@media (max-width: 640px) { .map-image { width: 96px; height: 96px; } }
+.map-view { float: right; margin: 0 0 8px 16px; width: 220px; }
+.map-view.large { width: min(560px, 60vw); }
+.map-frame { position: relative; cursor: zoom-in; line-height: 0; }
+.map-view.large .map-frame { cursor: zoom-out; }
+.map-frame img { width: 100%; aspect-ratio: 1; border-radius: 6px; border: 1px solid var(--border); object-fit: cover; }
+.map-frame svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.map-view figcaption { font-size: 12px; color: var(--muted); margin-top: 4px; display: flex; gap: 6px; align-items: center; justify-content: flex-end; }
+.mk-gold { fill: #f5c518; stroke: #3a2c00; stroke-width: 0.5; }
+.mk-start { fill: none; stroke: #4aa3ff; stroke-width: 0.8; }
+.mk-shop { fill: #ffffff; stroke: #222; stroke-width: 0.4; }
+.mk-camp { stroke: #111; stroke-width: 0.35; }
+.camp-easy { fill: #39d353; }
+.camp-mid { fill: #ff9f1a; }
+.camp-hard { fill: #ff3b30; }
+@media (max-width: 640px) { .map-view { width: 120px; } }
+.versus { display: inline-flex; align-items: center; gap: 8px; font-size: 18px; }
+.race-icon { height: 46px; width: auto; vertical-align: middle; filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.35)) brightness(1.25); }
+
+/* Tooltips: .tip is the small "i"; any [data-tip] element shows its text (Tip.tsx TipLayer). */
+.tip { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; border-radius: 50%; border: 1px solid var(--axis); color: var(--muted); font-size: 10px; font-weight: 700; font-style: italic; font-family: Georgia, serif; cursor: help; vertical-align: middle; }
+.tip:hover, .tip:focus { color: var(--ink); border-color: var(--ink-2); outline: none; }
+[data-tip]:not(.tip) { cursor: help; }
+button[data-tip], .map-frame[data-tip] { cursor: pointer; }
+.tooltip { position: fixed; z-index: 100; max-width: 340px; padding: 8px 10px; border-radius: 8px; background: var(--ink); color: var(--page); font-size: 12.5px; line-height: 1.4; font-weight: 400; pointer-events: none; transform: translateY(-100%); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2); }
+.tooltip.below { transform: none; }
 .rules-recap { font-size: 14px; margin: 8px 0 4px; }
 .rules-why { color: var(--ink-2); }
 .rules-findings { margin: 8px 0 12px; padding-left: 20px; }
 .rules-findings > li { margin: 12px 0; }
 .rules-findings h3 { margin: 0 0 4px; font-size: 14px; }
 .rules-findings ul { margin: 4px 0 0; padding-left: 18px; color: var(--ink-2); }
-.rules-more h3 { font-size: 13px; margin: 16px 0 4px; }
+.rules-more h3, .rules-strengths h3 { font-size: 13px; margin: 16px 0 4px; }
+.rules-strengths ul { margin: 4px 0 12px; padding-left: 18px; color: var(--ink-2); }
 .rules-more ul { margin: 4px 0; padding-left: 18px; color: var(--ink-2); }
 .match-head { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: baseline; }
 .match-head .big { font-size: 28px; font-weight: 650; }
@@ -157,6 +181,7 @@ tr.tier-row-below td:first-child { box-shadow: inset 3px 0 0 var(--critical); }
 /* AI analysis */
 .ai-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .ai-head h2 { margin: 0; }
+.ai-actions { display: flex; gap: 8px; }
 .ai-busy { color: var(--ink-2); }
 .ai-body p { margin: 8px 0; line-height: 1.5; max-width: 900px; }
 .ai-body.stale { opacity: 0.5; }

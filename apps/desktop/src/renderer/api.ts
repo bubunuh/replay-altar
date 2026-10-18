@@ -2,6 +2,7 @@ import type { Config, GameDetail, GameRow, MetricDef, Paths, PerfGame, Reference
 import type { RefProfile } from "@replay-altar/reference/types";
 import type { AiAnalysis, RulesBook } from "@replay-altar/ai/types";
 import type { Principles } from "@replay-altar/ai/principles";
+import type { MapMarker } from "../mapOverlay.ts";
 
 export type AiStatus = { problem: string | null; warcraftRunning: boolean; running: string[] };
 
@@ -32,6 +33,10 @@ type W3Api = {
   rules(key: string): Promise<RulesBook>;
   /** The map's minimap as a data URL, or null when there is none yet. */
   mapImage(mapFile: string): Promise<string | null>;
+  /** Gold mines, shops, start locations and creep camps over the minimap (0-1 coordinates). */
+  mapMarkers(mapFile: string): Promise<MapMarker[] | null>;
+  /** Race crests as data URLs by race code (empty until extracted from the game). */
+  raceIcons(): Promise<Record<string, string>>;
   aiStatus(): Promise<AiStatus>;
   aiRun(key: string): Promise<AiAnalysis | null>;
   onAi(fn: (event: "progress" | "done", key: string, stage?: string) => void): () => void;

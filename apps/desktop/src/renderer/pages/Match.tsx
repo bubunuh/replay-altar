@@ -8,6 +8,8 @@ import { deviationsFromPros, matchBuilds } from "@replay-altar/ai/builds";
 import { proBuildOf, type Principles } from "@replay-altar/ai/principles";
 import { AiCard } from "../AiCard.tsx";
 import { RulesCard } from "../RulesCard.tsx";
+import { MapView } from "../MapView.tsx";
+import { Tip } from "../Tip.tsx";
 import { Chart, heroLevelsChart, timeLines, type Band, type HeroLine, type Tokens } from "../Chart.tsx";
 import { assess, describeRef, groupForRace, pickProfile } from "@replay-altar/reference/compare";
 import { ProMedian, Standing } from "../Standing.tsx";
@@ -128,24 +130,23 @@ function GameCharts({ record, refMp, refLabel }: { record: GameRecord; refMp: Ma
       : null;
   return (
     <div className="card">
-      <h2>Game over time</h2>
-      <p className="sub">
-        You in blue, your opponent in orange{refMp ? `; grey: ${refLabel.toLowerCase()} (median and middle 50%)` : ""}. Army and resources are
-        reconstructed by simulating the replay (WC3V); army value is an estimate.
-      </p>
+      <h2>
+        Game over time{" "}
+        <Tip text={`You in blue, your opponent in orange${refMp ? `; grey: ${refLabel.toLowerCase()} (median and middle 50%)` : ""}. Army and resources are reconstructed by simulating the replay (WC3V); army value is an estimate.`} />
+      </h2>
       {note && <p className="sub">{note}</p>}
       {ok && (
         <>
-          <h3 className="chart-title">≈ Army value (resources in living army units, heroes excluded)</h3>
+          <h3 className="chart-title" data-tip="Gold and lumber in living army units, heroes excluded; estimated by the simulation.">≈ Army value</h3>
           <Chart option={army} height={240} label="Estimated army value over time for both players" />
         </>
       )}
-      <h3 className="chart-title">Heroes: level over time (✕ died, ○ back after revive; death times are approximate)</h3>
+      <h3 className="chart-title" data-tip="✕ died, ○ back after revive; death times are approximate.">Hero levels</h3>
       <Chart option={heroes} height={260} label="Hero levels over time for both players, with deaths and revives" />
       {ok && (
         <div className="grid-2">
           <div>
-            <h3 className="chart-title">Resources spent (gold + lumber)</h3>
+            <h3 className="chart-title" data-tip="Gold plus lumber spent, cumulative.">Resources spent</h3>
             <Chart option={spent} height={200} label="Cumulative gold plus lumber spent by both players" />
           </div>
           <div>
@@ -170,6 +171,12 @@ function GameCharts({ record, refMp, refLabel }: { record: GameRecord; refMp: Ma
   );
 }
 
+/** A race's crest from the game (text when it hasn't been extracted). */
+function RaceIcon({ race, icons }: { race?: string; icons: Record<string, string> }) {
+  const name = RACE[race ?? ""] ?? race ?? "?";
+  return race && icons[race] ? <img className="race-icon" src={icons[race]} alt={name} data-tip={name} /> : <span className="muted">{name}</span>;
+}
+
 /** Closest library build, and how the pros who played it did. */
 function BuildLine({ record, player, who, principles }: { record: GameRecord; player: PlayerRecord; who: string; principles: Principles | null | undefined }) {
   const best = useMemo(() => matchBuilds(record, player)[0], [record, player]);
@@ -177,11 +184,14 @@ function BuildLine({ record, player, who, principles }: { record: GameRecord; pl
   const pro = proBuildOf(principles, best);
   const dev = pro ? deviationsFromPros(best, pro).filter((d) => ["tech", "expand", "hero"].includes(d.action)) : [];
   const source = best.build.source.author ?? best.build.source.where ?? "guide";
+  const details = [
+    `Closest build-order guide: "${best.build.name}" (${source}).`,
+    pro ? `${pro.players} pros played it, ${Math.round(pro.winRate * 100)}% won.` : "",
+    dev.length ? `Compared with those pros: ${dev.map((d) => (d.yours === null ? `no ${d.label}` : `${d.label} at ${d.yours} food (pros ${d.pros})`)).join(", ")}.` : "",
+  ].filter(Boolean).join(" ");
   return (
-    <p className="sub" style={{ margin: "6px 0 0" }}>
-      <b>{who}:</b> closest to "{best.build.name}" ({source})
-      {pro && ` · ${pro.players} pros played it, ${Math.round(pro.winRate * 100)}% won`}
-      {dev.length > 0 && ` · vs those pros: ${dev.map((d) => (d.yours === null ? `no ${d.label}` : `${d.label} at ${d.yours} food (pros ${d.pros})`)).join(", ")}`}
+    <p className="sub" style={{ margin: "6px 0 0" }} data-tip={details}>
+      <b>{who}:</b> {best.build.name}
     </p>
   );
 }
@@ -190,16 +200,14 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
   const [detail, setDetail] = useState<GameDetail | undefined>();
   const [hideWorkers, setHideWorkers] = useState(true);
   const [kinds, setKinds] = useState(new Set(["building", "unit", "upgrade", "item"]));
-  const [mapImage, setMapImage] = useState<string | null>(null);
+  const [icons, setIcons] = useState<Record<string, string>>({});
   const load = useCallback(() => api.getGame(gameKey).then(setDetail), [gameKey]);
   useEffect(() => {
     load();
   }, [load]);
-  const mapFile = detail?.record.game.map.file;
   useEffect(() => {
-    setMapImage(null);
-    if (mapFile) api.mapImage(mapFile).then(setMapImage);
-  }, [mapFile]);
+    api.raceIcons().then(setIcons);
+  }, []);
 
   const r = detail?.record;
   const me = r?.players.find((p) => p.isMe);
@@ -235,19 +243,23 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
     <div className="page">
       <div><button className="btn" onClick={onBack}>← All matches</button></div>
       <div className="card match-card">
-        {mapImage && <img className="map-image" src={mapImage} alt={`Minimap of ${r.game.map.file}`} title={r.game.map.file} />}
+        <MapView mapFile={r.game.map.file} />
         <div className="match-head">
           <span className={`big ${row.result}`}>{row.result === "win" ? "Victory" : row.result === "loss" ? "Defeat" : "Result unknown"}</span>
-          <span style={{ fontSize: 18 }}>
-            {RACE[me?.race ?? ""]} vs <b>{opp?.name}</b> ({RACE[opp?.race ?? ""]})
+          <span className="versus">
+            <b>You</b>
+            <RaceIcon race={me?.race} icons={icons} />
+            <span className="muted">vs</span>
+            <RaceIcon race={opp?.race} icons={icons} />
+            <b>{opp?.name}</b>
           </span>
         </div>
-        <p className="sub" style={{ marginTop: 6 }}>
-          {r.game.map.file} · {mmss(r.game.durationMs)} · {dateTime(r.game.playedAt)} · {SOURCE[r.classification.source]}
+        <p className="sub" style={{ marginTop: 6 }} data-tip={`${r.game.map.file} · ${SOURCE[r.classification.source]}`}>
+          {mmss(r.game.durationMs)} · {dateTime(r.game.playedAt)}
           {r.userLabel ? ` · “${r.userLabel}”` : ""}
         </p>
         <div className="filters">
-          <label>
+          <label data-tip="Correct the result if it was detected wrong.">
             Result
             <select
               value={overridden ? row.result : "detected"}
@@ -256,12 +268,12 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
                 load();
               }}
             >
-              <option value="detected">Detected ({row.result_detected}, {r.result.confidence} confidence)</option>
+              <option value="detected">Detected: {row.result_detected}</option>
               <option value="win">Win (manual)</option>
               <option value="loss">Loss (manual)</option>
             </select>
           </label>
-          <button className="btn" onClick={() => api.showFile(r.provenance.archivePath)}>Show replay file</button>
+          <button className="btn" onClick={() => api.showFile(r.provenance.archivePath)} data-tip={r.provenance.archivePath}>Replay file</button>
         </div>
         {r.sim?.status === "ok" && me && opp && (
           <div className="build-lines small">
@@ -281,14 +293,16 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
       <GameCharts record={r} refMp={ref?.mp ?? null} refLabel="Pros" />
 
       <div className="card">
-        <h2>Key numbers</h2>
-        <p className="sub">
-          Order times are when the order was issued (cancels included). Economy and supply rows come from the simulation; ≈ marks estimates.
-          {ref
-            ? ` Pros: ${pros!.group.label}, ${describeRef(ref)}. Core and Mechanics get a verdict: green = pro level (at or above the pro median), yellow = at least as good as your opponent, red = below both; for timings with no better direction (heroes, tiers, expansions): green = like pros (their middle 50%), yellow = unusual, red = far from pros. Whole-game totals are compared per 10 minutes.`
-            : ""}{" "}
-          Hover a metric for its definition.
-        </p>
+        <h2>
+          Key numbers{" "}
+          <Tip
+            text={`Order times are when the order was issued (cancels included). Economy and supply rows come from the simulation; ≈ marks estimates.${
+              ref
+                ? ` Pros: ${pros!.group.label}, ${describeRef(ref)}. Green = pro level (at or above the pro median), yellow = at least as good as your opponent, red = below both; for timings with no better direction (heroes, tiers, expansions): green = like pros, yellow = unusual, red = far from pros. Whole-game totals are compared per 10 minutes.`
+                : ""
+            } Hover a metric for its definition.`}
+          />
+        </h2>
         {(() => {
           const cols = ref ? 5 : 3;
           const race = (me?.race ?? "") as RaceCode;
@@ -324,7 +338,7 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
           );
           const sectionRow = (id: keyof typeof SECTION_INFO) => (
             <tr key={`s-${id}`} className="section-row">
-              <td colSpan={cols}><b>{SECTION_INFO[id].title}</b> <span className="muted small">{SECTION_INFO[id].note}</span></td>
+              <td colSpan={cols}><b>{SECTION_INFO[id].title}</b> <Tip text={SECTION_INFO[id].note} /></td>
             </tr>
           );
           const { core, mechanics, details } = splitMetrics(metrics);
@@ -365,7 +379,7 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
                 </tbody>
               </table>
               <details className="more-metrics">
-                <summary>{SECTION_INFO.details.title}: {details.length} more metrics. {SECTION_INFO.details.note}</summary>
+                <summary data-tip={SECTION_INFO.details.note}>{details.length} more metrics</summary>
                 <table>
                   {head}
                   <tbody>
@@ -382,13 +396,11 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
       </div>
 
       <div className="card">
-        <h2>Heroes</h2>
-        <p className="sub">
-          Hero experience over time (all heroes), from level-up times; levels are exact, the XP between them is interpolated. Creeps give no
-          experience to a hero of level 5 or more.{ref ? " Grey: pros." : ""}
-        </p>
+        <h2>
+          Heroes{" "}
+          <Tip text={`Hero experience over time (all heroes), from level-up times; levels are exact, the XP between them is interpolated. Creeps give no experience to a hero of level 5 or more.${ref ? " Grey: pros." : ""} Below: skill order; a hero's first skill marks roughly when it arrived.`} />
+        </h2>
         {xpOption && <Chart option={xpOption} height={220} label="Hero experience over time for both players" />}
-        <p className="sub" style={{ marginTop: 12 }}>Skill order; a hero's first skill marks roughly when it arrived.</p>
         <div className="grid-2">
           {me && <Heroes p={me} />}
           {opp && <Heroes p={opp} />}
@@ -440,7 +452,7 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
 
       <div className="card">
         <details>
-          <summary>How this game was classified and where the data came from</summary>
+          <summary>Data sources</summary>
           <table style={{ marginTop: 10 }}>
             <tbody>
               {r.classification.rules.map((x, i) => (

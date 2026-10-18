@@ -4,6 +4,17 @@ import { useEffect, useState } from "react";
 import type { AiAnalysis } from "@replay-altar/ai/types";
 import { api, type AiStatus } from "./api.ts";
 import { dateTime } from "./format.ts";
+import { Tip } from "./Tip.tsx";
+
+/** Hidden or shown, remembered across matches (a per-viewer convenience). */
+const HIDDEN_KEY = "ai-card-hidden";
+const readHidden = () => {
+  try {
+    return localStorage.getItem(HIDDEN_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
 
 export function AiCard({ gameKey }: { gameKey: string }) {
   const [analysis, setAnalysis] = useState<AiAnalysis | null | undefined>(undefined);
@@ -11,6 +22,16 @@ export function AiCard({ gameKey }: { gameKey: string }) {
   const [stage, setStage] = useState<string | null>(null);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [now, setNow] = useState(Date.now());
+  const [hidden, setHidden] = useState(readHidden);
+  const toggle = () =>
+    setHidden((h) => {
+      try {
+        localStorage.setItem(HIDDEN_KEY, h ? "0" : "1");
+      } catch {
+        // storage unavailable: the choice lasts for this page only
+      }
+      return !h;
+    });
 
   const load = () => {
     api.aiGet(gameKey).then(setAnalysis);
@@ -55,23 +76,26 @@ export function AiCard({ gameKey }: { gameKey: string }) {
   return (
     <div className="card ai-card">
       <div className="ai-head">
-        <h2>AI analysis</h2>
-        {!busy && !status.problem && (
-          <button className="btn" onClick={run}>
-            {analysis ? "Run again" : status.warcraftRunning ? "Analyze anyway" : "Analyze with AI"}
-          </button>
-        )}
+        <h2>
+          AI analysis{" "}
+          <Tip text="A local model (Gemma, on your graphics card) writes up the findings above. About 30 seconds, a minute the first time while it loads. Nothing leaves your computer." />
+        </h2>
+        <div className="ai-actions">
+          {!hidden && !busy && !status.problem && (
+            <button
+              className="btn"
+              onClick={run}
+              data-tip={status.warcraftRunning ? "Warcraft III is running: the model takes most of the graphics card's memory and would slow the game down." : undefined}
+            >
+              {analysis ? "Run again" : status.warcraftRunning ? "Analyze anyway" : "Analyze with AI"}
+            </button>
+          )}
+          <button className="btn" onClick={toggle}>{hidden ? "Show" : "Hide"}</button>
+        </div>
       </div>
-      {!analysis && !busy && (
-        <p className="sub">
-          Replay Altar picks what mattered in this game (rules, compared with pros); a local model (Gemma, on your graphics card) writes it up. About 30 seconds, a
-          minute the first time while the model loads. Nothing leaves your computer.
-        </p>
-      )}
+      {hidden ? null : (
+      <>
       {status.problem && <p className="sub">Not available: {status.problem}. The model is set in the "ai" section of the settings file.</p>}
-      {status.warcraftRunning && !busy && !status.problem && (
-        <p className="sub">Warcraft III is running: the model takes most of the graphics card's memory and would slow the game down.</p>
-      )}
       {busy && (
         <p className="sub ai-busy">
           {stage}…{startedAt ? ` ${Math.round((now - startedAt) / 1000)} s` : ""}
@@ -96,7 +120,7 @@ export function AiCard({ gameKey }: { gameKey: string }) {
                   </p>
                 )}
                 <details>
-                  <summary>Evidence (computed by Replay Altar)</summary>
+                  <summary>Evidence</summary>
                   <ul className="small">
                     {f.evidence.map((e) => (
                       <li key={e}>{e}</li>
@@ -106,8 +130,7 @@ export function AiCard({ gameKey }: { gameKey: string }) {
               </div>
             );
           })}
-          {analysis.findings.length === 0 && <p className="muted">No clear problem stood out in this game.</p>}
-          {review.strengths && (
+                    {review.strengths && (
             <p>
               <b>Went well.</b> {review.strengths}
             </p>
@@ -115,8 +138,8 @@ export function AiCard({ gameKey }: { gameKey: string }) {
           <p className="ai-one">
             <b>One thing for next game:</b> {review.one_thing}
           </p>
-          <p className="sub small">
-            {analysis.model.file.replace(/\.gguf$/, "")} · {dateTime(analysis.createdAt)} · {Math.round(analysis.timings.totalMs / 1000)} s ·{" "}
+          <p className="sub small" data-tip={`${analysis.model.file.replace(/\.gguf$/, "")}, ${Math.round(analysis.timings.totalMs / 1000)} s`}>
+            {dateTime(analysis.createdAt)} ·{" "}
             {analysis.unverified.length === 0 ? "every number checked against the game data" : `not found in the game data, double-check: ${analysis.unverified.join(", ")}`}
           </p>
           <details>
@@ -124,6 +147,8 @@ export function AiCard({ gameKey }: { gameKey: string }) {
             <pre className="ai-facts">{analysis.facts}</pre>
           </details>
         </div>
+      )}
+      </>
       )}
     </div>
   );

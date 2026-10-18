@@ -1,5 +1,6 @@
 #!/bin/sh
-# Extracts the balance tables WC3V's simulation needs from the local Warcraft III install.
+# Extracts the balance tables WC3V's simulation needs from the local Warcraft III install,
+# and the race crests the match page shows.
 #
 #   scripts/extract-gamedata.sh [wc3-install-dir]
 #
@@ -36,6 +37,16 @@ nice -n 19 podman run --rm --security-opt label=disable \
   'war3.w3mod:units\unitweapons.slk' \
   'war3.w3mod:units\unitdata.slk' \
   'war3.w3mod:units\miscgame.txt'
+
+# Race crests for the match page (the game's own menu art; kept with your data, not in the repo).
+mkdir -p "$DATA/ui/races"
+nice -n 19 podman run --rm --security-opt label=disable \
+  -v "$WC3":/war3:O -v "$DATA/ui/races":/out:z "$IMAGE" /war3 /out \
+  'war3.w3mod:webui\versusmenu\raceicons\human-resting.png' \
+  'war3.w3mod:webui\versusmenu\raceicons\orc-resting.png' \
+  'war3.w3mod:webui\versusmenu\raceicons\undead-resting.png' \
+  'war3.w3mod:webui\versusmenu\raceicons\nightelf-resting.png' \
+  'war3.w3mod:webui\versusmenu\raceicons\random-resting.png' >/dev/null
 
 # WC3V's converter reads ./UnitBalance.slk and writes ./UnitBalance.json.
 (cd "$OUT" && cp unitbalance.slk UnitBalance.slk && node "$ROOT/vendor/wc3v/slk/slk.js" >/dev/null)

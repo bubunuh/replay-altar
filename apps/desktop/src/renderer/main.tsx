@@ -6,6 +6,7 @@ import { Match } from "./pages/Match.tsx";
 import { Matches } from "./pages/Matches.tsx";
 import { Settings, Skipped } from "./pages/Other.tsx";
 import { Performance } from "./pages/Performance.tsx";
+import { TipLayer } from "./Tip.tsx";
 import "./styles.css";
 
 type Page = "matches" | "performance" | "skipped" | "settings";
@@ -50,6 +51,7 @@ function App() {
 
   return (
     <div className="app">
+      <TipLayer />
       <header className="topbar">
         <span className="brand">Replay Altar</span>
         <nav className="tabs">
