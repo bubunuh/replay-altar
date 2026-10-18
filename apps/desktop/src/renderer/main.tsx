@@ -7,7 +7,10 @@ import { Matches } from "./pages/Matches.tsx";
 import { Settings, Skipped } from "./pages/Other.tsx";
 import { Performance } from "./pages/Performance.tsx";
 import { TipLayer } from "./Tip.tsx";
+import { applyTextScale } from "./textSize.ts";
 import "./styles.css";
+
+applyTextScale();
 
 // The game's own font when it has been extracted (scripts/extract-gamedata.sh); system font otherwise.
 api.uiFont().then((url) => {

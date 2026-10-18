@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Config, GameRow, Paths } from "@replay-altar/core/ui";
+import { setTextScale, TEXT_SCALES, textScale } from "../textSize.ts";
 import { api, type RefGroupInfo } from "../api.ts";
 import { dateTime, mmss, SKIP, SOURCE } from "../format.ts";
 
@@ -98,6 +99,7 @@ export function Settings({ refs, onRefsChanged }: { refs: RefGroupInfo[]; onRefs
   const [accounts, setAccounts] = useState("");
   const [saved, setSaved] = useState(false);
   const [status, setStatus] = useState("…");
+  const [scale, setScale] = useState(textScale);
   useEffect(() => {
     api.getConfig().then((s) => {
       setState(s);
@@ -123,6 +125,19 @@ export function Settings({ refs, onRefsChanged }: { refs: RefGroupInfo[]; onRefs
           <input type="text" style={{ flex: 1 }} value={accounts} onChange={(e) => setAccounts(e.target.value)} />
           <button className="btn" onClick={() => save({ ...config, accounts: accounts.split(",").map((a) => a.trim()).filter(Boolean) })}>Save</button>
           {saved && <span className="muted small">Saved</span>}
+        </div>
+      </div>
+      <div className="card">
+        <h2>Display</h2>
+        <div className="filters">
+          <label>
+            Text size
+            <select value={scale} onChange={(e) => { const v = Number(e.target.value); setTextScale(v); setScale(v); }}>
+              {TEXT_SCALES.map((v) => (
+                <option key={v} value={v}>{Math.round(v * 100)}%</option>
+              ))}
+            </select>
+          </label>
         </div>
       </div>
       <div className="card">
