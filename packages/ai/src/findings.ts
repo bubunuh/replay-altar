@@ -10,7 +10,7 @@ import { metricValue, type FactsRef } from "./facts.ts";
 import { openingOf } from "./openings.ts";
 import { deviationsFromPros, matchBuilds } from "./builds.ts";
 import { proBuildOf } from "./principles.ts";
-import { at, expansionsOf, fightLabel, fightLosses, levelSum, mmss, sampleBoth, seriesOf, STEP_MS } from "./series.ts";
+import { at, expansionsOf, fightLabel, fightLosses, levelSum, mmss, sampleBoth, sampleTimes, seriesOf, STEP_MS } from "./series.ts";
 import { adviceFor } from "./advice.ts";
 import { ATTACK_NAME, airShare, antiAirShare, armyMix, bestAgainst, canHitAir, describeMix, mixValue, mixVsMix } from "./combat.ts";
 import { CORE_UPGRADES, POTION_ITEMS, TOWN_PORTAL } from "@replay-altar/core/gamedata";
@@ -22,7 +22,7 @@ export type Finding = {
     | "first_creep" | "upgrades" | "one_hero" | "no_items" | "floating" | "unanswered_expansion" | "just_over_50" | "towers" | "workers_lost" | "goal_3360"
     | "unused_spike" | "upkeep_before_upgrades" | "mine_dry" | "build_drift"
     // army and habits: composition against theirs, items, production, scouting
-    | "no_anti_air" | "army_mismatch" | "no_sustain" | "no_scout" | "unused_lead";
+    | "no_anti_air" | "army_mismatch" | "no_sustain" | "no_scout" | "unused_lead" | "out_expanded";
   /** 0–1: how much it likely cost (problems) or how well it went (strengths). */
   severity: number;
   /** Fallback title when the model is not available. */
@@ -367,7 +367,9 @@ function upkeepFinding(c: Ctx): Finding | null {
   const top = Math.max(...series.map((s) => s.foodUsed));
   return {
     id: "upkeep",
-    severity: Math.min(0.8, 0.5 + seconds / 1200),
+    // A basic since the base counts and food got more accurate (holdout lift 1.3 -> 1.0): the
+    // simulation's food count keeps dead units, so long games overstate it.
+    severity: BASIC,
     headline: "You sat in high upkeep on too few bases",
     evidence: [
       `You were above 80 food (high upkeep: you keep 40% of the gold your workers mine) for ${Math.round(seconds)} s, from ${mmss(first)}; at most ${top} food. Go that high only right before a fight.`,
@@ -789,6 +791,43 @@ function unusedLeadFinding(c: Ctx): Finding | null {
   };
 }
 
+/** Standing bases at t (1 + expansions started 2 minutes earlier and not lost). */
+const basesAt = (r: GameRecord, p: PlayerRecord, t: number) => {
+  const sim = r.sim?.status === "ok" ? r.sim.players.find((x) => x.playerId === p.playerId)?.bases : undefined;
+  if (!sim) return null;
+  return 1 + sim.filter((b) => b.at + TOWN_HALL_BUILD_MS <= t && (b.lostAt === null || b.lostAt > t)).length;
+};
+
+/** They had more standing bases than you for 4+ minutes before 20:00. */
+function outExpandedFinding(c: Ctx): Finding | null {
+  const times = sampleTimes(Math.min(c.r.game.durationMs, 20 * 60_000));
+  const rows = times.map((t) => ({ t, me: basesAt(c.r, c.me, t), opp: basesAt(c.r, c.opp, t) }));
+  if (rows.some((x) => x.me === null || x.opp === null)) return null;
+  let run = 0;
+  let from: number | null = null;
+  let best: { from: number; to: number } | null = null;
+  for (const x of rows) {
+    if (x.opp! > x.me!) {
+      from ??= x.t;
+      run = x.t - from;
+      if (run >= 240_000 && (!best || run > best.to - best.from)) best = { from, to: x.t };
+    } else {
+      from = null;
+    }
+  }
+  if (!best) return null;
+  const at = rows.find((x) => x.t === best!.to)!;
+  return {
+    id: "out_expanded",
+    severity: 0.55,
+    headline: "They had more bases than you",
+    evidence: [
+      `From ${mmss(best.from)} to ${mmss(best.to)} they had more bases standing than you (at ${mmss(best.to)}: ${at.opp} vs ${at.me}). Your expansions: ${expansionTimes(c.r, c.me).map((t) => mmss(t)).join(", ") || "none"}; theirs: ${expansionTimes(c.r, c.opp).map((t) => mmss(t)).join(", ") || "none"}.`,
+    ],
+    advice: "When they take an extra base, either take one yourself or attack theirs while it builds (about two minutes); letting them mine more for minutes decides long games.",
+  };
+}
+
 // ---- Links: facts from elsewhere in the game that explain a finding.
 
 function becauseFor(f: Finding, c: Ctx): string[] {
@@ -856,7 +895,8 @@ export function allFindings(r: GameRecord, ref: FactsRef | null, subjectId?: num
     noHeroesFinding(c),
     upkeepFinding(c),
     window ? null : expansionFinding(c), // the window finding already says whether you expanded
-    heroes ? null : firstCreepFinding(c), // the heroes finding names a late first creep as a cause
+    // firstCreepFinding: dropped from the list (holdout lift 0.5 once the heroes finding names a
+    // late first creep as a cause); kept for that cause.
     upgradesFinding(c),
     oneHeroFinding(c),
     noItemsFinding(c),
@@ -871,6 +911,7 @@ export function allFindings(r: GameRecord, ref: FactsRef | null, subjectId?: num
     mineDryFinding(c),
     buildDriftFinding(c),
     window ? null : unusedLeadFinding(c),
+    outExpandedFinding(c),
     noAntiAirFinding(c),
     armyMismatchFinding(c),
     noSustainFinding(c),

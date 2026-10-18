@@ -106,7 +106,8 @@ function basesOf(o: WOutput, playerId: number, race: string): { at: number; lost
   for (const u of (p.units ?? []).filter((x) => codes.includes(x.itemId) && !x.isIllusion)) {
     const pos = u.lastPosition ?? u.spawnPosition;
     const at = u.constructionStartTime ?? u.spawnTime;
-    if (!pos || at === null || at === undefined || Math.hypot(pos.x - start.x, pos.y - start.y) < EXPANSION_MIN_DISTANCE) continue;
+    // The starting hall is no expansion, even when a Night Elf walks it elsewhere.
+    if (!pos || at === null || at === undefined || at < 5_000 || Math.hypot(pos.x - start.x, pos.y - start.y) < EXPANSION_MIN_DISTANCE) continue;
     const lostAt = u.lostState?.state === "lost" ? u.lostState.since : null;
     const same = sites.find((s) => Math.hypot(s.x - pos.x, s.y - pos.y) < SAME_SITE);
     if (same) {
