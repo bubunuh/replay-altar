@@ -3,9 +3,9 @@
 // mined entries add how pros actually play each build (scripts/mine-principles.ts).
 // The matcher aligns a player's opening with every entry of their race and reports the best
 // match and where the player drifted from it.
-import type { GameRecord, PlayerRecord } from "@w3stats/core/ui";
-import { CORE_UPGRADES, dropRepeatedBuildOrders, RACES, type RaceCode } from "@w3stats/core/gamedata";
-import { codeOf, nameOf } from "@w3stats/core/names";
+import type { GameRecord, PlayerRecord } from "@replay-altar/core/ui";
+import { CORE_UPGRADES, dropRepeatedBuildOrders, RACES, type RaceCode } from "@replay-altar/core/gamedata";
+import { codeOf, nameOf } from "@replay-altar/core/names";
 import grubby from "../../../data/builds/grubby.json" with { type: "json" };
 import gym from "../../../data/builds/gym.json" with { type: "json" };
 import liquipedia from "../../../data/builds/liquipedia.json" with { type: "json" };

@@ -1,13 +1,13 @@
 # Data format (for audits, scripts and LLMs)
 
-All data lives in `~/.local/share/w3stats/`. The trust order is:
+All data lives in `~/.local/share/replay-altar/`. The trust order is:
 
 1. `archive/` holds the original `.w3g` files.
 2. `raw/` holds the parser output.
 3. `games/` holds the derived records.
 4. The SQLite DB is a projection of the records.
 
-Each layer can be rebuilt from the one above it with `w3stats reingest`. The exception is the `annotations` table, which holds human or LLM input and is never rebuilt.
+Each layer can be rebuilt from the one above it with `replay-altar reingest`. The exception is the `annotations` table, which holds human or LLM input and is never rebuilt.
 
 ## Per game
 
@@ -118,7 +118,7 @@ Each metric has a `section`:
   - **How it's fitted:** so the median end-of-game estimate equals the official gold collected (58 player-games). The result is 1.96 gold per worker-second, against a prior of 2.0 from the game's harvest data.
   - **Accuracy:** typical error 11%. Games under 15 minutes read about 10% high, longer ones about 12% low.
   - **Fallback:** with fewer than 20 official samples it uses the "bank can't go negative" method.
-  - **Re-running:** re-run it as games accumulate, then run `w3stats reingest` and `w3stats sim --resummarize`.
+  - **Re-running:** re-run it as games accumulate, then run `replay-altar reingest` and `replay-altar sim --resummarize`.
 - **Lumber:** the estimate correlated only 0.60 with official lumber, so it isn't reported. Unspent resources are gold only.
 - **Gold collected (non-W3C games):** gold spent minus the 500 starting gold, within about 3% of official on median.
 - **Horizon:** income estimates are reported for the first 10 minutes only. Past that the model drifts, in multi-mine games and for Night Elves, whose wisps WC3V under-counts.
@@ -154,7 +154,7 @@ Each metric has a `section`:
 
 ## AI analyses (`ai/<gameKey>.json`)
 
-One file per analyzed game, written by `w3stats ai` or the button. `reingest` never touches these files.
+One file per analyzed game, written by `replay-altar ai` or the button. `reingest` never touches these files.
 
 - **`findings`:** what mattered, decided by rules in `packages/ai/src/findings.ts`. Each has an `id`, a `severity` (0–1) and `evidence` lines. Every rule, its source and its score on pro games are listed in [RULES.md](RULES.md).
 - **`strengths`:** core metrics at pro level.
@@ -175,14 +175,14 @@ One file per analyzed game, written by `w3stats ai` or the button. `reingest` ne
 ## Exports
 
 
-- `w3stats export --jsonl`: one compact digest per analyzed game, containing metrics, heroes, the first 40 build orders, caveats and provenance.
-- `w3stats export --md <game>`: one game as Markdown, with a metric definition next to each value.
+- `replay-altar export --jsonl`: one compact digest per analyzed game, containing metrics, heroes, the first 40 build orders, caveats and provenance.
+- `replay-altar export --md <game>`: one game as Markdown, with a metric definition next to each value.
 
 ## Reference groups (`reference/<group>/`)
 
 - **One group per race:** Human pros (`pros`), plus Orc, Undead and Night Elf groups that only download once you have played that race (`onlyIfPlayed`).
 - **Matching:** pages and exports compare you with the group for the race you played.
-- **Source and updates:** tournament replays from warcraft3.info, on request only (`w3stats ref refresh`, "Update pro games"). See the README for the rules. Older games in the Human group came from the W3Champions ladder; they keep their official stats.
+- **Source and updates:** tournament replays from warcraft3.info, on request only (`replay-altar ref refresh`, "Update pro games"). See the README for the rules. Older games in the Human group came from the W3Champions ladder; they keep their official stats.
 - **Maps:** map versions you don't have are fetched by the SHA-1 in the replay header and stored in `maps/` in your data folder.
 
 - **Layout:** the same files as your data (`archive/`, `games/`, `raw/`, `sim/out/`), plus `reference.sqlite`. Records are "observed", so both players have metrics.

@@ -19,9 +19,9 @@ export function wc3vCommit(): string {
 
 /** Why the simulation can't run yet, or null when it can. */
 export function simNotReady(dataRoot: string): string | null {
-  if (!existsSync(join(WC3V_DIR, "wc3v.js"))) return "WC3V is not checked out (run `w3stats setup-sim`)";
-  if (!existsSync(join(WC3V_DIR, "node_modules/w3gjs"))) return "WC3V dependencies are not installed (run `w3stats setup-sim`)";
-  if (!existsSync(join(WC3V_DIR, "helpers/UnitBalance.json"))) return "game data has not been extracted (run `w3stats setup-sim`)";
-  if (!existsSync(join(gamedataDir(dataRoot), "manifest.json"))) return "game data manifest missing (run `w3stats setup-sim`)";
+  if (!existsSync(join(WC3V_DIR, "wc3v.js"))) return "WC3V is not checked out (run `replay-altar setup-sim`)";
+  if (!existsSync(join(WC3V_DIR, "node_modules/w3gjs"))) return "WC3V dependencies are not installed (run `replay-altar setup-sim`)";
+  if (!existsSync(join(WC3V_DIR, "helpers/UnitBalance.json"))) return "game data has not been extracted (run `replay-altar setup-sim`)";
+  if (!existsSync(join(gamedataDir(dataRoot), "manifest.json"))) return "game data manifest missing (run `replay-altar setup-sim`)";
   return null;
 }

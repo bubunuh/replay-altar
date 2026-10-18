@@ -7,13 +7,13 @@
 # The install is mounted as an overlay (:O): CascLib opens files read-write, and the
 # overlay sends anything it might write to a throwaway layer, so the game files are never
 # touched. Output: vendor/wc3v/helpers/UnitBalance.json plus a copy of the source tables
-# and a manifest under $W3STATS_DATA/sim/gamedata/<game version>/.
+# and a manifest under $REPLAY_ALTAR_DATA/sim/gamedata/<game version>/.
 set -eu
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 WC3="${1:-$HOME/Games/battlenet/drive_c/Program Files (x86)/Warcraft III}"
-DATA="${W3STATS_DATA:-${XDG_DATA_HOME:-$HOME/.local/share}/w3stats}"
-IMAGE=localhost/w3stats-casc:latest
+DATA="${REPLAY_ALTAR_DATA:-${XDG_DATA_HOME:-$HOME/.local/share}/replay-altar}"
+IMAGE=localhost/replay-altar-casc:latest
 
 [ -f "$WC3/.build.info" ] || { echo "No Warcraft III install at $WC3" >&2; exit 1; }
 VERSION="$(awk -F'|' 'NR==1{for(i=1;i<=NF;i++) if($i ~ /^Version!/) c=i} NR==2{print $c}' "$WC3/.build.info")"

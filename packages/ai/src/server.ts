@@ -4,7 +4,7 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { existsSync, mkdirSync, openSync } from "node:fs";
 import { join } from "node:path";
-import type { AiConfig } from "@w3stats/core/ui";
+import type { AiConfig } from "@replay-altar/core/ui";
 
 const START_TIMEOUT_MS = 240_000;
 const REQUEST_TIMEOUT_MS = 600_000;

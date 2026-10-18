@@ -2,7 +2,7 @@
 // for the subject players of a reference group. Read by the desktop app and exports.
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { heroesXpAt, METRICS, per10Minutes, readRecord, researchLevels, transaction, type DB, type GameRecord, type ReferenceGroup } from "@w3stats/core";
+import { heroesXpAt, METRICS, per10Minutes, readRecord, researchLevels, transaction, type DB, type GameRecord, type ReferenceGroup } from "@replay-altar/core";
 import { summarizeValues, type Stat } from "./quantiles.ts";
 import type { RefPaths } from "./store.ts";
 

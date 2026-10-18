@@ -2,7 +2,7 @@
 import { execFile } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
-import { RACES, type GameRecord, type RaceCode, type SimFight, type SimSummary } from "@w3stats/core";
+import { RACES, type GameRecord, type RaceCode, type SimFight, type SimSummary } from "@replay-altar/core";
 import { loadCosts, type CostTables } from "./costs.ts";
 import { buildTimelines, economyMetrics, ESTIMATE_HORIZON_MS, runIncome, type EconomyConstants, type WOutput } from "./economy.ts";
 import constantsJson from "./economy-constants.json" with { type: "json" };

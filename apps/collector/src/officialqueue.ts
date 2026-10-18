@@ -1,7 +1,7 @@
 // Fetches the game's own end-of-game stats from W3Champions for your new W3C games.
 // W3Champions lists a match a little after the replay appears, so try after 90 s, then later.
-import { applyOfficial, readRecord, type IngestContext } from "@w3stats/core";
-import { officialForOwnGame, w3cClient } from "@w3stats/reference";
+import { applyOfficial, readRecord, type IngestContext } from "@replay-altar/core";
+import { officialForOwnGame, w3cClient } from "@replay-altar/reference";
 
 const RETRY_DELAYS_MS = [90_000, 10 * 60_000, 60 * 60_000];
 

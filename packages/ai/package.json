@@ -1,5 +1,5 @@
 {
-  "name": "@w3stats/ai",
+  "name": "@replay-altar/ai",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -11,7 +11,7 @@
     "./builds": "./src/builds.ts"
   },
   "dependencies": {
-    "@w3stats/core": "*",
-    "@w3stats/reference": "*"
+    "@replay-altar/core": "*",
+    "@replay-altar/reference": "*"
   }
 }

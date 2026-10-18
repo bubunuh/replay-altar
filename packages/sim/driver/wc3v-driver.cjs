@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Runs WC3V's simulation (vendor/wc3v, GPL-3.0) on one replay and writes its full output.
-// This file loads WC3V's modules, so it is GPL like WC3V. W3Stats only runs it as a separate
+// This file loads WC3V's modules, so it is GPL like WC3V. Replay Altar only runs it as a separate
 // process and reads the JSON it prints.
 //
 //   node wc3v-driver.cjs <replay.w3g> <out.wc3v.gz>

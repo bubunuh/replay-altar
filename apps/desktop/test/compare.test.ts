@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
-import { METRICS } from "@w3stats/core/metrics";
-import type { MatchupProfile } from "@w3stats/reference/types";
-import { assess } from "@w3stats/reference/compare";
+import { METRICS } from "@replay-altar/core/metrics";
+import type { MatchupProfile } from "@replay-altar/reference/types";
+import { assess } from "@replay-altar/reference/compare";
 
 const def = (key: string) => METRICS.find((m) => m.key === key)!;
 const stat = (values: number[]) => {

@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, statSync, symlinkSync
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
-import { buildRecord, endTimeOf, paths, parseReplay, type BuildEvent, type SimSummary } from "@w3stats/core";
+import { buildRecord, endTimeOf, paths, parseReplay, type BuildEvent, type SimSummary } from "@replay-altar/core";
 import { CONSTANTS, gamedataDir, loadCosts, simNotReady, simulateGame } from "../src/index.ts";
 import { runIncome, spendFromOrders, type Timeline } from "../src/economy.ts";
 
@@ -75,7 +75,7 @@ describe("income model", () => {
 describe.skipIf(!ready || !existsSync(FIXTURE))("simulating a real replay", () => {
   test("Macro_loss: WC3V runs and the economy is consistent", async () => {
     // A throwaway data root that borrows the extracted game data.
-    const root = mkdtempSync(join(tmpdir(), "w3stats-sim-"));
+    const root = mkdtempSync(join(tmpdir(), "replay-altar-sim-"));
     mkdirSync(join(root, "sim/gamedata"), { recursive: true });
     symlinkSync(gamedataDir(realData), join(root, "sim/gamedata/current"));
     const raw = await parseReplay(readFileSync(FIXTURE));

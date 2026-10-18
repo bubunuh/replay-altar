@@ -3,7 +3,7 @@
 // - "largest army" (game counts it in food) vs our max army food: correlation 0.90, 0.95x
 // - "units killed" (game counts creeps too) vs (enemy losses + creeps in camps you cleared) x 1.49:
 //   correlation 0.90
-import { RACES, type GameRecord, type HeroTimeline } from "@w3stats/core";
+import { RACES, type GameRecord, type HeroTimeline } from "@replay-altar/core";
 import { costOf, type CostTables } from "./costs.ts";
 import type { WOutput } from "./economy.ts";
 

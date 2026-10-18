@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { GameRow } from "@w3stats/core/ui";
+import type { GameRow } from "@replay-altar/core/ui";
 import { dateTime, mmss, RACE, shortName, SOURCE } from "../format.ts";
 
 export function Result({ result }: { result: string }) {

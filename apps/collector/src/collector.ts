@@ -1,11 +1,11 @@
 // The always-on service: archive + analyze new replays, react to Warcraft III starting.
-import { ingestFile, loadConfig, mmss, openDb, paths, replayDirs, type GameRecord } from "@w3stats/core";
+import { ingestFile, loadConfig, mmss, openDb, paths, replayDirs, type GameRecord } from "@replay-altar/core";
 import { OfficialQueue } from "./officialqueue.ts";
 import { SimQueue } from "./simqueue.ts";
 import { notify, openDesktop, watchWarcraft } from "./system.ts";
 import { ReplayWatcher } from "./watcher.ts";
 
-const log = (msg: string) => console.log(`[w3stats] ${msg}`);
+const log = (msg: string) => console.log(`[replay-altar] ${msg}`);
 
 function describe(r: GameRecord) {
   const me = r.players.find((p) => p.isMe);

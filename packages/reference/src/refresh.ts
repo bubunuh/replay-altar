@@ -1,10 +1,10 @@
 // Keeps a reference group stocked with current-patch tournament games from warcraft3.info.
-// Runs only when you ask ("Update pro games" in the window, or `w3stats ref refresh`).
+// Runs only when you ask ("Update pro games" in the window, or `replay-altar ref refresh`).
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { applySim, ingestFile, parseReplay, readRecord, type Config, type GameRecord, type ReferenceGroup } from "@w3stats/core";
-import { simulateGame } from "@w3stats/sim";
+import { applySim, ingestFile, parseReplay, readRecord, type Config, type GameRecord, type ReferenceGroup } from "@replay-altar/core";
+import { simulateGame } from "@replay-altar/sim";
 import { buildProfile, type RefProfile } from "./profile.ts";
 import { openReference } from "./store.ts";
 import { RateLimited } from "./w3c.ts";
@@ -90,7 +90,7 @@ export async function refreshGroup(group: ReferenceGroup, opts: RefreshOptions):
     const pruned = pruneOtherBuilds(ref, opts.replayBuild);
 
     // Tournaments play map versions you may not have: fetch them from warcraft3.info by the
-    // checksum in the replay, into W3Stats' own maps folder (never the game's).
+    // checksum in the replay, into Replay Altar's own maps folder (never the game's).
     const mapsDir = join(opts.gamedataRoot, "maps");
     let mapIndex: Map<string, W3iMapFile> | null = null;
     const simulate = async (record: GameRecord) => {

@@ -5,7 +5,7 @@
 // the starting hall and workers as spending and prices tier upgrades cumulatively. Mined income
 // is not observable at all; runIncome() estimates it from workers alive and the mine rules, with
 // rates calibrated on real games (scripts/calibrate-economy.ts).
-import { RACES, type GameRecord, type Metrics, type RaceCode, type SimSample } from "@w3stats/core";
+import { RACES, type GameRecord, type Metrics, type RaceCode, type SimSample } from "@replay-altar/core";
 import { costOf, type CostTables } from "./costs.ts";
 
 // --- WC3V output (only the fields we read) -------------------------------------------------

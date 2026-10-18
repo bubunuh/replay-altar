@@ -1,6 +1,6 @@
 // A reference group's own data folder and database (same layout as yours, plus ref_* tables).
 import { mkdirSync } from "node:fs";
-import { openDb, referencePaths, type Config, type DB, type IngestContext } from "@w3stats/core";
+import { openDb, referencePaths, type Config, type DB, type IngestContext } from "@replay-altar/core";
 
 export type RefPaths = ReturnType<typeof referencePaths>;
 

@@ -2,7 +2,7 @@
 import { spawn } from "node:child_process";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { isWarcraftRunning } from "@w3stats/core";
+import { isWarcraftRunning } from "@replay-altar/core";
 
 export { isWarcraftRunning };
 
@@ -18,7 +18,7 @@ export function watchWarcraft(onStart: () => void, onStop: () => void) {
   }, POLL_MS);
 }
 
-export const desktopLauncher = () => process.env.W3STATS_DESKTOP ?? join(homedir(), ".local/bin/w3stats-desktop");
+export const desktopLauncher = () => process.env.REPLAY_ALTAR_DESKTOP ?? join(homedir(), ".local/bin/replay-altar-desktop");
 
 export function openDesktop(args: string[]) {
   const child = spawn(desktopLauncher(), args, { detached: true, stdio: "ignore" });
@@ -29,7 +29,7 @@ export function openDesktop(args: string[]) {
 /** Shows a notification; resolves with the action the user clicked, if any. */
 export function notify(title: string, body: string, action?: { id: string; label: string }): Promise<string | null> {
   return new Promise((resolve) => {
-    const args = ["--app-name=W3Stats", "--icon=w3stats", "--expire-time=15000"];
+    const args = ["--app-name=Replay Altar", "--icon=replay-altar", "--expire-time=15000"];
     if (action) args.push(`--action=${action.id}=${action.label}`, "--wait");
     const child = spawn("notify-send", [...args, title, body], { stdio: ["ignore", "pipe", "ignore"] });
     let out = "";

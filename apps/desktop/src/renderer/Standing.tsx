@@ -1,5 +1,5 @@
-import type { MetricDef } from "@w3stats/core/ui";
-import { TIER_LABEL, TYPICAL_LABEL, type Assessment } from "@w3stats/reference/compare";
+import type { MetricDef } from "@replay-altar/core/ui";
+import { TIER_LABEL, TYPICAL_LABEL, type Assessment } from "@replay-altar/reference/compare";
 import { metricValue } from "./format.ts";
 
 /** Coloured label (with words, never colour alone) plus the plain-language comparison. */

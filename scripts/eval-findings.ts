@@ -6,16 +6,16 @@
 //   node scripts/eval-findings.ts --holdout   (thresholds mined from half the games, scored on the other half)
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { loadConfig, openDb, paths, referencePaths, readRecord, listGames, type GameRecord } from "@w3stats/core";
-import { groupForRace, pickProfile } from "@w3stats/reference/compare";
-import type { RefProfile } from "@w3stats/reference/types";
+import { loadConfig, openDb, paths, referencePaths, readRecord, listGames, type GameRecord } from "@replay-altar/core";
+import { groupForRace, pickProfile } from "@replay-altar/reference/compare";
+import type { RefProfile } from "@replay-altar/reference/types";
 import { allFindings } from "../packages/ai/src/findings.ts";
 import { execFileSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 
 // --holdout: mine thresholds from the even half of the pro games, score the rules on the odd half.
-const HOLDOUT_DIR = process.argv.includes("--holdout") ? mkdtempSync(join(tmpdir(), "w3stats-holdout-")) : null;
+const HOLDOUT_DIR = process.argv.includes("--holdout") ? mkdtempSync(join(tmpdir(), "replay-altar-holdout-")) : null;
 if (HOLDOUT_DIR) execFileSync(process.execPath, [join(import.meta.dirname, "mine-principles.ts"), "--sample", "even", "--out", HOLDOUT_DIR], { stdio: "ignore" });
 const scored = (gameKey: string) => !HOLDOUT_DIR || parseInt(gameKey.at(-1)!, 16) % 2 === 1;
 

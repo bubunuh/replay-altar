@@ -1,6 +1,6 @@
 // Helpers for the pro reference groups. Updating them is manual ("Update pro games" in the
-// window, `w3stats ref refresh`): the collector no longer downloads on its own.
-import type { DB } from "@w3stats/core";
+// window, `replay-altar ref refresh`): the collector no longer downloads on its own.
+import type { DB } from "@replay-altar/core";
 
 /** Races you played in analyzed games. */
 export function racesPlayed(db: DB): Set<string> {

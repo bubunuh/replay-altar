@@ -1,13 +1,13 @@
 import { useMemo, useState } from "react";
 import type { EChartsOption } from "echarts";
-import type { MetricDef, PerfGame } from "@w3stats/core/ui";
-import { per10Minutes } from "@w3stats/core/metrics";
+import type { MetricDef, PerfGame } from "@replay-altar/core/ui";
+import { per10Minutes } from "@replay-altar/core/metrics";
 import { base, Chart, esc, winrateBars, type Tokens } from "../Chart.tsx";
-import { assess, describeRef, groupForRace, pickProfile } from "@w3stats/reference/compare";
+import { assess, describeRef, groupForRace, pickProfile } from "@replay-altar/reference/compare";
 import { ProMedian, Standing } from "../Standing.tsx";
 import { groupDetails, SECTION_INFO, splitMetrics } from "../sections.ts";
 import { proText, researchTimes, upgradeRows, upgradeStanding } from "../upgrades.ts";
-import type { RaceCode } from "@w3stats/core/gamedata";
+import type { RaceCode } from "@replay-altar/core/gamedata";
 import type { RefGroupInfo } from "../api.ts";
 import { dateTime, GROUP_LABEL, mean, metricValue, mmss, pct, RACE, shortName, SOURCE } from "../format.ts";
 
@@ -291,7 +291,7 @@ export function Performance({ games: all, metrics, refs, onOpen }: { games: Perf
           Averages over the filtered games; (3/6) means only 3 of 6 games had that event. The opponents column is everyone you faced.
           {ref
             ? ` Pros: ${pros!.group.label}, ${describeRef(ref)}. Core and Mechanics get a verdict: green = pro level (at or above the pro median), yellow = not yet but at least as good as your opponents, red = below both; for timings with no better direction (heroes, tiers, expansions): green = like pros (their middle 50%), yellow = unusual, red = far from pros. Whole-game totals are compared per 10 minutes.`
-            : " Pro comparison appears once reference games are downloaded (w3stats ref refresh)."}
+            : " Pro comparison appears once reference games are downloaded (replay-altar ref refresh)."}
           {" "}Hover a metric for its definition.
         </p>
         {(() => {

@@ -2,9 +2,9 @@
 // overrides) and the profile of pros playing your race.
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { getGame, loadConfig, referencePaths, type DB, type GameRecord, type Paths } from "@w3stats/core/ui";
-import { groupForRace, pickProfile } from "@w3stats/reference/compare";
-import type { RefProfile } from "@w3stats/reference/types";
+import { getGame, loadConfig, referencePaths, type DB, type GameRecord, type Paths } from "@replay-altar/core/ui";
+import { groupForRace, pickProfile } from "@replay-altar/reference/compare";
+import type { RefProfile } from "@replay-altar/reference/types";
 import { gameFacts, type FactsRef } from "./facts.ts";
 import type { Principles } from "./principles.ts";
 

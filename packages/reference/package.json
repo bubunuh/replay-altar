@@ -1,5 +1,5 @@
 {
-  "name": "@w3stats/reference",
+  "name": "@replay-altar/reference",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -10,7 +10,7 @@
     "./compare": "./src/compare.ts"
   },
   "dependencies": {
-    "@w3stats/core": "*",
-    "@w3stats/sim": "*"
+    "@replay-altar/core": "*",
+    "@replay-altar/sim": "*"
   }
 }

@@ -2,10 +2,10 @@
 // 26B, the model restated facts reliably but could not tell what decided a game (it missed a
 // 6-minute window where the opponent had no army). Told the situation, it explains it well.
 // Each finding carries its evidence as plain lines; the model writes the words around them.
-import type { GameRecord, PlayerRecord } from "@w3stats/core/ui";
-import { RACES, type RaceCode } from "@w3stats/core/gamedata";
-import { METRICS, per10Minutes } from "@w3stats/core/metrics";
-import { percentileOf } from "@w3stats/reference/quantiles";
+import type { GameRecord, PlayerRecord } from "@replay-altar/core/ui";
+import { RACES, type RaceCode } from "@replay-altar/core/gamedata";
+import { METRICS, per10Minutes } from "@replay-altar/core/metrics";
+import { percentileOf } from "@replay-altar/reference/quantiles";
 import { metricValue, type FactsRef } from "./facts.ts";
 import { openingOf } from "./openings.ts";
 import { deviationsFromPros, matchBuilds } from "./builds.ts";

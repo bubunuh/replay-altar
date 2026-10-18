@@ -1,9 +1,9 @@
 // The Upgrades section: your race's attack/armor upgrades level by level, then other research,
 // with timings compared to the pros (who research it, and when).
-import { CORE_UPGRADES, researchLevels, upgradeMaxLevel, type RaceCode, type UpgradeKind } from "@w3stats/core/gamedata";
-import { nameOf } from "@w3stats/core/names";
-import { percentileOf } from "@w3stats/reference/quantiles";
-import type { MatchupProfile, UpgradeStat } from "@w3stats/reference/types";
+import { CORE_UPGRADES, researchLevels, upgradeMaxLevel, type RaceCode, type UpgradeKind } from "@replay-altar/core/gamedata";
+import { nameOf } from "@replay-altar/core/names";
+import { percentileOf } from "@replay-altar/reference/quantiles";
+import type { MatchupProfile, UpgradeStat } from "@replay-altar/reference/types";
 import { mmss } from "./format.ts";
 
 export type UpgradeRow = { key: string; code: string; level: number; label: string; detail: string | null; kind: UpgradeKind | null; pro: UpgradeStat | null };

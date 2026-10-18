@@ -75,23 +75,23 @@ export const DEFAULT_CONFIG: Config = {
   },
 };
 
-// W3STATS_DATA / W3STATS_CONFIG let tests and dry runs use throwaway locations.
+// REPLAY_ALTAR_DATA / REPLAY_ALTAR_CONFIG let tests and dry runs use throwaway locations.
 export const dataDir = () =>
-  process.env.W3STATS_DATA ?? join(process.env.XDG_DATA_HOME ?? join(home, ".local/share"), "w3stats");
+  process.env.REPLAY_ALTAR_DATA ?? join(process.env.XDG_DATA_HOME ?? join(home, ".local/share"), "replay-altar");
 export const configPath = () =>
-  process.env.W3STATS_CONFIG ?? join(process.env.XDG_CONFIG_HOME ?? join(home, ".config"), "w3stats/config.json");
+  process.env.REPLAY_ALTAR_CONFIG ?? join(process.env.XDG_CONFIG_HOME ?? join(home, ".config"), "replay-altar/config.json");
 
 export const paths = (root = dataDir()) => {
   return {
     root,
-    db: join(root, "w3stats.sqlite"),
+    db: join(root, "replay-altar.sqlite"),
     archive: join(root, "archive"),
     superseded: join(root, "archive/superseded"),
     games: join(root, "games"),
     raw: join(root, "raw"),
     events: join(root, "events.jsonl"),
     ai: join(root, "ai"),
-    /** Maps W3Stats downloaded (tournament versions you don't have); never the game's folder. */
+    /** Maps Replay Altar downloaded (tournament versions you don't have); never the game's folder. */
     maps: join(root, "maps"),
   };
 };

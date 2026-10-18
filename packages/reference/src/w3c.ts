@@ -2,7 +2,7 @@
 // Polite by design: callers wait between requests, and 429/5xx answers back off.
 
 export const W3C_API = "https://website-backend.w3champions.com/api/";
-const USER_AGENT = "w3stats/0.1 (personal replay analysis; slow, a few requests per minute)";
+const USER_AGENT = "replay-altar/0.1 (personal replay analysis; slow, a few requests per minute)";
 
 /** W3Champions race codes. */
 export const W3C_RACE: Record<number, "H" | "O" | "N" | "U" | "R"> = { 0: "R", 1: "H", 2: "O", 4: "N", 8: "U" };

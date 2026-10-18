@@ -1,6 +1,6 @@
 // Runs game simulations one at a time, after the fast analysis has been stored and announced.
-import { applySim, readRecord, type IngestContext } from "@w3stats/core";
-import { simulateGame } from "@w3stats/sim";
+import { applySim, readRecord, type IngestContext } from "@replay-altar/core";
+import { simulateGame } from "@replay-altar/sim";
 
 export class SimQueue {
   private queue: string[] = [];

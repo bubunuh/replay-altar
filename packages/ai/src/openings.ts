@@ -2,8 +2,8 @@
 // (Common build orders: fast altar "standard", tavern hero, fast Riflemen/Headhunters/Huntresses,
 // Fiend or Ghoul openings, fast expand, fast tech). Gives the model a plan to describe instead
 // of a list of orders. Tower positions are not known, so "tower rush" is not claimed.
-import type { PlayerRecord } from "@w3stats/core/ui";
-import { RACES, type RaceCode } from "@w3stats/core/gamedata";
+import type { PlayerRecord } from "@replay-altar/core/ui";
+import { RACES, type RaceCode } from "@replay-altar/core/gamedata";
 import { mmss } from "./series.ts";
 
 const ALTAR: Record<RaceCode, string> = { H: "halt", O: "oalt", U: "uaod", N: "eate" };

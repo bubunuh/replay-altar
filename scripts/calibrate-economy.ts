@@ -13,11 +13,11 @@
 // official numbers and is no longer reported.
 //
 // --write stores the result in packages/sim/src/economy-constants.json, then run
-// `w3stats sim --resummarize` (and `w3stats reingest` for the reference games).
+// `replay-altar sim --resummarize` (and `replay-altar reingest` for the reference games).
 import { readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { loadConfig, paths, readRecord, referencePaths, type GameRecord } from "@w3stats/core";
-import { buildTimelines, CONSTANTS, gamedataDir, loadCosts, readSimOutput, runIncome, unitsKilledEstimate, type EconomyConstants, type Timeline } from "@w3stats/sim";
+import { loadConfig, paths, readRecord, referencePaths, type GameRecord } from "@replay-altar/core";
+import { buildTimelines, CONSTANTS, gamedataDir, loadCosts, readSimOutput, runIncome, unitsKilledEstimate, type EconomyConstants, type Timeline } from "@replay-altar/sim";
 
 const MIN_OFFICIAL = 20;
 const SKIP_FIRST_MS = 60_000;
@@ -115,5 +115,5 @@ console.log(`gold per worker-second: ${next.goldPerWorkerSecond}`, next.calibrat
 if (process.argv.includes("--write")) {
   const file = join(import.meta.dirname, "../packages/sim/src/economy-constants.json");
   writeFileSync(file, JSON.stringify(next, null, 2) + "\n");
-  console.log(`wrote ${file} (model v${next.version}); run \`w3stats reingest\` and \`w3stats sim --resummarize\``);
+  console.log(`wrote ${file} (model v${next.version}); run \`replay-altar reingest\` and \`replay-altar sim --resummarize\``);
 }

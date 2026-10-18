@@ -1,5 +1,5 @@
 // SQLite projection of the game records. The JSON files in games/ are the source of truth;
-// `w3stats reingest --all` can rebuild every table here except `annotations`, which holds
+// `replay-altar reingest --all` can rebuild every table here except `annotations`, which holds
 // things only people (or later an LLM) can add: result overrides, notes, coaching.
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";

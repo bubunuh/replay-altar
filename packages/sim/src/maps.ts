@@ -1,5 +1,5 @@
 // Makes sure WC3V has map data for a replay's map, extracting it from the local Maps folder
-// (or extra folders, e.g. maps W3Stats downloaded for tournament games).
+// (or extra folders, e.g. maps Replay Altar downloaded for tournament games).
 import { execFileSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -45,7 +45,7 @@ export function ensureMapData(mapFile: string, warcraftDocuments: string[], extr
   if (existsSync(join(WC3V_DIR, "mapdata", name))) return null;
   const source = findMapFile(warcraftDocuments, mapFile, extraDirs);
   if (!source) return `map file ${mapFile} not found under Documents/Warcraft III/Maps`;
-  const tmp = mkdtempSync(join(tmpdir(), "w3stats-map-"));
+  const tmp = mkdtempSync(join(tmpdir(), "replay-altar-map-"));
   try {
     // The data-tool only reads .w3x; a .w3m (classic-format map) is the same kind of archive.
     copyFileSync(source, join(tmp, mapFile.replace(/\.w3m$/i, ".w3x")));

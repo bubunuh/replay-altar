@@ -2,8 +2,8 @@
 // of a game plan happened. Pros hit their milestones at similar food counts whatever the build
 // (tier 2 around 27 food, first hero level 3 around 34, tier 3 around 53), so food is the common
 // scale for comparing builds; scripts/mine-principles.ts collects these over the pro games.
-import type { GameRecord, PlayerRecord, SimSample } from "@w3stats/core/ui";
-import { RACES, type RaceCode } from "@w3stats/core/gamedata";
+import type { GameRecord, PlayerRecord, SimSample } from "@replay-altar/core/ui";
+import { RACES, type RaceCode } from "@replay-altar/core/gamedata";
 import { openingOf } from "./openings.ts";
 import { at } from "./series.ts";
 

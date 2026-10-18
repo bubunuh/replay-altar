@@ -1,5 +1,5 @@
 {
-  "name": "@w3stats/desktop",
+  "name": "@replay-altar/desktop",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -9,12 +9,12 @@
     "start": "electron ."
   },
   "dependencies": {
-    "@w3stats/core": "*",
+    "@replay-altar/core": "*",
     "echarts": "^6.1.0",
     "electron": "^44.9.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "@w3stats/reference": "*"
+    "@replay-altar/reference": "*"
   },
   "devDependencies": {
     "@types/react": "^19.3.0",

@@ -1,6 +1,6 @@
 import { StrictMode, useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import type { GameRow, MetricDef, PerfGame } from "@w3stats/core/ui";
+import type { GameRow, MetricDef, PerfGame } from "@replay-altar/core/ui";
 import { api, type RefGroupInfo } from "./api.ts";
 import { Match } from "./pages/Match.tsx";
 import { Matches } from "./pages/Matches.tsx";
@@ -51,7 +51,7 @@ function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <span className="brand">W3Stats</span>
+        <span className="brand">Replay Altar</span>
         <nav className="tabs">
           {TABS.map(([id, label]) => (
             <button

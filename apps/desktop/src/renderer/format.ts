@@ -1,4 +1,4 @@
-import type { MetricDef } from "@w3stats/core/ui";
+import type { MetricDef } from "@replay-altar/core/ui";
 
 export const RACE: Record<string, string> = { H: "Human", O: "Orc", U: "Undead", N: "Night Elf", R: "Random" };
 

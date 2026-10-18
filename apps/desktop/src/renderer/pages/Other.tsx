@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Config, GameRow, Paths } from "@w3stats/core/ui";
+import type { Config, GameRow, Paths } from "@replay-altar/core/ui";
 import { api, type RefGroupInfo } from "../api.ts";
 import { dateTime, mmss, SKIP, SOURCE } from "../format.ts";
 
@@ -118,7 +118,7 @@ export function Settings({ refs, onRefsChanged }: { refs: RefGroupInfo[]; onRefs
     <div className="page" style={{ maxWidth: 820 }}>
       <div className="card">
         <h2>You</h2>
-        <p className="sub">Your battletags, comma separated. Games where none of them played are archived as "observed". Run <code>w3stats reingest</code> after changing this to reclassify old games.</p>
+        <p className="sub">Your battletags, comma separated. Games where none of them played are archived as "observed". Run <code>replay-altar reingest</code> after changing this to reclassify old games.</p>
         <div className="filters">
           <input type="text" style={{ flex: 1 }} value={accounts} onChange={(e) => setAccounts(e.target.value)} />
           <button className="btn" onClick={() => save({ ...config, accounts: accounts.split(",").map((a) => a.trim()).filter(Boolean) })}>Save</button>
@@ -148,7 +148,7 @@ export function Settings({ refs, onRefsChanged }: { refs: RefGroupInfo[]; onRefs
           </tbody>
         </table>
         <p className="sub" style={{ marginTop: 12 }}>
-          Pause: <code>w3stats suspend</code> · resume: <code>w3stats resume</code> · remove: <code>w3stats uninstall</code> (add <code>--purge</code> to also delete your archive and stats).
+          Pause: <code>replay-altar suspend</code> · resume: <code>replay-altar resume</code> · remove: <code>replay-altar uninstall</code> (add <code>--purge</code> to also delete your archive and stats).
         </p>
       </div>
     </div>

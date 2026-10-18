@@ -1,7 +1,7 @@
 // How metric tables are split: Core (decides games, with verdicts), Mechanics (skill level),
 // Details (everything else, collapsed).
-import type { MetricDef } from "@w3stats/core/ui";
-import { CORE_METRICS, MECHANICS_METRICS } from "@w3stats/core/metrics";
+import type { MetricDef } from "@replay-altar/core/ui";
+import { CORE_METRICS, MECHANICS_METRICS } from "@replay-altar/core/metrics";
 
 export const SECTION_INFO = {
   core: { title: "Core", note: "What decides games: in pro games and yours, the winner was better on these most of the time." },

@@ -1,6 +1,6 @@
 // Comparing your numbers with a reference group (pros) from profile.json. Browser-safe: the
 // window and the AI fact sheet (packages/ai) use the same verdicts.
-import type { MetricDef } from "@w3stats/core/ui";
+import type { MetricDef } from "@replay-altar/core/ui";
 import { percentileOf } from "./quantiles.ts";
 import type { MatchupProfile, RefProfile } from "./types.ts";
 

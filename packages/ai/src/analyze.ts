@@ -2,7 +2,7 @@
 // review around them, and every number it writes is checked against what it was given.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
-import { getGame, logEvent, type AiConfig, type DB, type Paths } from "@w3stats/core/ui";
+import { getGame, logEvent, type AiConfig, type DB, type Paths } from "@replay-altar/core/ui";
 import { factsRefFor } from "./context.ts";
 import { gameFacts } from "./facts.ts";
 import { findings as findFindings, MIN_GAME_MS, opponentPlan, strengths as findStrengths } from "./findings.ts";

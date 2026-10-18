@@ -1,10 +1,10 @@
-// Electron main process: one window, read-mostly access to the W3Stats database.
+// Electron main process: one window, read-mostly access to the Replay Altar database.
 import { execFile, spawn, type ChildProcess } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, watch, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { app, BrowserWindow, ipcMain, nativeTheme, shell } from "electron";
-import { aiNotReady, analyzeGame, ModelServer, readAnalysis } from "@w3stats/ai";
+import { aiNotReady, analyzeGame, ModelServer, readAnalysis } from "@replay-altar/ai";
 import {
   addAnnotation,
   configPath,
@@ -18,9 +18,9 @@ import {
   referencePaths,
   saveConfig,
   type Config,
-} from "@w3stats/core/ui";
+} from "@replay-altar/core/ui";
 
-app.setName("w3stats"); // window class, so the .desktop entry's StartupWMClass matches
+app.setName("replay-altar"); // window class, so the .desktop entry's StartupWMClass matches
 
 type Launch = { background: boolean; game: string | null; page: string | null; screenshot: string | null };
 const arg = (argv: string[], name: string) => argv.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3) ?? null;
@@ -33,9 +33,9 @@ const parseArgs = (argv: string[]): Launch => ({
 });
 
 // A screenshot run (dev/test) gets its own profile, and so its own single-instance lock:
-// it must never hand its arguments to, resize, or quit the real W3Stats window.
+// it must never hand its arguments to, resize, or quit the real Replay Altar window.
 if (parseArgs(process.argv).screenshot) {
-  app.setPath("userData", mkdtempSync(join(tmpdir(), "w3stats-shot-")));
+  app.setPath("userData", mkdtempSync(join(tmpdir(), "replay-altar-shot-")));
 }
 
 if (!app.requestSingleInstanceLock()) {
@@ -82,7 +82,7 @@ if (!app.requestSingleInstanceLock()) {
       minWidth: 900,
       minHeight: 600,
       show: false,
-      title: "W3Stats",
+      title: "Replay Altar",
       backgroundColor: nativeTheme.shouldUseDarkColors ? "#0d0d0d" : "#f9f9f7",
       autoHideMenuBar: true,
       webPreferences: {
@@ -120,7 +120,7 @@ if (!app.requestSingleInstanceLock()) {
   let queue: Promise<unknown> = Promise.resolve();
   const runningAi = new Set<string>();
   app.on("will-quit", () => model?.server.stop());
-  // "Update pro games": runs `w3stats ref refresh` (download + simulation take minutes) and
+  // "Update pro games": runs `replay-altar ref refresh` (download + simulation take minutes) and
   // streams its lines to the page.
   let refUpdate: ChildProcess | null = null;
   const refLog: string[] = [];
@@ -129,7 +129,7 @@ if (!app.requestSingleInstanceLock()) {
   ipcMain.handle("ref:update", (e) => {
     if (refUpdate) return false;
     refLog.length = 0;
-    const cli = process.env.W3STATS_CLI ?? join(homedir(), ".local/bin/w3stats");
+    const cli = process.env.REPLAY_ALTAR_CLI ?? join(homedir(), ".local/bin/replay-altar");
     const child = spawn(cli, ["ref", "refresh"], { stdio: ["ignore", "pipe", "pipe"] });
     refUpdate = child;
     const send = (channel: string, ...args: unknown[]) => {
@@ -188,11 +188,11 @@ if (!app.requestSingleInstanceLock()) {
   ipcMain.handle("config:set", (_e, config: Config) => {
     saveConfig(config);
     // The collector reads its settings at start.
-    execFile("systemctl", ["--user", "try-restart", "w3stats-collector.service"], () => {});
+    execFile("systemctl", ["--user", "try-restart", "replay-altar-collector.service"], () => {});
   });
   ipcMain.handle("collector:status", () =>
     new Promise<string>((resolve) =>
-      execFile("systemctl", ["--user", "is-active", "w3stats-collector.service"], (_err, out) => resolve(out.trim() || "not installed")),
+      execFile("systemctl", ["--user", "is-active", "replay-altar-collector.service"], (_err, out) => resolve(out.trim() || "not installed")),
     ),
   );
   ipcMain.handle("ref:profiles", () => {

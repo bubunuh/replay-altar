@@ -3,7 +3,7 @@
 import { RateLimited, type Fetch } from "./w3c.ts";
 
 export const W3INFO_API = "https://warcraft3.info/api/v1/";
-const USER_AGENT = "w3stats (personal replay analysis)";
+const USER_AGENT = "replay-altar (personal replay analysis)";
 const RACE: Record<string, "H" | "O" | "U" | "N"> = { Human: "H", Orc: "O", Undead: "U", Nightelf: "N", "Night Elf": "N" };
 
 export type W3iPlayer = {

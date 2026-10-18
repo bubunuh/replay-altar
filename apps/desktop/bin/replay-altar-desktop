@@ -1,0 +1,7 @@
+#!/bin/sh
+# Starts the Replay Altar window. Flags: --background (show without focus), --game=<game key>
+APP_DIR="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+ROOT="$(cd "$APP_DIR/../.." && pwd)"
+# KDE matches the window to replay-altar.desktop (taskbar icon) through this.
+export CHROME_DESKTOP=replay-altar.desktop
+exec "$ROOT/node_modules/electron/dist/electron" --ozone-platform-hint=auto "$APP_DIR" "$@"

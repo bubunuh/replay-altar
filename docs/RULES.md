@@ -29,8 +29,8 @@ Shown per game (top 3): 1.45 findings in pro wins, 2.16 in pro losses.
 | `upkeep` | above 80 food with fewer than 2 expansions for longer than 9 in 10 pros of your race (2+ minutes) | Blizzard's upkeep page; Grubby #3: "only if you intend to fight very soon" | 12% / 16% | 1.3 (0.8 1.5 2.4 0.2) |
 | `supply` | supply blocked longer than 75% of pros | metric research | 22% / 28% | 1.3 |
 | `no_heroes` | you fought while all your heroes were dead (lost 300+) | Blizzard hero basics: retreat when all heroes are dead | 0% / 1% | rare |
-| `window` | the opponent had no army for 4+ minutes and you neither expanded, made them lose 400+, nor out-levelled pros | W3Stats (punishing greedy play; Warcraft3.info Human guide) | never in pros | – |
-| `exposed` | you had no army for 4+ minutes while they had one | W3Stats | 1% / 1% | rare |
+| `window` | the opponent had no army for 4+ minutes and you neither expanded, made them lose 400+, nor out-levelled pros | Replay Altar (punishing greedy play; Warcraft3.info Human guide) | never in pros | – |
+| `exposed` | you had no army for 4+ minutes while they had one | Replay Altar | 1% / 1% | rare |
 | `mechanics` | APM and hotkey use far below pros, shown only when little else stands out | metric research | 2% / 0% | for beginners only |
 
 ## Basics (beginner mistakes, ranked below the main findings)

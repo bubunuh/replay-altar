@@ -1,12 +1,12 @@
 // The fact sheet a local language model gets for one game. Everything that can be computed is
 // computed here (times, counts, comparisons, the app's verdicts), so the model only has to read
 // and explain; small models are good at that and bad at arithmetic and Warcraft III trivia.
-import type { GameRecord, PlayerRecord } from "@w3stats/core/ui";
-import { RACE_NAMES, RACES, researchLevels, TIER_NAMES, upgradeMaxLevel, type RaceCode } from "@w3stats/core/gamedata";
-import { CORE_METRICS, MECHANICS_METRICS, METRICS, per10Minutes, type MetricDef } from "@w3stats/core/metrics";
-import { nameOf } from "@w3stats/core/names";
-import { assess, TIER_LABEL, TYPICAL_LABEL } from "@w3stats/reference/compare";
-import type { MatchupProfile } from "@w3stats/reference/types";
+import type { GameRecord, PlayerRecord } from "@replay-altar/core/ui";
+import { RACE_NAMES, RACES, researchLevels, TIER_NAMES, upgradeMaxLevel, type RaceCode } from "@replay-altar/core/gamedata";
+import { CORE_METRICS, MECHANICS_METRICS, METRICS, per10Minutes, type MetricDef } from "@replay-altar/core/metrics";
+import { nameOf } from "@replay-altar/core/names";
+import { assess, TIER_LABEL, TYPICAL_LABEL } from "@replay-altar/reference/compare";
+import type { MatchupProfile } from "@replay-altar/reference/types";
 import { openingOf } from "./openings.ts";
 import { deviationsFromPros, matchBuilds } from "./builds.ts";
 import { proBuildOf, type Principles } from "./principles.ts";

@@ -194,10 +194,10 @@ describe("time of game", () => {
 });
 
 describe.skipIf(files.length === 0)("ingest", () => {
-  const root = mkdtempSync(join(tmpdir(), "w3stats-test-"));
+  const root = mkdtempSync(join(tmpdir(), "replay-altar-test-"));
   const paths = {
     root,
-    db: join(root, "w3stats.sqlite"),
+    db: join(root, "replay-altar.sqlite"),
     archive: join(root, "archive"),
     superseded: join(root, "archive/superseded"),
     games: join(root, "games"),

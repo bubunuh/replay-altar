@@ -1,7 +1,7 @@
 // "AI analysis" on a match: run on demand (too heavy to run after every game), stored with
-// everything the model was given. The findings come from W3Stats' rules; the model only writes.
+// everything the model was given. The findings come from Replay Altar's rules; the model only writes.
 import { useEffect, useState } from "react";
-import type { AiAnalysis } from "@w3stats/ai/types";
+import type { AiAnalysis } from "@replay-altar/ai/types";
 import { api, type AiStatus } from "./api.ts";
 import { dateTime } from "./format.ts";
 
@@ -64,7 +64,7 @@ export function AiCard({ gameKey }: { gameKey: string }) {
       </div>
       {!analysis && !busy && (
         <p className="sub">
-          W3Stats picks what mattered in this game (rules, compared with pros); a local model (Gemma, on your graphics card) writes it up. About 30 seconds, a
+          Replay Altar picks what mattered in this game (rules, compared with pros); a local model (Gemma, on your graphics card) writes it up. About 30 seconds, a
           minute the first time while the model loads. Nothing leaves your computer.
         </p>
       )}
@@ -96,7 +96,7 @@ export function AiCard({ gameKey }: { gameKey: string }) {
                   </p>
                 )}
                 <details>
-                  <summary>Evidence (computed by W3Stats)</summary>
+                  <summary>Evidence (computed by Replay Altar)</summary>
                   <ul className="small">
                     {f.evidence.map((e) => (
                       <li key={e}>{e}</li>

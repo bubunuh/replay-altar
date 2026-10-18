@@ -1,5 +1,5 @@
 // Small helpers over a game's simulated series, shared by the fact sheet and the findings.
-import type { GameRecord, PlayerRecord, SimSample } from "@w3stats/core/ui";
+import type { GameRecord, PlayerRecord, SimSample } from "@replay-altar/core/ui";
 
 export const STEP_MS = 120_000;
 

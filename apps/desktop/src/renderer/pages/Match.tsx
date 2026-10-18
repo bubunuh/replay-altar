@@ -1,19 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { BuildEvent, GameDetail, GameRecord, MetricDef, PlayerRecord, SimSample } from "@w3stats/core/ui";
-import { per10Minutes } from "@w3stats/core/metrics";
-import { heroesXpAt } from "@w3stats/core/heroxp";
+import type { BuildEvent, GameDetail, GameRecord, MetricDef, PlayerRecord, SimSample } from "@replay-altar/core/ui";
+import { per10Minutes } from "@replay-altar/core/metrics";
+import { heroesXpAt } from "@replay-altar/core/heroxp";
 import { api, type RefGroupInfo } from "../api.ts";
-import { MIN_GAME_MS } from "@w3stats/ai/findings";
-import { deviationsFromPros, matchBuilds } from "@w3stats/ai/builds";
-import { proBuildOf, type Principles } from "@w3stats/ai/principles";
+import { MIN_GAME_MS } from "@replay-altar/ai/findings";
+import { deviationsFromPros, matchBuilds } from "@replay-altar/ai/builds";
+import { proBuildOf, type Principles } from "@replay-altar/ai/principles";
 import { AiCard } from "../AiCard.tsx";
 import { Chart, heroLevelsChart, timeLines, type Band, type HeroLine, type Tokens } from "../Chart.tsx";
-import { assess, describeRef, groupForRace, pickProfile } from "@w3stats/reference/compare";
+import { assess, describeRef, groupForRace, pickProfile } from "@replay-altar/reference/compare";
 import { ProMedian, Standing } from "../Standing.tsx";
 import { groupDetails, SECTION_INFO, splitMetrics } from "../sections.ts";
 import { proText, researchTimes, upgradeRows, upgradeStanding } from "../upgrades.ts";
-import type { RaceCode } from "@w3stats/core/gamedata";
-import type { CurvePoint, MatchupProfile } from "@w3stats/reference/types";
+import type { RaceCode } from "@replay-altar/core/gamedata";
+import type { CurvePoint, MatchupProfile } from "@replay-altar/reference/types";
 import { dateTime, GROUP_LABEL, metricValue, mmss, RACE, shortName, SOURCE } from "../format.ts";
 
 const WORKERS = new Set(["hpea", "opeo", "uaco", "ewsp"]);
@@ -121,7 +121,7 @@ function GameCharts({ record, refMp, refLabel }: { record: GameRecord; refMp: Ma
   const heroes = useMemo(() => heroLevelsChart(heroLines, end), [heroLines, end]);
 
   const note = !sim
-    ? "Not simulated yet: army, resources, workers and supply appear about a minute after a game ends (older games: w3stats sim --backfill)."
+    ? "Not simulated yet: army, resources, workers and supply appear about a minute after a game ends (older games: replay-altar sim --backfill)."
     : !ok
       ? `Simulation failed: ${(sim as { reason: string }).reason}`
       : null;

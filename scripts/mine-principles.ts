@@ -6,10 +6,10 @@
 //   node scripts/mine-principles.ts
 import { readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { loadConfig, readRecord, referencePaths, RACE_NAMES, type GameRecord } from "@w3stats/core";
+import { loadConfig, readRecord, referencePaths, RACE_NAMES, type GameRecord } from "@replay-altar/core";
 import { milestonesOf, subjectsOf, type Milestones } from "../packages/ai/src/milestones.ts";
 import { keyEvents, matchBuilds, type KeyEvent } from "../packages/ai/src/builds.ts";
-import { RACES as RACE_DATA, type RaceCode } from "@w3stats/core";
+import { RACES as RACE_DATA, type RaceCode } from "@replay-altar/core";
 
 type Feature = { key: string; label: string; unit: "food" | "ms" | "count" | "share"; get: (m: Milestones) => number | null | undefined };
 

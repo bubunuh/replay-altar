@@ -1,5 +1,5 @@
 // Fetching the game's own end-of-game stats from W3Champions for a stored game.
-import type { GameRecord, OfficialStats } from "@w3stats/core";
+import type { GameRecord, OfficialStats } from "@replay-altar/core";
 import type { W3cClient, W3cScore } from "./w3c.ts";
 
 const GATEWAYS = [20, 10];

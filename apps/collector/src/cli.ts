@@ -12,48 +12,48 @@ import {
   paths,
   reingestAll,
   replayDirs,
-} from "@w3stats/core";
+} from "@replay-altar/core";
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { activeReferenceGroups, applyOfficial, applySim, readRecord, referencePaths, type RefLookup } from "@w3stats/core";
-import { CONSTANTS, gamedataDir, loadCosts, readSimOutput, simNotReady, simulateGame, summarize } from "@w3stats/sim";
-import { buildProfile, officialForMatch, officialForOwnGame, openReference, readState, refreshGroup, w3cClient } from "@w3stats/reference";
-import { analyzeGame, buildPrompt, ModelServer } from "@w3stats/ai";
+import { activeReferenceGroups, applyOfficial, applySim, readRecord, referencePaths, type RefLookup } from "@replay-altar/core";
+import { CONSTANTS, gamedataDir, loadCosts, readSimOutput, simNotReady, simulateGame, summarize } from "@replay-altar/sim";
+import { buildProfile, officialForMatch, officialForOwnGame, openReference, readState, refreshGroup, w3cClient } from "@replay-altar/reference";
+import { analyzeGame, buildPrompt, ModelServer } from "@replay-altar/ai";
 import { currentReplayBuild, racesPlayed } from "./reference.ts";
 import { runCollector } from "./collector.ts";
 import { isReplayFile } from "./watcher.ts";
 import { install, resume, suspend, uninstall } from "./install.ts";
 
-const HELP = `w3stats — Warcraft III replay archive & stats
+const HELP = `replay-altar — Warcraft III replay archive & stats
 
-  w3stats install             set up the background collector, launchers and desktop icon
-  w3stats suspend             stop the collector and keep it from starting at login
-  w3stats resume              start it again
-  w3stats uninstall [--purge] remove service, launchers and icons (--purge also deletes archive, stats, settings)
-  w3stats status              collector state and recent games
-  w3stats scan                ingest every replay in your replay folders now
-  w3stats ingest <file.w3g>…  ingest specific files
-  w3stats reingest            rebuild all stats from the archived replays
-  w3stats override <game> win|loss   correct a detected result (kept as an annotation)
-  w3stats export --jsonl [--out f]   one JSON line per analyzed game (for LLMs/scripts)
-  w3stats export --md <game|latest>  one game as Markdown
-  w3stats setup-sim           prepare the economy simulation (WC3V, its packages, game data from your install)
-  w3stats sim                 simulation status
-  w3stats sim --backfill      simulate analyzed games that have no simulation yet
-  w3stats sim --retry-failed  simulate games whose simulation failed
-  w3stats sim --rerun         simulate every analyzed game again
-  w3stats sim --resummarize   recompute economy numbers from stored simulations (after a model update)
-  w3stats sim <game>          simulate one game
-  w3stats ref                 pro reference games: status
-  w3stats ref refresh [--target N] [--group id|--all]   download recent tournament games from warcraft3.info
+  replay-altar install             set up the background collector, launchers and desktop icon
+  replay-altar suspend             stop the collector and keep it from starting at login
+  replay-altar resume              start it again
+  replay-altar uninstall [--purge] remove service, launchers and icons (--purge also deletes archive, stats, settings)
+  replay-altar status              collector state and recent games
+  replay-altar scan                ingest every replay in your replay folders now
+  replay-altar ingest <file.w3g>…  ingest specific files
+  replay-altar reingest            rebuild all stats from the archived replays
+  replay-altar override <game> win|loss   correct a detected result (kept as an annotation)
+  replay-altar export --jsonl [--out f]   one JSON line per analyzed game (for LLMs/scripts)
+  replay-altar export --md <game|latest>  one game as Markdown
+  replay-altar setup-sim           prepare the economy simulation (WC3V, its packages, game data from your install)
+  replay-altar sim                 simulation status
+  replay-altar sim --backfill      simulate analyzed games that have no simulation yet
+  replay-altar sim --retry-failed  simulate games whose simulation failed
+  replay-altar sim --rerun         simulate every analyzed game again
+  replay-altar sim --resummarize   recompute economy numbers from stored simulations (after a model update)
+  replay-altar sim <game>          simulate one game
+  replay-altar ref                 pro reference games: status
+  replay-altar ref refresh [--target N] [--group id|--all]   download recent tournament games from warcraft3.info
                               until each of your races has its target (same as "Update pro games")
-  w3stats ref profile         rebuild the reference statistics from stored games
-  w3stats official            fetch the game's own end-of-game stats from W3Champions for W3C games
+  replay-altar ref profile         rebuild the reference statistics from stored games
+  replay-altar official            fetch the game's own end-of-game stats from W3Champions for W3C games
                               (yours and reference games) that don't have them yet
-  w3stats ai <game|latest>    AI analysis of one game with the local model (also: button in the window)
-  w3stats ai <game> --facts   print what the model would be given, without running it
-  w3stats collector           run the collector in the foreground (what the service runs)
+  replay-altar ai <game|latest>    AI analysis of one game with the local model (also: button in the window)
+  replay-altar ai <game> --facts   print what the model would be given, without running it
+  replay-altar collector           run the collector in the foreground (what the service runs)
 `;
 
 const [cmd, ...args] = process.argv.slice(2);
@@ -126,7 +126,7 @@ switch (cmd) {
   }
   case "override": {
     const [ref, result] = args;
-    if (!ref || !["win", "loss"].includes(result)) throw new Error("usage: w3stats override <game> win|loss");
+    if (!ref || !["win", "loss"].includes(result)) throw new Error("usage: replay-altar override <game> win|loss");
     const { db } = ctx();
     const key = resolveKey(db, ref);
     addAnnotation(db, { gameKey: key, kind: "result_override", source: "user", author: "cli", body: { result } });
@@ -170,7 +170,7 @@ switch (cmd) {
     if (!existsSync(join(root, "vendor/wc3v/node_modules/w3gjs"))) run("npm", ["ci", "--omit=dev", "--no-audit", "--no-fund"], join(root, "vendor/wc3v"));
     run(join(root, "scripts/extract-gamedata.sh"), []);
     const problem = simNotReady(paths().root);
-    console.log(problem ? `Not ready: ${problem}` : "Simulation ready. Run `w3stats sim --backfill` to simulate existing games.");
+    console.log(problem ? `Not ready: ${problem}` : "Simulation ready. Run `replay-altar sim --backfill` to simulate existing games.");
     break;
   }
   case "sim": {
@@ -250,7 +250,7 @@ switch (cmd) {
         console.log(`${g.id}: profile from ${p.games} games`);
       }
     } else {
-      console.log(`current replay build: ${build ?? "unknown (no games yet)"}; update with \`w3stats ref refresh\` or "Update pro games" in Settings`);
+      console.log(`current replay build: ${build ?? "unknown (no games yet)"}; update with \`replay-altar ref refresh\` or "Update pro games" in Settings`);
       for (const g of groups) {
         const ref = openReference(g.id, config);
         const st = readState(ref.paths.root);
@@ -303,7 +303,7 @@ switch (cmd) {
     const { execFileSync } = await import("node:child_process");
     let state = "not installed";
     try {
-      state = execFileSync("systemctl", ["--user", "is-active", "w3stats-collector.service"], { encoding: "utf8" }).trim();
+      state = execFileSync("systemctl", ["--user", "is-active", "replay-altar-collector.service"], { encoding: "utf8" }).trim();
     } catch (e) {
       state = ((e as { stdout?: string }).stdout ?? "").trim() || state;
     }

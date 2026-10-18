@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import type { GameRecord, SimSample } from "@w3stats/core/ui";
-import { findings, opponentPlan, unverifiedNumbers } from "@w3stats/ai";
+import type { GameRecord, SimSample } from "@replay-altar/core/ui";
+import { findings, opponentPlan, unverifiedNumbers } from "@replay-altar/ai";
 import { leads } from "../src/series.ts";
 
 describe("number check", () => {

@@ -1,7 +1,7 @@
-import type { Config, GameDetail, GameRow, MetricDef, Paths, PerfGame, ReferenceGroup } from "@w3stats/core/ui";
-import type { RefProfile } from "@w3stats/reference/types";
-import type { AiAnalysis } from "@w3stats/ai/types";
-import type { Principles } from "@w3stats/ai/principles";
+import type { Config, GameDetail, GameRow, MetricDef, Paths, PerfGame, ReferenceGroup } from "@replay-altar/core/ui";
+import type { RefProfile } from "@replay-altar/reference/types";
+import type { AiAnalysis } from "@replay-altar/ai/types";
+import type { Principles } from "@replay-altar/ai/principles";
 
 export type AiStatus = { problem: string | null; warcraftRunning: boolean; running: string[] };
 

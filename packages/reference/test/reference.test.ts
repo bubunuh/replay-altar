@@ -2,10 +2,10 @@ import { existsSync, mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, expect, test } from "vitest";
-import { DEFAULT_CONFIG, paths } from "@w3stats/core";
-import { simNotReady } from "@w3stats/sim";
+import { DEFAULT_CONFIG, paths } from "@replay-altar/core";
+import { simNotReady } from "@replay-altar/sim";
 import { officialForOwnGame, percentileOf, quantile, RateLimited, refreshGroup, summarizeValues, w3cClient, w3iSubjects, type Fetch, type W3cClient, type W3cMatch, type W3cScore, type W3iClient, type W3iReplay } from "../src/index.ts";
-import { mergeOfficial, type GameRecord } from "@w3stats/core";
+import { mergeOfficial, type GameRecord } from "@replay-altar/core";
 
 const FIX = join(import.meta.dirname, "../../../fixtures/replays");
 const match = (id: string, a: [string, number, number], b: [string, number, number], extra: Partial<W3cMatch> = {}): W3cMatch => ({
@@ -108,11 +108,11 @@ const files = ["Macro_loss.w3g", "Victory-1v1-oct-2026.w3g", "victory_vs_elf.w3g
 const canRun = simNotReady(realData) === null && files.every((f) => existsSync(join(FIX, f)));
 
 describe.skipIf(!canRun)("refreshing a reference group (fake warcraft3.info, real simulation)", () => {
-  const before = process.env.W3STATS_DATA;
-  process.env.W3STATS_DATA = mkdtempSync(join(tmpdir(), "w3stats-ref-"));
+  const before = process.env.REPLAY_ALTAR_DATA;
+  process.env.REPLAY_ALTAR_DATA = mkdtempSync(join(tmpdir(), "replay-altar-ref-"));
   afterAll(() => {
-    if (before === undefined) delete process.env.W3STATS_DATA;
-    else process.env.W3STATS_DATA = before;
+    if (before === undefined) delete process.env.REPLAY_ALTAR_DATA;
+    else process.env.REPLAY_ALTAR_DATA = before;
   });
   // Pretend Pedrovisk is a tournament Human with a profile in the fixture games.
   const list = [
