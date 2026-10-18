@@ -49,6 +49,11 @@ units disappearing.
 - "No attack/armor upgrades" fires for caster armies and Orc builds whose research went
   elsewhere; consider counting caster training.
 - Games with no detected fights at all should carry a low-confidence note.
+- Food counts late in long games are uncertain both ways: the simulation's supply counter keeps
+  dead units (pros "at 100 food" after losing half their army), while counting only units it
+  hasn't marked lost undercounts badly (units that sit without orders get "possibly lost": one
+  pro at 35 food at 24 minutes). Tried for the upkeep rule and reverted; upkeep evidence in long
+  games should be read with that in mind. Army value uses living units (the same caveat).
 
 ## My games (the user, Human, ~1500 MMR Battle.net ladder)
 
