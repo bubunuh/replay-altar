@@ -56,6 +56,12 @@ export type SimPlayer = {
   series: SimSample[];
   metrics: Metrics;
   heroes?: HeroTimeline[];
+  /**
+   * Expansions the simulation saw standing: town halls (Undead: Necropolis or Haunted Gold Mine)
+   * placed 2500+ from the start, one per site, with when they were started and lost. Orders
+   * overcount: cancelled or re-placed halls (a Night Elf Tree of Life placed three times).
+   */
+  bases?: { at: number; lostAt: number | null }[];
 };
 
 export type SimSummary =

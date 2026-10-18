@@ -5,7 +5,7 @@
 import type { GameRecord, PlayerRecord, SimSample } from "@replay-altar/core/ui";
 import { RACES, type RaceCode } from "@replay-altar/core/gamedata";
 import { openingOf } from "./openings.ts";
-import { at, productionGap } from "./series.ts";
+import { at, expansionsOf, productionGap } from "./series.ts";
 
 export const MILESTONES = [
   "tier2", "tier3", "hero1", "hero2", "hero3", "hero1_l3", "hero2_l3", "hero1_l5",
@@ -79,7 +79,7 @@ export function milestonesOf(r: GameRecord, playerId: number): Milestones | null
   const b = p.build;
   const first = (pred: (x: (typeof b)[number]) => boolean) => b.find(pred)?.ms ?? null;
   const heroes = [...p.heroes].sort((a, c) => a.order - c.order);
-  const halls = b.filter((x) => x.kind === "building" && R.townHalls.includes(x.code)).map((x) => x.ms);
+  const halls = expansionsOf(r, p);
   const m = p.metrics;
   const t50 = series.find((s) => s.foodUsed >= 50)?.t ?? null;
   const t60 = series.find((s) => s.foodUsed >= 60)?.t ?? null;

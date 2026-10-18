@@ -10,7 +10,7 @@ import { metricValue, type FactsRef } from "./facts.ts";
 import { openingOf } from "./openings.ts";
 import { deviationsFromPros, matchBuilds } from "./builds.ts";
 import { proBuildOf } from "./principles.ts";
-import { at, fightLabel, fightLosses, levelSum, mmss, sampleBoth, seriesOf, STEP_MS } from "./series.ts";
+import { at, expansionsOf, fightLabel, fightLosses, levelSum, mmss, sampleBoth, seriesOf, STEP_MS } from "./series.ts";
 import { adviceFor } from "./advice.ts";
 import { ATTACK_NAME, airShare, antiAirShare, armyMix, bestAgainst, canHitAir, describeMix, mixValue, mixVsMix } from "./combat.ts";
 import { CORE_UPGRADES, POTION_ITEMS, TOWN_PORTAL } from "@replay-altar/core/gamedata";
@@ -101,17 +101,16 @@ function windowFinding(c: Ctx, mine: boolean): Finding | null {
   // Not a window when they put the resources into heroes instead (a hero rush): their heroes
   // were ahead of yours by then.
   if (heroLevelSum(c.opp, to) > heroLevelSum(c.me, to) + 1) return null;
-  const halls = RACES[c.me.race as RaceCode]?.townHalls ?? [];
-  const expansions = c.me.build.filter((b) => b.kind === "building" && halls.includes(b.code));
-  const expandedInWindow = expansions.some((b) => b.ms >= since && b.ms <= to);
+  const expansions = expansionTimes(c.r, c.me);
+  const expandedInWindow = expansions.some((t) => t >= since && t <= to);
   const xp = c.me.metrics.hero_xp_10m;
   const xpGap = proGap(c, "hero_xp_10m");
   const used = expandedInWindow || theyLost >= 400 || (xpGap !== null && xpGap.worseThan < 0.5);
   const evidence = [
     `Opp had no army units (army value 0) at every check from ${mmss(since)} to ${mmss(to)}, only heroes and buildings; your army value was ${at(sm, to)?.armyValue ?? "—"} at ${mmss(to)}.`,
     expandedInWindow
-      ? `You expanded in that time (${expansions.filter((b) => b.ms >= since && b.ms <= to).map((b) => mmss(b.ms)).join(", ")}).`
-      : `You did not expand in that time (your first expansion: ${expansions.length ? mmss(expansions[0].ms) : "none"}).`,
+      ? `You expanded in that time (${expansions.filter((t) => t >= since && t <= to).map((t) => mmss(t)).join(", ")}).`
+      : `You did not expand in that time (your first expansion: ${expansions.length ? mmss(expansions[0]) : "none"}).`,
     `Opp lost ≈${theyLost} in fights in that time; you lost ≈${youLost}.`,
     ...(to >= 600_000 && xp !== null && xp !== undefined ? [`Your hero XP by 10:00: ${num(xp)}${vsPros(c, "hero_xp_10m")}.`] : []),
     `Your workers at ${mmss(to)}: ${at(sm, to)?.workers ?? "—"}; opp's: ${at(so, to)?.workers ?? "—"}.`,
@@ -128,8 +127,8 @@ function windowFinding(c: Ctx, mine: boolean): Finding | null {
  */
 const LUMBER_CREW: Record<RaceCode, [number, number]> = { H: [9, 12], O: [7, 9], N: [9, 12], U: [0, 0] };
 const TOWN_HALL_BUILD_MS = 120_000;
-function workerTarget(p: PlayerRecord, t: number) {
-  const bases = 1 + expansionTimes(p).filter((x) => x + TOWN_HALL_BUILD_MS <= t).length;
+function workerTarget(r: GameRecord, p: PlayerRecord, t: number) {
+  const bases = 1 + expansionTimes(r, p).filter((x) => x + TOWN_HALL_BUILD_MS <= t).length;
   const crew = LUMBER_CREW[p.race as RaceCode] ?? [9, 12];
   return { bases, target: 5 * bases + crew[bases > 1 ? 1 : 0] };
 }
@@ -143,7 +142,7 @@ function economyFinding(c: Ctx): Finding | null {
   ]
     .filter(({ t }) => c.r.game.durationMs >= t)
     .map(({ t, slack, key }) => {
-      const target = workerTarget(c.me, t);
+      const target = workerTarget(c.r, c.me, t);
       // Short of the guides' target and below 9 in 10 pros of the race: Orc and Undead pros run
       // leaner than the guide numbers (Orc pros plateau at ~12 even on two bases).
       const floor = Math.min(target.target - slack, proQ(c, key, "p10") ?? Infinity);
@@ -296,10 +295,7 @@ function proShareBelow(c: Ctx, key: string): number | null {
 }
 
 const simHeroes = (c: Ctx, p: PlayerRecord) => (c.r.sim?.status === "ok" ? (c.r.sim.players.find((x) => x.playerId === p.playerId)?.heroes ?? []) : []);
-const expansionTimes = (p: PlayerRecord) => {
-  const halls = RACES[p.race as RaceCode]?.townHalls ?? [];
-  return p.build.filter((b) => b.kind === "building" && halls.includes(b.code)).map((b) => b.ms);
-};
+const expansionTimes = (r: GameRecord, p: PlayerRecord) => expansionsOf(r, p);
 
 /** Official basics: keep heroes alive "at all costs"; a Town Portal is the way out. */
 function heroDeathsFinding(c: Ctx): Finding | null {
@@ -352,7 +348,7 @@ const fightsNear = (c: Ctx, from: number, to: number) =>
  */
 function upkeepFinding(c: Ctx): Finding | null {
   const series = seriesOf(c.r, c.me);
-  const exp = expansionTimes(c.me);
+  const exp = expansionTimes(c.r, c.me);
   let seconds = 0;
   let first: number | null = null;
   for (let i = 1; i < series.length; i++) {
@@ -487,7 +483,7 @@ function floatingFinding(c: Ctx): Finding | null {
 
 /** The opponent started an expansion while your army was bigger, and you left it alone for 4 minutes. */
 function unansweredExpansionFinding(c: Ctx): Finding | null {
-  const t = expansionTimes(c.opp).find((x) => x > 60_000);
+  const t = expansionTimes(c.r, c.opp).find((x) => x > 60_000);
   if (t === undefined || c.r.sim?.status !== "ok") return null;
   const mine = at(seriesOf(c.r, c.me), t)?.armyValue ?? 0;
   const theirs = at(seriesOf(c.r, c.opp), t)?.armyValue ?? 0;
@@ -522,7 +518,7 @@ function justOver50Finding(c: Ctx): Finding | null {
 /** 2026 Human guide (Grubby): one arcane tower and maybe one guard tower per base; more gains little. */
 function towersFinding(c: Ctx): Finding | null {
   const towers = c.me.metrics.towers_total ?? 0; // build and upgrade orders: a guard tower is 2
-  const bases = 1 + expansionTimes(c.me).length;
+  const bases = 1 + expansionTimes(c.r, c.me).length;
   if (towers / bases <= Math.max(6, proQ(c, "towersPerBase", "p90") ?? 0)) return null;
   return {
     id: "towers",
@@ -577,7 +573,7 @@ function unusedSpikeFinding(c: Ctx): Finding | null {
   const until = t50 === null ? null : t50 + 240_000;
   if (t50 === null || until === null || c.r.game.durationMs < until) return null;
   const attacked = fightsNear(c, t50, until).some((f) => f.initiatorId === c.me.playerId && f.playerIds.includes(c.opp.playerId));
-  const expanded = expansionTimes(c.me).some((t) => t >= t50 - 60_000 && t <= until);
+  const expanded = expansionTimes(c.r, c.me).some((t) => t >= t50 - 60_000 && t <= until);
   const t3 = tier3Of(c.me);
   const teched = t3 !== null && t3 <= until;
   if (attacked || expanded || teched) return null;
@@ -599,7 +595,7 @@ function upkeepBeforeUpgradesFinding(c: Ctx): Finding | null {
   const m = c.me.metrics;
   // An upgrade ordered in the next 30 s counts: the food crossing and the click are seconds apart.
   const upgraded = Math.min(m.first_attack_upgrade_ms ?? Infinity, m.first_armor_upgrade_ms ?? Infinity) <= over + 30_000;
-  const expanded = expansionTimes(c.me).some((t) => t <= over);
+  const expanded = expansionTimes(c.r, c.me).some((t) => t <= over);
   // Tier 3 is an investment too. (Excusing a fight around that time silenced the rule: the
   // simulation sees some fight nearly all the time.)
   const t3 = tier3Of(c.me);
@@ -617,7 +613,7 @@ function upkeepBeforeUpgradesFinding(c: Ctx): Finding | null {
 function mineDryFinding(c: Ctx): Finding | null {
   const collected = c.me.metrics.gold_collected;
   if (collected === null || collected === undefined || collected < MINE_GOLD - 1000) return null;
-  const exp = expansionTimes(c.me);
+  const exp = expansionTimes(c.r, c.me);
   if (exp.length) return null;
   return {
     id: "mine_dry",
@@ -775,7 +771,7 @@ function unusedLeadFinding(c: Ctx): Finding | null {
   const { from, to } = best;
   // Used = something within the first 4 minutes of the lead (a late attack doesn't undo the wait).
   const attacked = fightLosses(c.r, c.me, c.opp).some((x) => x.f.start >= from - 60_000 && x.f.start <= from + 240_000 && x.f.category !== "creep-fight" && (x.f.initiatorId === c.me.playerId || x.opp >= 300));
-  const expanded = expansionTimes(c.me).some((t) => t >= from - 60_000 && t <= from + 240_000);
+  const expanded = expansionTimes(c.r, c.me).some((t) => t >= from - 60_000 && t <= from + 240_000);
   if (attacked || expanded) return null;
   const peak = army.slice(best.i, best.j + 1).reduce((m, x) => (x.me / Math.max(1, x.opp) > m.me / Math.max(1, m.opp) ? x : m));
   return {
@@ -921,8 +917,8 @@ export function opponentPlan(r: GameRecord, ref: FactsRef | null): string[] {
     const towers = b.filter((x) => race.towers.includes(x.code));
     const early = towers.filter((x) => x.ms <= 300_000).length;
     lines.push(`Towers: ${towers.length} build/upgrade orders, ${early} of them by 5:00.`);
-    const halls = b.filter((x) => x.kind === "building" && race.townHalls.includes(x.code));
-    lines.push(`Expansions: ${halls.length ? halls.map((x) => mmss(x.ms)).join(", ") : "none"}.`);
+    const halls = expansionsOf(r, opp);
+    lines.push(`Expansions: ${halls.length ? halls.map((t) => mmss(t)).join(", ") : "none"}.`);
   }
   const army = b.filter((x) => x.kind === "unit" && x.code !== race?.worker);
   const byName = new Map<string, number>();

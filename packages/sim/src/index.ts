@@ -77,7 +77,7 @@ export function summarize(record: GameRecord, o: WOutput, costs: CostTables, k: 
     const food60 = series.find((s) => s.foodUsed >= 60)?.t ?? null;
     metrics.goal_3360_ms = l3(0) !== null && l3(1) !== null && food60 !== null ? Math.max(l3(0)!, l3(1)!, food60) : null;
     metrics.workers_lost_12m = workersLost(o, tl.playerId, rp.race, 720_000);
-    return { playerId: tl.playerId, parseConfidence: tl.parseConfidence, validationWarnings: pw, series, metrics, heroes };
+    return { playerId: tl.playerId, parseConfidence: tl.parseConfidence, validationWarnings: pw, series, metrics, heroes, bases: basesOf(o, tl.playerId, rp.race) };
   });
   return {
     status: "ok",
@@ -89,6 +89,33 @@ export function summarize(record: GameRecord, o: WOutput, costs: CostTables, k: 
     fights: fightsOf(o),
     warnings,
   };
+}
+
+const EXPANSION_MIN_DISTANCE = 2500;
+const SAME_SITE = 1200;
+const HALLS: Record<string, string[]> = { H: ["htow", "hkee", "hcas"], O: ["ogre", "ostr", "ofrt"], U: ["unpl", "unp1", "unp2", "ugol"], N: ["etol", "etoa", "etoe"] };
+
+/** Expansion halls standing in the simulation, one per site (see SimPlayer.bases). */
+function basesOf(o: WOutput, playerId: number, race: string): { at: number; lostAt: number | null }[] {
+  type U = { itemId: string; isIllusion?: boolean; spawnTime?: number | null; constructionStartTime?: number | null; spawnPosition?: { x: number; y: number } | null; lastPosition?: { x: number; y: number } | null; lostState?: { state: string; since: number } | null };
+  const p = o.players[String(playerId)] as unknown as { units?: U[]; startingPosition?: { x: number; y: number } } | undefined;
+  const start = p?.startingPosition;
+  const codes = HALLS[race] ?? [];
+  if (!p || !start) return [];
+  const sites: { x: number; y: number; at: number; lostAt: number | null }[] = [];
+  for (const u of (p.units ?? []).filter((x) => codes.includes(x.itemId) && !x.isIllusion)) {
+    const pos = u.lastPosition ?? u.spawnPosition;
+    const at = u.constructionStartTime ?? u.spawnTime;
+    if (!pos || at === null || at === undefined || Math.hypot(pos.x - start.x, pos.y - start.y) < EXPANSION_MIN_DISTANCE) continue;
+    const lostAt = u.lostState?.state === "lost" ? u.lostState.since : null;
+    const same = sites.find((s) => Math.hypot(s.x - pos.x, s.y - pos.y) < SAME_SITE);
+    if (same) {
+      same.at = Math.min(same.at, at);
+      continue;
+    }
+    sites.push({ x: pos.x, y: pos.y, at, lostAt });
+  }
+  return sites.sort((a, b) => a.at - b.at).map(({ at, lostAt }) => ({ at, lostAt }));
 }
 
 /** Workers of this race the simulation saw die (lost or possibly lost) by a time. */

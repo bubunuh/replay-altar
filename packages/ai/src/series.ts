@@ -1,5 +1,6 @@
 // Small helpers over a game's simulated series, shared by the fact sheet and the findings.
 import type { GameRecord, PlayerRecord, SimFight, SimSample } from "@replay-altar/core/ui";
+import { RACES, type RaceCode } from "@replay-altar/core/gamedata";
 
 export const STEP_MS = 120_000;
 
@@ -133,3 +134,14 @@ export function productionGap(r: GameRecord, p: PlayerRecord, worker: string, un
 
 /** A fight's category in words. */
 export const fightLabel = (category: string) => (category === "unseen-fight" ? "fight (inferred from units lost)" : category.replace(/-/g, " "));
+
+/**
+ * When a player started each expansion: the simulation's standing halls (one per site) when it
+ * has them, else hall build orders (which count cancelled and re-placed halls too).
+ */
+export function expansionsOf(r: GameRecord, p: PlayerRecord): number[] {
+  const sim = r.sim?.status === "ok" ? r.sim.players.find((x) => x.playerId === p.playerId) : undefined;
+  if (sim?.bases) return sim.bases.map((b) => b.at);
+  const halls = RACES[p.race as RaceCode]?.townHalls ?? [];
+  return p.build.filter((b) => b.kind === "building" && halls.includes(b.code)).map((b) => b.ms);
+}

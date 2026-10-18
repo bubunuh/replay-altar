@@ -66,7 +66,7 @@ function orderLines(p: PlayerRecord): string[] {
   const lines = [
     ...(opening.length ? [`- Opening: ${opening.join("; ")}`] : []),
     `- Tech: ${t2} ${mmss(race ? firstOrder(race.tier2) : null)}, ${t3} ${mmss(race ? firstOrder(race.tier3) : null)}`,
-    `- Expansions: ${b.filter((x) => x.kind === "building" && isHall(x.code)).map((x) => mmss(x.ms)).join(", ") || "none"}`,
+    `- Town hall orders: ${b.filter((x) => x.kind === "building" && isHall(x.code)).map((x) => mmss(x.ms)).join(", ") || "none"}`,
     `- Buildings: ${grouped(b.filter((x) => x.kind === "building" && !isTower(x.code) && !isHall(x.code) && x.code !== race?.supply && !tierCodes.includes(x.code))) || "none"}`,
     `- Supply buildings: ${b.filter((x) => x.code === race?.supply).length}`,
     `- Towers (build and upgrade orders): ${grouped(b.filter((x) => isTower(x.code))) || "none"}`,

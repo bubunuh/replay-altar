@@ -17,8 +17,8 @@ Builds with 8+ games: fast expand (44, 52% won); fast tech (43, 63% won); early 
 | Second hero level 3 (food) | 66 (55–89) | 140 | 67 / 62 | 56% / 57% | depends (1.1) |
 | Second hero level 3 (time) | 12:07 (9:54–14:38) | 140 | 12:24 / 11:49 | 54% / 66% | depends (1.2) |
 | First hero level 5 (time) | 16:40 (14:24–18:30) | 89 | 16:06 / 17:07 | 74% / 57% | same (0.4) |
-| First expansion (food) | 33 (28–43) | 125 | 35 / 32 | 63% / 53% | depends (2.4) |
-| First expansion (time) | 4:34 (3:40–8:16) | 125 | 4:56 / 4:29 | 59% / 56% | depends (2.4) |
+| First expansion (food) | 33 (29–44) | 122 | 35 / 33 | 61% / 50% | depends (2.4) |
+| First expansion (time) | 4:42 (3:45–8:29) | 122 | 4:55 / 4:33 | 61% / 55% | depends (2.3) |
 | Tier 3 started (food) | 53 (42–66) | 82 | 48 / 58 | 77% / 43% | similar (0.8) |
 | Tier 3 started (time) | 9:19 (7:55–11:00) | 82 | 8:50 / 9:32 | 71% / 52% | depends (1.0) |
 | First attack upgrade (food) | 54 (46–70) | 133 | 54 / 54 | 59% / 62% | similar (0.9) |
@@ -38,12 +38,12 @@ Builds with 8+ games: fast expand (44, 52% won); fast tech (43, 63% won); early 
 | Hero deaths | 0 (0–1) | 211 | 0 / 0 | 58% / 48% | same (0.0) |
 | Hero to first creep | 0:10 (0:05–0:39) | 211 | 0:11 / 0:09 | 55% / 62% | same (0.3) |
 | Workers lost by 12:00 | 2 (0–3) | 211 | 2 / 3 | 69% / 43% | depends (1.3) |
-| Tower orders per base | 2 (2–4) | 211 | 2.3 / 2 | 51% / 59% | similar (0.8) |
-| Seconds above 80 food on fewer than 2 expansions | 75 (0–350.5) | 211 | 94.5 / 62 | 55% / 51% | similar (0.7) |
+| Tower orders per base | 2 (2–4.3) | 211 | 2.5 / 2 | 51% / 60% | similar (0.7) |
+| Seconds above 80 food on fewer than 2 expansions | 95 (0–426) | 211 | 104 / 73 | 54% / 49% | similar (0.6) |
 | Longest production stop with gold (to 10:00), s | 20 (0–50) | 211 | 20 / 20 | 57% / 56% | depends (1.0) |
 | Unspent gold, first 10 min (≈) | 160.6 (55.3–282.3) | 211 | 162.2 / 158.9 | 57% / 55% | similar (0.6) |
 | Workers at 10:00 | 15 (13–21.5) | 175 | 16 / 14 | 53% / 55% | depends (1.1) |
-| Expanded at all | 59% | 211 | 60% / 58% | — | depends (1.0) |
+| Expanded at all | 58% | 211 | 59% / 56% | — | depends (1.0) |
 | Had a second hero (games 10+ min) | 97% | 175 | 95% / 99% | — | same (0.0) |
 | Reached tier 3 (games 15+ min) | 57% | 121 | 61% / 52% | — | depends (1.0) |
 | Used the 50-food spike within 4 min | 96% | 146 | 96% / 95% | — | same (0.0) |
@@ -87,8 +87,8 @@ Builds with 8+ games: fast tech (79, 49% won); Headhunter opening + fast tech (6
 | Second hero level 3 (food) | 49 (44–56) | 117 | 48 / 51 | 63% / 47% | same (0.0) |
 | Second hero level 3 (time) | 9:49 (8:53–11:04) | 117 | 9:44 / 10:00 | 67% / 43% | same (0.0) |
 | First hero level 5 (time) | 17:20 (14:42–19:43) | 60 | 16:07 / 19:10 | 80% / 53% | same (0.2) |
-| First expansion (food) | 44 (37–52) | 78 | 43 / 49 | 70% / 50% | same (0.1) |
-| First expansion (time) | 8:50 (7:34–10:12) | 78 | 8:12 / 9:23 | 70% / 55% | same (0.2) |
+| First expansion (food) | 49 (42–56) | 70 | 46 / 50 | 67% / 38% | same (0.0) |
+| First expansion (time) | 9:26 (8:11–12:10) | 70 | 8:51 / 9:51 | 72% / 33% | same (0.1) |
 | Tier 3 started (food) | 32 (25–46) | 61 | 33 / 30 | 59% / 69% | similar (0.9) |
 | Tier 3 started (time) | 6:02 (5:18–8:48) | 61 | 6:01 / 6:25 | 63% / 69% | similar (0.6) |
 | First attack upgrade (food) | 51 (44–68) | 52 | 53 / 46 | 54% / 57% | same (0.1) |
@@ -108,15 +108,15 @@ Builds with 8+ games: fast tech (79, 49% won); Headhunter opening + fast tech (6
 | Hero deaths | 0 (0–1) | 159 | 0 / 0 | 58% / 42% | similar (0.5) |
 | Hero to first creep | 1:20 (0:10–3:46) | 152 | 1:25 / 1:02 | 53% / 45% | same (0.3) |
 | Workers lost by 12:00 | 0 (0–1) | 159 | 0 / 0 | 55% / 45% | same (0.0) |
-| Tower orders per base | 0 (0–0.3) | 159 | 0 / 0 | 56% / 43% | same (0.0) |
-| Seconds above 80 food on fewer than 2 expansions | 0 (0–218.5) | 159 | 0 / 0 | 49% / 65% | same (0.0) |
+| Tower orders per base | 0 (0–0.5) | 159 | 0 / 0 | 56% / 41% | same (0.0) |
+| Seconds above 80 food on fewer than 2 expansions | 0 (0–336) | 159 | 0 / 0 | 51% / 53% | same (0.3) |
 | Longest production stop with gold (to 10:00), s | 30 (0–60) | 158 | 30 / 20 | 46% / 54% | similar (0.8) |
 | Unspent gold, first 10 min (≈) | 172.6 (60.6–283.6) | 159 | 189.2 / 152.3 | 43% / 55% | depends (1.3) |
 | Workers at 10:00 | 12 (11–12) | 138 | 12 / 12 | 52% / 56% | same (0.0) |
-| Expanded at all | 49% | 159 | 52% / 46% | — | depends (1.0) |
+| Expanded at all | 44% | 159 | 47% / 41% | — | same (0.0) |
 | Had a second hero (games 10+ min) | 99% | 138 | 100% / 98% | — | same (0.0) |
 | Reached tier 3 (games 15+ min) | 55% | 83 | 70% / 38% | — | depends (1.0) |
-| Used the 50-food spike within 4 min | 98% | 87 | 98% / 98% | — | same (0.0) |
+| Used the 50-food spike within 4 min | 97% | 87 | 98% / 95% | — | same (0.0) |
 
 **Library builds as pros play them** (each pro matched to the closest guide build; the food at each step is the pros' median when they did it):
 
@@ -157,8 +157,8 @@ Builds with 8+ games: Crypt before the altar + Ghoul opening + fast expand (58, 
 | Second hero level 3 (food) | 68 (56–83) | 119 | 68 / 68 | 43% / 47% | depends (1.1) |
 | Second hero level 3 (time) | 13:18 (12:02–15:19) | 119 | 12:36 / 13:40 | 37% / 43% | similar (0.9) |
 | First hero level 5 (time) | 18:50 (15:56–21:10) | 79 | 17:30 / 18:51 | 55% / 40% | similar (0.8) |
-| First expansion (food) | 27 (23–47) | 119 | 25 / 29 | 47% / 29% | depends (1.5) |
-| First expansion (time) | 4:01 (3:12–9:51) | 119 | 3:46 / 4:26 | 53% / 30% | depends (1.4) |
+| First expansion (food) | 41 (34–56) | 91 | 41 / 41 | 33% / 36% | similar (1.0) |
+| First expansion (time) | 7:02 (5:34–11:17) | 91 | 6:59 / 7:10 | 30% / 35% | depends (1.1) |
 | Tier 3 started (food) | 35 (29–48) | 157 | 37 / 34 | 36% / 38% | depends (1.0) |
 | Tier 3 started (time) | 7:07 (5:43–9:16) | 157 | 7:33 / 6:52 | 43% / 33% | depends (1.2) |
 | First attack upgrade (food) | 52 (42–66) | 104 | 50 / 56 | 50% / 33% | same (0.3) |
@@ -178,12 +178,12 @@ Builds with 8+ games: Crypt before the altar + Ghoul opening + fast expand (58, 
 | Hero deaths | 0 (0–1) | 190 | 0 / 1 | 49% / 22% | same (0.0) |
 | Hero to first creep | 0:23 (0:15–2:15) | 181 | 0:22 / 0:27 | 33% / 37% | similar (0.7) |
 | Workers lost by 12:00 | 0 (0–1) | 190 | 0 / 0 | 38% / 38% | depends (1.0) |
-| Tower orders per base | 1 (0.3–1) | 190 | 0.9 / 1 | 40% / 37% | similar (0.5) |
-| Seconds above 80 food on fewer than 2 expansions | 0 (0–0) | 190 | 0 / 0 | 43% / 38% | same (0.0) |
+| Tower orders per base | 1 (0.7–2) | 190 | 1 / 1 | 37% / 36% | same (0.4) |
+| Seconds above 80 food on fewer than 2 expansions | 105 (0–501.3) | 190 | 0 / 214.5 | 45% / 31% | same (0.5) |
 | Longest production stop with gold (to 10:00), s | 20 (0–70) | 190 | 30 / 20 | 34% / 39% | depends (1.0) |
 | Unspent gold, first 10 min (≈) | 140.9 (33.6–312.5) | 190 | 155.5 / 130.4 | 33% / 38% | similar (0.9) |
 | Workers at 10:00 | 7 (6–10) | 165 | 8 / 7 | 35% / 39% | depends (1.3) |
-| Expanded at all | 63% | 190 | 65% / 61% | — | depends (1.0) |
+| Expanded at all | 48% | 190 | 51% / 46% | — | depends (1.0) |
 | Had a second hero (games 10+ min) | 98% | 165 | 98% / 97% | — | same (0.0) |
 | Reached tier 3 (games 15+ min) | 99% | 124 | 100% / 99% | — | same (0.0) |
 | Used the 50-food spike within 4 min | 99% | 132 | 100% / 99% | — | same (0.0) |
@@ -227,8 +227,8 @@ Builds with 8+ games: fast tech (103, 57% won); fast expand (27, 37% won); fast 
 | Second hero level 3 (food) | 58 (49–66) | 134 | 59 / 56 | 49% / 54% | similar (0.6) |
 | Second hero level 3 (time) | 11:32 (10:21–13:02) | 134 | 11:32 / 11:34 | 65% / 59% | similar (0.7) |
 | First hero level 5 (time) | 17:25 (14:19–20:14) | 88 | 16:18 / 17:51 | 73% / 59% | same (0.3) |
-| First expansion (food) | 26 (21–46) | 117 | 28 / 25 | 39% / 57% | depends (1.2) |
-| First expansion (time) | 4:18 (2:55–9:57) | 117 | 5:05 / 4:02 | 43% / 57% | depends (1.0) |
+| First expansion (food) | 28 (19–60) | 112 | 25 / 34 | 76% / 52% | same (0.5) |
+| First expansion (time) | 4:32 (2:39–11:46) | 112 | 4:16 / 7:06 | 75% / 50% | similar (0.7) |
 | Tier 3 started (food) | 36 (31–44) | 162 | 35 / 36 | 55% / 55% | depends (1.2) |
 | Tier 3 started (time) | 6:57 (6:05–8:46) | 162 | 6:43 / 7:07 | 63% / 51% | depends (1.2) |
 | First attack upgrade (food) | 54 (43–68) | 110 | 52 / 54 | 62% / 61% | same (0.3) |
@@ -248,12 +248,12 @@ Builds with 8+ games: fast tech (103, 57% won); fast expand (27, 37% won); fast 
 | Hero deaths | 0 (0–1) | 201 | 0 / 0 | 60% / 45% | same (0.0) |
 | Hero to first creep | 0:00 (0:00–1:33) | 195 | 0:00 / 0:00 | 56% / 47% | depends (1.5) |
 | Workers lost by 12:00 | 1 (0–2) | 201 | 1 / 1 | 57% / 47% | depends (1.0) |
-| Tower orders per base | 0 (0–0.2) | 201 | 0 / 0 | 51% / 63% | depends (2.5) |
-| Seconds above 80 food on fewer than 2 expansions | 0 (0–181) | 201 | 0 / 0 | 55% / 53% | same (0.1) |
+| Tower orders per base | 0 (0–0.3) | 201 | 0 / 0 | 51% / 63% | depends (2.0) |
+| Seconds above 80 food on fewer than 2 expansions | 0 (0–250) | 201 | 0 / 0 | 54% / 43% | similar (0.6) |
 | Longest production stop with gold (to 10:00), s | 40 (0–90) | 201 | 30 / 50 | 58% / 44% | depends (1.1) |
 | Unspent gold, first 10 min (≈) | 219.2 (70–524.3) | 201 | 204 / 244.2 | 59% / 47% | depends (1.8) |
 | Workers at 10:00 | 13 (11–15.5) | 171 | 13 / 13 | 58% / 56% | similar (0.9) |
-| Expanded at all | 58% | 201 | 56% / 61% | — | depends (1.0) |
+| Expanded at all | 56% | 201 | 60% / 51% | — | depends (1.0) |
 | Had a second hero (games 10+ min) | 95% | 171 | 92% / 98% | — | same (0.0) |
 | Reached tier 3 (games 15+ min) | 95% | 116 | 95% / 94% | — | same (0.0) |
 | Used the 50-food spike within 4 min | 99% | 128 | 99% / 100% | — | same (0.0) |
