@@ -6,6 +6,8 @@ What the "AI analysis" looks for. Rules decide what mattered; the local model on
 their losses. A useful rule fires more often in losses ("lift" above 1). Numbers below are from
 56 Human pro perspectives (37 wins, 19 losses); small samples, so treat them as rough.
 
+**Calibration (2026-10-18):** with tournament games in the corpus, several hand-set thresholds fired for pros nearly as often as for anyone. The basics now use the pros' own 90th percentile per race (first creep, high upkeep, towers per base, workers lost), with the old values as floors. `node scripts/eval-findings.ts --holdout` mines thresholds from half the games and scores on the other half. The table below predates this and will be refreshed once the 4-race corpus is complete. Shared principles and how pros play each library build: [PRINCIPLES.md](PRINCIPLES.md).
+
 ## Main findings
 
 | Rule | Fires when | Source | Pro wins / losses |
