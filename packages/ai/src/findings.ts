@@ -551,7 +551,7 @@ function workersLostFinding(c: Ctx): Finding | null {
     id: "workers_lost",
     severity: BASIC + 0.1,
     headline: "You lost too many workers",
-    evidence: [`Workers lost by 12:00: ≈${lost} (pros: usually 0-4; deaths are inferred and tend to be undercounted). Pull workers away or fight back with militia/towers when harassed.`],
+    evidence: [`Workers lost by ${c.r.game.durationMs < 12 * 60_000 ? `the end (${mmss(c.r.game.durationMs)})` : "12:00"}: ≈${lost} (pros: usually 0-4; deaths are inferred and tend to be undercounted).`],
   };
 }
 

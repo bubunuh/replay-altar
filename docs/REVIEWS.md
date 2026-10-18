@@ -287,6 +287,14 @@ units disappearing.
 
 **22073328 · loss, 1096 vs 1075, NvU, 25:17.** App: too few workers (9 at 10:00); hero deaths (Keeper 2x, with 2 Town Portals: the advice says to use them); their heroes out-levelled yours (35%; Forsaken Paladin level 3 from 9:47 to the end while their Lich went 2 to 5). Replay: Dryads, Druids of the Claw and late Hippogryphs against Fiends, Statues and Abominations that led in army all game; the fights traded evenly (≈1870 each), so economy and hero levels are the story. **Good.**
 
+#### Average (1500-1700)
+
+**198743bb · loss, 1689 vs 1657, NvH, 9:28.** App: lost too many workers (≈7). Replay: 23 Wisps and 6 Archers against a fast-expanding tower Human (expansion 4:15, 8 tower orders) whose Archmage led in levels; the Night Elf left at 9:28 with roughly even armies. **Fine**, thin for a short game. The evidence said "by 12:00" in a 9:28 game and carried Human advice ("fight back with militia") for every race; it now says "by the end (9:28)" and leaves the advice to the race-specific line.
+
+**d7dfc017 · loss, 1614 vs 1628, NvH, 17:06.** App: heroes fell behind (1 camp by 6:00; tavern Dark Ranger first, Goblin Tinker level 1 from 5:20 to 15:09); hero deaths (4 vs 1, no Town Portal); they had more bases from 8:00 (expansion 4:30, none of yours). Replay: two tavern heroes, 18 Wisps and 8 Dryads against a fast-expanding tower Human with Dragonhawk Riders; the Night Elf never had an army bigger than ≈615. **Good.**
+
+**fb780dee · win, 1625 vs 1617, NvH, 19:49.** App: no attack or armor upgrades until 17:01. Strengths: 3-3-60 at 11:30, 65% of the hero XP. Replay: Dryads and Druids of the Claw led in army from 4:00 and won. **Good.**
+
 #### Pros
 
 **057ae56c · loss, NvH, 25:50.** App: their heroes out-levelled yours (your own pace at pro level; their Archmage reached 6); no attack/armor upgrades by 15:00. Turning point 16:48 (≈1880 vs 860, going in 3230 vs 1755). Replay: fast expansion 2:36, Bears + Dryads against Knights, Mortars and casters with Swords 2 by 9:00; the 16:48 attack with the bigger army was lost. **Good.** Note: the Night Elf "expansions" list (2:36, 4:04, 5:26, 13:53) counts every Tree of Life order; counts of bases from orders are unreliable for Night Elf and Undead.
