@@ -32,11 +32,27 @@ export function turningPoint(r: GameRecord, me: PlayerRecord, opp: PlayerRecord,
   const fromSummary = (p: PlayerRecord) => (top.f.losses?.[String(p.playerId)]?.heroes ?? []).map((code) => nameOf(code));
   const both = (p: PlayerRecord) => [...new Set([...heroes(p), ...fromSummary(p)])];
   const died = [...both(me).map((n) => `your ${n}`), ...both(opp).map((n) => `their ${n}`)];
+  // Already far ahead going in: the fight finished a lead built earlier, so say when it began.
+  const ahead = result === "win" ? [sm, so] : result === "loss" ? [so, sm] : null;
+  const [fa, fb] = result === "win" ? before : [before[1], before[0]];
+  let built = "";
+  if (ahead && fa !== undefined && fb !== undefined && fa >= 2 * fb && fa - fb >= 1000) {
+    const [a, b] = ahead;
+    let from = top.f.start;
+    for (let i = a.length - 1; i >= 0; i--) {
+      if (a[i].t > top.f.start) continue;
+      const other = at(b, a[i].t)?.armyValue ?? 0;
+      if ((a[i].armyValue ?? 0) <= other) break;
+      from = a[i].t;
+    }
+    built = `${result === "win" ? "You were" : "They were"} already far ahead going in: ${result === "win" ? "your" : "their"} army had been bigger since ${mmss(from)}.`;
+  }
   const category = fightLabel(top.f.category);
   const text = [
     `The game turned at ${mmss(top.f.start)}: ${/^[aeiou]/.test(category) ? "an" : "a"} ${category} where you lost ≈${top.me} and they lost ≈${top.opp}${died.length ? `; ${died.join(" and ")} died` : ""}.`,
     // Only "before": units trained during and right after the fight make the value after it misleading.
     before[0] !== undefined && before[1] !== undefined ? `Army value going in: you ${before[0]}, opp ${before[1]}.` : "",
+    built,
     `Watch the replay from ${mmss(Math.max(0, top.f.start - 15_000))}.`,
   ].filter(Boolean).join(" ");
   return { start: top.f.start, end: top.f.end, category, youLost: top.me, theyLost: top.opp, text };

@@ -207,6 +207,14 @@ units disappearing.
 
 ### Undead
 
+#### Low (1000-1300)
+
+**bb0d8935 · win, 1108 vs 1128, UvO, 13:08.** App: heroes fell behind (1 camp by 6:00; Crypt Lord first hero waited 82 s); army mismatch (52% damage against their armor); into upkeep before upgrades. Replay: a Crypt Lord first, Crypt Fiends with Web (7:17) and two Statues against 8 Wind Riders; both players creeped equally little (XP share 50%). **Wrong** on the mismatch: Crypt Fiends were counted as unable to hit air, but Web brings air units down for them, and piercing does 200% to the Wind Riders' light armor. Fixed: Web (Crypt Fiend) and Ensnare (Raider) now make the unit count as anti-air once researched. The creep advice also named "the Death Knight or Dreadlord" to a Crypt Lord player; it now names your actual first hero.
+
+**cadefd0e · win, 1274 vs 1260, UvH, 20:45.** App: supply blocked 35 s. Turning point 13:54 (≈0 vs 845, Blood Mage died). Strengths: 3 camps by 6:00, gold 15075 vs 8655. Replay: fast expansion at 3:25, mass Ghouls with 3/3 upgrades and a Pandaren, later Frost Wyrms, against Riflemen and Knights; the Human never expanded. **Good.**
+
+**024039ee · win, 1207 vs 1239, UvH, 17:22.** App: no attack or armor upgrades for 15 minutes. Turning point 13:49 (≈310 vs 940), army going in 2980 vs 850. Replay: fast Halls (2:34) and Black Citadel (5:04) into Statues/Destroyers and Abominations; the lead came from a string of fights from 8:00 on (an expansion fight and creep-site fights where the Human lost ≈1600). **Partial**: a fight with a 3.5× army going in finishes a lead rather than turns the game. Fixed: when the winner already had 2× the army and +1000 going in, the turning point adds "you were already far ahead going in: your army had been bigger since 7:00".
+
 #### Pros
 
 **d9617f59 · loss, UvO, 4:15.** App: nothing stood out (game over at 4:15, ahead in army). Probably a disconnect or an early leave; nothing to judge. **Fine.**

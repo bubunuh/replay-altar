@@ -23,18 +23,23 @@ export const ROSTER: Record<RaceCode, string[]> = {
 export const ARMOR_NAME: Record<string, string> = { small: "light", medium: "medium", large: "heavy", fort: "fortified", hero: "hero", none: "unarmored", divine: "divine", normal: "normal" };
 export const ATTACK_NAME: Record<string, string> = { normal: "normal", pierce: "piercing", siege: "siege", magic: "magic", chaos: "chaos", hero: "hero", spells: "spell" };
 
+/** Research that brings air units down for a ground unit to hit: Web (Crypt Fiend), Ensnare (Raider). */
+const GROUNDS_AIR: Record<string, string> = { ucry: "Ruwb", orai: "Roen" };
+
 export type MixEntry = { code: string; name: string; count: number; value: number; unit: UnitData };
 
 /** Army units (not workers or heroes; building-only attackers on request) ordered in [from, to], by cost. */
 export function armyMix(p: PlayerRecord, from: number, to: number, withBuildingAttackers = false): MixEntry[] {
   const worker = RACES[p.race as RaceCode]?.worker;
   const out = new Map<string, MixEntry>();
+  const researched = new Set(p.build.filter((b) => b.kind === "upgrade" && b.ms <= to).map((b) => b.code));
   for (const b of p.build) {
     if (b.kind !== "unit" || b.ms < from || b.ms > to || b.code === worker) continue;
     const unit = UNITS[b.code];
     // Units that only hit buildings (Siege Engine) don't fight armies.
     if (!unit || unit.hero || !unit.cost || (!unit.attacks.length && !withBuildingAttackers)) continue;
-    const e = out.get(b.code) ?? { code: b.code, name: b.name, count: 0, value: 0, unit };
+    const grounds = GROUNDS_AIR[b.code] && researched.has(GROUNDS_AIR[b.code]);
+    const e = out.get(b.code) ?? { code: b.code, name: b.name, count: 0, value: 0, unit: grounds ? { ...unit, attacks: unit.attacks.map((a) => ({ ...a, air: true })) } : unit };
     e.count++;
     e.value += unit.cost;
     out.set(b.code, e);

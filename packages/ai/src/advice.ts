@@ -16,8 +16,13 @@ const SMITH: Record<RaceCode, string> = { H: "hbla", O: "ofor", U: "ugrv", N: "e
 const FIRST_CREEP: Record<RaceCode, string> = {
   H: "your first hero, Militia and the first Footmen",
   O: "your first hero and the first Grunts or Headhunters",
-  U: "the Death Knight or Dreadlord and your first Ghouls",
+  U: "your first hero and your first Ghouls",
   N: "your first hero and the first Archers, healing at the Moon Wells",
+};
+/** The first-creep party, naming the hero you actually trained first. */
+const firstCreep = (c: AdviceCtx, R: RaceCode) => {
+  const hero = c.me.heroes[0]?.name;
+  return hero ? FIRST_CREEP[R].replace("your first hero", `your ${hero}`) : FIRST_CREEP[R];
 };
 /** How a race answers worker harassment (Grubby's race guides). */
 const HARASS_ANSWER: Record<RaceCode, string> = {
@@ -46,7 +51,7 @@ export function adviceFor(id: string, c: AdviceCtx): string | null {
       const l3 = pro(c, "hero_level3_ms");
       const camps = pro(c, "creep_camps_6m");
       const fewCamps = camps !== null && (m.creep_camps_6m ?? 0) < camps;
-      return `Creep from the moment your hero leaves the altar, with ${FIRST_CREEP[R]}, and go straight from one camp to the next; pros reach hero level 3 by ${mmss(l3)}${fewCamps ? ` and clear ${camps} camp${camps === 1 ? "" : "s"} by 6:00` : ""}. ${c.me.heroes.length >= 2 ? "Bring the second hero creeping too, and buy" : "Buy"} a healing item so you can keep creeping instead of walking home.`;
+      return `Creep from the moment your hero leaves the altar, with ${firstCreep(c, R)}, and go straight from one camp to the next; pros reach hero level 3 by ${mmss(l3)}${fewCamps ? ` and clear ${camps} camp${camps === 1 ? "" : "s"} by 6:00` : ""}. ${c.me.heroes.length >= 2 ? "Bring the second hero creeping too, and buy" : "Buy"} a healing item so you can keep creeping instead of walking home.`;
     }
     case "fights": {
       const items = [m.items_bought ?? 0, c.opp.metrics.items_bought ?? 0];
@@ -72,7 +77,7 @@ export function adviceFor(id: string, c: AdviceCtx): string | null {
     case "expansion":
       return "Take an expansion when it is safe: after you win a fight, while their army is away, or when they tech. Pros who expanded did it by about " + mmss(pro(c, "expansion_ms")) + ".";
     case "first_creep":
-      return `Start creeping as soon as the hero leaves the altar, with ${FIRST_CREEP[R]}; pros start within about 10 seconds.`;
+      return `Start creeping as soon as the hero leaves the altar, with ${firstCreep(c, R)}; pros start within about 10 seconds.`;
     case "upgrades":
       return `Start your first attack or armor upgrade at the ${nameOf(SMITH[R])} around 50 food; pros start their first attack upgrade by about ${mmss(pro(c, "first_attack_upgrade_ms"))}.`;
     case "one_hero":
