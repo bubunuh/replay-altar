@@ -14,7 +14,8 @@ Rules version: commit after 92968df (2026-10-18).
 
 ## Patterns so far
 
-Updated as reviews accumulate (per-game notes below).
+Updated as reviews accumulate (per-game notes below). Coverage so far: all 13 of my games; ladder
+games at three skill bands for every race (3 each, Human low 6); 9-12 pro games per race.
 
 **What works.** In most games the top findings match what a reading of the replay says decided
 it: hero levels and creeping, fights lost (with items and hero levels as causes), windows the
