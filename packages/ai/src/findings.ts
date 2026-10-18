@@ -808,7 +808,7 @@ function becauseFor(f: Finding, c: Ctx): string[] {
   }
   if (f.id === "fights") {
     const items = [m.items_bought ?? 0, o.items_bought ?? 0];
-    if (items[1] >= 8 && items[1] >= 3 * Math.max(1, items[0])) out.push(`You bought ${items[0]} items, they bought ${items[1]}: potions and scrolls decide even fights.`);
+    if (items[1] >= 5 && items[1] >= 3 * Math.max(1, items[0])) out.push(`You bought ${items[0]} items, they bought ${items[1]}: potions and scrolls decide even fights.`);
     const worst = fightLosses(c.r, c.me, c.opp).filter((x) => x.f.playerIds.includes(c.opp.playerId)).sort((a, b) => b.me - b.opp - (a.me - a.opp))[0];
     if (worst) {
       const [mine, theirs] = [levelSum(c.me, worst.f.start), levelSum(c.opp, worst.f.start)];

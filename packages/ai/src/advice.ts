@@ -50,7 +50,7 @@ export function adviceFor(id: string, c: AdviceCtx): string | null {
     }
     case "fights": {
       const items = [m.items_bought ?? 0, c.opp.metrics.items_bought ?? 0];
-      const fewItems = items[1] >= 8 && items[1] >= 3 * Math.max(1, items[0]);
+      const fewItems = items[1] >= 5 && items[1] >= 3 * Math.max(1, items[0]);
       return `Take fights only where you are stronger: with your heroes alive and at least as high level, after an upgrade, never under their towers. ${fewItems ? `Bring potions and a Town Portal (${nameOf(SHOP[R])}) before the fight. ` : ""}Focus their heroes, and pull back wounded units and heroes instead of losing them.`;
     }
     case "window":

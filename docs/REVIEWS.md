@@ -40,8 +40,8 @@ units disappearing.
   it, and base counts from orders are unreliable for Night Elf and Undead (repeated or cancelled
   Tree of Life / Haunted Gold Mine orders). The simulation's own building list disagrees too.
   Needs a trustworthy base count first; "unanswered expansion" (the closest rule) scores below 1.
-- Items gap below the 8-item threshold (1 vs 6) goes unmentioned.
-- A late second hero has no rule of its own (only through 3-3-60).
+- Items gap below the 8-item threshold (1 vs 6) went unmentioned: the fights "why" now needs 5+ items and 3x yours.
+- A late second hero has no rule of its own (only through 3-3-60). Tested a basic ("second hero later than 9 in 10 pros of the matchup, or none in 12+ minutes"): 8% of pro wins and 8% of losses (lift 1.0; Night Elf 0.4 — solo-hero builds), so not added.
 - "No attack/armor upgrades" fires for caster armies and Orc builds whose research went
   elsewhere; consider counting caster training.
 - Games with no detected fights at all should carry a low-confidence note.
