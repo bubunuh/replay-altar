@@ -421,6 +421,9 @@ function firstCreepFinding(c: Ctx): Finding | null {
   // Beyond what 9 in 10 pros of your race do (at least 90 s).
   const limit = Math.max(90_000, proQ(c, "creepDelay", "p90") ?? 0);
   if (!Number.isFinite(hero) || creep === null || creep === undefined || creep - hero <= limit) return null;
+  // A hero that harassed instead of creeping and still kept pace isn't idle (fast-tech openings).
+  const xp = proGap(c, "hero_xp_6m");
+  if (xp && xp.worseThan < 0.5) return null;
   return {
     id: "first_creep",
     severity: BASIC,
@@ -439,7 +442,7 @@ function upgradesFinding(c: Ctx): Finding | null {
     severity: BASIC + 0.05,
     headline: "No attack or armor upgrades for 15 minutes",
     evidence: [
-      `Your first attack upgrade: ${mmss(m.first_attack_upgrade_ms)}; first armor upgrade: ${mmss(m.first_armor_upgrade_ms)} (pros: first attack upgrade around 9:00).`,
+      `Your first attack upgrade: ${mmss(m.first_attack_upgrade_ms)}; first armor upgrade: ${mmss(m.first_armor_upgrade_ms)} ${c.ref?.mp.metrics.first_attack_upgrade_ms ? ` (pros in this matchup: first attack upgrade by ${mmss(c.ref.mp.metrics.first_attack_upgrade_ms.p50)}, median of those who got one)` : ""}.`,
       `Opp's: attack ${mmss(c.opp.metrics.first_attack_upgrade_ms)}, armor ${mmss(c.opp.metrics.first_armor_upgrade_ms)}.`,
     ],
   };
@@ -854,7 +857,7 @@ export function allFindings(r: GameRecord, ref: FactsRef | null, subjectId?: num
     noHeroesFinding(c),
     upkeepFinding(c),
     window ? null : expansionFinding(c), // the window finding already says whether you expanded
-    firstCreepFinding(c),
+    heroes ? null : firstCreepFinding(c), // the heroes finding names a late first creep as a cause
     upgradesFinding(c),
     oneHeroFinding(c),
     noItemsFinding(c),

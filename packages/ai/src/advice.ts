@@ -46,7 +46,7 @@ export function adviceFor(id: string, c: AdviceCtx): string | null {
       const l3 = pro(c, "hero_level3_ms");
       const camps = pro(c, "creep_camps_6m");
       const fewCamps = camps !== null && (m.creep_camps_6m ?? 0) < camps;
-      return `Creep from the moment your hero leaves the altar, with ${FIRST_CREEP[R]}, and go straight from one camp to the next; pros reach hero level 3 by ${mmss(l3)}${fewCamps ? ` and clear ${camps} camps by 6:00` : ""}. Bring the second hero creeping too, and buy a healing item so you can keep creeping instead of walking home.`;
+      return `Creep from the moment your hero leaves the altar, with ${FIRST_CREEP[R]}, and go straight from one camp to the next; pros reach hero level 3 by ${mmss(l3)}${fewCamps ? ` and clear ${camps} camp${camps === 1 ? "" : "s"} by 6:00` : ""}. Bring the second hero creeping too, and buy a healing item so you can keep creeping instead of walking home.`;
     }
     case "fights": {
       const items = [m.items_bought ?? 0, c.opp.metrics.items_bought ?? 0];

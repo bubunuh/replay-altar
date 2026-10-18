@@ -137,3 +137,31 @@ Rules version: commit after 92968df (2026-10-18).
 **60ea5039 · loss, 2096 vs 1985, OvU, 25:31.** App: hero deaths (3 vs 0, 1 Town Portal vs 4); hero waited 375 s before creeping; late 3-3-60. Turning point 14:28 (≈925 vs 0). Replay: Stronghold 1:49 and Fortress 4:22 into Wind Riders, so the first creep came late by design; then Undead Ghouls + 13 Necromancers + Gargoyles won from 14:00. **Partial**: "hero waited before creeping" is the build, not a mistake (a fast-tech opening with Headhunters only at 3:10); the Undead's skeleton army and the lost 14:28/18:53 fights are the story.
 
 **Data quality (found here):** game 4bb3b7e4 had no fights because WC3V stopped reading the replay at 4:33 of 17:14 (`PARSE_TRUNCATED`, "Cannot read properties of null (reading 'timerEvent')"). The same happened in 7-10% of the pro corpus (H 7, O 20, U 13, N 20 games) and 2 review games. Those simulations were still marked ok and fed the pro baselines. Fixed: more than 30 s missing now fails the simulation; profiles, principles and scores rebuilt (370 held-out perspectives).
+
+#### Pros
+
+**40d3187b · win, OvH, 15:34.** App: fights cost more (11:45 ≈1180 vs 175); no attack/armor upgrade in 15 minutes. Replay: Far Seer + Tauren Chieftain ahead in levels, Raiders/Shamans/Kodos; the Human had more army at the end. **Good** for a win. The upgrades evidence said "pros: around 9:00" for every race; Orc pros' median is ~12:00 — fixed to show the matchup's pro median.
+
+**21e6e0d9 · loss, OvN, 17:09.** App: mine ran dry with no expansion; no upgrades; reached 50 food at 10:00 and waited. Replay: one-base Raiders/Spirit Walkers vs 24 Wisps, Dryads and Bears; both heroes behind from 4:00; lost two creep-fight ambushes at 14:48 and 15:06 (≈735 each, inferred). **Good.**
+
+**b5150703 · loss, OvH, 18:47.** App: heroes fell behind (0 camps by 6:00; first hero waited 377 s); no upgrades; and the same late creep again as a separate basic. **Good** content, **repetitive** form: the first-creep basic now stays out when the heroes finding fires (it already names the late first creep). Fixed "1 camps".
+
+### Undead
+
+#### Pros
+
+**d9617f59 · loss, UvO, 4:15.** App: nothing stood out (game over at 4:15, ahead in army). Probably a disconnect or an early leave; nothing to judge. **Fine.**
+
+**3b6fd9fa · loss, UvO, 26:04.** App: heroes (Death Knight level 3 from 15:09 to 25:08; mid-game advice since early creeping was good); hero deaths (Death Knight 3x, Lich 1x; 4 potions vs 17); fights (their heroes 14 levels vs 10 at 21:01). Turning point 21:01 (≈880 vs 0, Death Knight died). Replay: a long game where Blademaster and Shadow Hunter reached level 6 by killing the Death Knight repeatedly; you led in army and workers. **Good.**
+
+**e289a1ab · loss, UvH, 10:14.** App: heroes fell behind (0 camps by 6:00, Lich waited 312 s, level 2 from 4:01); fights (three losing fights at 4:44-6:41, one under their towers). Replay: an 18-Ghoul push into a fast-expanding Human that held with Footmen and towers while their Archmage reached level 4; no creeping at all. **Good.**
+
+### Night Elf
+
+#### Pros
+
+**057ae56c · loss, NvH, 25:50.** App: their heroes out-levelled yours (your own pace at pro level; their Archmage reached 6); no attack/armor upgrades by 15:00. Turning point 16:48 (≈1880 vs 860, going in 3230 vs 1755). Replay: fast expansion 2:36, Bears + Dryads against Knights, Mortars and casters with Swords 2 by 9:00; the 16:48 attack with the bigger army was lost. **Good.** Note: the Night Elf "expansions" list (2:36, 4:04, 5:26, 13:53) counts every Tree of Life order; counts of bases from orders are unreliable for Night Elf and Undead.
+
+**64fbe88a · loss, NvH, 26:14.** App: supply blocked 32 s; no upgrades by 15:00 (they had Gunpowder 2, Plating 2, Swords 2). Turning point 13:58 (base defense, ≈1675 vs 565). Replay: Bears/Dryads with no Hunter's Hall upgrades against a fully upgraded, potion-heavy Human (27 healing items). **Good**: the upgrade gap is the story; the items gap (yours 12, mostly not healing) isn't mentioned.
+
+**875003a8 · result unknown, NvO, 10:06.** App: nothing stood out (you ahead in hero XP and workers). **Fine.**
