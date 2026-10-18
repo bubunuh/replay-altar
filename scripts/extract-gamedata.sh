@@ -52,6 +52,25 @@ mkdir -p "$DATA/ui/fonts"
 nice -n 19 podman run --rm --security-opt label=disable \
   -v "$WC3":/war3:O -v "$DATA/ui/fonts":/out:z "$IMAGE" /war3 /out 'war3.w3mod:fonts\frizqt__.ttf' >/dev/null
 
+# Hero portraits (command-card icons, DDS) for the match header, converted to PNG with
+# ImageMagick when it is installed.
+if command -v magick >/dev/null; then
+  RAW="$(mktemp -d)"
+  mkdir -p "$DATA/ui/heroes"
+  HEROES="Hamg:btnheroarchmage Hmkg:btnheromountainking Hpal:btnheropaladin Hblm:btnherobloodelfprince
+    Edem:btnherodemonhunter Ekee:btnkeeperofthegrove Emoo:btnheromoonpriestess Ewar:btnherowarden
+    Obla:btnheroblademaster Ofar:btnherofarseer Otch:btnherotaurenchieftain Oshd:btnshadowhunter
+    Udea:btnherodeathknight Udre:btnherodreadlord Ulic:btnherolich Ucrl:btnherocryptlord
+    Npbm:btnpandarenbrewmaster Nbrn:btnbansheeranger Nngs:btnnagaseawitch Nplh:btnpitlord
+    Nbst:btnbeastmaster Ntin:btnherotinker Nfir:btnheroavatarofflame Nalc:btnheroalchemist Npal:btnforsakenpaladin"
+  set --
+  for h in $HEROES; do set -- "$@" "war3.w3mod:replaceabletextures\\commandbuttons\\${h#*:}.dds"; done
+  nice -n 19 podman run --rm --security-opt label=disable \
+    -v "$WC3":/war3:O -v "$RAW":/out:z "$IMAGE" /war3 /out "$@" >/dev/null
+  for h in $HEROES; do nice -n 19 magick "$RAW/${h#*:}.dds" -resize 128x128 "$DATA/ui/heroes/${h%%:*}.png"; done
+  rm -rf "$RAW"
+fi
+
 # WC3V's converter reads ./UnitBalance.slk and writes ./UnitBalance.json.
 (cd "$OUT" && cp unitbalance.slk UnitBalance.slk && node "$ROOT/vendor/wc3v/slk/slk.js" >/dev/null)
 cp "$OUT/UnitBalance.json" "$ROOT/vendor/wc3v/helpers/UnitBalance.json"

@@ -109,9 +109,24 @@ td.num, th.num { text-align: right; }
 .tile .value.hero { font-size: calc(48px * var(--text-scale)); line-height: 1.1; }
 .tile .note { color: var(--muted); font-size: calc(12.5px * var(--text-scale)); }
 
-.match-card::after { content: ""; display: block; clear: both; }
-.map-view { float: right; margin: 0 0 8px 16px; width: 286px; }
-.map-view.large { width: min(560px, 60vw); }
+/* Match header: centred column between two equal side columns (the right one holds the map). */
+.match-card { display: grid; grid-template-columns: 286px 1fr 286px; gap: 16px; align-items: start; }
+.match-side { min-width: 0; }
+.match-head { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; }
+.match-head .sub, .match-head .build-lines p { margin: 0; }
+.match-head .filters { justify-content: center; }
+.versus { display: flex; align-items: flex-start; justify-content: center; gap: 20px; font-size: calc(18px * var(--text-scale)); }
+.versus-side { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.versus-name { display: flex; align-items: center; gap: 10px; }
+.versus-vs { align-self: center; margin-top: -40px; }
+.hero-icons { display: flex; gap: 6px; justify-content: center; }
+.hero-icon { position: relative; width: 48px; height: 48px; border: 1px solid #6b5a2e; border-radius: 3px; box-shadow: 0 0 0 1px #000, 0 2px 6px rgba(0, 0, 0, 0.5); }
+.hero-icon img { width: 100%; height: 100%; display: block; border-radius: 2px; }
+.hero-icon .hero-name { display: flex; align-items: center; justify-content: center; height: 100%; font-size: calc(9px * var(--text-scale)); padding: 2px; }
+.hero-level { position: absolute; right: -4px; bottom: -4px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: #111; border: 1px solid #c9a227; color: #f3d77a; font-size: calc(11px * var(--text-scale)); font-weight: 700; line-height: 16px; text-align: center; }
+.map-view { width: 286px; margin: 0; }
+.map-view.large { position: relative; z-index: 5; width: min(560px, 60vw); margin-left: calc(286px - min(560px, 60vw)); }
+@media (max-width: 1000px) { .match-card { grid-template-columns: 1fr; } .match-card > .match-side:first-child { display: none; } .match-side .map-view { margin: 0 auto; } }
 .map-frame { position: relative; cursor: zoom-in; line-height: 0; }
 .map-view.large .map-frame { cursor: zoom-out; }
 .map-frame img { width: 100%; aspect-ratio: 1; border-radius: 6px; border: 1px solid var(--border); object-fit: cover; }
@@ -124,8 +139,6 @@ td.num, th.num { text-align: right; }
 .camp-easy { fill: #39d353; }
 .camp-mid { fill: #ff9f1a; }
 .camp-hard { fill: #ff3b30; }
-@media (max-width: 640px) { .map-view { width: 156px; } }
-.versus { display: inline-flex; align-items: center; gap: 8px; font-size: calc(18px * var(--text-scale)); }
 .race-icon { height: 104px; width: auto; vertical-align: middle; filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.35)) brightness(1.25); }
 .race-icon.small { height: 40px; filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3)) brightness(1.25); }
 .matchup { display: inline-flex; align-items: center; gap: 4px; }
@@ -146,7 +159,6 @@ button[data-tip], .map-frame[data-tip] { cursor: pointer; }
 .rules-more h3, .rules-strengths h3 { font-size: calc(13px * var(--text-scale)); margin: 16px 0 4px; }
 .rules-strengths ul { margin: 4px 0 12px; padding-left: 18px; color: var(--ink-2); }
 .rules-more ul { margin: 4px 0; padding-left: 18px; color: var(--ink-2); }
-.match-head { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: baseline; }
 .match-head .big { font-family: "Blackletter", var(--font); font-size: calc(56px * var(--text-scale)); line-height: 1; font-weight: 700; letter-spacing: 0.01em; }
 .match-head .big.win { color: var(--good-text); }
 .match-head .big.loss { color: var(--critical-text); }

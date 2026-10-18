@@ -11,6 +11,7 @@ import { RulesCard } from "../RulesCard.tsx";
 import { MapView } from "../MapView.tsx";
 import { Tip } from "../Tip.tsx";
 import { RaceIcon } from "../RaceIcon.tsx";
+import { HeroIcons } from "../HeroIcons.tsx";
 import { Chart, heroLevelsChart, timeLines, type Band, type HeroLine, type Tokens } from "../Chart.tsx";
 import { assess, describeRef, groupForRace, pickProfile } from "@replay-altar/reference/compare";
 import { ProMedian, Standing } from "../Standing.tsx";
@@ -185,7 +186,7 @@ function BuildLine({ record, player, who, principles }: { record: GameRecord; pl
     dev.length ? `Compared with those pros: ${dev.map((d) => (d.yours === null ? `no ${d.label}` : `${d.label} at ${d.yours} food (pros ${d.pros})`)).join(", ")}.` : "",
   ].filter(Boolean).join(" ");
   return (
-    <p className="sub" style={{ margin: "6px 0 0" }} data-tip={details}>
+    <p className="sub" style={{ margin: "4px 0 0" }} data-tip={details}>
       <b>{who}:</b> {best.build.name}
     </p>
   );
@@ -234,44 +235,57 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
     <div className="page">
       <div><button className="btn" onClick={onBack}>← All matches</button></div>
       <div className="card match-card">
-        <MapView mapFile={r.game.map.file} />
+        <div className="match-side" />
         <div className="match-head">
-          <span className={`big ${row.result}`}>{row.result === "win" ? "Victory" : row.result === "loss" ? "Defeat" : "Result unknown"}</span>
-          <span className="versus">
-            <b>You</b>
-            <RaceIcon race={me?.race} />
-            <span className="muted">vs</span>
-            <RaceIcon race={opp?.race} />
-            <b>{opp?.name}</b>
-          </span>
-        </div>
-        <p className="sub" style={{ marginTop: 6 }} data-tip={`${r.game.map.file} · ${SOURCE[r.classification.source]}`}>
-          {mmss(r.game.durationMs)} · {dateTime(r.game.playedAt)}
-          {r.userLabel ? ` · “${r.userLabel}”` : ""}
-        </p>
-        <div className="filters">
-          <label data-tip="Correct the result if it was detected wrong.">
-            Result
-            <select
-              value={overridden ? row.result : "detected"}
-              onChange={async (e) => {
-                await api.overrideResult(r.gameKey, e.target.value === "detected" ? null : (e.target.value as "win" | "loss"));
-                load();
-              }}
-            >
-              <option value="detected">Detected: {row.result_detected}</option>
-              <option value="win">Win (manual)</option>
-              <option value="loss">Loss (manual)</option>
-            </select>
-          </label>
-          <button className="btn" onClick={() => api.showFile(r.provenance.archivePath)} data-tip={r.provenance.archivePath}>Replay file</button>
-        </div>
-        {r.sim?.status === "ok" && me && opp && (
-          <div className="build-lines small">
-            <BuildLine record={r} player={me} who="Your build" principles={pros?.principles} />
-            <BuildLine record={r} player={opp} who="Opponent's build" principles={groupForRace(refs, opp.race)?.principles} />
+          <div className={`big ${row.result}`}>{row.result === "win" ? "Victory" : row.result === "loss" ? "Defeat" : "Result unknown"}</div>
+          <div className="versus">
+            <div className="versus-side me">
+              <div className="versus-name">
+                <b>You</b>
+                <RaceIcon race={me?.race} />
+              </div>
+              {me && <HeroIcons p={me} />}
+            </div>
+            <span className="muted versus-vs">vs</span>
+            <div className="versus-side opp">
+              <div className="versus-name">
+                <RaceIcon race={opp?.race} />
+                <b>{opp?.name}</b>
+              </div>
+              {opp && <HeroIcons p={opp} />}
+            </div>
           </div>
-        )}
+          <p className="sub" data-tip={`${r.game.map.file} · ${SOURCE[r.classification.source]}`}>
+            {mmss(r.game.durationMs)} · {dateTime(r.game.playedAt)}
+            {r.userLabel ? ` · “${r.userLabel}”` : ""}
+          </p>
+          <div className="filters">
+            <label data-tip="Correct the result if it was detected wrong.">
+              Result
+              <select
+                value={overridden ? row.result : "detected"}
+                onChange={async (e) => {
+                  await api.overrideResult(r.gameKey, e.target.value === "detected" ? null : (e.target.value as "win" | "loss"));
+                  load();
+                }}
+              >
+                <option value="detected">Detected: {row.result_detected}</option>
+                <option value="win">Win (manual)</option>
+                <option value="loss">Loss (manual)</option>
+              </select>
+            </label>
+            <button className="btn" onClick={() => api.showFile(r.provenance.archivePath)} data-tip={r.provenance.archivePath}>Replay file</button>
+          </div>
+          {r.sim?.status === "ok" && me && opp && (
+            <div className="build-lines small">
+              <BuildLine record={r} player={me} who="Your build" principles={pros?.principles} />
+              <BuildLine record={r} player={opp} who="Opponent's build" principles={groupForRace(refs, opp.race)?.principles} />
+            </div>
+          )}
+        </div>
+        <div className="match-side">
+          <MapView mapFile={r.game.map.file} />
+        </div>
       </div>
 
       {row.analyzed === 1 && me && opp && r.game.durationMs >= MIN_GAME_MS && (

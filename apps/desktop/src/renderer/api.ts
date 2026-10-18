@@ -39,6 +39,8 @@ type W3Api = {
   raceIcons(): Promise<Record<string, string>>;
   /** The game's UI font as a data URL, or null until extracted. */
   uiFont(): Promise<string | null>;
+  /** Hero portraits as data URLs by hero code (empty until extracted). */
+  heroIcons(): Promise<Record<string, string>>;
   aiStatus(): Promise<AiStatus>;
   aiRun(key: string): Promise<AiAnalysis | null>;
   onAi(fn: (event: "progress" | "done", key: string, stage?: string) => void): () => void;

@@ -1,6 +1,6 @@
 // Electron main process: one window, read-mostly access to the Replay Altar database.
 import { execFile, spawn, type ChildProcess } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, watch, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, readFileSync, watch, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { app, BrowserWindow, ipcMain, nativeTheme, shell } from "electron";
@@ -168,6 +168,12 @@ if (!app.requestSingleInstanceLock()) {
         .filter(([, f]) => existsSync(f))
         .map(([code, f]) => [code, `data:image/png;base64,${readFileSync(f).toString("base64")}`]),
     );
+  });
+  // Hero portraits (the game's command-card icons), by hero code.
+  ipcMain.handle("hero:icons", () => {
+    const dir = join(dataDir(), "ui/heroes");
+    if (!existsSync(dir)) return {};
+    return Object.fromEntries(readdirSync(dir).filter((f) => f.endsWith(".png")).map((f) => [f.slice(0, -4), `data:image/png;base64,${readFileSync(join(dir, f)).toString("base64")}`]));
   });
   // The game's UI font (Friz Quadrata), copied out of the install like the crests.
   ipcMain.handle("ui:font", () => {
