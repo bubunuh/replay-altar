@@ -183,8 +183,10 @@ export function heroStall(c: Ctx) {
     for (let i = 0; i + 1 < marks.length; i++) {
       const [from, to] = [marks[i], marks[i + 1]];
       if (best && to - from <= best.to - best.from) continue;
-      const theirs = c.opp.heroes.reduce((n, x) => n + x.levelUps.filter((t) => t > from && t <= to).length, 0);
-      const top = [...c.opp.heroes].sort((a, b) => b.levelUps.filter((t) => t <= to).length - a.levelUps.filter((t) => t <= to).length)[0];
+      // Levels gained, not skill points: a hero's first point comes with it at level 1.
+      const gained = (x: (typeof c.opp.heroes)[number]) => x.levelUps.slice(1).filter((t) => t > from && t <= to).length;
+      const theirs = c.opp.heroes.reduce((n, x) => n + gained(x), 0);
+      const top = [...c.opp.heroes].sort((a, b) => gained(b) - gained(a))[0];
       const lv = (t: number) => Math.max(1, top?.levelUps.filter((x) => x <= t).length ?? 1);
       best = { name: h.name, level: i + 1, from, to, theirs, theirTop: top ? `their ${top.name} went from level ${lv(from)} to ${lv(to)}` : "" };
     }
@@ -196,14 +198,21 @@ const STALL_MS = 6 * 60_000;
 function heroFinding(c: Ctx): Finding | null {
   const gap = proGap(c, "hero_xp_10m") ?? proGap(c, "hero_xp_6m");
   const share = c.me.metrics.hero_xp_share;
+  // A low share of both players' XP goes with losing even when your own pace was like pros'
+  // (holdout: 68% of pro losses vs 30% of wins; requiring a slow pace too dropped it to 47%).
+  // Then the gap is theirs, not your creeping, and the advice says so.
   const losingShare = share !== null && share !== undefined && share < 0.45;
   if ((gap?.worseThan ?? 0) < 0.75 && !losingShare) return null;
+  const ownPaceFine = (gap?.worseThan ?? 1) < 0.5;
   const m = c.me.metrics;
   const end = c.r.game.durationMs;
   return {
     id: "heroes",
     severity: Math.max(gap?.worseThan ?? 0, losingShare ? 0.6 + (0.45 - share!) : 0),
-    headline: "Your heroes fell behind",
+    headline: ownPaceFine ? "Their heroes out-levelled yours" : "Your heroes fell behind",
+    ...(ownPaceFine
+      ? { advice: "Your own levelling was at pro pace; theirs was faster, much of it from your units. Fight with your heroes alive and focus theirs, don't trade units in small skirmishes, and creep the camps on their side to take that experience away." }
+      : {}),
     evidence: [
       `Hero XP by 6:00: you ${num(m.hero_xp_6m)}, opp ${num(c.opp.metrics.hero_xp_6m)}${vsPros(c, "hero_xp_6m")}.`,
       ...(m.hero_xp_10m !== null && m.hero_xp_10m !== undefined ? [`Hero XP by 10:00: you ${num(m.hero_xp_10m)}, opp ${num(c.opp.metrics.hero_xp_10m)}${vsPros(c, "hero_xp_10m")}.`] : []),
@@ -246,7 +255,8 @@ function fightFinding(c: Ctx): Finding | null {
 
 function supplyFinding(c: Ctx): Finding | null {
   const g = proGap(c, "supply_blocked_s");
-  if (!g || g.worseThan < 0.75) return null;
+  // Compared per 10 minutes: in a 5-minute game 13 s looked like 26. Under 30 s isn't worth a finding.
+  if (!g || g.worseThan < 0.75 || (c.me.metrics.supply_blocked_s ?? 0) < 30) return null;
   return {
     id: "supply",
     severity: 0.4 + g.worseThan / 4,
@@ -584,7 +594,8 @@ function upkeepBeforeUpgradesFinding(c: Ctx): Finding | null {
   const over = seriesOf(c.r, c.me).find((s) => s.foodUsed > 50)?.t ?? null;
   if (over === null) return null;
   const m = c.me.metrics;
-  const upgraded = Math.min(m.first_attack_upgrade_ms ?? Infinity, m.first_armor_upgrade_ms ?? Infinity) <= over;
+  // An upgrade ordered in the next 30 s counts: the food crossing and the click are seconds apart.
+  const upgraded = Math.min(m.first_attack_upgrade_ms ?? Infinity, m.first_armor_upgrade_ms ?? Infinity) <= over + 30_000;
   const expanded = expansionTimes(c.me).some((t) => t <= over);
   // Tier 3 is an investment too. (Excusing a fight around that time silenced the rule: the
   // simulation sees some fight nearly all the time.)
@@ -784,7 +795,7 @@ function becauseFor(f: Finding, c: Ctx): string[] {
   const out: string[] = [];
   if (f.id === "heroes") {
     const camps = proGap(c, "creep_camps_6m");
-    if (camps && camps.worseThan >= 0.6) out.push(`You cleared ${num(m.creep_camps_6m)} creep camps by 6:00 (pros: ${num(camps.median)}): too little creeping.`);
+    if (camps && camps.worseThan >= 0.6 && (m.creep_camps_6m ?? 0) < camps.median) out.push(`You cleared ${num(m.creep_camps_6m)} creep camp${m.creep_camps_6m === 1 ? "" : "s"} by 6:00 (pros: ${num(camps.median)}): too little creeping.`);
     const appear = Math.min(...simHeroes(c, c.me).map((h) => h.appearAt ?? Infinity));
     if (Number.isFinite(appear) && m.first_creep_ms !== null && m.first_creep_ms !== undefined && m.first_creep_ms - appear > 60_000) out.push(`Your first hero waited ${Math.round((m.first_creep_ms - appear) / 1000)} s before the first creep camp.`);
     const early = simHeroes(c, c.me).reduce((n, h) => n + h.deaths.filter((d) => d.diedAt <= 600_000).length, 0);

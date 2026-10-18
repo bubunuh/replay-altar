@@ -40,7 +40,18 @@ export function readSimOutput(path: string): WOutput {
 }
 
 /** Economy summary from an existing WC3V output (fast; used after a run and on reingest). */
+/** WC3V stops reading some replays part way (it reports PARSE_TRUNCATED); more than this missing makes the game unusable. */
+const MAX_MISSING_MS = 30_000;
+
 export function summarize(record: GameRecord, o: WOutput, costs: CostTables, k: EconomyConstants, meta: { ranAt: string; runMs: number; outputPath: string }): SimSummary {
+  // A truncated read looks like a game where everyone stopped playing: no fights, no levels,
+  // no spending after the cut. Better no simulation than one that misleads (7-10% of the pro
+  // corpus on WC3V 2026-10).
+  const cut = ((o.validation?.warnings ?? []) as { type?: string; missingMs?: number; lastActionGameTimeMs?: number }[]).find((w) => w.type === "PARSE_TRUNCATED" && (w.missingMs ?? 0) > MAX_MISSING_MS);
+  if (cut) {
+    const at = Math.round((cut.lastActionGameTimeMs ?? 0) / 1000);
+    return { status: "failed", engine: { name: "wc3v", commit: wc3vCommit() }, ranAt: meta.ranAt, reason: `the simulation could read the replay only up to ${Math.floor(at / 60)}:${String(at % 60).padStart(2, "0")} (WC3V parse truncated)` };
+  }
   const timelines = buildTimelines(o, record, costs);
   const incomes = timelines.map((tl) => runIncome(tl, k));
   const warnings: string[] = [];

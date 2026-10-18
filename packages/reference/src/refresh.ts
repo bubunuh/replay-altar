@@ -54,6 +54,32 @@ export type RefState = { lastRefreshAt: string | null; lastResult: Omit<RefreshR
 export const readState = (root: string): RefState =>
   existsSync(join(root, "state.json")) ? JSON.parse(readFileSync(join(root, "state.json"), "utf8")) : { lastRefreshAt: null, lastResult: null };
 
+/**
+ * Simulates games whose map you may not have (tournament and W3Champions versions): on a missing
+ * map it fetches the map from warcraft3.info by the checksum in the replay, into Replay Altar's
+ * own maps folder (never the game's), and tries again.
+ */
+export function mapFetchingSimulator(o: { dataRoot: string; config: Config; gamedataRoot: string; client: W3iClient; sleep: (ms: number) => Promise<void>; log: (m: string) => void }) {
+  const mapsDir = join(o.gamedataRoot, "maps");
+  let mapIndex: Map<string, W3iMapFile> | null = null;
+  return async (record: GameRecord) => {
+    const run = () => simulateGame(record, { dataRoot: o.dataRoot, warcraftDocuments: o.config.warcraftDocuments, gamedataRoot: o.gamedataRoot, extraMapDirs: [mapsDir] });
+    const sim = await run();
+    if (sim.status === "ok" || !sim.reason.includes("not found")) return sim; // only a missing map is fetchable
+    const sha1 = record.game.map.checksumSha1.toLowerCase();
+    mapIndex ??= new Map((await o.client.mapFiles()).map((f) => [f.checksum_sha1.toLowerCase(), f]));
+    const file = mapIndex.get(sha1);
+    if (!file) return sim;
+    await o.sleep(BETWEEN_DOWNLOADS_MS);
+    const buffer = await o.client.downloadMap(file.id);
+    if (!buffer || createHash("sha1").update(buffer).digest("hex") !== sha1) return sim;
+    mkdirSync(mapsDir, { recursive: true });
+    writeFileSync(join(mapsDir, record.game.map.file), buffer);
+    o.log(`downloaded map ${record.game.map.file}`);
+    return run();
+  };
+}
+
 export async function refreshGroup(group: ReferenceGroup, opts: RefreshOptions): Promise<RefreshResult> {
   const log = opts.log ?? (() => {});
   const sleep = opts.sleep ?? ((ms) => new Promise((r) => setTimeout(r, ms)));
@@ -89,26 +115,7 @@ export async function refreshGroup(group: ReferenceGroup, opts: RefreshOptions):
   try {
     const pruned = pruneOtherBuilds(ref, opts.replayBuild);
 
-    // Tournaments play map versions you may not have: fetch them from warcraft3.info by the
-    // checksum in the replay, into Replay Altar's own maps folder (never the game's).
-    const mapsDir = join(opts.gamedataRoot, "maps");
-    let mapIndex: Map<string, W3iMapFile> | null = null;
-    const simulate = async (record: GameRecord) => {
-      const run = () => simulateGame(record, { dataRoot: paths.root, warcraftDocuments: opts.config.warcraftDocuments, gamedataRoot: opts.gamedataRoot, extraMapDirs: [mapsDir] });
-      const sim = await run();
-      if (sim.status === "ok" || !sim.reason.includes("not found")) return sim; // only a missing map is fetchable
-      const sha1 = record.game.map.checksumSha1.toLowerCase();
-      mapIndex ??= new Map((await client.mapFiles()).map((f) => [f.checksum_sha1.toLowerCase(), f]));
-      const file = mapIndex.get(sha1);
-      if (!file) return sim;
-      await sleep(BETWEEN_DOWNLOADS_MS);
-      const buffer = await client.downloadMap(file.id);
-      if (!buffer || createHash("sha1").update(buffer).digest("hex") !== sha1) return sim;
-      mkdirSync(mapsDir, { recursive: true });
-      writeFileSync(join(mapsDir, record.game.map.file), buffer);
-      log(`${group.id}: downloaded map ${record.game.map.file}`);
-      return run();
-    };
+    const simulate = mapFetchingSimulator({ dataRoot: paths.root, config: opts.config, gamedataRoot: opts.gamedataRoot, client, sleep, log: (m) => log(`${group.id}: ${m}`) });
     // Earlier games whose simulation failed over their map (missing, or not extractable before).
     for (const { game_key } of db.prepare("SELECT r.game_key FROM ref_matches r JOIN games g ON g.game_key = r.game_key WHERE g.sim_status = 'failed'").all() as { game_key: string }[]) {
       const record = readRecord(paths, game_key);

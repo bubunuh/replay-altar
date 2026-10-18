@@ -35,7 +35,7 @@ export type W3cClient = {
   matchDetail(matchId: string): Promise<{ match: W3cMatch; playerScores: W3cScore[] } | null>;
   /** A player's 1v1 matches against one opponent in a season. */
   searchPlayerMatches(q: { playerTag: string; opponentTag: string; gateway: number; season: number }): Promise<W3cMatch[]>;
-  listMatches(q: { gateway: number; season: number; minMmr: number; offset: number; pageSize: number }): Promise<{ count: number; matches: W3cMatch[] }>;
+  listMatches(q: { gateway: number; season: number; minMmr: number; maxMmr?: number; offset: number; pageSize: number }): Promise<{ count: number; matches: W3cMatch[] }>;
   downloadReplay(matchId: string): Promise<Buffer | null>;
 };
 
@@ -71,7 +71,7 @@ export function w3cClient(opts: { fetch?: Fetch; sleep?: (ms: number) => Promise
       return Math.max(...seasons.map((s) => s.id));
     },
     async listMatches(q) {
-      const url = `${W3C_API}matches?offset=${q.offset}&gateway=${q.gateway}&pageSize=${q.pageSize}&gameMode=1&mapName=Overall&minMmr=${q.minMmr}&season=${q.season}`;
+      const url = `${W3C_API}matches?offset=${q.offset}&gateway=${q.gateway}&pageSize=${q.pageSize}&gameMode=1&mapName=Overall&minMmr=${q.minMmr}${q.maxMmr ? `&maxMmr=${q.maxMmr}` : ""}&season=${q.season}`;
       const res = await get(url);
       if (res.status !== 200) throw new Error(`match list failed: HTTP ${res.status}`);
       return (await res.json()) as { count: number; matches: W3cMatch[] };
