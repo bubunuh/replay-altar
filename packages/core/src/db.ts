@@ -289,8 +289,9 @@ export function writeGame(db: DB, r: GameRecord, archiveSha256: string) {
     const insSkill = db.prepare("INSERT INTO hero_skills VALUES (?, ?, ?, ?, ?, ?)");
     const insApm = db.prepare("INSERT INTO apm_minutes VALUES (?, ?, ?, ?)");
     for (const p of r.players) {
-      insPlayer.run(r.gameKey, p.playerId, p.name, p.teamId, p.racePicked, p.race, p.isMe ? 1 : 0, p.result, p.metrics.apm);
-      for (const [k, v] of Object.entries(p.metrics)) insMetric.run(r.gameKey, p.playerId, k, v);
+      insPlayer.run(r.gameKey, p.playerId, p.name ?? null, p.teamId ?? null, p.racePicked ?? null, p.race ?? null, p.isMe ? 1 : 0, p.result ?? null, p.metrics.apm ?? null);
+      // Missing or non-finite values (a metric a replay can't support) are stored as NULL.
+      for (const [k, v] of Object.entries(p.metrics)) insMetric.run(r.gameKey, p.playerId, k, typeof v === "number" && Number.isFinite(v) ? v : null);
       for (const b of p.build) insBuild.run(r.gameKey, p.playerId, b.ms, b.kind, b.code, b.name);
       for (const h of p.heroes) {
         insHero.run(r.gameKey, p.playerId, h.order, h.code, h.name, h.level, h.retrainings);

@@ -177,7 +177,15 @@ export async function refreshGroup(group: ReferenceGroup, opts: RefreshOptions):
           oldStreak = 0;
           const file = join(incoming, `${r.id}.w3g`);
           writeFileSync(file, buffer);
-          const out = await ingestFile(ref, file);
+          let out: Awaited<ReturnType<typeof ingestFile>>;
+          try {
+            out = await ingestFile(ref, file);
+          } catch (e) {
+            // One bad replay must not stop the whole update.
+            unlinkSync(file);
+            skip(id, `ingest failed: ${(e as Error).message}`);
+            continue;
+          }
           unlinkSync(file);
           // Anything but a brand-new game (an error, or a game we already have from another source).
           if (out.status !== "new") {
