@@ -284,3 +284,9 @@ units disappearing.
 **550333c4 · loss, NvO, 12:18.** App: fights (5 items vs 16); heroes fell behind (level 3 at 8:39; share 31%). Replay: Bears against Grunts/Spirit Walkers/Kodos; both Orc heroes reached 4. **Good.**
 
 **e81e985d · loss, NvO, 39:12.** App: hero deaths; heroes (Demon Hunter level 3 from 18:04 to 33:36, mid-game advice); high upkeep on one base from 16:00 (expanded only at 26:59). Turning point 13:29. Replay: 39 minutes of Archers + Dryads (no tier 3 ever) against Wind Riders, out-mined by the Orc from 6:00 to 30:00. **Good**; "never teched in 39 minutes" isn't a rule and probably shouldn't be (some builds stay on tier 2).
+
+**b5741d4e · loss, NvH, 19:04.** App: heroes fell behind (0 camps by 6:00; tavern Beastmaster level 3 only at 11:23); hero deaths (2 vs 0, no Town Portal); supply blocked 31 s. Turning point 15:39 (≈1650 vs 1095). Replay: 23 Archers and 5 Druids of the Claw against a tower Human (11 tower orders) with Riflemen, Priests and Sorceresses whose Archmage reached level 5. **Good.**
+
+**60f477c6 · win, NvO, 9:03.** App: nothing stood out; strengths 70% of the hero XP, 74% trades. Replay: Archers and a fast Tree of Eternity; the Orc had 5 Grunts and left at 9:03. **Good.**
+
+**8e6cc82d · loss, NvH, 27:01.** App: fights cost far more (≈4180 vs 2705; 6 items vs 19; their 2 upgrade levels vs 0); their heroes out-levelled yours (38%); floating ≈1094 in the first 10 minutes. Turning point 12:47 (≈1005 vs 145, Priestess of the Moon died). Replay: a fast-expanding Druid of the Claw / Faerie Dragon / Hippogryph Night Elf against Knights, Priests and then 10 Flying Machines with 3/3 melee and 2 armor upgrades; the Human led in army from 4:00. **Good.**
