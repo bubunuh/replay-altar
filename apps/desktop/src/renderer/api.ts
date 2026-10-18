@@ -22,6 +22,9 @@ type W3Api = {
   referenceProfiles(): Promise<RefGroupInfo[]>;
   showFile(file: string): Promise<void>;
   openPath(dir: string): Promise<void>;
+  refUpdate(): Promise<boolean>;
+  refUpdateStatus(): Promise<{ running: boolean; log: string[] }>;
+  onRefUpdate(fn: (event: "progress" | "done", value: string | number | null) => void): () => void;
   aiGet(key: string): Promise<AiAnalysis | null>;
   aiStatus(): Promise<AiStatus>;
   aiRun(key: string): Promise<AiAnalysis | null>;

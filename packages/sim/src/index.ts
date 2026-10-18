@@ -102,14 +102,14 @@ function fightsOf(o: WOutput): SimFight[] {
  */
 export async function simulateGame(
   record: GameRecord,
-  opts: { dataRoot: string; warcraftDocuments: string[]; gamedataRoot?: string },
+  opts: { dataRoot: string; warcraftDocuments: string[]; gamedataRoot?: string; extraMapDirs?: string[] },
 ): Promise<SimSummary> {
   const ranAt = new Date().toISOString();
   const engine = { name: "wc3v" as const, commit: wc3vCommit() };
   const gamedataRoot = opts.gamedataRoot ?? opts.dataRoot;
   const notReady = simNotReady(gamedataRoot);
   if (notReady) return { status: "failed", engine, ranAt, reason: notReady };
-  const mapProblem = ensureMapData(record.game.map.file, opts.warcraftDocuments);
+  const mapProblem = ensureMapData(record.game.map.file, opts.warcraftDocuments, opts.extraMapDirs);
   if (mapProblem) return { status: "failed", engine, ranAt, reason: mapProblem };
   const out = simOutputPath(opts.dataRoot, record.gameKey);
   const res = await runDriver(record.provenance.archivePath, out);

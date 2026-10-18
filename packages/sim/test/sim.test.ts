@@ -109,3 +109,13 @@ describe.skipIf(!ready || !existsSync(FIXTURE))("simulating a real replay", () =
     expect(me.series.some((s) => s.dominance !== null)).toBe(true);
   });
 });
+
+describe("map data names (as WC3V's data-tool names them)", () => {
+  test("ladder, W3Champions and tournament file names", async () => {
+    const { mapDataName } = await import("../src/maps.ts");
+    expect(mapDataName("(2)EchoIsles_S2_v2.2.w3x")).toBe("EchoIsles_S2_v2.2");
+    expect(mapDataName("5682_w3c_260706_2308_SunhoofMesa_v1.4.5c.w3m")).toBe("SunhoofMesa_v1.4.5c");
+    expect(mapDataName("w3c_260816_0950_FairyTale_v1.3.1.w3x")).toBe("260816_0950_FairyTale_v1.3.1");
+    expect(mapDataName("1v1_EchoIsles_v2.2_w3c_260125_1357_1051.w3x")).toBe("EchoIsles_v2.2");
+  });
+});

@@ -1,20 +1,24 @@
-// Keeps a reference group stocked with current-patch games from W3Champions.
+// Keeps a reference group stocked with current-patch tournament games from warcraft3.info.
+// Runs only when you ask ("Update pro games" in the window, or `w3stats ref refresh`).
+import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { applyOfficial, applySim, ingestFile, parseReplay, readRecord, type Config, type ReferenceGroup } from "@w3stats/core";
-import { officialForMatch } from "./official.ts";
+import { applySim, ingestFile, parseReplay, readRecord, type Config, type GameRecord, type ReferenceGroup } from "@w3stats/core";
 import { simulateGame } from "@w3stats/sim";
 import { buildProfile, type RefProfile } from "./profile.ts";
 import { openReference } from "./store.ts";
-import { pickSubject, RateLimited, W3C_RACE, w3cClient, type W3cClient } from "./w3c.ts";
+import { RateLimited } from "./w3c.ts";
+import { w3iRace, w3infoClient, w3iSubjects, type W3iClient, type W3iMapFile } from "./w3info.ts";
 
-// W3Champions rate-limits replay downloads (about 20 in 5 minutes triggered it), so stay well
-// below that: one every 10 s and at most 15 per run; the collector continues hours later.
-const BETWEEN_DOWNLOADS_MS = 10_000;
-const MAX_DOWNLOADS_PER_RUN = 15;
+// No documented limit: stay polite.
+const BETWEEN_DOWNLOADS_MS = 3000;
 const BETWEEN_PAGES_MS = 1000;
-const PAGE_SIZE = 50;
-const MAX_PAGES_PER_GATEWAY = 40;
+const MAX_DOWNLOADS_PER_RUN = 120;
+const MAX_PAGES = 80; // 25 replays a page: about a month of uploads
+/** The list is newest first: this many older-patch replays in a row means the patch is behind us. */
+const OLD_PATCH_STREAK = 6;
+/** Games shorter than this (someone left early) say nothing about how pros play. */
+const MIN_DURATION_S = 180;
 
 export type RefreshOptions = {
   config: Config;
@@ -23,9 +27,9 @@ export type RefreshOptions = {
   /** Where the user's extracted game data lives (sim/gamedata/current). */
   gamedataRoot: string;
   target?: number;
-  /** Download cap for this run (default 15). */
+  /** Download cap for this run. */
   maxDownloads?: number;
-  client?: W3cClient;
+  client?: W3iClient;
   sleep?: (ms: number) => Promise<void>;
   /** Checked before each download; true pauses the refresh (e.g. while Warcraft III runs). */
   shouldPause?: () => boolean;
@@ -37,7 +41,7 @@ export type RefreshResult = {
   skipped: number;
   pruned: number;
   kept: number;
-  /** Stopped early: Warcraft III started, W3Champions asked to slow down, or the per-run cap. */
+  /** Stopped early: Warcraft III started, the site asked to slow down, or the per-run cap. */
   paused: boolean;
   stopReason: string | null;
   profile: RefProfile;
@@ -45,30 +49,18 @@ export type RefreshResult = {
 
 export type RefState = { lastRefreshAt: string | null; lastResult: Omit<RefreshResult, "profile"> | null };
 
-/**
- * Whether a group should refresh now: weekly (refreshDays) once full; while still below target
- * (or after a rate limit stopped a run), at every check that is at least checkEveryMs after the
- * last attempt.
- */
-export function refreshDue(a: { lastRefreshAt: string | null; kept: number; target: number; refreshDays: number; checkEveryMs: number; now: number }): boolean {
-  if (!a.lastRefreshAt) return true;
-  const age = a.now - Date.parse(a.lastRefreshAt);
-  if (age > a.refreshDays * 86_400_000) return true;
-  return a.kept < a.target && age >= a.checkEveryMs - 60_000;
-}
-
 export const readState = (root: string): RefState =>
   existsSync(join(root, "state.json")) ? JSON.parse(readFileSync(join(root, "state.json"), "utf8")) : { lastRefreshAt: null, lastResult: null };
 
 export async function refreshGroup(group: ReferenceGroup, opts: RefreshOptions): Promise<RefreshResult> {
   const log = opts.log ?? (() => {});
   const sleep = opts.sleep ?? ((ms) => new Promise((r) => setTimeout(r, ms)));
-  const client = opts.client ?? w3cClient({ sleep, log });
+  const client = opts.client ?? w3infoClient({ sleep });
   const target = opts.target ?? group.target;
   const ref = openReference(group.id, opts.config);
   const { db, paths } = ref;
 
-  // One refresh at a time (the collector's weekly job and the CLI could overlap).
+  // One refresh at a time (the window's button and the CLI could overlap).
   const lock = join(paths.root, "refresh.lock");
   if (existsSync(lock)) {
     const pid = Number(readFileSync(lock, "utf8"));
@@ -94,6 +86,35 @@ export async function refreshGroup(group: ReferenceGroup, opts: RefreshOptions):
   };
   try {
     const pruned = pruneOtherBuilds(ref, opts.replayBuild);
+
+    // Tournaments play map versions you may not have: fetch them from warcraft3.info by the
+    // checksum in the replay, into W3Stats' own maps folder (never the game's).
+    const mapsDir = join(opts.gamedataRoot, "maps");
+    let mapIndex: Map<string, W3iMapFile> | null = null;
+    const simulate = async (record: GameRecord) => {
+      const run = () => simulateGame(record, { dataRoot: paths.root, warcraftDocuments: opts.config.warcraftDocuments, gamedataRoot: opts.gamedataRoot, extraMapDirs: [mapsDir] });
+      const sim = await run();
+      if (sim.status === "ok" || !sim.reason.includes("not found")) return sim; // only a missing map is fetchable
+      const sha1 = record.game.map.checksumSha1.toLowerCase();
+      mapIndex ??= new Map((await client.mapFiles()).map((f) => [f.checksum_sha1.toLowerCase(), f]));
+      const file = mapIndex.get(sha1);
+      if (!file) return sim;
+      await sleep(BETWEEN_DOWNLOADS_MS);
+      const buffer = await client.downloadMap(file.id);
+      if (!buffer || createHash("sha1").update(buffer).digest("hex") !== sha1) return sim;
+      mkdirSync(mapsDir, { recursive: true });
+      writeFileSync(join(mapsDir, record.game.map.file), buffer);
+      log(`${group.id}: downloaded map ${record.game.map.file}`);
+      return run();
+    };
+    // Earlier games whose simulation failed over their map (missing, or not extractable before).
+    for (const { game_key } of db.prepare("SELECT r.game_key FROM ref_matches r JOIN games g ON g.game_key = r.game_key WHERE g.sim_status = 'failed'").all() as { game_key: string }[]) {
+      const record = readRecord(paths, game_key);
+      if (record?.sim?.status !== "failed" || !/map/i.test(record.sim.reason)) continue;
+      const sim = await simulate(record);
+      applySim(ref, game_key, sim);
+      if (sim.status === "ok") log(`${group.id}: simulated ${record.game.map.file.replace(/\.w3[xm]$/, "")} game now that its map is here`);
+    }
     const countKept = () =>
       (db.prepare(`SELECT COUNT(*) n FROM ref_matches ${opts.replayBuild === null ? "" : "WHERE replay_build = ?"}`).get(...(opts.replayBuild === null ? [] : [opts.replayBuild])) as { n: number }).n;
     const seen = (id: string) =>
@@ -103,84 +124,85 @@ export async function refreshGroup(group: ReferenceGroup, opts: RefreshOptions):
       skipped++;
     };
 
-    // Spread the sample over many players: newest-first would otherwise favour whoever is online now.
+    // Spread the sample over many players: newest-first would otherwise favour whoever played
+    // the latest tournament.
     const perPlayerCap = Math.max(2, Math.ceil(target / 10));
-    const gamesOf = (battleTag: string) =>
-      (db.prepare("SELECT COUNT(*) n FROM ref_matches WHERE lower(subject_name) = lower(?)").get(battleTag) as { n: number }).n;
+    const gamesOf = (name: string) => (db.prepare("SELECT COUNT(*) n FROM ref_matches WHERE lower(subject_name) = lower(?)").get(name) as { n: number }).n;
 
     let kept = countKept();
     const incoming = join(paths.root, "incoming");
     mkdirSync(incoming, { recursive: true });
+    let oldStreak = 0;
     if (kept < target) try {
-      const season = await client.currentSeason();
-      log(`${group.id}: ${kept}/${target} games; searching season ${season}`);
-      outer: for (const gateway of group.gateways) {
-        for (let page = 0; page < MAX_PAGES_PER_GATEWAY; page++) {
-          const list = await client.listMatches({ gateway, season, minMmr: group.minMmr, offset: page * PAGE_SIZE, pageSize: PAGE_SIZE });
-          if (!list.matches.length) break;
-          for (const m of list.matches) {
-            if (kept >= target) break outer;
-            if (seen(m.id)) continue;
-            const pick = pickSubject(m, group.race, group.minMmr);
-            if (!pick || gamesOf(pick.subject.battleTag) >= perPlayerCap) continue;
-            if (opts.shouldPause?.()) {
-              stop("paused: Warcraft III is running");
-              break outer;
-            }
-            if (downloaded >= (opts.maxDownloads ?? MAX_DOWNLOADS_PER_RUN)) {
-              stop(`downloaded ${downloaded} this run; continuing next time`);
-              break outer;
-            }
-            await sleep(BETWEEN_DOWNLOADS_MS);
-            const buffer = await client.downloadReplay(m.id);
-            if (!buffer) {
-              skip(m.id, "replay not available");
-              continue;
-            }
-            let build: number;
-            try {
-              build = (await parseReplay(buffer)).output.buildNumber;
-            } catch (e) {
-              skip(m.id, `unparsable: ${(e as Error).message}`);
-              continue;
-            }
-            if (opts.replayBuild !== null && build !== opts.replayBuild) {
-              skip(m.id, `replay build ${build}, current ${opts.replayBuild}`);
-              continue;
-            }
-            const file = join(incoming, `${m.id}.w3g`);
-            writeFileSync(file, buffer);
-            const out = await ingestFile(ref, file);
-            unlinkSync(file);
-            // Anything but a brand-new game (an error, or a game we already have under another id).
-            if (out.status !== "new") {
-              skip(m.id, out.status === "error" ? out.error : "duplicate game");
-              continue;
-            }
-            const record = out.record;
-            const subject = record.players.find((p) => p.name.toLowerCase() === pick.subject.battleTag.toLowerCase());
-            if (!subject) {
-              skip(m.id, `player ${pick.subject.battleTag} not found in the replay`);
-              continue;
-            }
-            db.prepare("INSERT INTO ref_matches VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run(
-              record.gameKey, m.id, m.gateWay, m.season, m.startTime, m.mapName ?? m.map,
-              pick.subject.battleTag, subject.playerId, pick.subject.oldMmr,
-              pick.opponent.battleTag, W3C_RACE[pick.opponent.race] ?? null, pick.opponent.oldMmr,
-              pick.subject.won ? 1 : 0, build, new Date().toISOString(),
-            );
-            const sim = await simulateGame(record, { dataRoot: paths.root, warcraftDocuments: opts.config.warcraftDocuments, gamedataRoot: opts.gamedataRoot });
-            applySim(ref, record.gameKey, sim);
-            // The game's own score sheet: replaces our estimates where it has the number.
-            await sleep(BETWEEN_PAGES_MS);
-            const fresh = readRecord(paths, record.gameKey);
-            if (fresh) applyOfficial(ref, record.gameKey, await officialForMatch(client, m.id, fresh));
-            downloaded++;
-            kept++;
-            log(`${group.id}: ${kept}/${target} ${pick.subject.battleTag} (${pick.subject.oldMmr}) vs ${pick.opponent.battleTag} on ${m.mapName ?? m.map}${sim.status === "ok" ? "" : ` (simulation failed: ${sim.reason})`}`);
+      log(`${group.id}: ${kept}/${target} games; looking at warcraft3.info`);
+      outer: for (let page = 1; page <= MAX_PAGES; page++) {
+        const list = await client.listReplays(page);
+        for (const r of list.replays) {
+          if (kept >= target) break outer;
+          const id = `w3info:${r.id}`;
+          if (r.duration < MIN_DURATION_S || seen(id)) continue;
+          const pick = w3iSubjects(r, group.race).find((x) => gamesOf(x.subject.stats_player!.name) < perPlayerCap);
+          if (!pick) continue;
+          if (opts.shouldPause?.()) {
+            stop("paused: Warcraft III is running");
+            break outer;
           }
-          await sleep(BETWEEN_PAGES_MS);
+          if (downloaded + skipped >= (opts.maxDownloads ?? MAX_DOWNLOADS_PER_RUN)) {
+            stop(`looked at ${downloaded + skipped} replays this run; run it again for more`);
+            break outer;
+          }
+          await sleep(BETWEEN_DOWNLOADS_MS);
+          const buffer = await client.download(r.id);
+          if (!buffer) {
+            skip(id, "replay not available");
+            continue;
+          }
+          let build: number;
+          try {
+            build = (await parseReplay(buffer)).output.buildNumber;
+          } catch (e) {
+            skip(id, `unparsable: ${(e as Error).message}`);
+            continue;
+          }
+          if (opts.replayBuild !== null && build !== opts.replayBuild) {
+            skip(id, `replay build ${build}, current ${opts.replayBuild}`);
+            if (++oldStreak >= OLD_PATCH_STREAK) {
+              log(`${group.id}: reached games from before your patch`);
+              break outer;
+            }
+            continue;
+          }
+          oldStreak = 0;
+          const file = join(incoming, `${r.id}.w3g`);
+          writeFileSync(file, buffer);
+          const out = await ingestFile(ref, file);
+          unlinkSync(file);
+          // Anything but a brand-new game (an error, or a game we already have from another source).
+          if (out.status !== "new") {
+            skip(id, out.status === "error" ? out.error : "duplicate game");
+            continue;
+          }
+          const record = out.record;
+          const subject = record.players.find((p) => p.name.toLowerCase() === pick.subject.player.toLowerCase());
+          if (!subject) {
+            skip(id, `player ${pick.subject.player} not found in the replay`);
+            continue;
+          }
+          const opponent = record.players.find((p) => p.playerId !== subject.playerId);
+          db.prepare("INSERT INTO ref_matches VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run(
+            record.gameKey, id, null, null, r.created_at, r.map,
+            pick.subject.stats_player!.name, subject.playerId, null,
+            pick.opponent.stats_player?.name ?? pick.opponent.player, w3iRace(pick.opponent.race), null,
+            subject.result === "win" ? 1 : subject.result === "loss" ? 0 : null, build, new Date().toISOString(),
+          );
+          const sim = await simulate(record);
+          applySim(ref, record.gameKey, sim);
+          downloaded++;
+          kept++;
+          log(`${group.id}: ${kept}/${target} ${pick.subject.stats_player!.name} vs ${opponent?.name.replace(/#\d+$/, "") ?? "?"} (${r.map.replace(/\.w3[xm]$/, "")})${sim.status === "ok" ? "" : ` (simulation failed: ${sim.reason})`}`);
         }
+        if (page >= list.lastPage) break;
+        await sleep(BETWEEN_PAGES_MS);
       }
     } catch (e) {
       if (!(e instanceof RateLimited)) throw e;

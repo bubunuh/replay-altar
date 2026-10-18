@@ -1,7 +1,7 @@
 // Electron main process: one window, read-mostly access to the W3Stats database.
-import { execFile } from "node:child_process";
+import { execFile, spawn, type ChildProcess } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, watch, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { app, BrowserWindow, ipcMain, nativeTheme, shell } from "electron";
 import { aiNotReady, analyzeGame, ModelServer, readAnalysis } from "@w3stats/ai";
@@ -120,6 +120,36 @@ if (!app.requestSingleInstanceLock()) {
   let queue: Promise<unknown> = Promise.resolve();
   const runningAi = new Set<string>();
   app.on("will-quit", () => model?.server.stop());
+  // "Update pro games": runs `w3stats ref refresh` (download + simulation take minutes) and
+  // streams its lines to the page.
+  let refUpdate: ChildProcess | null = null;
+  const refLog: string[] = [];
+  app.on("will-quit", () => refUpdate?.kill("SIGTERM"));
+  ipcMain.handle("ref:updateStatus", () => ({ running: refUpdate !== null, log: refLog.slice(-40) }));
+  ipcMain.handle("ref:update", (e) => {
+    if (refUpdate) return false;
+    refLog.length = 0;
+    const cli = process.env.W3STATS_CLI ?? join(homedir(), ".local/bin/w3stats");
+    const child = spawn(cli, ["ref", "refresh"], { stdio: ["ignore", "pipe", "pipe"] });
+    refUpdate = child;
+    const send = (channel: string, ...args: unknown[]) => {
+      if (!e.sender.isDestroyed()) e.sender.send(channel, ...args);
+    };
+    const onData = (chunk: Buffer) => {
+      for (const line of chunk.toString().split("\n").filter(Boolean)) {
+        refLog.push(line);
+        send("ref:progress", line);
+      }
+    };
+    child.stdout?.on("data", onData);
+    child.stderr?.on("data", onData);
+    child.on("error", (err) => onData(Buffer.from(`could not start ${cli}: ${err.message}`)));
+    child.on("close", (code) => {
+      refUpdate = null;
+      send("ref:done", code);
+    });
+    return true;
+  });
   ipcMain.handle("ai:get", (_e, key: string) => readAnalysis(p, key));
   ipcMain.handle("ai:status", () => ({ problem: aiNotReady(loadConfig().ai), warcraftRunning: isWarcraftRunning(), running: [...runningAi] }));
   ipcMain.handle("ai:run", (e, key: string) => {

@@ -20,7 +20,7 @@ export type W3cMatch = {
   teams: { players: W3cPlayer[] }[];
 };
 
-export type Fetch = (url: string, init?: { headers?: Record<string, string> }) => Promise<{ status: number; headers: { get(name: string): string | null }; json(): Promise<unknown>; arrayBuffer(): Promise<ArrayBuffer> }>;
+export type Fetch = (url: string, init?: { method?: string; body?: string; headers?: Record<string, string> }) => Promise<{ status: number; headers: { get(name: string): string | null }; json(): Promise<unknown>; arrayBuffer(): Promise<ArrayBuffer> }>;
 
 export type W3cScore = {
   battleTag: string;
@@ -97,12 +97,3 @@ export function w3cClient(opts: { fetch?: Fetch; sleep?: (ms: number) => Promise
   };
 }
 
-/** The player this game is about: right race, MMR at or above the group's threshold, in a 1v1. */
-export function pickSubject(m: W3cMatch, race: "H" | "O" | "U" | "N", minMmr: number): { subject: W3cPlayer; opponent: W3cPlayer } | null {
-  const players = m.teams.flatMap((t) => t.players);
-  if (m.gameMode !== 1 || players.length !== 2) return null;
-  const candidates = players.filter((p) => W3C_RACE[p.race] === race && p.oldMmr >= minMmr).sort((a, b) => b.oldMmr - a.oldMmr);
-  if (!candidates.length) return null;
-  const subject = candidates[0];
-  return { subject, opponent: players.find((p) => p !== subject)! };
-}

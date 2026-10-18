@@ -45,8 +45,9 @@ const HELP = `w3stats — Warcraft III replay archive & stats
   w3stats sim --rerun         simulate every analyzed game again
   w3stats sim --resummarize   recompute economy numbers from stored simulations (after a model update)
   w3stats sim <game>          simulate one game
-  w3stats ref                 reference groups (pro games from W3Champions): status
-  w3stats ref refresh [--target N] [--group id]   download/simulate missing reference games now
+  w3stats ref                 pro reference games: status
+  w3stats ref refresh [--target N] [--group id]   download recent tournament games from warcraft3.info
+                              until each of your races has its target (same as "Update pro games")
   w3stats ref profile         rebuild the reference statistics from stored games
   w3stats official            fetch the game's own end-of-game stats from W3Champions for W3C games
                               (yours and reference games) that don't have them yet
@@ -240,13 +241,13 @@ switch (cmd) {
         console.log(`${g.id}: profile from ${p.games} games`);
       }
     } else {
-      console.log(`current replay build: ${build ?? "unknown (no games yet)"}; refresh every ${config.reference.refreshDays} days`);
+      console.log(`current replay build: ${build ?? "unknown (no games yet)"}; update with \`w3stats ref refresh\` or "Update pro games" in Settings`);
       for (const g of groups) {
         const ref = openReference(g.id, config);
         const st = readState(ref.paths.root);
         const n = (ref.db.prepare("SELECT COUNT(*) n FROM ref_matches").get() as { n: number }).n;
         const sims = ref.db.prepare("SELECT COALESCE(sim_status, 'none') s, COUNT(*) n FROM games GROUP BY 1").all() as { s: string; n: number }[];
-        const byMu = ref.db.prepare("SELECT 'Hv' || opp_race mu, COUNT(*) n FROM ref_matches GROUP BY 1").all() as { mu: string; n: number }[];
+        const byMu = ref.db.prepare("SELECT ? || 'v' || opp_race mu, COUNT(*) n FROM ref_matches GROUP BY 1").all(g.race) as { mu: string; n: number }[];
         console.log(`${g.label} [${g.id}]: ${n}/${g.target} games (${byMu.map((x) => `${x.mu} ${x.n}`).join(", ") || "none"}); simulations ${sims.map((x) => `${x.s} ${x.n}`).join(", ") || "none"}`);
         console.log(`  last refresh: ${st.lastRefreshAt ?? "never"}; data in ${ref.paths.root}`);
       }
@@ -274,7 +275,7 @@ switch (cmd) {
     // Reference groups: the W3C match id is known.
     for (const g of activeReferenceGroups(c.config, racesPlayed(c.db))) {
       const ref = openReference(g.id, c.config);
-      for (const { game_key, w3c_match_id } of ref.db.prepare("SELECT game_key, w3c_match_id FROM ref_matches").all() as { game_key: string; w3c_match_id: string }[]) {
+      for (const { game_key, w3c_match_id } of ref.db.prepare("SELECT game_key, w3c_match_id FROM ref_matches WHERE w3c_match_id NOT LIKE 'w3info:%'").all() as { game_key: string; w3c_match_id: string }[]) {
         const record = readRecord(ref.paths, game_key);
         if (!record || record.official?.status === "ok") continue;
         const off = await officialForMatch(client, w3c_match_id, record);

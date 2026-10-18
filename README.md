@@ -19,7 +19,7 @@ Local Warcraft III replay archive and stats. A background service saves every re
 | `w3stats setup-sim` | One-time setup for the economy simulation (WC3V engine, its packages, unit costs from your WC3 install) |
 | `w3stats sim` | Simulation status; `--backfill`, `--retry-failed`, `--rerun`, `--resummarize` |
 | `w3stats official` | Fetch the game's own end-of-game stats from W3Champions for W3C games that lack them (the collector does this by itself for new games) |
-| `w3stats ref` | Pro reference games: status. `ref refresh [--target N]` downloads more now, `ref profile` rebuilds the statistics |
+| `w3stats ref` | Pro reference games: status. `ref refresh [--target N]` updates them (same as "Update pro games"), `ref profile` rebuilds the statistics |
 | `w3stats ai <game\|latest>` | AI analysis of one game with the local model (same as the button in a match). `--facts` prints what the model would get |
 
 To remove everything, run `w3stats uninstall --purge` (this also deletes the `localhost/w3stats-casc` podman image), then delete `~/Projects/w3stats`.
@@ -37,7 +37,8 @@ To remove everything, run `w3stats uninstall --purge` (this also deletes the `lo
 | Simulation output per game | `~/.local/share/w3stats/sim/out/` |
 | Unit/item costs from your install (per game version) | `~/.local/share/w3stats/sim/gamedata/<version>/` |
 | Simulation engine and its map data | `~/Projects/w3stats/vendor/wc3v` (`mapdata/`, `client/maps/`, `helpers/UnitBalance.json` are generated there) |
-| Pro reference games (W3Champions downloads, own database, `profile.json`) | `~/.local/share/w3stats/reference/pros/` |
+| Pro reference games (own database, `profile.json`), one folder per race | `~/.local/share/w3stats/reference/pros/` (Human), `pros-orc/`, `pros-undead/`, `pros-nightelf/` |
+| Maps downloaded for tournament games | `~/.local/share/w3stats/maps/` |
 | Game-data extractor | podman image `localhost/w3stats-casc` (reads your install through a throwaway overlay; never writes to it) |
 | AI analyses (review + everything the model was given) | `~/.local/share/w3stats/ai/<game>.json`, model server log `ai/server.log` |
 | Local model (not part of W3Stats) | `~/models/unsloth/gemma-4-26B-A4B-it-GGUF/` (model, MTP drafter, chat template), run by `~/.local/bin/llama-server` |
@@ -57,11 +58,13 @@ To remove everything, run `w3stats uninstall --purge` (this also deletes the `lo
 
 ## Pro comparison
 
-The collector downloads public replays of Human players rated 2400+ MMR from W3Champions and analyzes them locally with the same pipeline.
+Your numbers are compared with 50 games per race of tournament players, analyzed locally with the same pipeline.
 
-- **Download pace:** one replay every 10 s, at most 15 per run, and it stops at the first "slow down" answer.
-- **Schedule:** it tops up every 6 hours until it has 50 games, then refreshes weekly. It never downloads while Warcraft III is running.
-- **Patch:** only games from your current patch (replay build) are kept.
+- **Updating:** only when you ask, with **Update pro games** in Settings or `w3stats ref refresh`. Nothing downloads in the background.
+- **Source:** [warcraft3.info](https://warcraft3.info/replays/), a community archive of tournament replays. A game counts when it's 1v1, at least 3 minutes long, and the player has a curated profile on the site (tournament players) and played your race. At most 5 games per player, so one pro doesn't dominate. The first 43 Human games came from the W3Champions ladder (2400+ MMR) before the switch.
+- **Download pace:** one replay every 3 s, at most 120 looked at per update. It stops at the first "slow down" answer.
+- **Maps:** tournaments often play map versions you don't have. These are downloaded from warcraft3.info, checked against the checksum in the replay, and stored in `~/.local/share/w3stats/maps/`, never in your game folder.
+- **Patch:** only games from your current patch (replay build) are kept; older ones are dropped at the next update.
 - **In the app:** charts show the pros' median and middle 50% in grey, and tables show where you stand.
 - **Your race:** you're compared with pros of the race you played. Orc, Undead and Night Elf pro games are only downloaded once you've played that race.
 

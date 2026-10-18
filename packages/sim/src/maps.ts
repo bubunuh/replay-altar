@@ -1,19 +1,25 @@
-// Makes sure WC3V has map data for a replay's map, extracting it from the local Maps folder.
+// Makes sure WC3V has map data for a replay's map, extracting it from the local Maps folder
+// (or extra folders, e.g. maps W3Stats downloaded for tournament games).
 import { execFileSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { WC3V_DIR } from "./paths.ts";
 
-/** WC3V's folder name for a map: "(2)EchoIsles_S2_v2.2.w3x" -> "EchoIsles_S2_v2.2". */
+/**
+ * WC3V's folder name for a map, as its data-tool names it (normalizeW3xFilename there):
+ * "(2)EchoIsles_S2_v2.2.w3x" -> "EchoIsles_S2_v2.2", "59_w3c_251104_0950_X_v2.4" -> "X_v2.4",
+ * "w3c_260816_0950_FairyTale_v1.3.1" -> "260816_0950_FairyTale_v1.3.1".
+ */
 export function mapDataName(file: string) {
-  return file
-    .replace(/\.w3[xm]$/i, "")
-    .replace(/^\(\d+\)/, "")
-    .replace(/^\d+_w3c_\d+_\d+_/, "");
+  const sanitize = (n: string) => n.replace(/\s+/g, "").replace(/[^A-Za-z0-9_\-.']/g, "").trim();
+  const name = basename(file).replace(/\.w3[xm]$/i, "").replace(/^\(\d+\)/, "");
+  const match = name.match(/^1v1_(.+?)_w3c_\d+_\d+_\d+$/) ?? name.match(/^\d+_w3c_\d+_\d+_(.+)$/) ?? name.match(/^w3c_s\d+(?:\.\d+)?_(.+)$/);
+  if (match) return sanitize(match[1]);
+  return sanitize(name.startsWith("w3c_") ? name.slice(4) : name);
 }
 
-function findMapFile(warcraftDocuments: string[], file: string): string | null {
+function findMapFile(warcraftDocuments: string[], file: string, extraDirs: string[] = []): string | null {
   const walk = (dir: string): string | null => {
     for (const e of readdirSync(dir, { withFileTypes: true })) {
       const p = join(dir, e.name);
@@ -24,8 +30,7 @@ function findMapFile(warcraftDocuments: string[], file: string): string | null {
     }
     return null;
   };
-  for (const docs of warcraftDocuments) {
-    const maps = join(docs, "Maps");
+  for (const maps of [...warcraftDocuments.map((d) => join(d, "Maps")), ...extraDirs]) {
     if (existsSync(maps)) {
       const hit = walk(maps);
       if (hit) return hit;
@@ -35,14 +40,15 @@ function findMapFile(warcraftDocuments: string[], file: string): string | null {
 }
 
 /** Returns null when ready, or the reason the map can't be prepared. */
-export function ensureMapData(mapFile: string, warcraftDocuments: string[]): string | null {
+export function ensureMapData(mapFile: string, warcraftDocuments: string[], extraDirs: string[] = []): string | null {
   const name = mapDataName(mapFile);
   if (existsSync(join(WC3V_DIR, "mapdata", name))) return null;
-  const source = findMapFile(warcraftDocuments, mapFile);
+  const source = findMapFile(warcraftDocuments, mapFile, extraDirs);
   if (!source) return `map file ${mapFile} not found under Documents/Warcraft III/Maps`;
   const tmp = mkdtempSync(join(tmpdir(), "w3stats-map-"));
   try {
-    copyFileSync(source, join(tmp, mapFile));
+    // The data-tool only reads .w3x; a .w3m (classic-format map) is the same kind of archive.
+    copyFileSync(source, join(tmp, mapFile.replace(/\.w3m$/i, ".w3x")));
     mkdirSync(join(WC3V_DIR, "mapdata"), { recursive: true });
     mkdirSync(join(WC3V_DIR, "client/maps"), { recursive: true });
     const prefix = /^\d+_w3c_/.test(mapFile) ? [] : ["--prefix="];

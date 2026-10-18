@@ -1,7 +1,6 @@
 // The always-on service: archive + analyze new replays, react to Warcraft III starting.
 import { ingestFile, loadConfig, mmss, openDb, paths, replayDirs, type GameRecord } from "@w3stats/core";
 import { OfficialQueue } from "./officialqueue.ts";
-import { scheduleReferenceRefresh } from "./reference.ts";
 import { SimQueue } from "./simqueue.ts";
 import { notify, openDesktop, watchWarcraft } from "./system.ts";
 import { ReplayWatcher } from "./watcher.ts";
@@ -53,7 +52,6 @@ export async function runCollector() {
   watcher.start();
   watcher.scanAll(); // backfill + anything played while we were down
   sims.backfill();
-  const refTimer = scheduleReferenceRefresh(config, log);
 
   const wc3 = watchWarcraft(
     () => {
@@ -67,7 +65,6 @@ export async function runCollector() {
     log("stopping");
     watcher.stop();
     clearInterval(wc3);
-    clearInterval(refTimer);
     db.close();
     process.exit(0);
   };

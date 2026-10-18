@@ -35,7 +35,65 @@ export function Skipped({ games, onOpen }: { games: GameRow[]; onOpen: (key: str
   );
 }
 
-export function Settings({ refs }: { refs: RefGroupInfo[] }) {
+/** "Update pro games": downloads recent tournament games and recomputes the pro comparison. */
+function ProGames({ refs, onChanged }: { refs: RefGroupInfo[]; onChanged: () => void }) {
+  const [running, setRunning] = useState(false);
+  const [log, setLog] = useState<string[]>([]);
+  const [warcraft, setWarcraft] = useState(false);
+  useEffect(() => {
+    api.refUpdateStatus().then((s) => {
+      setRunning(s.running);
+      setLog(s.log);
+    });
+    api.aiStatus().then((s) => setWarcraft(s.warcraftRunning));
+    return api.onRefUpdate((event, value) => {
+      if (event === "progress") setLog((l) => [...l.slice(-39), String(value)]);
+      else {
+        setRunning(false);
+        onChanged();
+      }
+    });
+  }, []);
+  const start = async () => {
+    setLog([]);
+    setRunning(await api.refUpdate());
+  };
+  return (
+    <div className="card">
+      <div className="ai-head">
+        <h2>Pro games</h2>
+        <button className="btn" disabled={running} onClick={start}>
+          {running ? "Updating…" : "Update pro games"}
+        </button>
+      </div>
+      <p className="sub">
+        The games your numbers are compared with. "Update pro games" downloads recent tournament replays from warcraft3.info (players with a curated
+        profile, playing your race, on your current patch) until each race you play has its target, simulates them here, and recalculates the
+        comparison. Games from an older patch are dropped. It takes a few minutes and uses the processor; best not while you play.
+      </p>
+      {warcraft && !running && <p className="sub">Warcraft III is running: the update would slow the game down.</p>}
+      <table>
+        <tbody>
+          {refs.map((r) => (
+            <tr key={r.group.id}>
+              <td>{r.group.label}</td>
+              <td className="small">
+                {r.profile ? `${r.profile.games} games` : "no games yet"} of {r.group.target}
+                {r.profile && ` (${Object.entries(r.profile.matchups).filter(([k]) => k !== "all").map(([k, v]) => `${k} ${v.n}`).join(", ")})`}
+                {r.state?.lastRefreshAt && ` · updated ${new Date(r.state.lastRefreshAt).toLocaleString()}`}
+                {r.group.onlyIfPlayed && !r.profile && " · downloaded once you play this race"}
+              </td>
+              <td><button className="btn" onClick={() => api.openPath(r.root)}>Open</button></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {log.length > 0 && <pre className="ai-facts">{log.join("\n")}</pre>}
+    </div>
+  );
+}
+
+export function Settings({ refs, onRefsChanged }: { refs: RefGroupInfo[]; onRefsChanged: () => void }) {
   const [state, setState] = useState<{ config: Config; configPath: string; paths: Paths } | null>(null);
   const [accounts, setAccounts] = useState("");
   const [saved, setSaved] = useState(false);
@@ -75,30 +133,7 @@ export function Settings({ refs }: { refs: RefGroupInfo[] }) {
           <label><input type="checkbox" checked={config.notifyAfterGame} onChange={(e) => save({ ...config, notifyAfterGame: e.target.checked })} />Notify me after each analyzed game</label>
         </div>
       </div>
-      <div className="card">
-        <h2>Reference games</h2>
-        <p className="sub">
-          Pro games downloaded from W3Champions (public replays), analyzed and simulated locally. Topped up every 6 hours until full, then
-          refreshed every {state.config.reference.refreshDays} days; never while Warcraft III is running. Only games from your current patch are kept.
-        </p>
-        <table>
-          <tbody>
-            {refs.map((r) => (
-              <tr key={r.group.id}>
-                <td>{r.group.label}</td>
-                <td className="small">
-                  {r.profile ? `${r.profile.games} games` : "no games yet"} of {r.group.target}
-                  {r.profile && ` (${Object.entries(r.profile.matchups).filter(([k]) => k !== "all").map(([k, v]) => `${k} ${v.n}`).join(", ")})`}
-                  {r.state?.lastRefreshAt && ` · last refresh ${new Date(r.state.lastRefreshAt).toLocaleString()}`}
-                  {r.state?.lastResult?.stopReason && ` · ${r.state.lastResult.stopReason}`}
-                </td>
-                <td><button className="btn" onClick={() => api.openPath(r.root)}>Open</button></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <p className="sub" style={{ marginTop: 12 }}>Refresh now: <code>w3stats ref refresh</code> · status: <code>w3stats ref</code></p>
-      </div>
+      <ProGames refs={refs} onChanged={onRefsChanged} />
       <div className="card">
         <h2>Where things live</h2>
         <table>

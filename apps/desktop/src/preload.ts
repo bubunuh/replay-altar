@@ -12,6 +12,19 @@ const api = {
   referenceProfiles: () => ipcRenderer.invoke("ref:profiles"),
   showFile: (file: string) => ipcRenderer.invoke("shell:showFile", file),
   openPath: (dir: string) => ipcRenderer.invoke("shell:openPath", dir),
+  refUpdate: () => ipcRenderer.invoke("ref:update"),
+  refUpdateStatus: () => ipcRenderer.invoke("ref:updateStatus"),
+  /** Lines from a running pro-games update, then its exit code; returns a function that stops listening. */
+  onRefUpdate: (fn: (event: "progress" | "done", value: string | number | null) => void) => {
+    const progress = (_e: unknown, line: string) => fn("progress", line);
+    const done = (_e: unknown, code: number | null) => fn("done", code);
+    ipcRenderer.on("ref:progress", progress);
+    ipcRenderer.on("ref:done", done);
+    return () => {
+      ipcRenderer.removeListener("ref:progress", progress);
+      ipcRenderer.removeListener("ref:done", done);
+    };
+  },
   aiGet: (key: string) => ipcRenderer.invoke("ai:get", key),
   aiStatus: () => ipcRenderer.invoke("ai:status"),
   aiRun: (key: string) => ipcRenderer.invoke("ai:run", key),

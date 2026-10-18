@@ -81,7 +81,7 @@ function App() {
         ) : page === "skipped" ? (
           <Skipped games={games} onOpen={open} />
         ) : (
-          <Settings refs={refs} />
+          <Settings refs={refs} onRefsChanged={load} />
         )}
       </main>
     </div>

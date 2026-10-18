@@ -5,13 +5,13 @@ import { dirname, join } from "node:path";
 export type ReferenceGroup = {
   id: string;
   label: string;
-  /** W3Champions MMR the subject player must have at least. */
+  /** Unused since the source is warcraft3.info (tournament players); kept for old settings files. */
   minMmr: number;
   /** Race of the subject player (the one compared with you). */
   race: "H" | "O" | "U" | "N";
   /** How many current-patch games to keep. */
   target: number;
-  /** W3Champions gateways to search: 20 = Europe, 10 = Americas. */
+  /** Unused since the source is warcraft3.info; kept for old settings files. */
   gateways: number[];
   /** Only download for this group once you have played a game as its race. */
   onlyIfPlayed?: boolean;
@@ -42,8 +42,8 @@ export type Config = {
   openWindowOnGameStart: boolean;
   /** Desktop notification after each analyzed game. */
   notifyAfterGame: boolean;
-  /** Reference games downloaded from W3Champions to compare against. */
-  reference: { refreshDays: number; groups: ReferenceGroup[] };
+  /** Pro games (warcraft3.info tournament replays) to compare against; updated on request. */
+  reference: { groups: ReferenceGroup[] };
   ai: AiConfig;
 };
 
@@ -56,12 +56,11 @@ export const DEFAULT_CONFIG: Config = {
   openWindowOnGameStart: true,
   notifyAfterGame: true,
   reference: {
-    refreshDays: 7,
     groups: [
-      { id: "pros", label: "Human pros (2400+ MMR)", minMmr: 2400, race: "H", target: 50, gateways: [20, 10] },
-      { id: "pros-orc", label: "Orc pros (2400+ MMR)", minMmr: 2400, race: "O", target: 50, gateways: [20, 10], onlyIfPlayed: true },
-      { id: "pros-undead", label: "Undead pros (2400+ MMR)", minMmr: 2400, race: "U", target: 50, gateways: [20, 10], onlyIfPlayed: true },
-      { id: "pros-nightelf", label: "Night Elf pros (2400+ MMR)", minMmr: 2400, race: "N", target: 50, gateways: [20, 10], onlyIfPlayed: true },
+      { id: "pros", label: "Human pros", minMmr: 2400, race: "H", target: 50, gateways: [20, 10] },
+      { id: "pros-orc", label: "Orc pros", minMmr: 2400, race: "O", target: 50, gateways: [20, 10], onlyIfPlayed: true },
+      { id: "pros-undead", label: "Undead pros", minMmr: 2400, race: "U", target: 50, gateways: [20, 10], onlyIfPlayed: true },
+      { id: "pros-nightelf", label: "Night Elf pros", minMmr: 2400, race: "N", target: 50, gateways: [20, 10], onlyIfPlayed: true },
     ],
   },
   ai: {
@@ -92,6 +91,8 @@ export const paths = (root = dataDir()) => {
     raw: join(root, "raw"),
     events: join(root, "events.jsonl"),
     ai: join(root, "ai"),
+    /** Maps W3Stats downloaded (tournament versions you don't have); never the game's folder. */
+    maps: join(root, "maps"),
   };
 };
 

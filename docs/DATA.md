@@ -171,10 +171,12 @@ One file per analyzed game, written by `w3stats ai` or the button. `reingest` ne
 
 - **One group per race:** Human pros (`pros`), plus Orc, Undead and Night Elf groups that only download once you have played that race (`onlyIfPlayed`).
 - **Matching:** pages and exports compare you with the group for the race you played.
+- **Source and updates:** tournament replays from warcraft3.info, on request only (`w3stats ref refresh`, "Update pro games"). See the README for the rules. Older games in the Human group came from the W3Champions ladder; they keep their official stats.
+- **Maps:** map versions you don't have are fetched by the SHA-1 in the replay header and stored in `maps/` in your data folder.
 
 - **Layout:** the same files as your data (`archive/`, `games/`, `raw/`, `sim/out/`), plus `reference.sqlite`. Records are "observed", so both players have metrics.
 - **Tables:**
-  - `ref_matches`: W3Champions match id, the subject player (the Human compared with you) with MMR, opponent and race, replay build.
+  - `ref_matches`: source id (a W3Champions match id, or `w3info:<replay id>` for warcraft3.info), the subject player (the one compared with you; MMR only for W3Champions games), opponent and race, result, replay build.
   - `ref_skipped`: matches not kept, with the reason.
   - `ref_metric_stats`: per matchup (`HvO`…, `all`), each metric's n and p10/p25/p50/p75/p90.
 - **`profile.json`:** the same statistics, plus the sorted values used for percentiles and per-minute curves (p25/p50/p75; at least 5 games per minute) for APM, workers, spending, food and army food.

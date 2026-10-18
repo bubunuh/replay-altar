@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { afterAll, describe, expect, test } from "vitest";
 import { DEFAULT_CONFIG, paths } from "@w3stats/core";
 import { simNotReady } from "@w3stats/sim";
-import { officialForOwnGame, percentileOf, pickSubject, quantile, RateLimited, refreshDue, refreshGroup, summarizeValues, w3cClient, type Fetch, type W3cClient, type W3cMatch, type W3cScore } from "../src/index.ts";
+import { officialForOwnGame, percentileOf, quantile, RateLimited, refreshGroup, summarizeValues, w3cClient, w3iSubjects, type Fetch, type W3cClient, type W3cMatch, type W3cScore, type W3iClient, type W3iReplay } from "../src/index.ts";
 import { mergeOfficial, type GameRecord } from "@w3stats/core";
 
 const FIX = join(import.meta.dirname, "../../../fixtures/replays");
@@ -14,33 +14,24 @@ const match = (id: string, a: [string, number, number], b: [string, number, numb
   ...extra,
 });
 
-describe("choosing the player to compare with", () => {
-  test("a Human at or above the MMR threshold", () => {
-    expect(pickSubject(match("1", ["Pro#1", 1, 2500], ["Opp#2", 2, 2450]), "H", 2400)?.subject.battleTag).toBe("Pro#1");
-  });
-  test("below the threshold, Random, or not 1v1: none", () => {
-    expect(pickSubject(match("1", ["Low#1", 1, 2300], ["Opp#2", 2, 2600]), "H", 2400)).toBeNull();
-    expect(pickSubject(match("1", ["Rnd#1", 0, 2600], ["Opp#2", 2, 2600]), "H", 2400)).toBeNull();
-    expect(pickSubject(match("1", ["Pro#1", 1, 2500], ["Opp#2", 2, 2450], { gameMode: 2 }), "H", 2400)).toBeNull();
-  });
-  test("Human mirror: the higher-rated Human", () => {
-    expect(pickSubject(match("1", ["A#1", 1, 2450], ["B#2", 1, 2600]), "H", 2400)?.subject.battleTag).toBe("B#2");
-  });
+// A warcraft3.info list entry: players as [battletag, race, curated profile name or null].
+const replay = (id: number, a: [string, string, string | null], b: [string, string, string | null], extra: Partial<W3iReplay> = {}): W3iReplay => ({
+  id, type: "1on1", duration: 900, map: "w3c_Concealed.w3x", created_at: "2026-10-17T00:00:00Z",
+  players: [a, b].map(([player, race, name], i) => ({ player, race, team: i + 1, stats_player: name ? { id: i, name, main_race: race } : null })),
+  ...extra,
 });
 
-describe("when to refresh", () => {
-  const H = 3600_000;
-  const now = Date.parse("2026-10-20T12:00:00Z");
-  const at = (hoursAgo: number) => new Date(now - hoursAgo * H).toISOString();
-  const base = { kept: 50, target: 50, refreshDays: 7, checkEveryMs: 6 * H, now };
-  test("never refreshed: now", () => expect(refreshDue({ ...base, lastRefreshAt: null })).toBe(true));
-  test("full: only after a week", () => {
-    expect(refreshDue({ ...base, lastRefreshAt: at(24 * 6) })).toBe(false);
-    expect(refreshDue({ ...base, lastRefreshAt: at(24 * 7 + 1) })).toBe(true);
+describe("choosing the player to compare with", () => {
+  test("a player with a curated profile, playing the group's race", () => {
+    expect(w3iSubjects(replay(1, ["pro#1", "Human", "Pro"], ["opp#2", "Orc", "Opp"]), "H").map((x) => x.subject.player)).toEqual(["pro#1"]);
   });
-  test("still filling: every check, but not right after the last attempt", () => {
-    expect(refreshDue({ ...base, kept: 28, lastRefreshAt: at(6) })).toBe(true);
-    expect(refreshDue({ ...base, kept: 28, lastRefreshAt: at(2) })).toBe(false);
+  test("no profile, another race, or not 1v1: none", () => {
+    expect(w3iSubjects(replay(1, ["anon#1", "Human", null], ["opp#2", "Orc", "Opp"]), "H")).toEqual([]);
+    expect(w3iSubjects(replay(1, ["pro#1", "Orc", "Pro"], ["opp#2", "Orc", "Opp"]), "H")).toEqual([]);
+    expect(w3iSubjects(replay(1, ["pro#1", "Human", "Pro"], ["opp#2", "Orc", "Opp"], { type: "2on2" }), "H")).toEqual([]);
+  });
+  test("a mirror gives both players as candidates", () => {
+    expect(w3iSubjects(replay(1, ["a#1", "Human", "A"], ["b#2", "Human", "B"]), "H")).toHaveLength(2);
   });
 });
 
@@ -116,41 +107,41 @@ const realData = paths().root;
 const files = ["Macro_loss.w3g", "Victory-1v1-oct-2026.w3g", "victory_vs_elf.w3g"];
 const canRun = simNotReady(realData) === null && files.every((f) => existsSync(join(FIX, f)));
 
-describe.skipIf(!canRun)("refreshing a reference group (fake W3Champions, real simulation)", () => {
+describe.skipIf(!canRun)("refreshing a reference group (fake warcraft3.info, real simulation)", () => {
   const before = process.env.W3STATS_DATA;
   process.env.W3STATS_DATA = mkdtempSync(join(tmpdir(), "w3stats-ref-"));
   afterAll(() => {
     if (before === undefined) delete process.env.W3STATS_DATA;
     else process.env.W3STATS_DATA = before;
   });
-  // Pretend Pedrovisk is a 2500-MMR Human pro in the fixture games.
-  const fakeMatches = [
-    match("m-old", ["Pedrovisk#1486", 1, 2500], ["x#1", 2, 2400]),
-    match("m1", ["Pedrovisk#1486", 1, 2500], ["OSTAS#21855", 8, 2400]),
-    match("m2", ["Low#1", 1, 1500], ["y#1", 2, 2400]),
-    match("m3", ["Pedrovisk#1486", 1, 2500], ["гнилой#21118", 4, 2400]),
-    match("m4", ["Pedrovisk#1486", 1, 2500], ["Lucky392cake#2107", 4, 2400]),
+  // Pretend Pedrovisk is a tournament Human with a profile in the fixture games.
+  const list = [
+    replay(10, ["pedrovisk#1486", "Human", "Pedrovisk"], ["x#1", "Orc", "X"]),
+    replay(11, ["pedrovisk#1486", "Human", "Pedrovisk"], ["ostas#21855", "Undead", null]),
+    replay(12, ["nobody#1", "Human", null], ["y#1", "Orc", "Y"]),
+    replay(13, ["pedrovisk#1486", "Human", "Pedrovisk"], ["гнилой#21118", "Night Elf", null], { duration: 60 }),
+    replay(14, ["pedrovisk#1486", "Human", "Pedrovisk"], ["гнилой#21118", "Night Elf", null]),
+    replay(15, ["pedrovisk#1486", "Human", "Pedrovisk"], ["lucky392cake#2107", "Night Elf", null]),
   ];
-  const replayFor: Record<string, string> = { "m-old": "Macro_loss.w3g", m1: "Macro_loss.w3g", m3: "Victory-1v1-oct-2026.w3g", m4: "victory_vs_elf.w3g" };
-  const downloads: string[] = [];
-  const client: W3cClient = {
-    currentSeason: async () => 25,
-    matchDetail: async () => null,
-    searchPlayerMatches: async () => [],
-    listMatches: async (q) => ({ count: fakeMatches.length, matches: q.offset === 0 && q.gateway === 20 ? fakeMatches : [] }),
-    downloadReplay: async (id) => {
+  const replayFor: Record<number, string> = { 10: "Macro_loss.w3g", 11: "Macro_loss.w3g", 13: "Victory-1v1-oct-2026.w3g", 14: "Victory-1v1-oct-2026.w3g", 15: "victory_vs_elf.w3g" };
+  const downloads: number[] = [];
+  const client: W3iClient = {
+    listReplays: async (page) => ({ replays: page === 1 ? list : [], lastPage: 1 }),
+    mapFiles: async () => [],
+    downloadMap: async () => null,
+    download: async (id) => {
       downloads.push(id);
       return readFileSync(join(FIX, replayFor[id]));
     },
   };
 
-  test("downloads up to the target, skips other patches, builds a profile", async () => {
+  test("downloads up to the target, skips duplicates, short games and players without a profile", async () => {
     const group = { ...DEFAULT_CONFIG.reference.groups[0], target: 2 };
     const res = await refreshGroup(group, { config: DEFAULT_CONFIG, replayBuild: 7000, gamedataRoot: realData, client, sleep: async () => {} });
     expect(res.downloaded).toBe(2);
     expect(res.kept).toBe(2);
-    // m1 is the same game as m-old (skipped as a duplicate); m2's Human is below 2400 (never downloaded).
-    expect(downloads).toEqual(["m-old", "m1", "m3"]);
+    // 11 is the same game as 10 (duplicate); 12 has no profile and 13 is too short (never downloaded).
+    expect(downloads).toEqual([10, 11, 14]);
     expect(res.skipped).toBe(1);
     expect(res.profile.games).toBe(2);
     expect(Object.keys(res.profile.matchups).sort()).toEqual(["HvN", "HvU", "all"]);
@@ -160,9 +151,9 @@ describe.skipIf(!canRun)("refreshing a reference group (fake W3Champions, real s
   test("a rate limit mid-run keeps what was downloaded", async () => {
     const group = { ...DEFAULT_CONFIG.reference.groups[0], id: "limited", target: 5 };
     let n = 0;
-    const limited: W3cClient = {
+    const limited: W3iClient = {
       ...client,
-      downloadReplay: async (id) => {
+      download: async (id) => {
         if (++n > 1) throw new RateLimited("slow down");
         return readFileSync(join(FIX, replayFor[id]));
       },
