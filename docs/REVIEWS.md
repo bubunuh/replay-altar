@@ -215,6 +215,14 @@ units disappearing.
 
 **024039ee · win, 1207 vs 1239, UvH, 17:22.** App: no attack or armor upgrades for 15 minutes. Turning point 13:49 (≈310 vs 940), army going in 2980 vs 850. Replay: fast Halls (2:34) and Black Citadel (5:04) into Statues/Destroyers and Abominations; the lead came from a string of fights from 8:00 on (an expansion fight and creep-site fights where the Human lost ≈1600). **Partial**: a fight with a 3.5× army going in finishes a lead rather than turns the game. Fixed: when the winner already had 2× the army and +1000 going in, the turning point adds "you were already far ahead going in: your army had been bigger since 7:00".
 
+#### Average (1500-1700)
+
+**e1f508dc · loss, 1700 vs 1651, UvO, 21:02.** App: hero deaths (3 vs 0; no Town Portal, 0 potions vs 10); kept fighting with all heroes dead; heroes fell behind (31% of the XP; Lich level 3 from 11:51 while the Far Seer went 4 to 6). Turning point 15:02 (≈925 vs 400, Death Knight and Lich died). Replay: Gargoyles and Statues against 11 Wind Riders and Batriders; the Orc expanded at 12:24 and won the 15:02 fight at the Undead's towers, then pushed in with Demolishers. **Good**, except "kept fighting with all heroes dead" counted fights the Orc started at the Undead's own towers (≈1160 of the ≈1235), where retreating isn't an option. Fixed: fights they start into your towers or base no longer count; the rule now fires in 0% of pro wins and 1% of losses.
+
+**9fbf80de · win, 1528 vs 1516, UvH, 15:02.** App: no attack or armor upgrades (neither player got one); they had more bases from 6:00 to 12:00 (their expansion 3:22, yours 11:46). Strengths: 3 camps by 6:00, 64% of the hero XP. Replay: fast tech into Statues/Destroyers against a fast-expanding tower Human; the Undead's hero lead carried it. **Good.**
+
+**9fd60b64 · win, 1564 vs 1540, UvH, 15:03.** App: they had more bases from 8:00 (expansion at 5:33, none of yours); mechanics (130 APM, 29% hotkey selections). Turning point 7:19 (≈255 vs 1015). Strengths: 74% of the hero XP, 71% trades. Replay: one-base Fiends into 7 Statues/Destroyers broke a Footman/Shadow Priest army with 27 Peasants and 9 towers. **Good.**
+
 #### Pros
 
 **d9617f59 · loss, UvO, 4:15.** App: nothing stood out (game over at 4:15, ahead in army). Probably a disconnect or an early leave; nothing to judge. **Fine.**

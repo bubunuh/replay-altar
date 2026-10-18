@@ -326,7 +326,9 @@ function noHeroesFinding(c: Ctx): Finding | null {
   if (!heroes.length) return null;
   const allDead = (t: number) =>
     heroes.every((h) => h.appearAt! > t || h.deaths.some((d) => d.diedAt <= t && (d.revivedAt === null || d.revivedAt > t))) && heroes.some((h) => h.appearAt! <= t);
-  const losses = fightLosses(c.r, c.me, c.opp).filter((x) => allDead(x.f.start) || allDead((x.f.start + x.f.end) / 2));
+  // Defending your own base when they attack it can't be avoided by retreating.
+  const atHome = (x: { f: { category: string; initiatorId: number | null } }) => x.f.initiatorId === c.opp.playerId && (x.f.category === "tower-dive" || x.f.category === "base-defense");
+  const losses = fightLosses(c.r, c.me, c.opp).filter((x) => !atHome(x) && (allDead(x.f.start) || allDead((x.f.start + x.f.end) / 2)));
   const lost = losses.reduce((n, x) => n + x.me, 0);
   if (lost < 300) return null;
   return {

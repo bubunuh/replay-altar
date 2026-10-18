@@ -32,7 +32,7 @@ Shown per game (top 3): 1.50 findings in pro wins, 2.23 in pro losses.
 | `unused_lead` | army 1.5x theirs (600+ more) and at least as many workers for 4+ minutes, with no attack, expansion or 300+ of their losses in the first 4 | reviews (REVIEWS.md) | never in pros | – |
 | `window` | the opponent had no army for 4+ minutes and you neither expanded, made them lose 400+, nor out-levelled pros | Replay Altar; Warcraft3.info Human guide | 1% / 0% | rare |
 | `exposed` | you had no army for 4+ minutes while they had one | Replay Altar | 1% / 2% | rare |
-| `no_heroes` | you fought while all your heroes were dead (lost 300+) | Blizzard hero basics | 1% / 1% | rare |
+| `no_heroes` | you fought while all your heroes were dead (lost 300+; not counting their attacks on your towers or base) | Blizzard hero basics | 0% / 1% | rare |
 | `no_anti_air` | 40%+ of their recent army flew (1,200+ value) and under 25% of yours could attack air | game data | 1% / 2% | rare |
 | `mechanics` | APM and hotkey use far below pros, shown only when little else stands out | metric research | 3% / 1% | for beginners only |
 
