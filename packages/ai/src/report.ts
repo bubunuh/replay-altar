@@ -29,7 +29,8 @@ export function turningPoint(r: GameRecord, me: PlayerRecord, opp: PlayerRecord,
       ? (r.sim.players.find((x) => x.playerId === p.playerId)?.heroes ?? []).flatMap((h) => h.deaths.filter((d) => d.diedAt >= top.f.start - 10_000 && d.diedAt <= top.f.end + 30_000).map(() => nameOf(h.code)))
       : [];
   // Hero deaths from the hero timelines, plus those WC3V's battle summary counted.
-  const fromSummary = (p: PlayerRecord) => (top.f.losses?.[String(p.playerId)]?.heroes ?? []).map((code) => nameOf(code));
+  // Only heroes the player trained: the summary sometimes files an enemy hero under the wrong side.
+  const fromSummary = (p: PlayerRecord) => (top.f.losses?.[String(p.playerId)]?.heroes ?? []).filter((code) => p.heroes.some((h) => h.code === code)).map((code) => nameOf(code));
   const both = (p: PlayerRecord) => [...new Set([...heroes(p), ...fromSummary(p)])];
   const died = [...both(me).map((n) => `your ${n}`), ...both(opp).map((n) => `their ${n}`)];
   // Already far ahead going in: the fight finished a lead built earlier, so say when it began.

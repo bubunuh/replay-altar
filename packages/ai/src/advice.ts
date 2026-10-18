@@ -69,6 +69,7 @@ export function adviceFor(id: string, c: AdviceCtx): string | null {
     case "supply":
       return `Start the next ${nameOf(RACES[R].supply)} when you are 6-8 food below the cap, not when you hit it; before a big round of production, start two.`;
     case "hero_deaths":
+      if ((m.tp_bought ?? 0) > 0) return "You had a Town Portal: use it, or a potion, as soon as a fight turns, and pull a hero back once it drops under a third of its health instead of chasing; a dead hero costs gold and time to revive and gives their heroes experience.";
       return `Carry a Scroll of Town Portal (${nameOf(SHOP[R])}) and pull a hero back once it drops under a third of its health: a dead hero costs gold and time to revive and gives their heroes experience.`;
     case "no_heroes":
       return "When all your heroes are dead, retreat and wait for the revive: units without heroes lose fights and feed experience to theirs.";

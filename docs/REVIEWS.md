@@ -237,6 +237,12 @@ units disappearing.
 
 **b3244d52 · win, UvH, 12:16.** App: fights (trade 54% vs pros 53% — now silenced by the same fix); ≈5 workers lost; into upkeep before upgrades. Replay: fast expansion 2:35 and 25 Ghouls; Death Knight only at 11:01. **Partial** before the fix.
 
+**4db678b4 · loss, UvO, 23:14.** App: the recap says the game ended with your army far bigger (4565 vs 1535), so maybe a disconnect; their heroes out-levelled yours (37% of the XP although your own creeping was at pro pace); hero deaths (Lich 2x; 5 potions vs 21); supply blocked 53 s. Replay: 34 Ghouls and 8 Statues with 2/2 upgrades led in army from 2:00 to the end and won almost every fight. **Good**: the disconnect note fits, and the levelling gap is real.
+
+**9c73463f · loss, UvN, 28:15.** App: hero deaths (Death Knight and Crypt Lord at 23:31 and 23:44); heroes fell behind after 6:01; into upkeep before upgrades. Turning point 19:45 (≈1845 vs 0). Strengths: gold 22525 vs 14990. Replay: Fiends, Statues, Abominations and late Gargoyles against Dryads and 15 Druids with 3/2 upgrades; the 19:45 fight lost the army, the 23:02 fight won back ≈2110 but cost both heroes. **Good**, except the advice told a player with 2 Town Portals and 17 potions to "carry a Town Portal". Fixed: with a Town Portal bought, the advice says to use it, or a potion, as soon as a fight turns.
+
+**244499b5 · loss, UvO, 29:32.** App: heroes fell behind (0 camps by 6:00; first hero waited 256 s); mine ran dry with no second base (≈14270 gold from one base); high upkeep 893 s with no expansion. Turning point 19:08 (≈2020 vs 465). Replay: one-base Ghouls/Statues with three heroes (Dark Ranger third) against Headhunters, Kodos and Wind Riders; the Orc out-mined it all game. **Good**, except the turning point said "your Shadow Hunter and their Shadow Hunter died": WC3V's battle summary filed the Orc's hero under the Undead too. Fixed: hero deaths from the battle summary only count heroes the player trained.
+
 ### Night Elf
 
 #### Pros
