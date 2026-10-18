@@ -4,6 +4,7 @@ import { basename } from "node:path";
 import { classify, type Classification } from "./classify.ts";
 import { computeMetrics, METRICS_VERSION, SIM_METRICS, type Metrics } from "./metrics.ts";
 import { levelUpTimes } from "./heroxp.ts";
+import { dropRepeatedBuildOrders } from "./gamedata.ts";
 import { abilityName, nameOf, NAMES_SOURCE } from "./names.ts";
 import type { RawReplay } from "./parse.ts";
 import { detectResult, type ResultInfo } from "./result.ts";
@@ -127,7 +128,7 @@ export function userLabelOf(files: SourceFile[]): string | null {
 
 function buildEvents(p: RawReplay["output"]["players"][number]): BuildEvent[] {
   const kinds = [
-    ["building", p.buildings!.order],
+    ["building", dropRepeatedBuildOrders(p.buildings!.order)],
     ["unit", p.units!.order],
     ["upgrade", p.upgrades!.order],
     ["item", p.items!.order],

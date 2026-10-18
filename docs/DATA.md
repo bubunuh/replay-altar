@@ -56,6 +56,7 @@ Each metric's `source` says how much to trust it:
 
 ## Hero experience (replay)
 
+- **Repeated building orders:** re-issuing a build order re-places the same building, so the same building ordered again within 5 s counts once (build lists and building metrics; checked against the buildings the simulation placed). Training clicks are not merged: each one queues a unit.
 - **Level-ups:** each level gives one skill point, so skill-pick times are the level-up times. Retraining re-picks don't count. The replay also keeps clicks the game refused (e.g. clicking a skill 12 times), so a pick only counts if the hero could learn that rank: ranks 1/2/3 at hero level 1/3/5, ultimates once at level 6. Against official XP on 58 player-games: correlation 0.95, median error 121 XP.
 - **XP per level:** game data, 200/500/900/1,400/2,000/… up to 5,400 for level 10.
 - **XP at time t:** linear between level-ups, and exact at each one. After the last level-up it grows to half the next level by the end of the game.
@@ -160,6 +161,7 @@ One file per analyzed game, written by `w3stats ai` or the button. `reingest` ne
   - From Warcraft III guides: `hero_deaths` (official basics: keep heroes alive, carry a Town Portal), `no_heroes` (fighting while all heroes are dead), `upkeep` (above 80 food for 2+ minutes with fewer than 2 expansions), `expansion` (none in a 20+ minute game while the opponent expanded), `creeping` (creeping after all heroes reached level 5, which gives no XP).
   - **Scoring:** `node scripts/eval-findings.ts` scores every rule on the pro games, from each player of the group's race. A useful rule fires more often in losses than in wins. Two candidates were dropped this way: "late expansion" (fired for half of the pros either way) and "turtling" (fired only for pros who won).
 - **`strengths`:** core metrics at pro level.
+- **Openings** (`packages/ai/src/openings.ts`): each player's opening named after Liquipedia's build-order pages: fast altar (standard), tavern hero, Barracks/Crypt before the altar, fast Riflemen/Headhunters/Huntresses, Fiend or Ghoul opening, fast expand (hall by 4:30), fast tech (tier 2 by 3:30, with its supply count), early towers, no army in the first 5 minutes. Tower positions aren't known, so "tower rush" is never claimed. Shown in the fact sheet and the opponent's plan.
 - **`facts`:** exactly what the model was given: the findings, strengths and opponent's plan, then the fact sheet (heroes, builds, trends, a table every 2 minutes, fights, key numbers with the app's verdicts).
 - **`review`:** the model's JSON. Its shape is enforced while it is generated: `recap`, `opponent_strategy`, one `{title, explanation, next_time}` per finding id, `strengths` and `one_thing`.
 - **`unverified`:** numbers and times in the review that appear nowhere in `facts`.

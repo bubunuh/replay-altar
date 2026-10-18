@@ -164,3 +164,19 @@ export function researchLevels(build: { kind: string; code: string; ms: number }
   }
   return out;
 }
+
+/**
+ * The same building ordered again within this time is the same building: the replay keeps
+ * every click, and re-issuing a build order re-places it (one Barracks at 0:29 and "another" at
+ * 0:31 was one Barracks in the simulation). Unit training is different: each click queues one.
+ */
+export const REPEAT_BUILD_MS = 5000;
+
+export function dropRepeatedBuildOrders<T extends { id: string; ms: number }>(orders: T[]): T[] {
+  const last = new Map<string, number>();
+  return orders.filter((o) => {
+    const prev = last.get(o.id);
+    last.set(o.id, o.ms);
+    return prev === undefined || o.ms - prev > REPEAT_BUILD_MS;
+  });
+}

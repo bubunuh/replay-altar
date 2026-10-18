@@ -254,3 +254,11 @@ describe.skipIf(files.length === 0)("ingest", () => {
     expect(db.prepare("SELECT result, result_detected FROM v_games WHERE game_key = ?").get(key)).toEqual({ result: "win", result_detected: "loss" });
   });
 });
+
+describe("repeated build orders", () => {
+  test("the same building re-ordered within 5 s is one building", async () => {
+    const { dropRepeatedBuildOrders } = await import("../src/gamedata.ts");
+    const o = (ms: number, id: string) => ({ ms, id });
+    expect(dropRepeatedBuildOrders([o(29_000, "hbar"), o(31_000, "hbar"), o(40_000, "hbar"), o(41_000, "hhou")]).map((x) => x.ms)).toEqual([29_000, 40_000, 41_000]);
+  });
+});

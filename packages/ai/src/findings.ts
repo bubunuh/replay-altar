@@ -7,6 +7,7 @@ import { RACES, type RaceCode } from "@w3stats/core/gamedata";
 import { METRICS, per10Minutes } from "@w3stats/core/metrics";
 import { percentileOf } from "@w3stats/reference/quantiles";
 import { metricValue, type FactsRef } from "./facts.ts";
+import { openingOf } from "./openings.ts";
 import { at, fightLosses, mmss, sampleBoth, seriesOf, STEP_MS } from "./series.ts";
 
 export type Finding = {
@@ -407,6 +408,8 @@ export function opponentPlan(r: GameRecord, ref: FactsRef | null): string[] {
   const b = opp.build;
   const first = (codes: string[]) => b.find((x) => codes.includes(x.code))?.ms ?? null;
   const lines: string[] = [];
+  const opening = openingOf(opp);
+  if (opening.length) lines.push(`Opening: ${opening.join("; ")}.`);
   if (race) {
     const [t2, t3] = [first([race.tier2]), first([race.tier3])];
     lines.push(`Tech: tier 2 ordered ${mmss(t2)}, tier 3 ${mmss(t3)}${ref ? ` (your race's pros: ${mmss(ref.mp.metrics.tier2_ms?.p50)} and ${mmss(ref.mp.metrics.tier3_ms?.p50)})` : ""}.`);

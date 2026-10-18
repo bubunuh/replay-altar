@@ -79,3 +79,16 @@ describe("findings", () => {
     expect(plan.find((l) => l.startsWith("Towers"))).toBe("Towers: 1 build/upgrade orders, 1 of them by 5:00.");
   });
 });
+
+describe("openings", () => {
+  test("named from the first orders, as Liquipedia describes them", async () => {
+    const { openingOf } = await import("../src/openings.ts");
+    const b = (ms: number, kind: "building" | "unit", code: string, name: string) => ({ ms, kind, code, name });
+    const p = {
+      race: "H",
+      heroes: [{ code: "Hamg", name: "Archmage", levelUps: [120_000] }],
+      build: [b(11_000, "building", "halt", "Altar of Kings"), b(17_000, "building", "hhou", "Farm"), b(78_000, "building", "hhou", "Farm"), b(126_000, "building", "hgtw", "Guard Tower"), b(150_000, "building", "hwtw", "Scout Tower"), b(180_000, "building", "hkee", "Keep"), b(603_000, "unit", "hgry", "Gryphon Rider")],
+    } as unknown as Parameters<typeof openingOf>[0];
+    expect(openingOf(p)).toEqual(["fast altar (standard)", "fast tech: tier 2 at 3:00 on 2 supply buildings", "early towers: 2 tower orders by 2:30", "no army units in the first 5 minutes"]);
+  });
+});

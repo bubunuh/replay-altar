@@ -7,6 +7,7 @@ import { CORE_METRICS, MECHANICS_METRICS, METRICS, per10Minutes, type MetricDef 
 import { nameOf } from "@w3stats/core/names";
 import { assess, TIER_LABEL, TYPICAL_LABEL } from "@w3stats/reference/compare";
 import type { MatchupProfile } from "@w3stats/reference/types";
+import { openingOf } from "./openings.ts";
 import { at, fightLosses, leads, levelSum, mmss, sampleBoth, seriesOf, STEP_MS, type Sampled } from "./series.ts";
 
 export type FactsRef = { label: string; key: string; mp: MatchupProfile };
@@ -59,7 +60,9 @@ function buildLines(p: PlayerRecord): string[] {
   const tierCodes = race ? [race.tier2, race.tier3] : [];
   const [t2, t3] = TIER_NAMES[p.race as RaceCode] ?? ["Tier 2", "Tier 3"];
   const firstOrder = (code: string) => b.find((x) => x.code === code)?.ms ?? null;
+  const opening = openingOf(p);
   const lines = [
+    ...(opening.length ? [`- Opening: ${opening.join("; ")}`] : []),
     `- Tech: ${t2} ${mmss(race ? firstOrder(race.tier2) : null)}, ${t3} ${mmss(race ? firstOrder(race.tier3) : null)}`,
     `- Expansions: ${b.filter((x) => x.kind === "building" && isHall(x.code)).map((x) => mmss(x.ms)).join(", ") || "none"}`,
     `- Buildings: ${grouped(b.filter((x) => x.kind === "building" && !isTower(x.code) && !isHall(x.code) && x.code !== race?.supply && !tierCodes.includes(x.code))) || "none"}`,

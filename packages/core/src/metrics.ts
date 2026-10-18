@@ -1,11 +1,11 @@
 // Per-player numbers derived from the parsed command stream.
 // A replay holds commands, not game state: every "time" here is when an order was issued
 // (cancelled orders included), and heroes are timed by their first learned skill.
-import { CORE_UPGRADES, isRaceCode, POTION_ITEMS, RACES, researchLevels, TIER_NAMES, TOWN_PORTAL, type RaceCode } from "./gamedata.ts";
+import { CORE_UPGRADES, dropRepeatedBuildOrders, isRaceCode, POTION_ITEMS, RACES, researchLevels, TIER_NAMES, TOWN_PORTAL, type RaceCode } from "./gamedata.ts";
 import { heroesXpAt, levelUpTimes } from "./heroxp.ts";
 import type { RawReplay } from "./parse.ts";
 
-export const METRICS_VERSION = 8;
+export const METRICS_VERSION = 9;
 
 export type MetricUnit = "ms" | "count" | "apm" | "ratio" | "per_min";
 
@@ -283,7 +283,7 @@ export function computeMetrics(raw: RawReplay, playerId: number): Metrics {
 
   const race = p.raceDetected || p.race;
   const rd = isRaceCode(race) ? RACES[race] : null;
-  const buildings = p.buildings!.order;
+  const buildings = dropRepeatedBuildOrders(p.buildings!.order);
   const units = p.units!.order;
   const workerIds = Object.values(RACES).map((r) => r.worker);
 
