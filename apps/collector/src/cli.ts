@@ -19,7 +19,7 @@ import { join } from "node:path";
 import { activeReferenceGroups, applyOfficial, applySim, readRecord, referencePaths, type RefLookup } from "@replay-altar/core";
 import { CONSTANTS, gamedataDir, loadCosts, readSimOutput, simNotReady, simulateGame, summarize } from "@replay-altar/sim";
 import { buildProfile, officialForMatch, officialForOwnGame, openReference, readState, refreshGroup, w3cClient } from "@replay-altar/reference";
-import { analyzeGame, buildPrompt, ModelServer } from "@replay-altar/ai";
+import { analyzeGame, buildPrompt, ModelServer, rulesBook } from "@replay-altar/ai";
 import { currentReplayBuild, racesPlayed } from "./reference.ts";
 import { runCollector } from "./collector.ts";
 import { isReplayFile } from "./watcher.ts";
@@ -51,6 +51,7 @@ const HELP = `replay-altar — Warcraft III replay archive & stats
   replay-altar ref profile         rebuild the reference statistics from stored games
   replay-altar official            fetch the game's own end-of-game stats from W3Champions for W3C games
                               (yours and reference games) that don't have them yet
+  replay-altar report <game|latest> the rules' report of one game: recap, findings with causes and advice, turning point
   replay-altar ai <game|latest>    AI analysis of one game with the local model (also: button in the window)
   replay-altar ai <game> --facts   print what the model would be given, without running it
   replay-altar collector           run the collector in the foreground (what the service runs)
@@ -315,6 +316,27 @@ switch (cmd) {
         `${new Date(String(g.played_at)).toLocaleString("sv-SE").slice(0, 16)}  ${g.analyzed ? String(g.result).padEnd(7) : `skip:${g.skip_reason}`.padEnd(7)} ${String(g.matchup ?? "").padEnd(4)} ${String(g.map_name).padEnd(16)} ${String(g.opp_name ?? "").padEnd(20)} ${mmss(Number(g.duration_ms))}  ${g.source}`,
       );
     }
+    break;
+  }
+  case "report": {
+    const c = ctx();
+    const target = args.find((a) => !a.startsWith("--")) ?? "latest";
+    const key =
+      target === "latest"
+        ? (c.db.prepare("SELECT game_key FROM games WHERE analyzed = 1 ORDER BY played_at DESC LIMIT 1").get() as { game_key: string }).game_key
+        : resolveKey(c.db, target);
+    const b = rulesBook(c.db, c.paths, key);
+    if (b.problem) throw new Error(b.problem);
+    console.log(`${b.recap}\n`);
+    b.findings.forEach((f, i) => {
+      console.log(`${i + 1}. ${f.headline}`);
+      for (const e of f.evidence) console.log(`   - ${e}`);
+      for (const e of f.because ?? []) console.log(`   Why: ${e}`);
+      if (f.advice) console.log(`   Next time: ${f.advice}`);
+      console.log("");
+    });
+    if (b.turningPoint) console.log(`Turning point: ${b.turningPoint}\n`);
+    if (b.oneThing) console.log(`One thing for next game: ${b.oneThing}`);
     break;
   }
   case "ai": {

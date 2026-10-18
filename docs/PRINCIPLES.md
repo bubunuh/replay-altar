@@ -40,6 +40,7 @@ Builds with 8+ games: fast expand (46, 52% won); fast tech (45, 60% won); early 
 | Workers lost by 12:00 | 2 (0–3) | 218 | 2 / 3 | 68% / 43% | depends (1.3) |
 | Tower orders per base | 2 (2–4) | 218 | 2.5 / 2 | 51% / 60% | similar (0.8) |
 | Seconds above 80 food on fewer than 2 expansions | 69.5 (0–354.8) | 218 | 91 / 50 | 54% / 51% | similar (0.7) |
+| Longest production stop with gold (to 10:00), s | 20 (0–50) | 218 | 20 / 20 | 56% / 57% | depends (1.0) |
 | Unspent gold, first 10 min (≈) | 151.2 (54.6–277.1) | 218 | 157 / 138.7 | 55% / 55% | similar (0.6) |
 | Workers at 10:00 | 15 (13–21) | 181 | 15.5 / 14 | 53% / 53% | depends (1.1) |
 | Expanded at all | 59% | 218 | 60% / 58% | — | depends (1.0) |
@@ -109,6 +110,7 @@ Builds with 8+ games: fast tech (89, 46% won); Headhunter opening + fast tech (7
 | Workers lost by 12:00 | 0 (0–1) | 180 | 0 / 0 | 52% / 45% | similar (0.5) |
 | Tower orders per base | 0 (0–0.5) | 180 | 0 / 0 | 53% / 40% | same (0.0) |
 | Seconds above 80 food on fewer than 2 expansions | 0 (0–204.5) | 180 | 0 / 0 | 47% / 60% | same (0.0) |
+| Longest production stop with gold (to 10:00), s | 30 (0–60) | 179 | 30 / 20 | 47% / 49% | similar (0.7) |
 | Unspent gold, first 10 min (≈) | 170 (54.5–288.9) | 180 | 182.9 / 161.4 | 42% / 47% | depends (1.9) |
 | Workers at 10:00 | 12 (11–12) | 159 | 12 / 12 | 49% / 54% | same (0.0) |
 | Expanded at all | 48% | 180 | 52% / 44% | — | depends (1.0) |
@@ -178,6 +180,7 @@ Builds with 8+ games: Crypt before the altar + Ghoul opening + fast expand (62, 
 | Workers lost by 12:00 | 0 (0–1) | 202 | 0 / 0 | 39% / 38% | depends (1.0) |
 | Tower orders per base | 1 (0.3–1) | 202 | 0.8 / 1 | 40% / 37% | similar (0.5) |
 | Seconds above 80 food on fewer than 2 expansions | 0 (0–0) | 202 | 0 / 0 | 43% / 38% | same (0.0) |
+| Longest production stop with gold (to 10:00), s | 20 (0–70) | 202 | 30 / 20 | 32% / 40% | depends (1.0) |
 | Unspent gold, first 10 min (≈) | 145.8 (34.6–312.5) | 202 | 166.3 / 124.2 | 31% / 41% | similar (0.9) |
 | Workers at 10:00 | 7 (6–11) | 176 | 8 / 7 | 35% / 49% | depends (1.0) |
 | Expanded at all | 63% | 202 | 66% / 62% | — | depends (1.0) |
@@ -247,6 +250,7 @@ Builds with 8+ games: fast tech (118, 58% won); fast expand (31, 42% won); fast 
 | Workers lost by 12:00 | 1 (0–2) | 227 | 1 / 1 | 58% / 47% | depends (1.0) |
 | Tower orders per base | 0 (0–0.3) | 227 | 0 / 0 | 51% / 64% | depends (2.0) |
 | Seconds above 80 food on fewer than 2 expansions | 0 (0–154) | 227 | 0 / 0 | 55% / 53% | same (0.2) |
+| Longest production stop with gold (to 10:00), s | 40 (0–90) | 227 | 30 / 50 | 59% / 48% | depends (1.2) |
 | Unspent gold, first 10 min (≈) | 219.2 (68.9–509.4) | 227 | 203.1 / 243.9 | 60% / 49% | depends (1.8) |
 | Workers at 10:00 | 13 (11–15) | 196 | 13 / 13 | 57% / 51% | depends (1.0) |
 | Expanded at all | 60% | 227 | 57% / 64% | — | depends (1.0) |

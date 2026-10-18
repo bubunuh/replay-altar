@@ -20,6 +20,7 @@ Local Warcraft III replay archive and stats. A background service saves every re
 | `replay-altar sim` | Simulation status; `--backfill`, `--retry-failed`, `--rerun`, `--resummarize` |
 | `replay-altar official` | Fetch the game's own end-of-game stats from W3Champions for W3C games that lack them (the collector does this by itself for new games) |
 | `replay-altar ref` | Pro reference games: status. `ref refresh [--target N]` updates them (same as "Update pro games"), `ref profile` rebuilds the statistics |
+| `replay-altar report <game\|latest>` | The rules' report of one game, as in the Findings card: recap, findings with causes and advice, turning point |
 | `replay-altar ai <game\|latest>` | AI analysis of one game with the local model (same as the button in a match). `--facts` prints what the model would get |
 
 To remove everything, run `replay-altar uninstall --purge` (this also deletes the `localhost/replay-altar-casc` podman image), then delete `~/Projects/replay-altar`.
@@ -106,7 +107,7 @@ A replay records *commands*, not game state. So:
   - **Workers, supply, camps, hero levels:** from the simulation.
   - **Losses and trades:** marked **≈**, because deaths are inferred.
   - **Mined income and unspent resources:** marked **≈**. They come from a mining model calibrated on your games and are shown for the first 10 minutes only.
-- **After a game patch:** run `scripts/extract-gamedata.sh` so costs match the new balance.
+- **After a game patch:** run `scripts/extract-gamedata.sh` so costs match the new balance, then `node scripts/extract-combat.ts` (attack and armor types for the army-composition rules).
 
 ## Development
 

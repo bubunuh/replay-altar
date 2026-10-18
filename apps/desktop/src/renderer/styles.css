@@ -109,6 +109,8 @@ td.num, th.num { text-align: right; }
 .match-card::after { content: ""; display: block; clear: both; }
 .map-image { float: right; width: 168px; height: 168px; margin: 0 0 8px 16px; border-radius: 6px; border: 1px solid var(--border); object-fit: cover; }
 @media (max-width: 640px) { .map-image { width: 96px; height: 96px; } }
+.rules-recap { font-size: 14px; margin: 8px 0 4px; }
+.rules-why { color: var(--ink-2); }
 .rules-findings { margin: 8px 0 12px; padding-left: 20px; }
 .rules-findings > li { margin: 12px 0; }
 .rules-findings h3 { margin: 0 0 4px; font-size: 14px; }

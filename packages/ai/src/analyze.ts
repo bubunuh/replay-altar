@@ -6,6 +6,7 @@ import { getGame, logEvent, type AiConfig, type DB, type Paths } from "@replay-a
 import { factsRefFor } from "./context.ts";
 import { gameFacts } from "./facts.ts";
 import { findings as findFindings, MIN_GAME_MS, opponentPlan, strengths as findStrengths } from "./findings.ts";
+import { recapOf, turningPoint } from "./report.ts";
 import type { ModelServer } from "./server.ts";
 import type { AiAnalysis, Review, RulesBook } from "./types.ts";
 
@@ -84,16 +85,27 @@ export function buildPrompt(db: DB, paths: Paths, gameKey: string) {
   ].join("\n");
   const prompt = `${brief}\n${facts}`;
 
-  return { record: r, found, good, plan, facts, prompt };
+  return { record: r, result: detail.row.result ?? "unknown", found, good, plan, facts, prompt };
 }
 
 /** What the rules found in one of your games (shown before, and without, the AI write-up). */
 export function rulesBook(db: DB, paths: Paths, gameKey: string): RulesBook {
   try {
-    const { found, good, plan, facts } = buildPrompt(db, paths, gameKey);
-    return { problem: null, findings: found, strengths: good, opponentPlan: plan, facts };
+    const { record, result, found, good, plan, facts } = buildPrompt(db, paths, gameKey);
+    const me = record.players.find((p) => p.isMe)!;
+    const opp = record.players.find((p) => p.playerId === record.classification.opponentId)!;
+    return {
+      problem: null,
+      recap: recapOf(record, opp, result, found, good),
+      findings: found,
+      turningPoint: turningPoint(record, me, opp, result)?.text ?? null,
+      oneThing: found[0]?.advice ?? null,
+      strengths: good,
+      opponentPlan: plan,
+      facts,
+    };
   } catch (e) {
-    return { problem: (e as Error).message, findings: [], strengths: [], opponentPlan: [], facts: "" };
+    return { problem: (e as Error).message, recap: "", findings: [], turningPoint: null, oneThing: null, strengths: [], opponentPlan: [], facts: "" };
   }
 }
 

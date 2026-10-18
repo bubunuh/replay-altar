@@ -33,6 +33,8 @@ nice -n 19 podman run --rm --security-opt label=disable \
   'war3.w3mod:units\upgradedata.slk' \
   'war3.w3mod:units\abilitydata.slk' \
   'war3.w3mod:units\itemdata.slk' \
+  'war3.w3mod:units\unitweapons.slk' \
+  'war3.w3mod:units\unitdata.slk' \
   'war3.w3mod:units\miscgame.txt'
 
 # WC3V's converter reads ./UnitBalance.slk and writes ./UnitBalance.json.
@@ -46,7 +48,7 @@ cp "$OUT/UnitBalance.json" "$ROOT/vendor/wc3v/helpers/UnitBalance.json"
   echo "  \"extractedAt\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\","
   echo "  \"sha256\": {"
   first=1
-  for f in unitbalance.slk upgradedata.slk abilitydata.slk itemdata.slk miscgame.txt UnitBalance.json; do
+  for f in unitbalance.slk upgradedata.slk abilitydata.slk itemdata.slk unitweapons.slk unitdata.slk miscgame.txt UnitBalance.json; do
     [ $first -eq 1 ] || echo ","
     printf '    "%s": "%s"' "$f" "$(sha256sum "$OUT/$f" | cut -d' ' -f1)"
     first=0

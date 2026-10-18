@@ -5,7 +5,7 @@
 import type { GameRecord, PlayerRecord, SimSample } from "@replay-altar/core/ui";
 import { RACES, type RaceCode } from "@replay-altar/core/gamedata";
 import { openingOf } from "./openings.ts";
-import { at } from "./series.ts";
+import { at, productionGap } from "./series.ts";
 
 export const MILESTONES = [
   "tier2", "tier3", "hero1", "hero2", "hero3", "hero1_l3", "hero2_l3", "hero1_l5",
@@ -48,6 +48,8 @@ export type Milestones = {
   highUpkeepFewBasesS: number | null;
   /** Average unspent gold over the first 10 minutes (estimate). */
   bankAvg: number | null;
+  /** Longest stretch to 10:00 with gold, supply room and no army unit trained (series.ts productionGap). */
+  productionGapS: number | null;
 };
 
 const point = (series: SimSample[], ms: number | null | undefined): Point | null => {
@@ -139,6 +141,7 @@ export function milestonesOf(r: GameRecord, playerId: number): Milestones | null
     towersPerBase: m.towers_total === null || m.towers_total === undefined ? null : m.towers_total / (1 + halls.length),
     highUpkeepFewBasesS: Math.round(highFew),
     bankAvg: m.est_bank_avg ?? null,
+    productionGapS: productionGap(r, p, R.worker)?.s ?? null,
   };
 }
 

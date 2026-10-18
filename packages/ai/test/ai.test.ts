@@ -140,3 +140,37 @@ describe("milestones", () => {
     expect(m.workers6).toBe(13);
   });
 });
+
+describe("report without the model", () => {
+  test("every finding carries advice; the window links to the opponent's tech", async () => {
+    const f = findings(game({}), null);
+    const w = f.find((x) => x.id === "window")!;
+    expect(w.advice).toMatch(/expansion/);
+    expect(w.because?.[0]).toMatch(/tier 2 at 3:00/);
+    expect(f.every((x) => x.advice)).toBe(true);
+  });
+
+  test("turning point: the fight the loser lost most in, with a time to rewatch", async () => {
+    const { turningPoint, recapOf } = await import("../src/report.ts");
+    const r = game({});
+    const [me, opp] = r.players;
+    const mine = r.sim!.status === "ok" ? r.sim!.players[0].series : [];
+    for (const s of mine) if (s.t >= 500_000) s.goldLost = 900; // you lose ≈900 around 8:20
+    (r.sim as { fights: unknown[] }).fights = [{ start: 495_000, end: 520_000, category: "pitched-battle", playerIds: [1, 2], initiatorId: 2 }];
+    const tp = turningPoint(r, me, opp, "loss")!;
+    expect(tp.text).toMatch(/turned at 8:15: a pitched battle where you lost ≈900 and they lost ≈0/);
+    expect(tp.text).toMatch(/from 8:00/);
+    expect(turningPoint(r, me, opp, "win")).toBeNull();
+    expect(recapOf(r, opp, "loss", findings(r, null), [])).toMatch(/^You lost in 14:00 against Human\. The biggest problem: they left a window open/);
+  });
+
+  test("composition: attack types against armor, and anti-air", async () => {
+    const { armyMix, mixVsMix, antiAirShare, bestAgainst } = await import("../src/combat.ts");
+    const p = (build: [string, string][]) => ({ race: "H", build: build.map(([code, name], i) => ({ ms: i * 1000, kind: "unit", code, name })) }) as unknown as GameRecord["players"][number];
+    const gryphons = armyMix(p([["hgry", "Gryphon Rider"], ["hgry", "Gryphon Rider"]]), 0, 10_000);
+    const headhunters = armyMix(p([["ohun", "Troll Headhunter"], ["ohun", "Troll Headhunter"]]), 0, 10_000);
+    expect(mixVsMix(gryphons, headhunters)).toBeCloseTo(0.75); // magic vs medium
+    expect(antiAirShare(armyMix(p([["hfoo", "Footman"]]), 0, 10_000))).toBe(0);
+    expect(bestAgainst("H", headhunters)[0].vs).toBeCloseTo(1.5); // normal vs medium
+  });
+});

@@ -63,3 +63,29 @@ export function fightLosses(r: GameRecord, me: PlayerRecord, opp: PlayerRecord) 
   const so = seriesOf(r, opp);
   return (r.sim.fights ?? []).map((f) => ({ f, me: lostBetween(sm, f.start - 10_000, f.end + 10_000), opp: lostBetween(so, f.start - 10_000, f.end + 10_000) }));
 }
+
+/**
+ * The longest stretch (up to 10:00, where the income estimate is reported) in which a player
+ * trained no army unit although they could: ≈300+ gold in the bank, not supply blocked, under 80
+ * food. Counted from the first army unit; seconds, with when and the average bank.
+ */
+export function productionGap(r: GameRecord, p: PlayerRecord, worker: string, untilMs = 600_000) {
+  const series = seriesOf(r, p);
+  const orders = p.build.filter((b) => b.kind === "unit" && b.code !== worker && !/^[A-Z]/.test(b.code)).map((b) => b.ms);
+  const end = Math.min(untilMs, r.game.durationMs);
+  if (!series.length || !orders.length || orders[0] >= end) return null;
+  let best = { s: 0, from: 0, to: 0, bank: 0 };
+  let run: { from: number; to: number; banks: number[] } | null = null;
+  for (const s of series) {
+    if (s.t < orders[0] || s.t > end) continue;
+    const ordered = orders.some((t) => t > s.t - 10_000 && t <= s.t);
+    const could = s.estGoldBank >= 300 && s.foodUsed < s.foodMax - 1 && s.foodUsed < 80;
+    if (could && !ordered) {
+      run ??= { from: s.t, to: s.t, banks: [] };
+      run.to = s.t;
+      run.banks.push(s.estGoldBank);
+    } else run = null;
+    if (run && (run.to - run.from) / 1000 > best.s) best = { s: (run.to - run.from) / 1000, from: run.from, to: run.to, bank: run.banks.reduce((a, b) => a + b, 0) / run.banks.length };
+  }
+  return best;
+}

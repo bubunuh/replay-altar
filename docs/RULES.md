@@ -15,7 +15,7 @@ workers lost) with the guide values as floors, and the worker rule fires only be
 guide target and 9 in 10 pros (Orc pros sit at ~12 workers even on two bases, Undead at ~7).
 Shared principles and how pros play each library build: [PRINCIPLES.md](PRINCIPLES.md).
 
-Shown per game (top 3): 1.45 findings in pro wins, 2.16 in pro losses.
+Shown per game (top 3): 1.48 findings in pro wins, 2.18 in pro losses.
 
 ## Main findings
 
@@ -32,6 +32,8 @@ Shown per game (top 3): 1.45 findings in pro wins, 2.16 in pro losses.
 | `window` | the opponent had no army for 4+ minutes and you neither expanded, made them lose 400+, nor out-levelled pros | Replay Altar (punishing greedy play; Warcraft3.info Human guide) | never in pros | – |
 | `exposed` | you had no army for 4+ minutes while they had one | Replay Altar | 1% / 1% | rare |
 | `mechanics` | APM and hotkey use far below pros, shown only when little else stands out | metric research | 2% / 0% | for beginners only |
+| `army_mismatch` | your units ordered in the 6 minutes before your costliest fight did ≤80% damage on average against their armor (game damage table), and your race had units doing 40+ points better | game data (attack vs armor types, `data/gamedata/combat.json`) | 2% / 6% | 3.0 |
+| `no_anti_air` | 40%+ of their recent army flew (1,200+ value) and under 25% of yours could attack air | game data | 1% / 1% | rare |
 
 ## Basics (beginner mistakes, ranked below the main findings)
 
@@ -53,12 +55,25 @@ near 1 here means "pros rarely do this either way", not that the advice is wrong
 | `no_items` | no shop purchase in 12+ minutes | Blizzard hero basics (potions, scrolls, Town Portal) | never in pros | – |
 | `towers` | more tower build/upgrade orders per base than 9 in 10 pros (and more than 6) | Grubby, Human guide 2026: an arcane tower and maybe a guard tower per base | 3% / 2% | 0.8 |
 | `unanswered_expansion` | the opponent expanded while your army was bigger and you didn't fight for 4 minutes | StrategyWiki: attack expansions before they finish | 2% / 1% | 0.7 |
+| `no_sustain` | items bought by 12:00 but none that heals or teleports, and a hero died by 15:00 | Blizzard hero basics; Grubby: potions and Town Portal keep the hero alive | 1% / 2% | 1.3 |
+| `no_scout` | your first unit on the opponent's side came after 9 in 10 pros (and after 5:00) | pro data; scouting in Grubby's and Liquipedia's guides | never in pros | – |
 | `workers_lost` | ≈ 5+ workers lost by 12:00 (and more than 9 in 10 pros) | Grubby, Human guide: losing ~5 peasants while expanding puts you far behind | 5% / 3% | 0.7 (worker deaths are inferred and undercounted) |
+
+## Around the findings (no model needed)
+
+`packages/ai/src/report.ts`, `advice.ts`, and `becauseFor` in `findings.ts`:
+
+- **Next time:** hand-written advice per rule, with the race's own buildings and units and the pros' numbers (`advice.ts`). The composition, items and scouting rules write theirs from the game (the units that would do more damage, the units that shoot air).
+- **Why:** facts from elsewhere in the game that explain a finding: few creep camps or an idle first hero or early hero deaths behind "heroes fell behind"; items bought, hero levels and upgrades at the costliest fight, and fights under towers behind "fights"; the opponent's tech behind "window".
+- **Recap:** result, the main problem and its first cause, the second problem.
+- **Turning point:** the fight with the biggest swing for the side that lost (500+), with the army values going in and a time to rewatch it.
+- **One thing for next game:** the top finding's advice.
 
 ## Also from the sources
 
 - **Opening labels** (`openings.ts`): each player's opening named after Liquipedia's build-order pages.
 - **Tested and dropped:** "late expansion vs pros" (fired for half the pros, wins and losses alike), "turtling" (fired only for pros who won), "unanswered expansion vs pros" as a main rule (pros leave expansions alone half the time either way), "creeping with level 5+ heroes" (creeps give them no XP, but pros do it for items and gold: it fired more in their wins, lift 0.5).
+- **Tested and dropped (2026-10-18):** "production stood still with gold in the bank" (the longest stretch to 10:00 with ≈300+ gold, supply room and no army unit trained): pros of every race do it about as often in wins as in losses (lift 0.9), partly because the bank is an estimate. The measure stays in PRINCIPLES.md.
 - **Changed after the 4-race corpus:** the worker rule used only the guide targets and fired in a third of pro games, mostly Orc and Undead (lift 0.9); with the pro floor it fires in 3% / 7% (lift 2.0). "Over 50 food before upgrades" now accepts tier 3 as the investment (it fired in 27% of pro wins).
 - **Build library** (`data/builds/`, `packages/ai/src/builds.ts`): 66 food-keyed builds from Grubby, Warcraft 3 Gym and Liquipedia. Each player's opening is matched against them; the match page and the fact sheet show the closest build and where you differ from how pros play it.
 - **Not measurable from a replay:** creep-camp micro (aggro pulls, purge, ensnare), spell and mana use, positioning, unit counters by armor type (possible later from game data).

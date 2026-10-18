@@ -41,6 +41,7 @@ export const FEATURES: Feature[] = [
   { key: "workersLost12", label: "Workers lost by 12:00", unit: "count", get: (m) => m.workersLost12 },
   { key: "towersPerBase", label: "Tower orders per base", unit: "count", get: (m) => m.towersPerBase },
   { key: "highUpkeepFewBases", label: "Seconds above 80 food on fewer than 2 expansions", unit: "count", get: (m) => m.highUpkeepFewBasesS },
+  { key: "productionGap", label: "Longest production stop with gold (to 10:00), s", unit: "count", get: (m) => m.productionGapS },
   { key: "bankAvg", label: "Unspent gold, first 10 min (≈)", unit: "count", get: (m) => m.bankAvg },
   { key: "workers10", label: "Workers at 10:00", unit: "count", get: (m) => m.workers10 },
   flag("expanded", "Expanded at all", (m) => m.at.expansion !== null),

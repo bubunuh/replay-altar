@@ -10,19 +10,28 @@ import { metricValue, type FactsRef } from "./facts.ts";
 import { openingOf } from "./openings.ts";
 import { deviationsFromPros, matchBuilds } from "./builds.ts";
 import { proBuildOf } from "./principles.ts";
-import { at, fightLosses, mmss, sampleBoth, seriesOf, STEP_MS } from "./series.ts";
+import { at, fightLosses, levelSum, mmss, sampleBoth, seriesOf, STEP_MS } from "./series.ts";
+import { adviceFor } from "./advice.ts";
+import { ATTACK_NAME, airShare, antiAirShare, armyMix, bestAgainst, canHitAir, describeMix, mixValue, mixVsMix } from "./combat.ts";
+import { CORE_UPGRADES, POTION_ITEMS, TOWN_PORTAL } from "@replay-altar/core/gamedata";
 
 export type Finding = {
   id:
     | "window" | "exposed" | "economy" | "heroes" | "fights" | "supply" | "mechanics" | "hero_deaths" | "no_heroes" | "upkeep" | "expansion"
     // basics: beginner mistakes, rare at higher levels (thresholds well outside what pros do)
     | "first_creep" | "upgrades" | "one_hero" | "no_items" | "floating" | "unanswered_expansion" | "just_over_50" | "towers" | "workers_lost" | "goal_3360"
-    | "unused_spike" | "upkeep_before_upgrades" | "mine_dry" | "build_drift";
+    | "unused_spike" | "upkeep_before_upgrades" | "mine_dry" | "build_drift"
+    // army and habits: composition against theirs, items, production, scouting
+    | "no_anti_air" | "army_mismatch" | "no_sustain" | "no_scout";
   /** 0–1: how much it likely cost (problems) or how well it went (strengths). */
   severity: number;
   /** Fallback title when the model is not available. */
   headline: string;
   evidence: string[];
+  /** What to do differently next time (advice.ts, or the rule's own). */
+  advice?: string;
+  /** Facts from elsewhere in the game that explain it ("you fought with 2 items against their 21"). */
+  because?: string[];
 };
 
 const MIN_SEVERITY = 0.5;
@@ -32,7 +41,7 @@ export const MIN_GAME_MS = 180_000;
 /** Core metrics that are not skills worth praising (being attacked less is not your doing). */
 const NOT_STRENGTHS = new Set(["fights_defending"]);
 
-type Ctx = { r: GameRecord; me: PlayerRecord; opp: PlayerRecord; ref: FactsRef | null };
+export type Ctx = { r: GameRecord; me: PlayerRecord; opp: PlayerRecord; ref: FactsRef | null };
 
 /**
  * Share of pro games that did better than this value (0 = better than every pro game, 1 = worse
@@ -188,7 +197,6 @@ function fightFinding(c: Ctx): Finding | null {
   const sim = c.r.sim?.status === "ok" ? c.r.sim.players.find((p) => p.playerId === c.me.playerId)?.heroes ?? [] : [];
   const worst = [...losses].sort((a, b) => b.me - b.opp - (a.me - a.opp)).slice(0, 3).sort((a, b) => a.f.start - b.f.start);
   const deathsNear = (from: number, to: number) => sim.flatMap((h) => h.deaths.filter((d) => d.diedAt >= from - 30_000 && d.diedAt <= to + 30_000).map((d) => `your ${h.name} died ≈${mmss(d.diedAt)}`));
-  const items = [c.me.metrics.items_bought, c.opp.metrics.items_bought];
   return {
     id: "fights",
     severity: Math.max(trade?.worseThan ?? 0.6, 0.6),
@@ -199,7 +207,6 @@ function fightFinding(c: Ctx): Finding | null {
         const d = deathsNear(x.f.start, x.f.end);
         return `${mmss(x.f.start)}–${mmss(x.f.end)} ${x.f.category.replace(/-/g, " ")}: you lost ≈${x.me}, opp ≈${x.opp}${d.length ? `; ${d.join(", ")}` : ""}.`;
       }),
-      ...((items[1] ?? 0) >= 8 && (items[1] ?? 0) >= 3 * Math.max(1, items[0] ?? 0) ? [`Items bought: you ${num(items[0])}, opp ${num(items[1])}.`] : []),
     ],
   };
 }
@@ -599,6 +606,143 @@ function buildDriftFinding(c: Ctx): Finding | null {
   };
 }
 
+// ---- Army and habits: composition against the opponent's, items, production, scouting.
+
+/** The fights the composition is judged at: your costliest fight against the opponent, else the end. */
+function judgedAt(c: Ctx): number {
+  const worst = fightLosses(c.r, c.me, c.opp)
+    .filter((x) => x.f.playerIds.includes(c.opp.playerId) && x.f.category !== "creep-fight")
+    .sort((a, b) => b.me - b.opp - (a.me - a.opp))[0];
+  return worst && worst.me > worst.opp ? worst.f.start : c.r.game.durationMs;
+}
+const MIX_WINDOW_MS = 360_000;
+
+/** Their army was largely air and little of yours could shoot up. */
+function noAntiAirFinding(c: Ctx): Finding | null {
+  const t = judgedAt(c);
+  const theirs = armyMix(c.opp, t - MIX_WINDOW_MS, t);
+  const mine = armyMix(c.me, t - MIX_WINDOW_MS, t);
+  const air = theirs.filter((e) => e.unit.air);
+  if (airShare(theirs) < 0.4 || mixValue(air) < 1200 || antiAirShare(mine) >= 0.25) return null;
+  const answers = bestAgainst(c.me.race as RaceCode, air, canHitAir).filter((x) => x.vs >= 1).slice(0, 3);
+  return {
+    id: "no_anti_air",
+    severity: 0.6,
+    headline: "Their air army met little anti-air",
+    evidence: [
+      `Their units ordered ${mmss(t - MIX_WINDOW_MS)}–${mmss(t)}: ${describeMix(theirs, "armor")}; ${Math.round(airShare(theirs) * 100)}% of the value flies.`,
+      `Yours: ${describeMix(mine, "attack") || "none"}; ${Math.round(antiAirShare(mine) * 100)}% of the value can attack air.`,
+    ],
+    advice: answers.length
+      ? `When you see their first air units, add units that shoot up: ${answers.map((x) => `${x.name} (${Math.round(x.vs * 100)}% damage against their air)`).join(", ")}.`
+      : "When you see their first air units, add units that can attack air.",
+  };
+}
+
+/** Your army's attack types did poorly against their armor types, and your race had better options. */
+function armyMismatchFinding(c: Ctx): Finding | null {
+  const t = judgedAt(c);
+  const theirs = armyMix(c.opp, t - MIX_WINDOW_MS, t);
+  const mine = armyMix(c.me, t - MIX_WINDOW_MS, t);
+  if (mixValue(mine) < 1500 || mixValue(theirs) < 1500) return null;
+  const ours = mixVsMix(mine, theirs);
+  const better = bestAgainst(c.me.race as RaceCode, theirs).filter((x) => x.vs >= ours + 0.4).slice(0, 3);
+  if (ours > 0.8 || !better.length) return null;
+  return {
+    id: "army_mismatch",
+    severity: 0.55,
+    headline: "Your units' attacks were weak against their armor",
+    evidence: [
+      `Your units ordered ${mmss(t - MIX_WINDOW_MS)}–${mmss(t)}: ${describeMix(mine, "attack")}.`,
+      `Theirs: ${describeMix(theirs, "armor")}.`,
+      `On average your attacks did ${Math.round(ours * 100)}% damage against their armor (game damage table: e.g. piercing does 75% to medium armor, magic 200% to heavy).`,
+    ],
+    advice: `Against this army, ${better.map((x) => `${x.name} (${ATTACK_NAME[x.unit.attacks[0]?.type] ?? "?"} attack, ${Math.round(x.vs * 100)}%)`).join(", ")} do more damage; mix them in once you see their composition.`,
+  };
+}
+
+/** Healing and escape items: potions, healing scrolls and salves, Town Portal, staves. */
+const SUSTAIN = new Set([...POTION_ITEMS, TOWN_PORTAL, "shea", "sreg", "hslv", "spre", "stel", "ssan", "rej1", "rej2", "rej3"]);
+
+/** Bought items, but nothing to heal or escape by 12:00 (the no-items basic covers buying nothing). */
+function noSustainFinding(c: Ctx): Finding | null {
+  if (c.r.game.durationMs < 12 * 60_000) return null;
+  const items = c.me.build.filter((b) => b.kind === "item" && b.ms <= 12 * 60_000);
+  if (!items.length || items.some((b) => SUSTAIN.has(b.code))) return null;
+  // It matters when a hero was lost: pros sometimes skip them in games where nobody dies.
+  const died = simHeroes(c, c.me).some((h) => h.deaths.some((d) => d.diedAt <= 15 * 60_000));
+  if (!died) return null;
+  const theirs = c.opp.build.filter((b) => b.kind === "item" && b.ms <= 12 * 60_000 && SUSTAIN.has(b.code)).length;
+  return {
+    id: "no_sustain",
+    severity: BASIC,
+    headline: "No healing or Town Portal bought",
+    evidence: [`Items bought by 12:00: ${items.map((b) => b.name).join(", ")}; none heals or teleports. Opp bought ${theirs} such items by then.`],
+    advice: "Keep a Potion of Healing and a Scroll of Town Portal on your main hero from the first shop visit: they save the hero and let you keep creeping.",
+  };
+}
+
+/** No unit reached the opponent's side of the map long after pros did. */
+function noScoutFinding(c: Ctx): Finding | null {
+  if (c.r.game.durationMs < 8 * 60_000) return null;
+  const ms = c.me.metrics.first_scout_ms;
+  const pro = c.ref?.mp.metrics.first_scout_ms;
+  if (!pro || pro.values.length < 10) return null;
+  const p90 = [...pro.values].sort((a, b) => a - b)[Math.floor(pro.values.length * 0.9)];
+  // Unknown (null) is common in pro games too: the simulation doesn't always place units.
+  if (ms === null || ms === undefined || ms <= Math.max(p90, 300_000)) return null;
+  return {
+    id: "no_scout",
+    severity: BASIC,
+    headline: "You scouted late",
+    evidence: [`First unit of yours on the opponent's side of the map: ${mmss(ms)}; pros: median ${mmss(pro.p50)}.`],
+    advice: "Scout their base around 2:00-3:00 (a worker, your hero on the way to a camp, or a cheap unit): their tech, towers and expansion tell you what is coming and what to build.",
+  };
+}
+
+// ---- Links: facts from elsewhere in the game that explain a finding.
+
+function becauseFor(f: Finding, c: Ctx): string[] {
+  const m = c.me.metrics;
+  const o = c.opp.metrics;
+  const out: string[] = [];
+  if (f.id === "heroes") {
+    const camps = proGap(c, "creep_camps_6m");
+    if (camps && camps.worseThan >= 0.6) out.push(`You cleared ${num(m.creep_camps_6m)} creep camps by 6:00 (pros: ${num(camps.median)}): too little creeping.`);
+    const appear = Math.min(...simHeroes(c, c.me).map((h) => h.appearAt ?? Infinity));
+    if (Number.isFinite(appear) && m.first_creep_ms !== null && m.first_creep_ms !== undefined && m.first_creep_ms - appear > 60_000) out.push(`Your first hero waited ${Math.round((m.first_creep_ms - appear) / 1000)} s before the first creep camp.`);
+    const early = simHeroes(c, c.me).reduce((n, h) => n + h.deaths.filter((d) => d.diedAt <= 600_000).length, 0);
+    if (early >= 1) out.push(`Your heroes died ${early === 1 ? "once" : `${early} times`} before 10:00: each death gave their heroes experience and cost you creeping time.`);
+    const h2 = proGap(c, "hero2_ms");
+    if (h2 && h2.worseThan >= 0.8) out.push(`Your second hero came at ${mmss(m.hero2_ms)} (pros: ${mmss(h2.median)}).`);
+  }
+  if (f.id === "fights") {
+    const items = [m.items_bought ?? 0, o.items_bought ?? 0];
+    if (items[1] >= 8 && items[1] >= 3 * Math.max(1, items[0])) out.push(`You bought ${items[0]} items, they bought ${items[1]}: potions and scrolls decide even fights.`);
+    const worst = fightLosses(c.r, c.me, c.opp).filter((x) => x.f.playerIds.includes(c.opp.playerId)).sort((a, b) => b.me - b.opp - (a.me - a.opp))[0];
+    if (worst) {
+      const [mine, theirs] = [levelSum(c.me, worst.f.start), levelSum(c.opp, worst.f.start)];
+      if (theirs >= mine + 2) out.push(`At your costliest fight (${mmss(worst.f.start)}) your heroes had ${mine} levels in all, theirs ${theirs}.`);
+      // Upgrade levels ordered at least a minute before the fight (time to finish part of them).
+      const ups = (p: PlayerRecord) => {
+        const codes = new Set((CORE_UPGRADES[p.race as RaceCode] ?? []).map((u) => u.code));
+        return p.build.filter((b) => b.kind === "upgrade" && codes.has(b.code) && b.ms <= worst.f.start - 60_000).length;
+      };
+      if (ups(c.opp) >= ups(c.me) + 2) out.push(`They had about ${ups(c.opp)} attack/armor upgrade levels by then, you ${ups(c.me)}.`);
+    }
+    const dives = fightLosses(c.r, c.me, c.opp).filter((x) => x.f.category === "tower-dive" && x.me > x.opp && x.me >= 300);
+    if (dives.length) out.push(`${dives.length === 1 ? "One" : dives.length} of your losing fights ${dives.length === 1 ? "was" : "were"} under their towers (${dives.map((x) => mmss(x.f.start)).join(", ")}).`);
+  }
+  if (f.id === "window") {
+    const R = RACES[c.opp.race as RaceCode];
+    const t2 = R ? c.opp.build.find((b) => b.code === R.tier2)?.ms : undefined;
+    const towers = R ? c.opp.build.filter((b) => R.towers.includes(b.code) && b.ms <= 600_000).length : 0;
+    if (t2 !== undefined && t2 <= 600_000) out.push(`They put the resources into tech instead (tier 2 at ${mmss(t2)}${towers ? `, ${towers} tower orders by 10:00` : ""}): that is when an expansion is safest.`);
+  }
+  if (f.id === "hero_deaths" && (m.tp_bought ?? 0) === 0) out.push("You had no Town Portal to save them.");
+  return out;
+}
+
 /** Every rule that fires, most costly first. */
 export function allFindings(r: GameRecord, ref: FactsRef | null, subjectId?: number): Finding[] {
   const me = subjectId === undefined ? r.players.find((p) => p.isMe) : r.players.find((p) => p.playerId === subjectId);
@@ -631,13 +775,17 @@ export function allFindings(r: GameRecord, ref: FactsRef | null, subjectId?: num
     upkeepBeforeUpgradesFinding(c),
     mineDryFinding(c),
     buildDriftFinding(c),
+    noAntiAirFinding(c),
+    armyMismatchFinding(c),
+    noSustainFinding(c),
+    noScoutFinding(c),
   ]
     .filter((f): f is Finding => !!f && f.severity >= MIN_SEVERITY)
     .sort((a, b) => b.severity - a.severity);
   // Mechanics are a real but constant, slow-to-fix gap: shown only when the game itself had
   // little else to point at.
   const mech = found.length < 2 ? mechanicsFinding(c) : null;
-  return [...found, ...(mech ? [mech] : [])];
+  return [...found, ...(mech ? [mech] : [])].map((f) => ({ ...f, advice: f.advice ?? adviceFor(f.id, c) ?? undefined, because: becauseFor(f, c) }));
 }
 
 /** The most important problems in a game, most costly first (at most 3). */

@@ -1,6 +1,6 @@
-// "Findings" on a match: what the rules found (most important first), shown as soon as the match
-// opens; strengths, the opponent's plan and the full fact sheet behind "Show more". The same text
-// is what the AI analysis is given.
+// "Findings" on a match: a recap, what the rules found (most important first) with the facts
+// that explain each and what to do next time, the fight that turned the game and the one thing
+// to work on; strengths, the opponent's plan and the full fact sheet behind "Show more".
 import { useEffect, useState } from "react";
 import type { RulesBook } from "@replay-altar/ai/types";
 import { api } from "./api.ts";
@@ -25,6 +25,7 @@ export function RulesCard({ gameKey }: { gameKey: string }) {
     <div className="card rules-card">
       <h2>Findings</h2>
       <p className="sub">Computed by Replay Altar's rules from the replay and the pro games, most important first.</p>
+      <p className="rules-recap">{book.recap}</p>
       {book.findings.length === 0 && <p className="muted">No clear problem stood out in this game.</p>}
       <ol className="rules-findings">
         {book.findings.map((f) => (
@@ -35,9 +36,29 @@ export function RulesCard({ gameKey }: { gameKey: string }) {
                 <li key={e}>{e}</li>
               ))}
             </ul>
+            {!!f.because?.length && (
+              <p className="small rules-why">
+                <b>Why:</b> {f.because.join(" ")}
+              </p>
+            )}
+            {f.advice && (
+              <p className="small">
+                <b>Next time:</b> {f.advice}
+              </p>
+            )}
           </li>
         ))}
       </ol>
+      {book.turningPoint && (
+        <p className="small">
+          <b>Turning point.</b> {book.turningPoint}
+        </p>
+      )}
+      {book.oneThing && (
+        <p className="ai-one">
+          <b>One thing for next game:</b> {book.oneThing}
+        </p>
+      )}
       <button className="btn" onClick={() => setMore((x) => !x)}>
         {more ? "Show less" : "Show more"}
       </button>

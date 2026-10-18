@@ -1,0 +1,3049 @@
+{
+ "gameVersion": "3.0.0.24268",
+ "damage": {
+  "normal": {
+   "small": 1,
+   "medium": 1.5,
+   "large": 1,
+   "fort": 0.7,
+   "normal": 1,
+   "hero": 1,
+   "divine": 0.05,
+   "none": 1
+  },
+  "pierce": {
+   "small": 2,
+   "medium": 0.75,
+   "large": 0.9,
+   "fort": 0.35,
+   "normal": 1,
+   "hero": 0.5,
+   "divine": 0.05,
+   "none": 1.5
+  },
+  "siege": {
+   "small": 1,
+   "medium": 0.5,
+   "large": 1,
+   "fort": 1.5,
+   "normal": 1,
+   "hero": 0.5,
+   "divine": 0.05,
+   "none": 1.5
+  },
+  "magic": {
+   "small": 1.25,
+   "medium": 0.75,
+   "large": 2,
+   "fort": 0.35,
+   "normal": 1,
+   "hero": 0.5,
+   "divine": 0.05,
+   "none": 1
+  },
+  "chaos": {
+   "small": 1,
+   "medium": 1,
+   "large": 1,
+   "fort": 1,
+   "normal": 1,
+   "hero": 1,
+   "divine": 1,
+   "none": 1
+  },
+  "spells": {
+   "small": 1,
+   "medium": 1,
+   "large": 1,
+   "fort": 1,
+   "normal": 1,
+   "hero": 0.7,
+   "divine": 0.05,
+   "none": 1
+  },
+  "hero": {
+   "small": 1,
+   "medium": 1,
+   "large": 1,
+   "fort": 0.5,
+   "normal": 1,
+   "hero": 1,
+   "divine": 0.05,
+   "none": 1
+  }
+ },
+ "units": {
+  "Hamg": {
+   "race": "H",
+   "cost": 500,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Hblm": {
+   "race": "H",
+   "cost": 500,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Hmkg": {
+   "race": "H",
+   "cost": 500,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Hpal": {
+   "race": "H",
+   "cost": 500,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "hbot": {
+   "race": "H",
+   "cost": 220,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": []
+  },
+  "hbsh": {
+   "race": "H",
+   "cost": 700,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "siege",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "hdes": {
+   "race": "H",
+   "cost": 350,
+   "armor": "small",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "hdhw": {
+   "race": "H",
+   "cost": 230,
+   "armor": "small",
+   "air": true,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "pierce",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "hfoo": {
+   "race": "H",
+   "cost": 135,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "hgry": {
+   "race": "H",
+   "cost": 350,
+   "armor": "small",
+   "air": true,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "magic",
+     "air": false,
+     "ground": true
+    },
+    {
+     "type": "magic",
+     "air": true,
+     "ground": false
+    }
+   ]
+  },
+  "hgyr": {
+   "race": "H",
+   "cost": 130,
+   "armor": "large",
+   "air": true,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "pierce",
+     "air": true,
+     "ground": false
+    }
+   ]
+  },
+  "hkni": {
+   "race": "H",
+   "cost": 305,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "hmil": {
+   "race": "H",
+   "cost": 75,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "hmpr": {
+   "race": "H",
+   "cost": 145,
+   "armor": "none",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "magic",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "hmtm": {
+   "race": "H",
+   "cost": 250,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "siege",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "hmtt": {
+   "race": "H",
+   "cost": 255,
+   "armor": "fort",
+   "air": false,
+   "hero": false,
+   "attacks": []
+  },
+  "hpea": {
+   "race": "H",
+   "cost": 75,
+   "armor": "medium",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "hphx": {
+   "race": "H",
+   "cost": 0,
+   "armor": "small",
+   "air": true,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "magic",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "hpxe": {
+   "race": "H",
+   "cost": 0,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": []
+  },
+  "hrif": {
+   "race": "H",
+   "cost": 235,
+   "armor": "medium",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "pierce",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "hrtt": {
+   "race": "H",
+   "cost": 255,
+   "armor": "fort",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "pierce",
+     "air": true,
+     "ground": false
+    }
+   ]
+  },
+  "hsor": {
+   "race": "H",
+   "cost": 175,
+   "armor": "none",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "magic",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "hspt": {
+   "race": "H",
+   "cost": 245,
+   "armor": "medium",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "hwat": {
+   "race": "H",
+   "cost": 0,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "pierce",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "hwt2": {
+   "race": "H",
+   "cost": 0,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "pierce",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "hwt3": {
+   "race": "H",
+   "cost": 0,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "pierce",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Obla": {
+   "race": "O",
+   "cost": 500,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Ofar": {
+   "race": "O",
+   "cost": 500,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Oshd": {
+   "race": "O",
+   "cost": 500,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Otch": {
+   "race": "O",
+   "cost": 500,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "obot": {
+   "race": "O",
+   "cost": 220,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": []
+  },
+  "ocat": {
+   "race": "O",
+   "cost": 270,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "siege",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "odes": {
+   "race": "O",
+   "cost": 350,
+   "armor": "small",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "odoc": {
+   "race": "O",
+   "cost": 170,
+   "armor": "none",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "magic",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "ogru": {
+   "race": "O",
+   "cost": 200,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "ohun": {
+   "race": "O",
+   "cost": 160,
+   "armor": "medium",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "pierce",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "okod": {
+   "race": "O",
+   "cost": 315,
+   "armor": "none",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "pierce",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "opeo": {
+   "race": "O",
+   "cost": 75,
+   "armor": "medium",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "orai": {
+   "race": "O",
+   "cost": 220,
+   "armor": "medium",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "siege",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "oshm": {
+   "race": "O",
+   "cost": 150,
+   "armor": "none",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "magic",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "ospm": {
+   "race": "O",
+   "cost": 230,
+   "armor": "none",
+   "air": false,
+   "hero": false,
+   "attacks": []
+  },
+  "ospw": {
+   "race": "O",
+   "cost": 230,
+   "armor": "none",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "magic",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "osw1": {
+   "race": "O",
+   "cost": 0,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "osw2": {
+   "race": "O",
+   "cost": 0,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "osw3": {
+   "race": "O",
+   "cost": 0,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "otau": {
+   "race": "O",
+   "cost": 400,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "otbk": {
+   "race": "O",
+   "cost": 160,
+   "armor": "medium",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "pierce",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "otbr": {
+   "race": "O",
+   "cost": 200,
+   "armor": "small",
+   "air": true,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "siege",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "owyv": {
+   "race": "O",
+   "cost": 305,
+   "armor": "small",
+   "air": true,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "pierce",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Edem": {
+   "race": "N",
+   "cost": 500,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Edmm": {
+   "race": "N",
+   "cost": 500,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "chaos",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Ekee": {
+   "race": "N",
+   "cost": 500,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Emoo": {
+   "race": "N",
+   "cost": 500,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Ewar": {
+   "race": "N",
+   "cost": 500,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "earc": {
+   "race": "N",
+   "cost": 140,
+   "armor": "medium",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "pierce",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "ebal": {
+   "race": "N",
+   "cost": 275,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "siege",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "ebsh": {
+   "race": "N",
+   "cost": 700,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "siege",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "echm": {
+   "race": "N",
+   "cost": 400,
+   "armor": "small",
+   "air": true,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "magic",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "edcm": {
+   "race": "N",
+   "cost": 335,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "edes": {
+   "race": "N",
+   "cost": 350,
+   "armor": "small",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "edoc": {
+   "race": "N",
+   "cost": 335,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "edot": {
+   "race": "N",
+   "cost": 155,
+   "armor": "none",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "magic",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "edry": {
+   "race": "N",
+   "cost": 205,
+   "armor": "none",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "pierce",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "edtm": {
+   "race": "N",
+   "cost": 155,
+   "armor": "none",
+   "air": true,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "pierce",
+     "air": true,
+     "ground": false
+    }
+   ]
+  },
+  "efdr": {
+   "race": "N",
+   "cost": 180,
+   "armor": "small",
+   "air": true,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "pierce",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "efon": {
+   "race": "N",
+   "cost": 0,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "ehip": {
+   "race": "N",
+   "cost": 180,
+   "armor": "none",
+   "air": true,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": true,
+     "ground": false
+    }
+   ]
+  },
+  "ehpr": {
+   "race": "N",
+   "cost": 320,
+   "armor": "small",
+   "air": true,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "pierce",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "emtg": {
+   "race": "N",
+   "cost": 450,
+   "armor": "medium",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "esen": {
+   "race": "N",
+   "cost": 215,
+   "armor": "none",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "espv": {
+   "race": "N",
+   "cost": 0,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "even": {
+   "race": "N",
+   "cost": 0,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "pierce",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "ewsp": {
+   "race": "N",
+   "cost": 60,
+   "armor": "medium",
+   "air": false,
+   "hero": false,
+   "attacks": []
+  },
+  "Ucrl": {
+   "race": "U",
+   "cost": 500,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Udea": {
+   "race": "U",
+   "cost": 500,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Udre": {
+   "race": "U",
+   "cost": 500,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Ulic": {
+   "race": "U",
+   "cost": 500,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "uabo": {
+   "race": "U",
+   "cost": 310,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "uaco": {
+   "race": "U",
+   "cost": 75,
+   "armor": "medium",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "uban": {
+   "race": "U",
+   "cost": 185,
+   "armor": "none",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "magic",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "ubsp": {
+   "race": "U",
+   "cost": 385,
+   "armor": "small",
+   "air": true,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "magic",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "ucrm": {
+   "race": "U",
+   "cost": 255,
+   "armor": "medium",
+   "air": false,
+   "hero": false,
+   "attacks": []
+  },
+  "ucry": {
+   "race": "U",
+   "cost": 255,
+   "armor": "medium",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "pierce",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "ucs1": {
+   "race": "U",
+   "cost": 0,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "ucs2": {
+   "race": "U",
+   "cost": 0,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "ucs3": {
+   "race": "U",
+   "cost": 0,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "ucsB": {
+   "race": "U",
+   "cost": 0,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": []
+  },
+  "ucsC": {
+   "race": "U",
+   "cost": 0,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": []
+  },
+  "ufro": {
+   "race": "U",
+   "cost": 505,
+   "armor": "small",
+   "air": true,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "magic",
+     "air": false,
+     "ground": true
+    },
+    {
+     "type": "magic",
+     "air": true,
+     "ground": false
+    }
+   ]
+  },
+  "ugar": {
+   "race": "U",
+   "cost": 205,
+   "armor": "none",
+   "air": true,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": true,
+     "ground": false
+    },
+    {
+     "type": "pierce",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "ugho": {
+   "race": "U",
+   "cost": 120,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "ugrm": {
+   "race": "U",
+   "cost": 215,
+   "armor": "none",
+   "air": false,
+   "hero": false,
+   "attacks": []
+  },
+  "uloc": {
+   "race": "U",
+   "cost": 0,
+   "armor": "small",
+   "air": true,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "spells",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "umtw": {
+   "race": "U",
+   "cost": 280,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "siege",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "unec": {
+   "race": "U",
+   "cost": 165,
+   "armor": "none",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "magic",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "uobs": {
+   "race": "U",
+   "cost": 235,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "magic",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "ushd": {
+   "race": "U",
+   "cost": 0,
+   "armor": "medium",
+   "air": false,
+   "hero": false,
+   "attacks": []
+  },
+  "uske": {
+   "race": "U",
+   "cost": 0,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "uskm": {
+   "race": "U",
+   "cost": 0,
+   "armor": "medium",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "pierce",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "uubs": {
+   "race": "U",
+   "cost": 700,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "siege",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Ecen": {
+   "race": "N",
+   "cost": 525,
+   "armor": "divine",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "chaos",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Eevi": {
+   "race": "N",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Eevm": {
+   "race": "N",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "chaos",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Efur": {
+   "race": "N",
+   "cost": 425,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Eidm": {
+   "race": "N",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "chaos",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Eill": {
+   "race": "N",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Eilm": {
+   "race": "N",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "chaos",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Ekgg": {
+   "race": "N",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Emfr": {
+   "race": "N",
+   "cost": 425,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Emns": {
+   "race": "N",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Etyr": {
+   "race": "N",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Ewrd": {
+   "race": "N",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Hant": {
+   "race": "H",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Hapm": {
+   "race": "H",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Harf": {
+   "race": "H",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "chaos",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Hart": {
+   "race": "H",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Hdgo": {
+   "race": "H",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Hgam": {
+   "race": "H",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Hhkl": {
+   "race": "H",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Hjai": {
+   "race": "H",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Hkal": {
+   "race": "H",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Hlgr": {
+   "race": "H",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Hmbr": {
+   "race": "H",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Hmgd": {
+   "race": "H",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Hpb1": {
+   "race": "H",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Hpb2": {
+   "race": "H",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Huth": {
+   "race": "H",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Hvwd": {
+   "race": "H",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Ocb2": {
+   "race": "O",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Ocbh": {
+   "race": "O",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Odrt": {
+   "race": "O",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Ogld": {
+   "race": "O",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "chaos",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Ogrh": {
+   "race": "O",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Opgh": {
+   "race": "O",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "chaos",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Orex": {
+   "race": "O",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    },
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Orkn": {
+   "race": "O",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Osam": {
+   "race": "O",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Otcc": {
+   "race": "O",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Othr": {
+   "race": "O",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Oths": {
+   "race": "O",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Uanb": {
+   "race": "U",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Ubal": {
+   "race": "U",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Uclc": {
+   "race": "U",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Udth": {
+   "race": "U",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Uear": {
+   "race": "U",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Uktl": {
+   "race": "U",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Umal": {
+   "race": "U",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Usyl": {
+   "race": "U",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Utic": {
+   "race": "U",
+   "cost": 525,
+   "armor": "divine",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Uvar": {
+   "race": "U",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Uvng": {
+   "race": "U",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Uwar": {
+   "race": "U",
+   "cost": 525,
+   "armor": "divine",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "chaos",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "eilw": {
+   "race": "N",
+   "cost": 230,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": []
+  },
+  "enec": {
+   "race": "N",
+   "cost": 0,
+   "armor": "medium",
+   "air": false,
+   "hero": false,
+   "attacks": []
+  },
+  "ensh": {
+   "race": "N",
+   "cost": 215,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "eshd": {
+   "race": "N",
+   "cost": 235,
+   "armor": "medium",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "pierce",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "etrs": {
+   "race": "N",
+   "cost": 220,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": []
+  },
+  "hbew": {
+   "race": "H",
+   "cost": 230,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": []
+  },
+  "hcth": {
+   "race": "H",
+   "cost": 130,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "hhdl": {
+   "race": "H",
+   "cost": 280,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": []
+  },
+  "hhes": {
+   "race": "H",
+   "cost": 135,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "hprt": {
+   "race": "H",
+   "cost": 0,
+   "armor": "fort",
+   "air": false,
+   "hero": false,
+   "attacks": []
+  },
+  "hrdh": {
+   "race": "H",
+   "cost": 280,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": []
+  },
+  "odkt": {
+   "race": "O",
+   "cost": 165,
+   "armor": "medium",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "pierce",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "ogrk": {
+   "race": "O",
+   "cost": 200,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "ojgn": {
+   "race": "O",
+   "cost": 700,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "siege",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "omtg": {
+   "race": "O",
+   "cost": 130,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "onzg": {
+   "race": "O",
+   "cost": 220,
+   "armor": "medium",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "siege",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "oosc": {
+   "race": "O",
+   "cost": 230,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": []
+  },
+  "oswy": {
+   "race": "O",
+   "cost": 130,
+   "armor": "small",
+   "air": true,
+   "hero": false,
+   "attacks": []
+  },
+  "ovlj": {
+   "race": "O",
+   "cost": 170,
+   "armor": "none",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "magic",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "owar": {
+   "race": "O",
+   "cost": 130,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "ownr": {
+   "race": "O",
+   "cost": 130,
+   "armor": "small",
+   "air": true,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": true,
+     "ground": false
+    }
+   ]
+  },
+  "uabc": {
+   "race": "U",
+   "cost": 310,
+   "armor": "small",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "uarb": {
+   "race": "U",
+   "cost": 300,
+   "armor": "small",
+   "air": true,
+   "hero": false,
+   "attacks": []
+  },
+  "ubdd": {
+   "race": "U",
+   "cost": 505,
+   "armor": "small",
+   "air": true,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "pierce",
+     "air": false,
+     "ground": true
+    },
+    {
+     "type": "pierce",
+     "air": true,
+     "ground": false
+    }
+   ]
+  },
+  "ubdr": {
+   "race": "U",
+   "cost": 795,
+   "armor": "small",
+   "air": true,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "chaos",
+     "air": false,
+     "ground": true
+    },
+    {
+     "type": "chaos",
+     "air": true,
+     "ground": false
+    }
+   ]
+  },
+  "ubot": {
+   "race": "U",
+   "cost": 220,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": []
+  },
+  "udes": {
+   "race": "U",
+   "cost": 350,
+   "armor": "small",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "uktg": {
+   "race": "U",
+   "cost": 195,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": []
+  },
+  "uktn": {
+   "race": "U",
+   "cost": 195,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "pierce",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "uswb": {
+   "race": "U",
+   "cost": 225,
+   "armor": "medium",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Hjnd": {
+   "race": "H",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "obai": {
+   "race": "O",
+   "cost": 230,
+   "armor": "none",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "magic",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "hrrh": {
+   "race": "H",
+   "cost": 75,
+   "armor": "medium",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Haah": {
+   "race": "H",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Hssa": {
+   "race": "H",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Hddt": {
+   "race": "H",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "owad": {
+   "race": "O",
+   "cost": 220,
+   "armor": "medium",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "siege",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "hctg": {
+   "race": "H",
+   "cost": 130,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Hctr": {
+   "race": "H",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "ublw": {
+   "race": "U",
+   "cost": 165,
+   "armor": "none",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "magic",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "uass": {
+   "race": "U",
+   "cost": 105,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "ucze": {
+   "race": "U",
+   "cost": 120,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Hctl": {
+   "race": "H",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Ubtr": {
+   "race": "U",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Hjsm": {
+   "race": "H",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Uany": {
+   "race": "U",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Ugrk": {
+   "race": "U",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Uarf": {
+   "race": "U",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Hleo": {
+   "race": "H",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Uctl": {
+   "race": "U",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Ujsm": {
+   "race": "U",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "uigh": {
+   "race": "U",
+   "cost": 165,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "ufr2": {
+   "race": "U",
+   "cost": 0,
+   "armor": "none",
+   "air": true,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "chaos",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "ufrb": {
+   "race": "U",
+   "cost": 0,
+   "armor": "none",
+   "air": true,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "chaos",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Uput": {
+   "race": "U",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Ubru": {
+   "race": "U",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "oidb": {
+   "race": "U",
+   "cost": 0,
+   "armor": "none",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "magic",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Htmx": {
+   "race": "H",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Uzkf": {
+   "race": "U",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Uzkm": {
+   "race": "U",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Uzrm": {
+   "race": "U",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "ugbo": {
+   "race": "U",
+   "cost": 310,
+   "armor": "large",
+   "air": false,
+   "hero": false,
+   "attacks": [
+    {
+     "type": "normal",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Ugr2": {
+   "race": "U",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Ugr3": {
+   "race": "U",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  },
+  "Urfm": {
+   "race": "U",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Urff": {
+   "race": "U",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Urfu": {
+   "race": "U",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": true,
+     "ground": true
+    }
+   ]
+  },
+  "Hct1": {
+   "race": "H",
+   "cost": 525,
+   "armor": "hero",
+   "air": false,
+   "hero": true,
+   "attacks": [
+    {
+     "type": "hero",
+     "air": false,
+     "ground": true
+    }
+   ]
+  }
+ }
+}
