@@ -14,7 +14,7 @@ export type Finding = {
   id:
     | "window" | "exposed" | "economy" | "heroes" | "fights" | "supply" | "mechanics" | "hero_deaths" | "no_heroes" | "upkeep" | "expansion" | "creeping"
     // basics: beginner mistakes, rare at higher levels (thresholds well outside what pros do)
-    | "first_creep" | "upgrades" | "one_hero" | "no_items" | "floating" | "unanswered_expansion";
+    | "first_creep" | "upgrades" | "one_hero" | "no_items" | "floating" | "unanswered_expansion" | "just_over_50" | "towers" | "workers_lost" | "goal_3360";
   /** 0–1: how much it likely cost (problems) or how well it went (strengths). */
   severity: number;
   /** Fallback title when the model is not available. */
@@ -109,25 +109,41 @@ function windowFinding(c: Ctx, mine: boolean): Finding | null {
     : { id: "window", severity: Math.min(0.95, 0.6 + (to - since) / 1_200_000), headline: "They left a window open and you didn't use it", evidence };
 }
 
+/**
+ * Workers a race needs: 5 on gold per base plus a lumber crew (Grubby, beginner guide #3 and the
+ * Human guides: Human 8-9 on wood, 12-13 on two bases; Orc 7; Night Elf 9 wisps; Undead lumber is
+ * ghouls, which are not workers). More than that adds nothing, so one base saturates at ~14.
+ */
+const LUMBER_CREW: Record<RaceCode, [number, number]> = { H: [9, 12], O: [7, 9], N: [9, 12], U: [0, 0] };
+const TOWN_HALL_BUILD_MS = 120_000;
+function workerTarget(p: PlayerRecord, t: number) {
+  const bases = 1 + expansionTimes(p).filter((x) => x + TOWN_HALL_BUILD_MS <= t).length;
+  const crew = LUMBER_CREW[p.race as RaceCode] ?? [9, 12];
+  return { bases, target: 5 * bases + crew[bases > 1 ? 1 : 0] };
+}
+
+/** Below the worker target (5 per gold mine + lumber crew) at 6:00 or 10:00, usually from an idle town hall. */
 function economyFinding(c: Ctx): Finding | null {
-  // Workers decide it; an idle hall only counts when workers are behind too (a hall can look
-  // idle while workers come from an expansion).
-  const workers = proGap(c, "workers_alive_10m") ?? proGap(c, "workers_alive_6m");
-  const idle = proGap(c, "hall_idle_6m_s");
-  if (!workers) return null;
-  const severity = workers.worseThan >= 0.5 && idle && idle.worseThan >= 0.85 ? (workers.worseThan + idle.worseThan) / 2 : workers.worseThan;
-  if (severity < 0.7) return null;
+  const series = seriesOf(c.r, c.me);
+  const checks = [
+    { t: 360_000, slack: 3 },
+    { t: 600_000, slack: 2 },
+  ]
+    .filter(({ t }) => c.r.game.durationMs >= t)
+    .map(({ t, slack }) => ({ t, slack, workers: at(series, t)?.workers ?? null, ...workerTarget(c.me, t) }))
+    .filter((x) => x.workers !== null);
+  const short = checks.filter((x) => x.workers! < x.target - x.slack);
+  if (!short.length) return null;
+  const gap = Math.max(...short.map((x) => x.target - x.workers!));
   const m = c.me.metrics;
-  const o = c.opp.metrics;
   return {
     id: "economy",
-    severity,
-    headline: "Your economy stalled early",
+    severity: Math.min(0.9, 0.55 + 0.05 * gap),
+    headline: "You had too few workers",
     evidence: [
-      `Workers alive at 6:00: you ${num(m.workers_alive_6m)}, opp ${num(o.workers_alive_6m)}${vsPros(c, "workers_alive_6m")}.`,
-      ...(m.workers_alive_10m !== null && m.workers_alive_10m !== undefined ? [`Workers alive at 10:00: you ${num(m.workers_alive_10m)}, opp ${num(o.workers_alive_10m)}${vsPros(c, "workers_alive_10m")}.`] : []),
-      `Your main hall was idle ${num(m.hall_idle_6m_s)} of the first 360 seconds${vsPros(c, "hall_idle_6m_s")}.`,
-      `Workers ordered by 6:00: you ${num(m.workers_by_6m)}, opp ${num(o.workers_by_6m)}${vsPros(c, "workers_by_6m")}.`,
+      ...checks.map((x) => `Workers at ${mmss(x.t)}: ${x.workers} of the ${x.target} your ${x.bases === 1 ? "base needs" : `${x.bases} bases need`} (5 on gold per base + lumber crew).`),
+      ...(m.hall_idle_6m_s !== null && m.hall_idle_6m_s !== undefined ? [`Your main hall was idle ${num(m.hall_idle_6m_s)} of the first 360 seconds${vsPros(c, "hall_idle_6m_s")}; it should train workers non-stop until the target.`] : []),
+      ...(m.workers_lost_12m ? [`Workers lost by 12:00: ≈${m.workers_lost_12m}.`] : []),
     ],
   };
 }
@@ -265,7 +281,16 @@ function noHeroesFinding(c: Ctx): Finding | null {
   };
 }
 
-/** Official upkeep page: above 80 food you keep 40% of mined gold; avoid it unless you have 2-3 expansions. */
+/** Sim fights you took part in that start in [from, to]. */
+const fightsNear = (c: Ctx, from: number, to: number) =>
+  (c.r.sim?.status === "ok" ? (c.r.sim.fights ?? []) : []).filter((f) => f.start >= from && f.start <= to && f.playerIds.includes(c.me.playerId) && f.category !== "creep-fight");
+
+/**
+ * High upkeep (above 80 food: you keep 40% of mined gold). Official page: avoid it unless you have
+ * 2-3 expansions. Grubby: only go there "if you intend to use it to fight very soon". Counted
+ * with fewer than 2 expansions (also requiring "no fight within 90 s" almost never fired: the
+ * simulation sees some fight nearly all the time); the fights are given as evidence instead.
+ */
 function upkeepFinding(c: Ctx): Finding | null {
   const series = seriesOf(c.r, c.me);
   const exp = expansionTimes(c.me);
@@ -286,7 +311,8 @@ function upkeepFinding(c: Ctx): Finding | null {
     severity: Math.min(0.8, 0.5 + seconds / 1200),
     headline: "You sat in high upkeep on too few bases",
     evidence: [
-      `You were above 80 food (high upkeep: you keep 40% of the gold your workers mine) for ${Math.round(seconds)} s, from ${mmss(first)}; at most ${top} food.`,
+      `You were above 80 food (high upkeep: you keep 40% of the gold your workers mine) for ${Math.round(seconds)} s, from ${mmss(first)}; at most ${top} food. Go that high only right before a fight.`,
+      `Fights you were in from then on: ${fightsNear(c, first ?? 0, c.r.game.durationMs).map((f) => `${mmss(f.start)} ${f.category.replace(/-/g, " ")}`).join(", ") || "none"}.`,
       `Expansions by ${mmss(first)}: ${exp.filter((t) => t <= (first ?? 0)).length} (your expansions: ${exp.length ? exp.map((t) => mmss(t)).join(", ") : "none"}).`,
       `Opp's highest food: ${Math.max(0, ...seriesOf(c.r, c.opp).map((s) => s.foodUsed))}.`,
     ],
@@ -421,6 +447,68 @@ function unansweredExpansionFinding(c: Ctx): Finding | null {
   };
 }
 
+/** Grubby: 51 food is "almost no benefit for maximum disadvantage": low upkeep for one extra unit. */
+function justOver50Finding(c: Ctx): Finding | null {
+  const series = seriesOf(c.r, c.me);
+  let seconds = 0;
+  for (let i = 1; i < series.length; i++) {
+    const s = series[i];
+    if (s.foodUsed >= 51 && s.foodUsed <= 54 && !fightsNear(c, s.t - 60_000, s.t + 60_000).length) seconds += (s.t - series[i - 1].t) / 1000;
+  }
+  if (seconds < 120) return null;
+  return {
+    id: "just_over_50",
+    severity: BASIC,
+    headline: "You sat just over 50 food",
+    evidence: [`You spent ${Math.round(seconds)} s at 51-54 food without fighting: that already costs 30% of your gold income (low upkeep) for one or two extra units. Stay at 50 and invest (upgrades, items, a production building), then go well past it right before a fight.`],
+  };
+}
+
+/** 2026 Human guide (Grubby): one arcane tower and maybe one guard tower per base; more gains little. */
+function towersFinding(c: Ctx): Finding | null {
+  const towers = c.me.metrics.towers_total ?? 0; // build and upgrade orders: a guard tower is 2
+  const bases = 1 + expansionTimes(c.me).length;
+  if (towers <= 6 * bases) return null;
+  return {
+    id: "towers",
+    severity: BASIC,
+    headline: "More towers than they're worth",
+    evidence: [`Tower build/upgrade orders: ${towers} for ${bases} base${bases > 1 ? "s" : ""} (a guide rule of thumb: an arcane tower and maybe a guard tower per base; after that units are worth more). Kills by towers give your heroes no experience.`],
+  };
+}
+
+/** Human guide: losing about five workers (e.g. while expanding) puts you too far behind. */
+function workersLostFinding(c: Ctx): Finding | null {
+  const lost = c.me.metrics.workers_lost_12m ?? 0;
+  if (lost < 5) return null;
+  return {
+    id: "workers_lost",
+    severity: BASIC + 0.1,
+    headline: "You lost too many workers",
+    evidence: [`Workers lost by 12:00: ≈${lost} (pros: usually 0-4; deaths are inferred and tend to be undercounted). Pull workers away or fight back with militia/towers when harassed.`],
+  };
+}
+
+/** Grubby's beginner goal "3360": first hero level 3, second hero level 3, 60 food; then seek a fight. */
+function goal3360Finding(c: Ctx): Finding | null {
+  const pro = c.ref?.mp.metrics.goal_3360_ms;
+  if (!pro || pro.values.length < 10 || c.r.game.durationMs < 15 * 60_000) return null;
+  const p75 = [...pro.values].sort((a, b) => a - b)[Math.floor(pro.values.length * 0.75)];
+  const got = c.me.metrics.goal_3360_ms;
+  if (got !== null && got !== undefined && got <= p75) return null;
+  if ((got === null || got === undefined) && c.r.game.durationMs < p75 + 180_000) return null;
+  const byOrder = [...c.me.heroes].sort((a, b) => a.order - b.order);
+  const food60 = seriesOf(c.r, c.me).find((s) => s.foodUsed >= 60)?.t ?? null;
+  return {
+    id: "goal_3360",
+    severity: BASIC,
+    headline: got ? "Late to the 3-3-60 goal" : "Never reached the 3-3-60 goal",
+    evidence: [
+      `Grubby's beginner goal: first hero level 3, second hero level 3, 60 food. You: first hero level 3 at ${mmss(byOrder[0]?.levelUps[2] ?? null)}, second hero level 3 at ${mmss(byOrder[1]?.levelUps[2] ?? null)}, 60 food at ${mmss(food60)}${got ? ` (all three at ${mmss(got)})` : ""}. Pros: median ${mmss(pro.p50)}.`,
+    ],
+  };
+}
+
 /** Every rule that fires, most costly first. */
 /** Every rule that fires, most costly first. */
 export function allFindings(r: GameRecord, ref: FactsRef | null, subjectId?: number): Finding[] {
@@ -447,6 +535,10 @@ export function allFindings(r: GameRecord, ref: FactsRef | null, subjectId?: num
     noItemsFinding(c),
     floatingFinding(c),
     unansweredExpansionFinding(c),
+    justOver50Finding(c),
+    towersFinding(c),
+    workersLostFinding(c),
+    goal3360Finding(c),
   ]
     .filter((f): f is Finding => !!f && f.severity >= MIN_SEVERITY)
     .sort((a, b) => b.severity - a.severity);

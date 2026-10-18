@@ -76,6 +76,7 @@ Each match has an **Analyze with AI** button. It runs on demand only, because it
 
 - **Who decides what:** W3Stats' rules decide what mattered in the game, by comparing with pros and spotting windows the opponent left open. They also write the opponent's plan from their orders. The local model only writes the review around those findings.
 - **Why it works this way:** tested on its own, Gemma 4 26B restated facts correctly but couldn't tell what decided a game, and it gets unit facts wrong.
+- **Rules:** [docs/RULES.md](docs/RULES.md) lists every rule, where it comes from (Grubby's guides, Blizzard's basics, Liquipedia…) and how it scores on pro games.
 - **Checking:** every number in the review is checked against the data the model was given. Each finding shows its evidence.
 - **Model:** set in the `ai` section of the settings file: `llama-server` path, model, MTP drafter, chat template, port 8089, extra arguments. W3Stats starts the server when needed and stops it after 10 idle minutes or when the window closes. A server you started yourself with the same model on that port is reused.
 - **While Warcraft III runs:** the button warns you, since the model takes most of the graphics card's memory.

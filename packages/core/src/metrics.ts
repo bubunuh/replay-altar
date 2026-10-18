@@ -5,7 +5,7 @@ import { CORE_UPGRADES, dropRepeatedBuildOrders, isRaceCode, POTION_ITEMS, RACES
 import { heroesXpAt, levelUpTimes } from "./heroxp.ts";
 import type { RawReplay } from "./parse.ts";
 
-export const METRICS_VERSION = 9;
+export const METRICS_VERSION = 10;
 
 export type MetricUnit = "ms" | "count" | "apm" | "ratio" | "per_min";
 
@@ -47,6 +47,8 @@ const SIM_SPECS: MetricSpec[] = [
   { key: "resources_lost_total", label: "Resources lost", unit: "count", group: "economy", source: "estimate", description: "Gold + lumber value of your units and buildings the simulation marks as lost or possibly lost (heroes excluded). Deaths are inferred, not recorded." },
   { key: "resources_killed_total", label: "Resources killed", unit: "count", group: "economy", source: "estimate", description: "Gold + lumber value of the opponent's losses." },
   { key: "trade_efficiency", label: "Trade efficiency", unit: "ratio", group: "economy", source: "estimate", description: "Resources killed / (killed + lost). Above 50% means you traded better than your opponent." },
+  { key: "goal_3360_ms", label: "3-3-60 reached", unit: "ms", group: "heroes", source: "simulation", description: "When you first had your first hero at level 3, your second hero at level 3 and 60 food: Grubby's beginner goal (\"3360 rule\"), after which you look for a fight. Empty if never reached (or one-hero play)." },
+  { key: "workers_lost_12m", label: "Workers lost by 12:00", unit: "count", group: "economy", source: "estimate", description: "Workers the simulation saw die in the first 12 minutes (inferred deaths). Losing about five while expanding usually puts you far behind." },
   { key: "workers_alive_6m", label: "Workers alive at 6:00", unit: "count", group: "economy", source: "simulation", description: "Workers alive at 6:00 (starting workers included, deaths subtracted)." },
   { key: "workers_alive_10m", label: "Workers alive at 10:00", unit: "count", group: "economy", source: "simulation", description: "Workers alive at 10:00." },
   { key: "tier2_done_ms", label: "Tier 2 finished", unit: "ms", group: "economy", source: "simulation", description: "Tier 2 upgrade started plus its build time." },
@@ -92,7 +94,7 @@ const BETTER: Record<string, "higher" | "lower"> = {
   gold_spent_6m: "higher", gold_spent_10m: "higher", lumber_spent_10m: "higher", resources_spent_total: "higher",
   resources_lost_total: "lower", resources_killed_total: "higher", trade_efficiency: "higher",
   creep_camps_6m: "higher", creep_camps_10m: "higher", first_creep_ms: "lower",
-  hero_level_6m: "higher", hero_level_10m: "higher", hero_levels_total: "higher", hero_level3_ms: "lower", hero_level5_ms: "lower", hero_deaths: "lower",
+  hero_level_6m: "higher", hero_level_10m: "higher", hero_levels_total: "higher", hero_level3_ms: "lower", goal_3360_ms: "lower", workers_lost_12m: "lower", hero_level5_ms: "lower", hero_deaths: "lower",
   hero_xp_4m: "higher", hero_xp_6m: "higher", hero_xp_8m: "higher", hero_xp_10m: "higher", hero_xp_total: "higher", hero_xp_per_min: "higher", hero_xp_share: "higher",
   fights_defending: "lower",
   gold_collected: "higher", units_killed: "higher", heroes_killed: "higher", largest_army: "higher", lumber_collected: "higher",
@@ -117,7 +119,7 @@ const SCALES_WITH_LENGTH = new Set([
  */
 export const CORE_METRICS = [
   "workers_by_6m", "workers_alive_6m", "workers_alive_10m",
-  "hero_xp_6m", "hero_xp_10m", "hero_xp_share", "hero_level3_ms", "hero2_ms", "hero3_ms", "creep_camps_6m",
+  "hero_xp_6m", "hero_xp_10m", "hero_xp_share", "hero_level3_ms", "goal_3360_ms", "hero2_ms", "hero3_ms", "creep_camps_6m",
   "tier2_ms", "tier3_ms",
   "gold_collected", "units_killed", "trade_efficiency",
   "unused_supply_avg", "fights_defending", "hero_deaths", "expansions",

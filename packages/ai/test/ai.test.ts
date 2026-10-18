@@ -24,7 +24,7 @@ describe("leads", () => {
 });
 
 // A 14-minute HvH game: the opponent makes no army until 10:00 while you have one.
-function game(opts: { youExpandAt?: number; yourFood?: (t: number) => number; theirHeroLevelUps?: number[] }): GameRecord {
+function game(opts: { youExpandAt?: number; yourFood?: (t: number) => number; theirHeroLevelUps?: number[]; yourWorkers?: number }): GameRecord {
   const series = (army: (t: number) => number, workers: number, food: (t: number) => number = () => 10): SimSample[] =>
     Array.from({ length: 85 }, (_, i) => {
       const t = i * 10_000;
@@ -46,7 +46,7 @@ function game(opts: { youExpandAt?: number; yourFood?: (t: number) => number; th
     sim: {
       status: "ok",
       players: [
-        { playerId: 1, series: series((t) => (t >= 200_000 ? 1500 : 0), 13, opts.yourFood), heroes: [] },
+        { playerId: 1, series: series((t) => (t >= 200_000 ? 1500 : 0), opts.yourWorkers ?? 13, opts.yourFood), heroes: [] },
         { playerId: 2, series: series((t) => (t >= 620_000 ? 700 : 0), 12), heroes: [] },
       ],
       fights: [],
@@ -69,6 +69,11 @@ describe("findings", () => {
     const f = findings(game({ yourFood: (t) => (t >= 500_000 ? 90 : 40) }), null).find((x) => x.id === "upkeep");
     expect(f?.evidence[0]).toContain("from 8:20");
     expect(findings(game({ yourFood: (t) => (t >= 780_000 ? 90 : 40) }), null).find((x) => x.id === "upkeep")).toBeUndefined(); // brief: before an attack
+  });
+  test("workers are judged against what the bases need (5 on gold + lumber crew)", () => {
+    expect(findings(game({}), null).find((x) => x.id === "economy")).toBeUndefined(); // 13 of 14 on one base: saturated
+    const f = findings(game({ yourWorkers: 9 }), null).find((x) => x.id === "economy");
+    expect(f?.evidence[0]).toBe("Workers at 6:00: 9 of the 14 your base needs (5 on gold per base + lumber crew).");
   });
   test("expanding in the window counts as using it", () => {
     expect(findings(game({ youExpandAt: 400_000 }), null).find((x) => x.id === "window")).toBeUndefined();

@@ -2,7 +2,7 @@
 import { execFile } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
-import type { GameRecord, SimFight, SimSummary } from "@w3stats/core";
+import { RACES, type GameRecord, type RaceCode, type SimFight, type SimSummary } from "@w3stats/core";
 import { loadCosts, type CostTables } from "./costs.ts";
 import { buildTimelines, economyMetrics, ESTIMATE_HORIZON_MS, runIncome, type EconomyConstants, type WOutput } from "./economy.ts";
 import constantsJson from "./economy-constants.json" with { type: "json" };
@@ -59,6 +59,12 @@ export function summarize(record: GameRecord, o: WOutput, costs: CostTables, k: 
     // The game counts its "largest army" in food, heroes included.
     metrics.largest_army = Math.max(0, ...series.map((s) => s.foodUsed - s.workers));
     const heroes = heroTimelines(o, tl.playerId, rp, costs, record.game.durationMs);
+    // Grubby's "3360": first hero level 3, second hero level 3, 60 food.
+    const byOrder = [...rp.heroes].sort((a, b) => a.order - b.order);
+    const l3 = (i: number) => byOrder[i]?.levelUps[2] ?? null;
+    const food60 = series.find((s) => s.foodUsed >= 60)?.t ?? null;
+    metrics.goal_3360_ms = l3(0) !== null && l3(1) !== null && food60 !== null ? Math.max(l3(0)!, l3(1)!, food60) : null;
+    metrics.workers_lost_12m = workersLost(o, tl.playerId, rp.race, 720_000);
     return { playerId: tl.playerId, parseConfidence: tl.parseConfidence, validationWarnings: pw, series, metrics, heroes };
   });
   return {
@@ -71,6 +77,13 @@ export function summarize(record: GameRecord, o: WOutput, costs: CostTables, k: 
     fights: fightsOf(o),
     warnings,
   };
+}
+
+/** Workers of this race the simulation saw die (lost or possibly lost) by a time. */
+function workersLost(o: WOutput, playerId: number, race: string, byMs: number): number {
+  const worker = RACES[race as RaceCode]?.worker;
+  const units = ((o.players[String(playerId)] as unknown as { units?: { itemId: string; lostState?: { state: string; since: number } | null }[] })?.units ?? []);
+  return units.filter((u) => u.itemId === worker && (u.lostState?.state === "lost" || u.lostState?.state === "possiblyLost") && u.lostState.since <= byMs).length;
 }
 
 type WBattle = {

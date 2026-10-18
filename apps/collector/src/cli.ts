@@ -186,14 +186,20 @@ switch (cmd) {
     }
     if (flag === "--resummarize") {
       const costs = loadCosts(gamedataDir(c.paths.root));
-      const rows = c.db.prepare("SELECT game_key FROM games WHERE sim_status = 'ok'").all() as { game_key: string }[];
-      for (const { game_key } of rows) {
-        const record = readRecord(c.paths, game_key);
-        if (!record || record.sim?.status !== "ok") continue;
-        const { ranAt, runMs, outputPath } = record.sim;
-        applySim(c, game_key, summarize(record, readSimOutput(outputPath), costs, CONSTANTS, { ranAt, runMs, outputPath }));
+      // Yours, then every reference group (their profiles are rebuilt after).
+      const contexts = [{ name: "your", ctx: c as { db: typeof c.db; paths: typeof c.paths } }, ...c.config.reference.groups.map((g) => ({ name: g.id, ctx: openReference(g.id, c.config), group: g }))];
+      for (const { name, ctx, ...rest } of contexts) {
+        const rows = ctx.db.prepare("SELECT game_key FROM games WHERE sim_status = 'ok'").all() as { game_key: string }[];
+        for (const { game_key } of rows) {
+          const record = readRecord(ctx.paths, game_key);
+          if (!record || record.sim?.status !== "ok") continue;
+          const { ranAt, runMs, outputPath } = record.sim;
+          applySim(ctx as Parameters<typeof applySim>[0], game_key, summarize(record, readSimOutput(outputPath), costs, CONSTANTS, { ranAt, runMs, outputPath }));
+        }
+        const group = (rest as { group?: (typeof c.config.reference.groups)[number] }).group;
+        if (group && rows.length) buildProfile(ctx.db, ctx.paths, group, currentReplayBuild(c.db));
+        if (rows.length) console.log(`re-summarized ${rows.length} ${name === "your" ? "of your" : name} games with economy model v${CONSTANTS.version}`);
       }
-      console.log(`re-summarized ${rows.length} games with economy model v${CONSTANTS.version}`);
       break;
     }
     const where =
