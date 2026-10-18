@@ -206,7 +206,12 @@ export async function refreshGroup(group: ReferenceGroup, opts: RefreshOptions):
             subject.result === "win" ? 1 : subject.result === "loss" ? 0 : null, build, new Date().toISOString(),
           );
           const sim = await simulate(record);
-          applySim(ref, record.gameKey, sim);
+          try {
+            applySim(ref, record.gameKey, sim);
+          } catch (e) {
+            skip(id, `could not save the simulation: ${(e as Error).message}`);
+            continue;
+          }
           downloaded++;
           kept++;
           log(`${group.id}: ${kept}/${target} ${pick.subject.stats_player!.name} vs ${opponent?.name.replace(/#\d+$/, "") ?? "?"} (${r.map.replace(/\.w3[xm]$/, "")})${sim.status === "ok" ? "" : ` (simulation failed: ${sim.reason})`}`);

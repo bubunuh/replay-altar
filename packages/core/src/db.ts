@@ -236,6 +236,9 @@ const mapName = (file: string) =>
 export { mapName };
 
 /** Replace everything stored for one game with the given record (annotations are kept). */
+/** A number SQLite can store, else NULL (the simulation can leave a sample field undefined or NaN). */
+const orNull = (v: number | null | undefined) => (typeof v === "number" && Number.isFinite(v) ? v : null);
+
 export function writeGame(db: DB, r: GameRecord, archiveSha256: string) {
   const me = r.players.find((p) => p.isMe);
   const opp = r.classification.opponentId === null ? undefined : r.players.find((p) => p.playerId === r.classification.opponentId);
@@ -311,7 +314,7 @@ export function writeGame(db: DB, r: GameRecord, archiveSha256: string) {
       );
       for (const p of r.sim.players) {
         for (const x of p.series) {
-          insSim.run(r.gameKey, p.playerId, x.t, x.goldSpent, x.lumberSpent, x.goldLost, x.lumberLost, x.foodUsed, x.foodMax, x.workers, x.estGoldMined, x.estLumberMined, x.estGoldBank, x.estLumberBank, x.dominance ?? null);
+          insSim.run(r.gameKey, p.playerId, x.t, ...[x.goldSpent, x.lumberSpent, x.goldLost, x.lumberLost, x.foodUsed, x.foodMax, x.workers, x.estGoldMined, x.estLumberMined, x.estGoldBank, x.estLumberBank, x.dominance].map(orNull));
         }
       }
     }

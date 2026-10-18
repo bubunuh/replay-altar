@@ -35,7 +35,7 @@ const refFor = (r: GameRecord, pid: number) => {
   return { label: g.group.label, ...picked, principles };
 };
 
-type Row = { win: boolean; ids: string[]; top: string[] };
+type Row = { race: string; win: boolean; ids: string[]; top: string[] };
 const rows: Row[] = [];
 for (const { group, profile } of groups) {
   if (!profile) continue;
@@ -46,7 +46,7 @@ for (const { group, profile } of groups) {
     // Both players of the group's race (the profile is for that race).
     for (const p of r.players.filter((x) => x.race === group.race && (x.result === "win" || x.result === "loss"))) {
       const found = allFindings(r, refFor(r, p.playerId), p.playerId);
-      rows.push({ win: p.result === "win", ids: found.map((x) => x.id), top: found.slice(0, 3).map((x) => x.id) });
+      rows.push({ race: p.race, win: p.result === "win", ids: found.map((x) => x.id), top: found.slice(0, 3).map((x) => x.id) });
     }
   }
 }
@@ -55,10 +55,13 @@ console.log(`pro perspectives: ${rows.length} (${wins.length} wins, ${losses.len
 const ids = [...new Set(rows.flatMap((r) => r.ids))];
 const rate = (set: Row[], id: string) => set.filter((r) => r.ids.includes(id)).length / Math.max(1, set.length);
 const pct = (x: number) => `${Math.round(x * 100)}%`.padStart(4);
-console.log("rule".padEnd(12), "| wins  losses | lift (loss rate / win rate)");
+const lift = (w: number, l: number) => (w > 0 ? (l / w).toFixed(1) : l > 0 ? "inf" : "-");
+const races = [...new Set(rows.map((r) => r.race))];
+console.log("rule".padEnd(22), "| wins  losses | lift | lift by race (" + races.join(" ") + ")");
 for (const id of ids) {
   const [w, l] = [rate(wins, id), rate(losses, id)];
-  console.log(id.padEnd(12), `| ${pct(w)}   ${pct(l)}  | ${w > 0 ? (l / w).toFixed(1) : l > 0 ? "only in losses" : "-"}`);
+  const byRace = races.map((race) => lift(rate(wins.filter((r) => r.race === race), id), rate(losses.filter((r) => r.race === race), id)).padStart(4));
+  console.log(id.padEnd(22), `| ${pct(w)}   ${pct(l)}  | ${lift(w, l).padStart(4)} | ${byRace.join(" ")}`);
 }
 const avg = (set: Row[]) => (set.reduce((n, r) => n + r.top.length, 0) / Math.max(1, set.length)).toFixed(2);
 console.log(`\nshown findings per game (top 3): wins ${avg(wins)}, losses ${avg(losses)}`);

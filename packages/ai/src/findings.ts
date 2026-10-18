@@ -14,7 +14,7 @@ import { at, fightLosses, mmss, sampleBoth, seriesOf, STEP_MS } from "./series.t
 
 export type Finding = {
   id:
-    | "window" | "exposed" | "economy" | "heroes" | "fights" | "supply" | "mechanics" | "hero_deaths" | "no_heroes" | "upkeep" | "expansion" | "creeping"
+    | "window" | "exposed" | "economy" | "heroes" | "fights" | "supply" | "mechanics" | "hero_deaths" | "no_heroes" | "upkeep" | "expansion"
     // basics: beginner mistakes, rare at higher levels (thresholds well outside what pros do)
     | "first_creep" | "upgrades" | "one_hero" | "no_items" | "floating" | "unanswered_expansion" | "just_over_50" | "towers" | "workers_lost" | "goal_3360"
     | "unused_spike" | "upkeep_before_upgrades" | "mine_dry" | "build_drift";
@@ -129,13 +129,19 @@ function workerTarget(p: PlayerRecord, t: number) {
 function economyFinding(c: Ctx): Finding | null {
   const series = seriesOf(c.r, c.me);
   const checks = [
-    { t: 360_000, slack: 3 },
-    { t: 600_000, slack: 2 },
+    { t: 360_000, slack: 3, key: "workers6" },
+    { t: 600_000, slack: 2, key: "workers10" },
   ]
     .filter(({ t }) => c.r.game.durationMs >= t)
-    .map(({ t, slack }) => ({ t, slack, workers: at(series, t)?.workers ?? null, ...workerTarget(c.me, t) }))
+    .map(({ t, slack, key }) => {
+      const target = workerTarget(c.me, t);
+      // Short of the guides' target and below 9 in 10 pros of the race: Orc and Undead pros run
+      // leaner than the guide numbers (Orc pros plateau at ~12 even on two bases).
+      const floor = Math.min(target.target - slack, proQ(c, key, "p10") ?? Infinity);
+      return { t, floor, workers: at(series, t)?.workers ?? null, ...target };
+    })
     .filter((x) => x.workers !== null);
-  const short = checks.filter((x) => x.workers! < x.target - x.slack);
+  const short = checks.filter((x) => x.workers! < x.floor);
   if (!short.length) return null;
   const gap = Math.max(...short.map((x) => x.target - x.workers!));
   const m = c.me.metrics;
@@ -345,23 +351,6 @@ function expansionFinding(c: Ctx): Finding | null {
   };
 }
 
-/** Official basics: heroes of level 5 and above get no experience from creeps. */
-function creepingFinding(c: Ctx): Finding | null {
-  const fights = c.r.sim?.status === "ok" ? (c.r.sim.fights ?? []) : [];
-  const heroes = c.me.heroes;
-  const wasted = fights.filter((f) => {
-    if (f.category !== "creep-fight" || !f.playerIds.includes(c.me.playerId)) return false;
-    const present = heroes.filter((h) => (h.levelUps[0] ?? Infinity) <= f.start);
-    return present.length > 0 && present.every((h) => h.levelUps.filter((x) => x <= f.start).length >= 5);
-  });
-  if (wasted.length < 2) return null;
-  return {
-    id: "creeping",
-    severity: 0.5,
-    headline: "Creeping with heroes that no longer gain XP from it",
-    evidence: [`Creep fights after all your heroes reached level 5 (no experience from creeps from then on): ${wasted.map((f) => mmss(f.start)).join(", ")}.`],
-  };
-}
 
 
 /** Pros' quantile of a mined feature (scripts/mine-principles.ts) for the player's race, or null. */
@@ -557,7 +546,11 @@ function upkeepBeforeUpgradesFinding(c: Ctx): Finding | null {
   const m = c.me.metrics;
   const upgraded = Math.min(m.first_attack_upgrade_ms ?? Infinity, m.first_armor_upgrade_ms ?? Infinity) <= over;
   const expanded = expansionTimes(c.me).some((t) => t <= over);
-  if (upgraded || expanded) return null;
+  // Tier 3 is an investment too. (Excusing a fight around that time silenced the rule: the
+  // simulation sees some fight nearly all the time.)
+  const t3 = tier3Of(c.me);
+  const teched = t3 !== null && t3 <= over;
+  if (upgraded || expanded || teched) return null;
   return {
     id: "upkeep_before_upgrades",
     severity: BASIC,
@@ -625,7 +618,6 @@ export function allFindings(r: GameRecord, ref: FactsRef | null, subjectId?: num
     noHeroesFinding(c),
     upkeepFinding(c),
     window ? null : expansionFinding(c), // the window finding already says whether you expanded
-    creepingFinding(c),
     firstCreepFinding(c),
     upgradesFinding(c),
     oneHeroFinding(c),
