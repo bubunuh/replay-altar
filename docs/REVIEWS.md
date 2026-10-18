@@ -36,8 +36,9 @@ units disappearing.
 - Repetition: the late first creep reported twice; wording ("1 camps", "a engagement").
 
 **Open (not fixed yet):**
-- *They out-expanded you* is the story of several losses (276f7a1a, 08c1cc36) but no rule says
-  it; "unanswered expansion" (the closest rule) scores about 1. Base counts now come from the
+- *They out-expanded you* was the story of several losses (276f7a1a, 08c1cc36). **Done:** the
+  `out_expanded` rule (more bases standing for 4+ minutes before 20:00) scores 1.8 on held-out
+  pros (Human 1.0, Orc 1.6, Undead 2.0, Night Elf 2.6) and fires in both games. Base counts now come from the
   simulation's standing halls, one per site 2500+ from the start (an Undead expansion is a
   Necropolis *and* a Haunted Gold Mine; a Night Elf can walk its Tree of Life over without an
   order; Tree of Life orders get cancelled and re-placed). On the pro corpus orders and
@@ -45,6 +46,7 @@ units disappearing.
   source moved some scores (upkeep 1.3 → 1.0, upkeep before upgrades 1.1 → 1.0; mine dry fires
   more, same lift), so those rules need another look with the better counts.
 - Items gap below the 8-item threshold (1 vs 6) went unmentioned: the fights "why" now needs 5+ items and 3x yours.
+- Fixed after more pro reviews: "your fights cost far more" next to a whole-game trade better than pros (d8946bf3, b3244d52); upkeep demoted to a basic (lift 1.0 with accurate bases).
 - A late second hero has no rule of its own (only through 3-3-60). Tested a basic ("second hero later than 9 in 10 pros of the matchup, or none in 12+ minutes"): 8% of pro wins and 8% of losses (lift 1.0; Night Elf 0.4 — solo-hero builds), so not added.
 - "No attack/armor upgrades" fires for caster armies and Orc builds whose research went
   elsewhere; consider counting caster training.
