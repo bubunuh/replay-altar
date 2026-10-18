@@ -877,7 +877,9 @@ function becauseFor(f: Finding, c: Ctx): string[] {
       const v = mixValue(idle);
       if (v >= 400) out.push(`≈${v} of what you ordered in the 6 minutes before it went into ${idle.map((e) => `${e.name} ×${e.count}`).join(", ")}, which only attack buildings.`);
     }
-    const dives = fightLosses(c.r, c.me, c.opp).filter((x) => x.f.category === "tower-dive" && x.f.initiatorId === c.me.playerId && x.me > x.opp && x.me >= 300);
+    // WC3V also calls fights at bases without towers (Night Elf ancients) tower dives.
+    const theyHadTowers = (t: number) => c.opp.build.some((b) => b.kind === "building" && b.ms < t && RACES[c.opp.race as RaceCode]?.towers.includes(b.code));
+    const dives = fightLosses(c.r, c.me, c.opp).filter((x) => x.f.category === "tower-dive" && x.f.initiatorId === c.me.playerId && theyHadTowers(x.f.start) && x.me > x.opp && x.me >= 300);
     if (dives.length) out.push(`${dives.length === 1 ? "One" : dives.length} of your losing fights ${dives.length === 1 ? "was" : "were"} under their towers (${dives.map((x) => mmss(x.f.start)).join(", ")}).`);
   }
   if (f.id === "window") {
