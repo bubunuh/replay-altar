@@ -7,7 +7,7 @@ import { factsRefFor } from "./context.ts";
 import { gameFacts } from "./facts.ts";
 import { findings as findFindings, MIN_GAME_MS, opponentPlan, strengths as findStrengths } from "./findings.ts";
 import type { ModelServer } from "./server.ts";
-import type { AiAnalysis, Review } from "./types.ts";
+import type { AiAnalysis, Review, RulesBook } from "./types.ts";
 
 export const PROMPT_VERSION = 2;
 
@@ -70,6 +70,7 @@ export function buildPrompt(db: DB, paths: Paths, gameKey: string) {
   const found = findFindings(r, ref);
   const good = findStrengths(r, ref);
   const facts = gameFacts(r, { result: detail.row.result ?? "unknown", ref });
+  const plan = opponentPlan(r, ref);
   const brief = [
     "## Findings (computed by the app, most important first)",
     ...(found.length ? found.map((f, i) => `${i + 1}. [${f.id}] ${f.headline}\n${f.evidence.map((e) => `   - ${e}`).join("\n")}`) : ["(none: no clear problem stood out)"]),
@@ -78,12 +79,22 @@ export function buildPrompt(db: DB, paths: Paths, gameKey: string) {
     ...(good.length ? good.map((s) => `- ${s}`) : ["(none)"]),
     "",
     "## Opponent's plan (computed by the app, from their orders)",
-    ...opponentPlan(r, ref).map((l) => `- ${l}`),
+    ...plan.map((l) => `- ${l}`),
     "",
   ].join("\n");
   const prompt = `${brief}\n${facts}`;
 
-  return { record: r, found, good, prompt };
+  return { record: r, found, good, plan, facts, prompt };
+}
+
+/** What the rules found in one of your games (shown before, and without, the AI write-up). */
+export function rulesBook(db: DB, paths: Paths, gameKey: string): RulesBook {
+  try {
+    const { found, good, plan, facts } = buildPrompt(db, paths, gameKey);
+    return { problem: null, findings: found, strengths: good, opponentPlan: plan, facts };
+  } catch (e) {
+    return { problem: (e as Error).message, findings: [], strengths: [], opponentPlan: [], facts: "" };
+  }
 }
 
 /** Run the analysis for one of your games and store it in <data>/ai/<gameKey>.json. */

@@ -600,7 +600,6 @@ function buildDriftFinding(c: Ctx): Finding | null {
 }
 
 /** Every rule that fires, most costly first. */
-/** Every rule that fires, most costly first. */
 export function allFindings(r: GameRecord, ref: FactsRef | null, subjectId?: number): Finding[] {
   const me = subjectId === undefined ? r.players.find((p) => p.isMe) : r.players.find((p) => p.playerId === subjectId);
   const opp = r.players.find((p) => p.playerId !== me?.playerId && p.teamId !== me?.teamId);

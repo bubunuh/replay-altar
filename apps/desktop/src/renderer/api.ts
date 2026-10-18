@@ -1,6 +1,6 @@
 import type { Config, GameDetail, GameRow, MetricDef, Paths, PerfGame, ReferenceGroup } from "@replay-altar/core/ui";
 import type { RefProfile } from "@replay-altar/reference/types";
-import type { AiAnalysis } from "@replay-altar/ai/types";
+import type { AiAnalysis, RulesBook } from "@replay-altar/ai/types";
 import type { Principles } from "@replay-altar/ai/principles";
 
 export type AiStatus = { problem: string | null; warcraftRunning: boolean; running: string[] };
@@ -29,6 +29,9 @@ type W3Api = {
   refUpdateStatus(): Promise<{ running: boolean; log: string[] }>;
   onRefUpdate(fn: (event: "progress" | "done", value: string | number | null) => void): () => void;
   aiGet(key: string): Promise<AiAnalysis | null>;
+  rules(key: string): Promise<RulesBook>;
+  /** The map's minimap as a data URL, or null when there is none yet. */
+  mapImage(mapFile: string): Promise<string | null>;
   aiStatus(): Promise<AiStatus>;
   aiRun(key: string): Promise<AiAnalysis | null>;
   onAi(fn: (event: "progress" | "done", key: string, stage?: string) => void): () => void;

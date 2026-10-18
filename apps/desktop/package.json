@@ -14,7 +14,8 @@
     "electron": "^44.9.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "@replay-altar/reference": "*"
+    "@replay-altar/reference": "*",
+    "@replay-altar/sim": "*"
   },
   "devDependencies": {
     "@types/react": "^19.3.0",

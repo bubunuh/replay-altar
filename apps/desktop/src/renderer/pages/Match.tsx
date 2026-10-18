@@ -7,6 +7,7 @@ import { MIN_GAME_MS } from "@replay-altar/ai/findings";
 import { deviationsFromPros, matchBuilds } from "@replay-altar/ai/builds";
 import { proBuildOf, type Principles } from "@replay-altar/ai/principles";
 import { AiCard } from "../AiCard.tsx";
+import { RulesCard } from "../RulesCard.tsx";
 import { Chart, heroLevelsChart, timeLines, type Band, type HeroLine, type Tokens } from "../Chart.tsx";
 import { assess, describeRef, groupForRace, pickProfile } from "@replay-altar/reference/compare";
 import { ProMedian, Standing } from "../Standing.tsx";
@@ -189,10 +190,16 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
   const [detail, setDetail] = useState<GameDetail | undefined>();
   const [hideWorkers, setHideWorkers] = useState(true);
   const [kinds, setKinds] = useState(new Set(["building", "unit", "upgrade", "item"]));
+  const [mapImage, setMapImage] = useState<string | null>(null);
   const load = useCallback(() => api.getGame(gameKey).then(setDetail), [gameKey]);
   useEffect(() => {
     load();
   }, [load]);
+  const mapFile = detail?.record.game.map.file;
+  useEffect(() => {
+    setMapImage(null);
+    if (mapFile) api.mapImage(mapFile).then(setMapImage);
+  }, [mapFile]);
 
   const r = detail?.record;
   const me = r?.players.find((p) => p.isMe);
@@ -227,7 +234,8 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
   return (
     <div className="page">
       <div><button className="btn" onClick={onBack}>← All matches</button></div>
-      <div className="card">
+      <div className="card match-card">
+        {mapImage && <img className="map-image" src={mapImage} alt={`Minimap of ${r.game.map.file}`} title={r.game.map.file} />}
         <div className="match-head">
           <span className={`big ${row.result}`}>{row.result === "win" ? "Victory" : row.result === "loss" ? "Defeat" : "Result unknown"}</span>
           <span style={{ fontSize: 18 }}>
@@ -263,7 +271,12 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
         )}
       </div>
 
-      {row.analyzed === 1 && me && opp && r.game.durationMs >= MIN_GAME_MS && <AiCard key={r.gameKey} gameKey={r.gameKey} />}
+      {row.analyzed === 1 && me && opp && r.game.durationMs >= MIN_GAME_MS && (
+        <>
+          <RulesCard key={`rules-${r.gameKey}`} gameKey={r.gameKey} />
+          <AiCard key={r.gameKey} gameKey={r.gameKey} />
+        </>
+      )}
 
       <GameCharts record={r} refMp={ref?.mp ?? null} refLabel="Pros" />
 

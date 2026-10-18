@@ -4,7 +4,8 @@ import { existsSync, mkdtempSync, readFileSync, watch, writeFileSync } from "nod
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { app, BrowserWindow, ipcMain, nativeTheme, shell } from "electron";
-import { aiNotReady, analyzeGame, ModelServer, readAnalysis } from "@replay-altar/ai";
+import { aiNotReady, analyzeGame, ModelServer, readAnalysis, rulesBook } from "@replay-altar/ai";
+import { mapDataName } from "@replay-altar/sim/mapname";
 import {
   addAnnotation,
   configPath,
@@ -151,6 +152,12 @@ if (!app.requestSingleInstanceLock()) {
     return true;
   });
   ipcMain.handle("ai:get", (_e, key: string) => readAnalysis(p, key));
+  ipcMain.handle("rules:get", (_e, key: string) => rulesBook(db, p, key));
+  // The map's minimap, as WC3V's data tool extracts it when a game on that map is first simulated.
+  ipcMain.handle("map:image", (_e, mapFile: string) => {
+    const file = join(import.meta.dirname, "../../../vendor/wc3v/client/maps", mapDataName(mapFile), "map.jpg");
+    return existsSync(file) ? `data:image/jpeg;base64,${readFileSync(file).toString("base64")}` : null;
+  });
   ipcMain.handle("ai:status", () => ({ problem: aiNotReady(loadConfig().ai), warcraftRunning: isWarcraftRunning(), running: [...runningAi] }));
   ipcMain.handle("ai:run", (e, key: string) => {
     if (runningAi.has(key)) return null;

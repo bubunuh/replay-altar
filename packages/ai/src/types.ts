@@ -3,6 +3,9 @@ import type { Finding } from "./findings.ts";
 
 export type { Finding };
 
+/** The rules' output for one game, without the model; problem says why there is none. */
+export type RulesBook = { problem: string | null; findings: Finding[]; strengths: string[]; opponentPlan: string[]; facts: string };
+
 export type ReviewedFinding = { title: string; explanation: string; next_time: string };
 
 /** What the model writes (its JSON is constrained to this shape while it is generated). */
