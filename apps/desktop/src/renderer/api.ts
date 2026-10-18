@@ -37,6 +37,8 @@ type W3Api = {
   mapMarkers(mapFile: string): Promise<MapMarker[] | null>;
   /** Race crests as data URLs by race code (empty until extracted from the game). */
   raceIcons(): Promise<Record<string, string>>;
+  /** The game's UI font as a data URL, or null until extracted. */
+  uiFont(): Promise<string | null>;
   aiStatus(): Promise<AiStatus>;
   aiRun(key: string): Promise<AiAnalysis | null>;
   onAi(fn: (event: "progress" | "done", key: string, stage?: string) => void): () => void;

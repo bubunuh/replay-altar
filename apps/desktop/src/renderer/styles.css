@@ -17,7 +17,7 @@
   --critical: #d03b3b;
   --good-text: #006300;
   --critical-text: #b42d2d;
-  --font: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font: "Warcraft", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -107,7 +107,7 @@ td.num, th.num { text-align: right; }
 .tile .note { color: var(--muted); font-size: 12.5px; }
 
 .match-card::after { content: ""; display: block; clear: both; }
-.map-view { float: right; margin: 0 0 8px 16px; width: 220px; }
+.map-view { float: right; margin: 0 0 8px 16px; width: 286px; }
 .map-view.large { width: min(560px, 60vw); }
 .map-frame { position: relative; cursor: zoom-in; line-height: 0; }
 .map-view.large .map-frame { cursor: zoom-out; }
@@ -121,9 +121,9 @@ td.num, th.num { text-align: right; }
 .camp-easy { fill: #39d353; }
 .camp-mid { fill: #ff9f1a; }
 .camp-hard { fill: #ff3b30; }
-@media (max-width: 640px) { .map-view { width: 120px; } }
+@media (max-width: 640px) { .map-view { width: 156px; } }
 .versus { display: inline-flex; align-items: center; gap: 8px; font-size: 18px; }
-.race-icon { height: 46px; width: auto; vertical-align: middle; filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.35)) brightness(1.25); }
+.race-icon { height: 69px; width: auto; vertical-align: middle; filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.35)) brightness(1.25); }
 
 /* Tooltips: .tip is the small "i"; any [data-tip] element shows its text (Tip.tsx TipLayer). */
 .tip { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; border-radius: 50%; border: 1px solid var(--axis); color: var(--muted); font-size: 10px; font-weight: 700; font-style: italic; font-family: Georgia, serif; cursor: help; vertical-align: middle; }

@@ -9,6 +9,13 @@ import { Performance } from "./pages/Performance.tsx";
 import { TipLayer } from "./Tip.tsx";
 import "./styles.css";
 
+// The game's own font when it has been extracted (scripts/extract-gamedata.sh); system font otherwise.
+api.uiFont().then((url) => {
+  if (!url) return;
+  const face = new FontFace("Warcraft", `url(${url})`);
+  face.load().then((f) => document.fonts.add(f)).catch(() => {});
+});
+
 type Page = "matches" | "performance" | "skipped" | "settings";
 const TABS: [Page, string][] = [
   ["matches", "Matches"],

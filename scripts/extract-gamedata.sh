@@ -1,6 +1,6 @@
 #!/bin/sh
 # Extracts the balance tables WC3V's simulation needs from the local Warcraft III install,
-# and the race crests the match page shows.
+# and the race crests and UI font the app shows.
 #
 #   scripts/extract-gamedata.sh [wc3-install-dir]
 #
@@ -47,6 +47,10 @@ nice -n 19 podman run --rm --security-opt label=disable \
   'war3.w3mod:webui\versusmenu\raceicons\undead-resting.png' \
   'war3.w3mod:webui\versusmenu\raceicons\nightelf-resting.png' \
   'war3.w3mod:webui\versusmenu\raceicons\random-resting.png' >/dev/null
+# The game's UI font (Friz Quadrata), used across the app.
+mkdir -p "$DATA/ui/fonts"
+nice -n 19 podman run --rm --security-opt label=disable \
+  -v "$WC3":/war3:O -v "$DATA/ui/fonts":/out:z "$IMAGE" /war3 /out 'war3.w3mod:fonts\frizqt__.ttf' >/dev/null
 
 # WC3V's converter reads ./UnitBalance.slk and writes ./UnitBalance.json.
 (cd "$OUT" && cp unitbalance.slk UnitBalance.slk && node "$ROOT/vendor/wc3v/slk/slk.js" >/dev/null)

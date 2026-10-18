@@ -169,6 +169,11 @@ if (!app.requestSingleInstanceLock()) {
         .map(([code, f]) => [code, `data:image/png;base64,${readFileSync(f).toString("base64")}`]),
     );
   });
+  // The game's UI font (Friz Quadrata), copied out of the install like the crests.
+  ipcMain.handle("ui:font", () => {
+    const f = join(dataDir(), "ui/fonts/frizqt__.ttf");
+    return existsSync(f) ? `data:font/ttf;base64,${readFileSync(f).toString("base64")}` : null;
+  });
   ipcMain.handle("map:image", (_e, mapFile: string) => {
     const file = join(import.meta.dirname, "../../../vendor/wc3v/client/maps", mapDataName(mapFile), "map.jpg");
     return existsSync(file) ? `data:image/jpeg;base64,${readFileSync(file).toString("base64")}` : null;
