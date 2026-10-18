@@ -236,3 +236,9 @@ units disappearing.
 **364b43fe · win, NvO, 26:47.** App: heroes fell behind (share 43%; mid-game advice: the gap opened after 15:36); late 3-3-60 (Pit Lord level 3 at 17:40). Replay: fast expansion 2:40 and 35 Wisps, Bears from 10:00; their Shadow Hunter reached 7 while your tavern Pit Lord levelled slowly. **Good.**
 
 **b9d19af7 · win, NvO, 11:30.** App: too few workers (10 at 6:00, 9 at 10:00; target 14). Replay: one-base fast Tree of Ages into Bears; Night Elf Wisps are consumed by buildings, and the worker floor already uses the Night Elf pros' 10th percentile (≈10.6), so this is a borderline call. **Fine.**
+
+**bdb923f9 · loss, NvH, 16:11.** App: heroes fell behind (1 camp by 6:00; Demon Hunter level 2 from 2:56 to 11:03); no upgrades (they had attack and armor at 10:38). Turning point 14:02 (≈1390 vs 0). **Good.**
+
+**550333c4 · loss, NvO, 12:18.** App: fights (5 items vs 16); heroes fell behind (level 3 at 8:39; share 31%). Replay: Bears against Grunts/Spirit Walkers/Kodos; both Orc heroes reached 4. **Good.**
+
+**e81e985d · loss, NvO, 39:12.** App: hero deaths; heroes (Demon Hunter level 3 from 18:04 to 33:36, mid-game advice); high upkeep on one base from 16:00 (expanded only at 26:59). Turning point 13:29. Replay: 39 minutes of Archers + Dryads (no tier 3 ever) against Wind Riders, out-mined by the Orc from 6:00 to 30:00. **Good**; "never teched in 39 minutes" isn't a rule and probably shouldn't be (some builds stay on tier 2).
