@@ -7,7 +7,7 @@ import { loadCosts, type CostTables } from "./costs.ts";
 import { buildTimelines, economyMetrics, ESTIMATE_HORIZON_MS, runIncome, type EconomyConstants, type WOutput } from "./economy.ts";
 import constantsJson from "./economy-constants.json" with { type: "json" };
 import { ensureMapData } from "./maps.ts";
-import { armyAt, heroTimelines, unitsKilledEstimate } from "./army.ts";
+import { armyAt, armyValueFn, heroTimelines, unitsKilledEstimate } from "./army.ts";
 import { DRIVER, gamedataDir, simNotReady, simOutputPath, wc3vCommit } from "./paths.ts";
 
 export { buildTimelines, runIncome, economyMetrics, loadCosts, simNotReady, simOutputPath, gamedataDir, ESTIMATE_HORIZON_MS };
@@ -54,7 +54,8 @@ export function summarize(record: GameRecord, o: WOutput, costs: CostTables, k: 
     }
     const pw = (o.validation?.warnings ?? []).filter((w) => String(w.player) === String(tl.playerId)).map((w) => `${w.type ?? "warning"}: ${w.message ?? ""}`.trim());
     const rp = record.players.find((p) => p.playerId === tl.playerId)!;
-    const series = incomes[i].series.map((s) => ({ ...s, ...armyAt(s.t, s.foodUsed, s.workers, rp, costs) }));
+    const valueAt = armyValueFn(o, tl.playerId, costs);
+    const series = incomes[i].series.map((s) => ({ ...s, ...armyAt(s.t, s.foodUsed, s.workers, rp, costs), armyValue: valueAt(s.t) }));
     metrics.units_killed = unitsKilledEstimate(o, tl.playerId, tl.teamId, k.unitsKilledFactor ?? 1.49, costs);
     // The game counts its "largest army" in food, heroes included.
     metrics.largest_army = Math.max(0, ...series.map((s) => s.foodUsed - s.workers));
@@ -86,6 +87,7 @@ function workersLost(o: WOutput, playerId: number, race: string, byMs: number): 
   return units.filter((u) => u.itemId === worker && (u.lostState?.state === "lost" || u.lostState?.state === "possiblyLost") && u.lostState.since <= byMs).length;
 }
 
+type WLossGroup = { gold?: number; lumber?: number; units?: { itemId: string; count: number; isHero?: boolean }[] };
 type WBattle = {
   startTime: number;
   endTime: number;
@@ -93,6 +95,7 @@ type WBattle = {
   startingPlayerId?: number | null;
   participants?: { playerId: number }[];
   flags?: { involvesHero?: boolean; involvesAir?: boolean };
+  summary?: { perPlayer?: Record<string, { definite?: WLossGroup; estimated?: WLossGroup; heroDeaths?: { itemId: string }[] }> };
 };
 
 function fightsOf(o: WOutput): SimFight[] {
@@ -105,6 +108,17 @@ function fightsOf(o: WOutput): SimFight[] {
     playerIds: [...new Set((b.participants ?? []).map((p) => p.playerId))],
     involvesHero: !!b.flags?.involvesHero,
     involvesAir: !!b.flags?.involvesAir,
+    // WC3V's own count of what each side lost in the battle (definite + estimated). Units it
+    // only estimates as killed here may still be alive in its unit list.
+    losses: Object.fromEntries(
+      Object.entries(b.summary?.perPlayer ?? {}).map(([pid, x]) => [
+        pid,
+        {
+          value: (x.definite?.gold ?? 0) + (x.definite?.lumber ?? 0) + (x.estimated?.gold ?? 0) + (x.estimated?.lumber ?? 0),
+          heroes: (x.heroDeaths ?? []).map((h) => h.itemId),
+        },
+      ]),
+    ),
   }));
 }
 

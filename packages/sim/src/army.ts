@@ -47,6 +47,21 @@ export function armyAt(
   return { armyFood, armyValue: food > 0 ? Math.round((armyFood * value) / food) : 0 };
 }
 
+/**
+ * Army value at each time from the simulation's own units: what the army units finished by then
+ * cost, minus those it saw die (lost or possibly lost, like the loss series). The supply count
+ * can't be used for this: the simulation rarely takes dead units off it (pros sit at "100 food"
+ * after losing half their army), so a wiped army still looked full.
+ */
+export function armyValueFn(o: WOutput, playerId: number, costs: CostTables): (t: number) => number {
+  const units = ((o.players[String(playerId)] as unknown as { units?: (WUnitX & { isBuilding?: boolean; isIllusion?: boolean })[] })?.units ?? [])
+    .filter((u) => !u.isBuilding && !u.isIllusion && !WORKERS.has(u.itemId))
+    .map((u) => ({ u, c: costOf(costs, u.itemId) }))
+    .filter(({ c }) => !c.isHero && c.food > 0)
+    .map(({ u, c }) => ({ from: u.trainedTime ?? u.spawnTime ?? Infinity, to: isLost(u) ? u.lostState!.since : Infinity, value: c.gold + c.lumber }));
+  return (t) => units.reduce((n, x) => (x.from <= t && x.to > t ? n + x.value : n), 0);
+}
+
 /** Revive duration in ms by the game's formula (miscgame: factor 0.6 per level, at most 2x build time, max 150 s). */
 const reviveMs = (buildMs: number, level: number) => Math.min(150_000, buildMs * level * 0.6, buildMs * 2);
 

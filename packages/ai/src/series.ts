@@ -1,5 +1,5 @@
 // Small helpers over a game's simulated series, shared by the fact sheet and the findings.
-import type { GameRecord, PlayerRecord, SimSample } from "@replay-altar/core/ui";
+import type { GameRecord, PlayerRecord, SimFight, SimSample } from "@replay-altar/core/ui";
 
 export const STEP_MS = 120_000;
 
@@ -56,12 +56,53 @@ export function leads(rows: Sampled[]): string {
   return spans.map((x) => `${x.who} ${x.who === "even" ? "" : "led "}${mmss(x.from)}${x.to > x.from ? `–${mmss(x.to)}` : ""}`).join(", ");
 }
 
-/** Resources each side lost in each detected fight (10 s margin on both ends). */
+/** Loss bursts: losses with gaps under 30 s between them, as [start, end, value]. */
+function lossBursts(series: SimSample[]): { start: number; end: number; value: number }[] {
+  const out: { start: number; end: number; value: number }[] = [];
+  for (let i = 1; i < series.length; i++) {
+    const d = series[i].goldLost + series[i].lumberLost - (series[i - 1].goldLost + series[i - 1].lumberLost);
+    if (d <= 0) continue;
+    const last = out.at(-1);
+    if (last && series[i].t - last.end <= 30_000) {
+      last.end = series[i].t;
+      last.value += d;
+    } else out.push({ start: series[i - 1].t, end: series[i].t, value: d });
+  }
+  return out;
+}
+
+/** A burst of losses this large with no battle detected around it counts as a fight too. */
+const UNSEEN_FIGHT_MIN = 600;
+
+/**
+ * Resources each side lost in each fight, from the loss series (10 s margin on both ends). Large
+ * loss bursts away from any detected battle are added as "unseen" fights: the simulation infers
+ * many deaths from units that stop moving, some time after the battle it saw.
+ */
 export function fightLosses(r: GameRecord, me: PlayerRecord, opp: PlayerRecord) {
   if (r.sim?.status !== "ok") return [];
   const sm = seriesOf(r, me);
   const so = seriesOf(r, opp);
-  return (r.sim.fights ?? []).map((f) => ({ f, me: lostBetween(sm, f.start - 10_000, f.end + 10_000), opp: lostBetween(so, f.start - 10_000, f.end + 10_000) }));
+  const fights = r.sim.fights ?? [];
+  // WC3V's battle summaries estimate losses too, but taking them made the fights rule fire in
+  // more pro wins (holdout lift 1.9 -> 1.5); only their hero kills are used (report.ts).
+  const seen = fights.map((f) => ({ f, me: lostBetween(sm, f.start - 10_000, f.end + 10_000), opp: lostBetween(so, f.start - 10_000, f.end + 10_000) }));
+  // Same 10 s margin as the losses counted for a detected fight, so a later burst isn't lost.
+  const near = (b: { start: number; end: number }) => fights.some((f) => b.start <= f.end + 10_000 && b.end >= f.start - 10_000);
+  const bursts = [...lossBursts(sm), ...lossBursts(so)].filter((b) => b.value >= UNSEEN_FIGHT_MIN && !near(b)).sort((a, b) => a.start - b.start);
+  const unseen: typeof seen = [];
+  for (const b of bursts) {
+    const last = unseen.at(-1);
+    if (last && b.start <= last.f.end + 30_000) {
+      last.f.end = Math.max(last.f.end, b.end);
+      last.me = lostBetween(sm, last.f.start - 10_000, last.f.end + 10_000);
+      last.opp = lostBetween(so, last.f.start - 10_000, last.f.end + 10_000);
+      continue;
+    }
+    const f: SimFight = { start: b.start, end: b.end, category: "unseen-fight", initiatorId: null, playerIds: [me.playerId, opp.playerId], involvesHero: false, involvesAir: false };
+    unseen.push({ f, me: lostBetween(sm, b.start - 10_000, b.end + 10_000), opp: lostBetween(so, b.start - 10_000, b.end + 10_000) });
+  }
+  return [...seen, ...unseen].sort((a, b) => a.f.start - b.f.start);
 }
 
 /**
@@ -89,3 +130,6 @@ export function productionGap(r: GameRecord, p: PlayerRecord, worker: string, un
   }
   return best;
 }
+
+/** A fight's category in words. */
+export const fightLabel = (category: string) => (category === "unseen-fight" ? "fight (inferred from units lost)" : category.replace(/-/g, " "));

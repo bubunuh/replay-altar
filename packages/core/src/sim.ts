@@ -45,6 +45,8 @@ export type SimFight = {
   playerIds: number[];
   involvesHero: boolean;
   involvesAir: boolean;
+  /** WC3V's battle summary per player id: resources lost and heroes killed (missing in older summaries). */
+  losses?: Record<string, { value: number; heroes: string[] }>;
 };
 
 export type SimPlayer = {

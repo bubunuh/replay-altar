@@ -10,7 +10,7 @@ import type { MatchupProfile } from "@replay-altar/reference/types";
 import { openingOf } from "./openings.ts";
 import { deviationsFromPros, matchBuilds } from "./builds.ts";
 import { proBuildOf, type Principles } from "./principles.ts";
-import { at, fightLosses, leads, levelSum, mmss, sampleBoth, seriesOf, STEP_MS, type Sampled } from "./series.ts";
+import { at, fightLabel, fightLosses, leads, levelSum, mmss, sampleBoth, seriesOf, STEP_MS, type Sampled } from "./series.ts";
 
 export type FactsRef = { label: string; key: string; mp: MatchupProfile; principles?: Principles | null };
 
@@ -138,7 +138,7 @@ function fightLines(r: GameRecord, me: PlayerRecord, opp: PlayerRecord): string[
   const who = (id: number | null) => (id === me.playerId ? "you" : id === opp.playerId ? "opp" : "?");
   const rows = fightLosses(r, me, opp).map(({ f, me: mine, opp: theirs }) => {
     const tags = [f.initiatorId !== null ? `started by ${who(f.initiatorId)}` : null, f.involvesHero ? "heroes" : null, f.involvesAir ? "air units" : null].filter(Boolean).join(", ");
-    return { f, weight: mine + theirs + (f.category === "pitched-battle" ? 1_000 : 0), line: `- ${mmss(f.start)}–${mmss(f.end)} ${f.category.replace(/-/g, " ")}${tags ? ` (${tags})` : ""}: you lost ≈${mine}, opp lost ≈${theirs}` };
+    return { f, weight: mine + theirs + (f.category === "pitched-battle" ? 1_000 : 0), line: `- ${mmss(f.start)}–${mmss(f.end)} ${fightLabel(f.category)}${tags ? ` (${tags})` : ""}: you lost ≈${mine}, opp lost ≈${theirs}` };
   });
   const kept = rows.length > MAX_FIGHTS ? [...rows].sort((a, b) => b.weight - a.weight).slice(0, MAX_FIGHTS).sort((a, b) => a.f.start - b.f.start) : rows;
   return kept.length ? kept.map((x) => x.line) : ["(none detected)"];

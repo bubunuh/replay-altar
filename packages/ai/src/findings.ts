@@ -10,7 +10,7 @@ import { metricValue, type FactsRef } from "./facts.ts";
 import { openingOf } from "./openings.ts";
 import { deviationsFromPros, matchBuilds } from "./builds.ts";
 import { proBuildOf } from "./principles.ts";
-import { at, fightLosses, levelSum, mmss, sampleBoth, seriesOf, STEP_MS } from "./series.ts";
+import { at, fightLabel, fightLosses, levelSum, mmss, sampleBoth, seriesOf, STEP_MS } from "./series.ts";
 import { adviceFor } from "./advice.ts";
 import { ATTACK_NAME, airShare, antiAirShare, armyMix, bestAgainst, canHitAir, describeMix, mixValue, mixVsMix } from "./combat.ts";
 import { CORE_UPGRADES, POTION_ITEMS, TOWN_PORTAL } from "@replay-altar/core/gamedata";
@@ -22,7 +22,7 @@ export type Finding = {
     | "first_creep" | "upgrades" | "one_hero" | "no_items" | "floating" | "unanswered_expansion" | "just_over_50" | "towers" | "workers_lost" | "goal_3360"
     | "unused_spike" | "upkeep_before_upgrades" | "mine_dry" | "build_drift"
     // army and habits: composition against theirs, items, production, scouting
-    | "no_anti_air" | "army_mismatch" | "no_sustain" | "no_scout";
+    | "no_anti_air" | "army_mismatch" | "no_sustain" | "no_scout" | "unused_lead";
   /** 0–1: how much it likely cost (problems) or how well it went (strengths). */
   severity: number;
   /** Fallback title when the model is not available. */
@@ -166,6 +166,33 @@ function economyFinding(c: Ctx): Finding | null {
   };
 }
 
+/**
+ * The longest stretch in which one of your first two heroes gained no level (from appearing, or
+ * from its last level, until the next level or the end), with how many levels their heroes
+ * gained meanwhile.
+ */
+export function heroStall(c: Ctx) {
+  const end = c.r.game.durationMs;
+  const appear = new Map(simHeroes(c, c.me).map((h) => [h.code, h.appearAt]));
+  let best: { name: string; level: number; from: number; to: number; theirs: number; theirTop: string } | null = null;
+  for (const h of [...c.me.heroes].sort((a, b) => a.order - b.order).slice(0, 2)) {
+    const start = appear.get(h.code) ?? h.levelUps[0];
+    if (start === null || start === undefined) continue;
+    // A hero starts at level 1; its first skill point is spent at once, later ones at each level.
+    const marks = [start, ...h.levelUps.slice(1), end];
+    for (let i = 0; i + 1 < marks.length; i++) {
+      const [from, to] = [marks[i], marks[i + 1]];
+      if (best && to - from <= best.to - best.from) continue;
+      const theirs = c.opp.heroes.reduce((n, x) => n + x.levelUps.filter((t) => t > from && t <= to).length, 0);
+      const top = [...c.opp.heroes].sort((a, b) => b.levelUps.filter((t) => t <= to).length - a.levelUps.filter((t) => t <= to).length)[0];
+      const lv = (t: number) => Math.max(1, top?.levelUps.filter((x) => x <= t).length ?? 1);
+      best = { name: h.name, level: i + 1, from, to, theirs, theirTop: top ? `their ${top.name} went from level ${lv(from)} to ${lv(to)}` : "" };
+    }
+  }
+  return best;
+}
+const STALL_MS = 6 * 60_000;
+
 function heroFinding(c: Ctx): Finding | null {
   const gap = proGap(c, "hero_xp_10m") ?? proGap(c, "hero_xp_6m");
   const share = c.me.metrics.hero_xp_share;
@@ -184,9 +211,15 @@ function heroFinding(c: Ctx): Finding | null {
       `Creep camps cleared by 6:00: ${num(m.creep_camps_6m)}${vsPros(c, "creep_camps_6m")}.`,
       ...(share !== null && share !== undefined ? [`Your share of both players' hero XP: ${Math.round(share * 100)}%.`] : []),
       `Hero levels at the end: yours ${heroLevels(c.me, end)}; opp's ${heroLevels(c.opp, end)}.`,
+      ...stallLine(c),
     ],
   };
 }
+
+const stallLine = (c: Ctx) => {
+  const s = heroStall(c);
+  return s && s.level <= 3 && s.to - s.from >= STALL_MS && s.theirs >= 2 ? [`Your ${s.name} stayed level ${s.level} from ${mmss(s.from)} to ${mmss(s.to)}; meanwhile ${s.theirTop}.`] : [];
+};
 
 function fightFinding(c: Ctx): Finding | null {
   const losses = fightLosses(c.r, c.me, c.opp);
@@ -205,7 +238,7 @@ function fightFinding(c: Ctx): Finding | null {
       `In fights you lost ≈${youLost}, opp lost ≈${theyLost} (trade efficiency ≈${Math.round((c.me.metrics.trade_efficiency ?? 0) * 100)}%${trade ? `, pros median ${Math.round(trade.median * 100)}%` : ""}).`,
       ...worst.map((x) => {
         const d = deathsNear(x.f.start, x.f.end);
-        return `${mmss(x.f.start)}–${mmss(x.f.end)} ${x.f.category.replace(/-/g, " ")}: you lost ≈${x.me}, opp ≈${x.opp}${d.length ? `; ${d.join(", ")}` : ""}.`;
+        return `${mmss(x.f.start)}–${mmss(x.f.end)} ${fightLabel(x.f.category)}: you lost ≈${x.me}, opp ≈${x.opp}${d.length ? `; ${d.join(", ")}` : ""}.`;
       }),
     ],
   };
@@ -292,7 +325,7 @@ function noHeroesFinding(c: Ctx): Finding | null {
     severity: Math.min(0.85, 0.55 + lost / 4000),
     headline: "You kept fighting with all heroes dead",
     evidence: [
-      ...losses.map((x) => `${mmss(x.f.start)}–${mmss(x.f.end)} ${x.f.category.replace(/-/g, " ")} while all your heroes were dead: you lost ≈${x.me}, opp ≈${x.opp}.`),
+      ...losses.map((x) => `${mmss(x.f.start)}–${mmss(x.f.end)} ${fightLabel(x.f.category)} while all your heroes were dead: you lost ≈${x.me}, opp ≈${x.opp}.`),
     ],
   };
 }
@@ -329,7 +362,7 @@ function upkeepFinding(c: Ctx): Finding | null {
     headline: "You sat in high upkeep on too few bases",
     evidence: [
       `You were above 80 food (high upkeep: you keep 40% of the gold your workers mine) for ${Math.round(seconds)} s, from ${mmss(first)}; at most ${top} food. Go that high only right before a fight.`,
-      `Fights you were in from then on: ${fightsNear(c, first ?? 0, c.r.game.durationMs).map((f) => `${mmss(f.start)} ${f.category.replace(/-/g, " ")}`).join(", ") || "none"}.`,
+      `Fights you were in from then on: ${fightsNear(c, first ?? 0, c.r.game.durationMs).map((f) => `${mmss(f.start)} ${fightLabel(f.category)}`).join(", ") || "none"}.`,
       `Expansions by ${mmss(first)}: ${exp.filter((t) => t <= (first ?? 0)).length} (your expansions: ${exp.length ? exp.map((t) => mmss(t)).join(", ") : "none"}).`,
       `Opp's highest food: ${Math.max(0, ...seriesOf(c.r, c.opp).map((s) => s.foodUsed))}.`,
     ],
@@ -661,24 +694,32 @@ function armyMismatchFinding(c: Ctx): Finding | null {
   };
 }
 
-/** Healing and escape items: potions, healing scrolls and salves, Town Portal, staves. */
+/** Items that heal or save a hero: potions, healing scrolls and salves, Town Portal, staves. */
 const SUSTAIN = new Set([...POTION_ITEMS, TOWN_PORTAL, "shea", "sreg", "hslv", "spre", "stel", "ssan", "rej1", "rej2", "rej3"]);
 
-/** Bought items, but nothing to heal or escape by 12:00 (the no-items basic covers buying nothing). */
+/**
+ * You bought items (the no-items basic covers buying none) but nothing that heals, and no Town
+ * Portal, before your first hero death.
+ */
 function noSustainFinding(c: Ctx): Finding | null {
-  if (c.r.game.durationMs < 12 * 60_000) return null;
-  const items = c.me.build.filter((b) => b.kind === "item" && b.ms <= 12 * 60_000);
-  if (!items.length || items.some((b) => SUSTAIN.has(b.code))) return null;
-  // It matters when a hero was lost: pros sometimes skip them in games where nobody dies.
-  const died = simHeroes(c, c.me).some((h) => h.deaths.some((d) => d.diedAt <= 15 * 60_000));
-  if (!died) return null;
-  const theirs = c.opp.build.filter((b) => b.kind === "item" && b.ms <= 12 * 60_000 && SUSTAIN.has(b.code)).length;
+  if (c.r.game.durationMs < 10 * 60_000 || !c.me.build.some((b) => b.kind === "item")) return null;
+  // From 6:00: an early death usually comes before the first shop visit.
+  const death = Math.min(...simHeroes(c, c.me).flatMap((h) => h.deaths.map((d) => d.diedAt).filter((t) => t >= 360_000)), Infinity);
+  // Tested on pros: adding "or a fight lost by 800+" made it fire in 12% of their games, wins
+  // and losses alike; a hero death is when it matters.
+  const t = death;
+  if (!Number.isFinite(t)) return null;
+  const before = c.me.build.filter((b) => b.kind === "item" && b.ms <= t);
+  if (before.some((b) => SUSTAIN.has(b.code))) return null;
+  const theirs = c.opp.build.filter((b) => b.kind === "item" && b.ms <= t && SUSTAIN.has(b.code)).length;
   return {
     id: "no_sustain",
     severity: BASIC,
-    headline: "No healing or Town Portal bought",
-    evidence: [`Items bought by 12:00: ${items.map((b) => b.name).join(", ")}; none heals or teleports. Opp bought ${theirs} such items by then.`],
-    advice: "Keep a Potion of Healing and a Scroll of Town Portal on your main hero from the first shop visit: they save the hero and let you keep creeping.",
+    headline: "No healing or Town Portal when your hero died",
+    evidence: [
+      `Your first hero death (≈${mmss(t)}) came with ${before.length ? `only ${before.map((b) => b.name).join(", ")} bought` : "no items bought yet"}; no potion, healing scroll or Town Portal. Opp had bought ${theirs} such items by then.`,
+    ],
+    advice: "Carry a Potion of Healing (or healing scroll/salve) on your main hero before every big fight, and a Town Portal to get out: they decide close fights and save heroes.",
   };
 }
 
@@ -697,6 +738,41 @@ function noScoutFinding(c: Ctx): Finding | null {
     headline: "You scouted late",
     evidence: [`First unit of yours on the opponent's side of the map: ${mmss(ms)}; pros: median ${mmss(pro.p50)}.`],
     advice: "Scout their base around 2:00-3:00 (a worker, your hero on the way to a camp, or a cheap unit): their tech, towers and expansion tell you what is coming and what to build.",
+  };
+}
+
+/**
+ * Clearly ahead (army value 1.5x theirs and 600+ more, at least as many workers) at every check
+ * for 4+ minutes, and you neither attacked them, expanded, nor made them lose 300+.
+ */
+function unusedLeadFinding(c: Ctx): Finding | null {
+  const army = sampleBoth(c.r, c.me, c.opp, (s) => s.armyValue ?? 0);
+  const workers = sampleBoth(c.r, c.me, c.opp, (s) => s.workers);
+  const ahead = (i: number) => army[i].t > 240_000 && army[i].opp > 0 && army[i].me >= 1.5 * army[i].opp && army[i].me - army[i].opp >= 600 && (workers[i]?.me ?? 0) >= (workers[i]?.opp ?? 0);
+  let best: { from: number; to: number; i: number; j: number } | null = null;
+  for (let i = 0; i < army.length; i++) {
+    if (!ahead(i)) continue;
+    let j = i;
+    while (j + 1 < army.length && ahead(j + 1)) j++;
+    if (!best || army[j].t - army[i].t > best.to - best.from) best = { from: army[i].t, to: army[j].t, i, j };
+    i = j;
+  }
+  if (!best || best.to - best.from < 240_000) return null;
+  const { from, to } = best;
+  // Used = something within the first 4 minutes of the lead (a late attack doesn't undo the wait).
+  const attacked = fightLosses(c.r, c.me, c.opp).some((x) => x.f.start >= from - 60_000 && x.f.start <= from + 240_000 && x.f.category !== "creep-fight" && (x.f.initiatorId === c.me.playerId || x.opp >= 300));
+  const expanded = expansionTimes(c.me).some((t) => t >= from - 60_000 && t <= from + 240_000);
+  if (attacked || expanded) return null;
+  const peak = army.slice(best.i, best.j + 1).reduce((m, x) => (x.me / Math.max(1, x.opp) > m.me / Math.max(1, m.opp) ? x : m));
+  return {
+    id: "unused_lead",
+    severity: Math.min(0.85, 0.55 + (to - from) / 1_800_000),
+    headline: "You were well ahead and didn't attack",
+    evidence: [
+      `From ${mmss(from)} to ${mmss(to)} your army value was at least 1.5x theirs (at ${mmss(peak.t)}: ${peak.me} vs ${peak.opp}) and you had at least as many workers (${workers[best.i]?.me} vs ${workers[best.i]?.opp} at ${mmss(from)}).`,
+      `In that time you started no fight against them, didn't expand, and they lost under 300 in fights.`,
+    ],
+    advice: "When you are this far ahead, use it before they catch up: attack their expansion or creeping hero, or their base with your heroes leading, or take an expansion yourself. Waiting lets them tech to stronger units.",
   };
 }
 
@@ -730,6 +806,11 @@ function becauseFor(f: Finding, c: Ctx): string[] {
       };
       if (ups(c.opp) >= ups(c.me) + 2) out.push(`They had about ${ups(c.opp)} attack/armor upgrade levels by then, you ${ups(c.me)}.`);
     }
+    if (worst) {
+      const idle = armyMix(c.me, worst.f.start - 360_000, worst.f.start, true).filter((e) => !e.unit.attacks.length);
+      const v = mixValue(idle);
+      if (v >= 400) out.push(`≈${v} of what you ordered in the 6 minutes before it went into ${idle.map((e) => `${e.name} ×${e.count}`).join(", ")}, which only attack buildings.`);
+    }
     const dives = fightLosses(c.r, c.me, c.opp).filter((x) => x.f.category === "tower-dive" && x.me > x.opp && x.me >= 300);
     if (dives.length) out.push(`${dives.length === 1 ? "One" : dives.length} of your losing fights ${dives.length === 1 ? "was" : "were"} under their towers (${dives.map((x) => mmss(x.f.start)).join(", ")}).`);
   }
@@ -750,11 +831,12 @@ export function allFindings(r: GameRecord, ref: FactsRef | null, subjectId?: num
   if (!me || !opp || r.game.durationMs < MIN_GAME_MS) return [];
   const c: Ctx = { r, me, opp, ref };
   const window = windowFinding(c, true);
+  const heroes = heroFinding(c);
   const found = [
     window,
     windowFinding(c, false),
     economyFinding(c),
-    heroFinding(c),
+    heroes,
     fightFinding(c),
     supplyFinding(c),
     heroDeathsFinding(c),
@@ -775,6 +857,7 @@ export function allFindings(r: GameRecord, ref: FactsRef | null, subjectId?: num
     upkeepBeforeUpgradesFinding(c),
     mineDryFinding(c),
     buildDriftFinding(c),
+    window ? null : unusedLeadFinding(c),
     noAntiAirFinding(c),
     armyMismatchFinding(c),
     noSustainFinding(c),

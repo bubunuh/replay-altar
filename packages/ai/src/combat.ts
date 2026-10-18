@@ -25,15 +25,15 @@ export const ATTACK_NAME: Record<string, string> = { normal: "normal", pierce: "
 
 export type MixEntry = { code: string; name: string; count: number; value: number; unit: UnitData };
 
-/** Army units (not workers, heroes or building-only attackers) ordered in [from, to], by cost. */
-export function armyMix(p: PlayerRecord, from: number, to: number): MixEntry[] {
+/** Army units (not workers or heroes; building-only attackers on request) ordered in [from, to], by cost. */
+export function armyMix(p: PlayerRecord, from: number, to: number, withBuildingAttackers = false): MixEntry[] {
   const worker = RACES[p.race as RaceCode]?.worker;
   const out = new Map<string, MixEntry>();
   for (const b of p.build) {
     if (b.kind !== "unit" || b.ms < from || b.ms > to || b.code === worker) continue;
     const unit = UNITS[b.code];
     // Units that only hit buildings (Siege Engine) don't fight armies.
-    if (!unit || unit.hero || !unit.cost || !unit.attacks.length) continue;
+    if (!unit || unit.hero || !unit.cost || (!unit.attacks.length && !withBuildingAttackers)) continue;
     const e = out.get(b.code) ?? { code: b.code, name: b.name, count: 0, value: 0, unit };
     e.count++;
     e.value += unit.cost;

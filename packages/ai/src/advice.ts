@@ -6,6 +6,7 @@ import { RACES, type RaceCode } from "@replay-altar/core/gamedata";
 import { nameOf } from "@replay-altar/core/names";
 import type { FactsRef } from "./facts.ts";
 import { mmss } from "./series.ts";
+import { heroStall } from "./findings.ts";
 
 export type AdviceCtx = { r: GameRecord; me: PlayerRecord; opp: PlayerRecord; ref: FactsRef | null };
 
@@ -29,12 +30,19 @@ const HARASS_ANSWER: Record<RaceCode, string> = {
 const pro = (c: AdviceCtx, key: string) => c.ref?.mp.metrics[key]?.p50 ?? null;
 const race = (c: AdviceCtx) => (c.me.race as RaceCode) in RACES ? (c.me.race as RaceCode) : "H";
 
+const midGame = (c: AdviceCtx) =>
+  "Between fights, keep both heroes creeping: clear the camps on your side and the bigger camps with your army while you wait for production, and give the second hero the last hits so it levels too. A hero that stands in base for minutes falls behind theirs.";
+
 /** The advice for a finding, or null when the rule has none. */
 export function adviceFor(id: string, c: AdviceCtx): string | null {
   const R = race(c);
   const m = c.me.metrics;
   switch (id) {
     case "heroes": {
+      // Good early creeping and a stall later: the gap is mid-game, so is the advice.
+      const stall = heroStall(c);
+      const goodEarly = (m.creep_camps_6m ?? 0) >= (pro(c, "creep_camps_6m") ?? 2);
+      if (goodEarly && stall && stall.to - stall.from >= 6 * 60_000 && stall.from >= 6 * 60_000) return `Your early creeping was good; the gap opened after ${mmss(stall.from)}. ${midGame(c)}`;
       const l3 = pro(c, "hero_level3_ms");
       const camps = pro(c, "creep_camps_6m");
       const fewCamps = camps !== null && (m.creep_camps_6m ?? 0) < camps;
@@ -93,6 +101,7 @@ export function adviceFor(id: string, c: AdviceCtx): string | null {
       return "Follow your build's timings: start the tier upgrade and the expansion at the food counts the pros on that build use (shown above), and add other buildings around them.";
     case "mechanics":
       return "Put heroes and army on control groups 1-3 and production buildings on 4-6, and select with the number keys instead of clicking; it frees time for the map.";
+    case "unused_lead":
     case "army_mismatch":
     case "no_anti_air":
     case "no_sustain":

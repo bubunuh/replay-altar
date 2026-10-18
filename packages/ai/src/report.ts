@@ -5,7 +5,7 @@ import type { GameRecord, PlayerRecord } from "@replay-altar/core/ui";
 import { RACE_NAMES } from "@replay-altar/core/gamedata";
 import { nameOf } from "@replay-altar/core/names";
 import type { Finding } from "./findings.ts";
-import { at, fightLosses, mmss, seriesOf } from "./series.ts";
+import { at, fightLabel, fightLosses, mmss, seriesOf } from "./series.ts";
 
 const lowerFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
 const clause = (s: string) => lowerFirst(s.replace(/\.$/, ""));
@@ -28,8 +28,11 @@ export function turningPoint(r: GameRecord, me: PlayerRecord, opp: PlayerRecord,
     r.sim?.status === "ok"
       ? (r.sim.players.find((x) => x.playerId === p.playerId)?.heroes ?? []).flatMap((h) => h.deaths.filter((d) => d.diedAt >= top.f.start - 10_000 && d.diedAt <= top.f.end + 30_000).map(() => nameOf(h.code)))
       : [];
-  const died = [...heroes(me).map((n) => `your ${n}`), ...heroes(opp).map((n) => `their ${n}`)];
-  const category = top.f.category.replace(/-/g, " ");
+  // Hero deaths from the hero timelines, plus those WC3V's battle summary counted.
+  const fromSummary = (p: PlayerRecord) => (top.f.losses?.[String(p.playerId)]?.heroes ?? []).map((code) => nameOf(code));
+  const both = (p: PlayerRecord) => [...new Set([...heroes(p), ...fromSummary(p)])];
+  const died = [...both(me).map((n) => `your ${n}`), ...both(opp).map((n) => `their ${n}`)];
+  const category = fightLabel(top.f.category);
   const text = [
     `The game turned at ${mmss(top.f.start)}: a ${category} where you lost ≈${top.me} and they lost ≈${top.opp}${died.length ? `; ${died.join(" and ")} died` : ""}.`,
     // Only "before": units trained during and right after the fight make the value after it misleading.
