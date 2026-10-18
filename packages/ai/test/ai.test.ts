@@ -102,3 +102,41 @@ describe("openings", () => {
     expect(openingOf(p)).toEqual(["fast altar (standard)", "fast tech: tier 2 at 3:00 on 2 supply buildings", "early towers: 2 tower orders by 2:30", "no army units in the first 5 minutes"]);
   });
 });
+
+describe("build library", () => {
+  test("every guide step resolves to a game code", async () => {
+    const { LIBRARY } = await import("../src/builds.ts");
+    expect(LIBRARY.length).toBeGreaterThan(50);
+    expect(LIBRARY.flatMap((b) => b.unresolved)).toEqual([]);
+  });
+  test("generic upgrade names resolve per race", async () => {
+    const { resolveName } = await import("../src/builds.ts");
+    expect(resolveName("Armor", "O", "research")).toBe("Roar");
+    expect(resolveName("Ranged Attack", "O", "research")).toBe("Rora");
+    expect(resolveName("Black Gunpowder", "H", "research")).toBe("Rhra");
+    expect(resolveName("Troll Headhunter", "O", "train")).toBe("ohun");
+  });
+  test("matching is by food count, not strict order, and reports drift", async () => {
+    const { alignBuild, deviations, LIBRARY } = await import("../src/builds.ts");
+    const build = LIBRARY.find((b) => b.id === "grubby-036b-hu-bloody-beginner-am-mk-rifles")!;
+    const ev = (food: number, action: string, code: string, name: string) => ({ ms: food * 10_000, food, action: action as "build", code, name });
+    // Footman before the Archmage (order swapped), Keep 9 food late, no Arcane Vault.
+    const events = [ev(5, "build", "halt", "Altar of Kings"), ev(6, "build", "hbar", "Barracks"), ev(9, "train", "hfoo", "Footman"), ev(10, "hero", "Hamg", "Archmage"), ev(19, "build", "hwtw", "Scout Tower"), ev(21, "build", "hatw", "Arcane Tower"), ev(36, "tech", "hkee", "Keep"), ev(27, "build", "hbla", "Blacksmith"), ev(29, "train", "hrif", "Rifleman"), ev(34, "hero", "Hmkg", "Mountain King"), ev(34, "build", "hars", "Arcane Sanctum")];
+    const m = alignBuild(build, events);
+    expect(m.steps.find((s) => s.step.code === "Hamg")?.event?.food).toBe(10);
+    expect(deviations(m)).toContain("Keep at 36 food (build: 27)");
+    expect(deviations(m)).toContain("no Arcane Vault (build: 29 food)");
+    expect(m.score).toBeGreaterThan(0.6);
+  });
+});
+
+describe("milestones", () => {
+  test("time and food at each step", async () => {
+    const { milestonesOf } = await import("../src/milestones.ts");
+    const m = milestonesOf(game({ yourFood: (t) => (t >= 300_000 ? 52 : 30) }), 1)!;
+    expect(m.at.food50?.ms).toBe(300_000);
+    expect(m.at.hero1?.ms).toBe(120_000);
+    expect(m.at.hero1?.food).toBe(30);
+    expect(m.workers6).toBe(13);
+  });
+});

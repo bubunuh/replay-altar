@@ -3,12 +3,21 @@
 // Then lists the top findings for each of your games. Run it when reviewing the rules:
 //
 //   node scripts/eval-findings.ts
+//   node scripts/eval-findings.ts --holdout   (thresholds mined from half the games, scored on the other half)
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { loadConfig, openDb, paths, referencePaths, readRecord, listGames, type GameRecord } from "@w3stats/core";
 import { groupForRace, pickProfile } from "@w3stats/reference/compare";
 import type { RefProfile } from "@w3stats/reference/types";
 import { allFindings } from "../packages/ai/src/findings.ts";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+
+// --holdout: mine thresholds from the even half of the pro games, score the rules on the odd half.
+const HOLDOUT_DIR = process.argv.includes("--holdout") ? mkdtempSync(join(tmpdir(), "w3stats-holdout-")) : null;
+if (HOLDOUT_DIR) execFileSync(process.execPath, [join(import.meta.dirname, "mine-principles.ts"), "--sample", "even", "--out", HOLDOUT_DIR], { stdio: "ignore" });
+const scored = (gameKey: string) => !HOLDOUT_DIR || parseInt(gameKey.at(-1)!, 16) % 2 === 1;
 
 const groups = loadConfig().reference.groups.map((group) => {
   const f = join(referencePaths(group.id).root, "profile.json");
@@ -19,7 +28,11 @@ const refFor = (r: GameRecord, pid: number) => {
   const opp = r.players.find((p) => p.playerId !== pid)!;
   const g = groupForRace(groups, me.race);
   const picked = pickProfile(g?.profile, `${me.race}v${opp.race}`);
-  return g && picked ? { label: g.group.label, ...picked } : null;
+  if (!g || !picked) return null;
+  let principles = null;
+  const file = HOLDOUT_DIR ? join(HOLDOUT_DIR, `principles-${g.group.id}.json`) : join(referencePaths(g.group.id).root, "principles.json");
+  try { principles = JSON.parse(readFileSync(file, "utf8")); } catch {}
+  return { label: g.group.label, ...picked, principles };
 };
 
 type Row = { win: boolean; ids: string[]; top: string[] };
@@ -29,7 +42,7 @@ for (const { group, profile } of groups) {
   const rp = referencePaths(group.id);
   for (const f of readdirSync(rp.games)) {
     const r = readRecord(rp, f.replace(/\.json$/, "")) as GameRecord;
-    if (r.sim?.status !== "ok" || r.players.length !== 2) continue;
+    if (r.sim?.status !== "ok" || r.players.length !== 2 || !scored(r.gameKey)) continue;
     // Both players of the group's race (the profile is for that race).
     for (const p of r.players.filter((x) => x.race === group.race && (x.result === "win" || x.result === "loss"))) {
       const found = allFindings(r, refFor(r, p.playerId), p.playerId);

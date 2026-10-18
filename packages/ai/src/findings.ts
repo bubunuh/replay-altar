@@ -8,6 +8,8 @@ import { METRICS, per10Minutes } from "@w3stats/core/metrics";
 import { percentileOf } from "@w3stats/reference/quantiles";
 import { metricValue, type FactsRef } from "./facts.ts";
 import { openingOf } from "./openings.ts";
+import { deviationsFromPros, matchBuilds } from "./builds.ts";
+import { proBuildOf } from "./principles.ts";
 import { at, fightLosses, mmss, sampleBoth, seriesOf, STEP_MS } from "./series.ts";
 
 export type Finding = {
@@ -15,7 +17,7 @@ export type Finding = {
     | "window" | "exposed" | "economy" | "heroes" | "fights" | "supply" | "mechanics" | "hero_deaths" | "no_heroes" | "upkeep" | "expansion" | "creeping"
     // basics: beginner mistakes, rare at higher levels (thresholds well outside what pros do)
     | "first_creep" | "upgrades" | "one_hero" | "no_items" | "floating" | "unanswered_expansion" | "just_over_50" | "towers" | "workers_lost" | "goal_3360"
-    | "unused_spike" | "upkeep_before_upgrades" | "mine_dry";
+    | "unused_spike" | "upkeep_before_upgrades" | "mine_dry" | "build_drift";
   /** 0–1: how much it likely cost (problems) or how well it went (strengths). */
   severity: number;
   /** Fallback title when the model is not available. */
@@ -305,7 +307,8 @@ function upkeepFinding(c: Ctx): Finding | null {
       first ??= s.t;
     }
   }
-  if (seconds < 120) return null;
+  // More than 9 in 10 pros of your race (and at least 2 minutes).
+  if (seconds < Math.max(120, proQ(c, "highUpkeepFewBases", "p90") ?? 0)) return null;
   const top = Math.max(...series.map((s) => s.foodUsed));
   return {
     id: "upkeep",
@@ -361,6 +364,13 @@ function creepingFinding(c: Ctx): Finding | null {
 }
 
 
+/** Pros' quantile of a mined feature (scripts/mine-principles.ts) for the player's race, or null. */
+function proQ(c: Ctx, key: string, q: "p10" | "p25" | "p50" | "p75" | "p90"): number | null {
+  const p = c.ref?.principles;
+  const f = p && p.race === c.me.race ? p.features[key]?.all : null;
+  return f ? f[q] : null;
+}
+
 // ---- Basics: clear beginner mistakes. Thresholds sit outside what the pro games show, so these
 // stay quiet for good players and speak up for new ones (they rank below the findings above).
 const BASIC = 0.5;
@@ -369,7 +379,9 @@ const BASIC = 0.5;
 function firstCreepFinding(c: Ctx): Finding | null {
   const hero = Math.min(...simHeroes(c, c.me).map((h) => h.appearAt ?? Infinity));
   const creep = c.me.metrics.first_creep_ms;
-  if (!Number.isFinite(hero) || creep === null || creep === undefined || creep - hero <= 90_000) return null;
+  // Beyond what 9 in 10 pros of your race do (at least 90 s).
+  const limit = Math.max(90_000, proQ(c, "creepDelay", "p90") ?? 0);
+  if (!Number.isFinite(hero) || creep === null || creep === undefined || creep - hero <= limit) return null;
   return {
     id: "first_creep",
     severity: BASIC,
@@ -469,7 +481,7 @@ function justOver50Finding(c: Ctx): Finding | null {
 function towersFinding(c: Ctx): Finding | null {
   const towers = c.me.metrics.towers_total ?? 0; // build and upgrade orders: a guard tower is 2
   const bases = 1 + expansionTimes(c.me).length;
-  if (towers <= 6 * bases) return null;
+  if (towers / bases <= Math.max(6, proQ(c, "towersPerBase", "p90") ?? 0)) return null;
   return {
     id: "towers",
     severity: BASIC,
@@ -481,7 +493,7 @@ function towersFinding(c: Ctx): Finding | null {
 /** Human guide: losing about five workers (e.g. while expanding) puts you too far behind. */
 function workersLostFinding(c: Ctx): Finding | null {
   const lost = c.me.metrics.workers_lost_12m ?? 0;
-  if (lost < 5) return null;
+  if (lost < Math.max(5, (proQ(c, "workersLost12", "p90") ?? 0) + 1)) return null;
   return {
     id: "workers_lost",
     severity: BASIC + 0.1,
@@ -568,6 +580,32 @@ function mineDryFinding(c: Ctx): Finding | null {
   };
 }
 
+/**
+ * Build discipline: compared with pros who played the same build (closest library build, pros'
+ * median food at each step), your tier upgrades, expansion or heroes came much later (6+ food).
+ */
+function buildDriftFinding(c: Ctx): Finding | null {
+  const principles = c.ref?.principles;
+  if (!principles || principles.race !== c.me.race) return null;
+  const [best] = matchBuilds(c.r, c.me);
+  const pro = proBuildOf(principles, best);
+  if (!best || !pro || pro.players < 8) return null;
+  // Tier upgrades and expansions only, 8+ food late: pros adapt their builds, and smaller or other
+  // differences fired for a third of pro winners.
+  const late = deviationsFromPros(best, pro, 8).filter((d) => ["tech", "expand"].includes(d.action) && d.yours !== null && d.yours > d.pros);
+  if (!late.length) return null;
+  return {
+    id: "build_drift",
+    severity: BASIC,
+    headline: "Your key steps came late for your build",
+    evidence: [
+      `Closest build: "${best.build.name}" (${best.build.source.author ?? "guide"}); ${pro.players} pros played it (${Math.round(pro.winRate * 100)}% won).`,
+      ...late.map((d) => (d.yours === null ? `No ${d.label}; pros on this build: at ${d.pros} food.` : `${d.label} at ${d.yours} food; pros on this build: ${d.pros} food.`)),
+      "Food counts finished units (the game's counter also includes units in training).",
+    ],
+  };
+}
+
 /** Every rule that fires, most costly first. */
 /** Every rule that fires, most costly first. */
 export function allFindings(r: GameRecord, ref: FactsRef | null, subjectId?: number): Finding[] {
@@ -601,6 +639,7 @@ export function allFindings(r: GameRecord, ref: FactsRef | null, subjectId?: num
     unusedSpikeFinding(c),
     upkeepBeforeUpgradesFinding(c),
     mineDryFinding(c),
+    buildDriftFinding(c),
   ]
     .filter((f): f is Finding => !!f && f.severity >= MIN_SEVERITY)
     .sort((a, b) => b.severity - a.severity);

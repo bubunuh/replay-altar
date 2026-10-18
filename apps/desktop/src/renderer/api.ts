@@ -1,6 +1,7 @@
 import type { Config, GameDetail, GameRow, MetricDef, Paths, PerfGame, ReferenceGroup } from "@w3stats/core/ui";
 import type { RefProfile } from "@w3stats/reference/types";
 import type { AiAnalysis } from "@w3stats/ai/types";
+import type { Principles } from "@w3stats/ai/principles";
 
 export type AiStatus = { problem: string | null; warcraftRunning: boolean; running: string[] };
 
@@ -9,6 +10,8 @@ export type RefGroupInfo = {
   profile: RefProfile | null;
   state: { lastRefreshAt: string | null; lastResult: { kept: number; stopReason: string | null } | null } | null;
   root: string;
+  /** Mined from the pro games (scripts/mine-principles.ts); null until mined. */
+  principles: Principles | null;
 };
 
 type W3Api = {

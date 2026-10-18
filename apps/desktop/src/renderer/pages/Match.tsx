@@ -4,6 +4,8 @@ import { per10Minutes } from "@w3stats/core/metrics";
 import { heroesXpAt } from "@w3stats/core/heroxp";
 import { api, type RefGroupInfo } from "../api.ts";
 import { MIN_GAME_MS } from "@w3stats/ai/findings";
+import { deviationsFromPros, matchBuilds } from "@w3stats/ai/builds";
+import { proBuildOf, type Principles } from "@w3stats/ai/principles";
 import { AiCard } from "../AiCard.tsx";
 import { Chart, heroLevelsChart, timeLines, type Band, type HeroLine, type Tokens } from "../Chart.tsx";
 import { assess, describeRef, groupForRace, pickProfile } from "@w3stats/reference/compare";
@@ -167,6 +169,22 @@ function GameCharts({ record, refMp, refLabel }: { record: GameRecord; refMp: Ma
   );
 }
 
+/** Closest library build, and how the pros who played it did. */
+function BuildLine({ record, player, who, principles }: { record: GameRecord; player: PlayerRecord; who: string; principles: Principles | null | undefined }) {
+  const best = useMemo(() => matchBuilds(record, player)[0], [record, player]);
+  if (!best) return null;
+  const pro = proBuildOf(principles, best);
+  const dev = pro ? deviationsFromPros(best, pro).filter((d) => ["tech", "expand", "hero"].includes(d.action)) : [];
+  const source = best.build.source.author ?? best.build.source.where ?? "guide";
+  return (
+    <p className="sub" style={{ margin: "6px 0 0" }}>
+      <b>{who}:</b> closest to "{best.build.name}" ({source})
+      {pro && ` · ${pro.players} pros played it, ${Math.round(pro.winRate * 100)}% won`}
+      {dev.length > 0 && ` · vs those pros: ${dev.map((d) => (d.yours === null ? `no ${d.label}` : `${d.label} at ${d.yours} food (pros ${d.pros})`)).join(", ")}`}
+    </p>
+  );
+}
+
 export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; metrics: MetricDef[]; refs: RefGroupInfo[]; onBack: () => void }) {
   const [detail, setDetail] = useState<GameDetail | undefined>();
   const [hideWorkers, setHideWorkers] = useState(true);
@@ -237,6 +255,12 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
           </label>
           <button className="btn" onClick={() => api.showFile(r.provenance.archivePath)}>Show replay file</button>
         </div>
+        {r.sim?.status === "ok" && me && opp && (
+          <div className="build-lines small">
+            <BuildLine record={r} player={me} who="Your build" principles={pros?.principles} />
+            <BuildLine record={r} player={opp} who="Opponent's build" principles={groupForRace(refs, opp.race)?.principles} />
+          </div>
+        )}
       </div>
 
       {row.analyzed === 1 && me && opp && r.game.durationMs >= MIN_GAME_MS && <AiCard key={r.gameKey} gameKey={r.gameKey} />}

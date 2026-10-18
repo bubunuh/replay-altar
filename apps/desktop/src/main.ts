@@ -204,6 +204,7 @@ if (!app.requestSingleInstanceLock()) {
         group: g,
         profile: existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : null,
         state: existsSync(state) ? JSON.parse(readFileSync(state, "utf8")) : null,
+        principles: existsSync(join(referencePaths(g.id).root, "principles.json")) ? JSON.parse(readFileSync(join(referencePaths(g.id).root, "principles.json"), "utf8")) : null,
         root: referencePaths(g.id).root,
       };
     });

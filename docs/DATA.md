@@ -164,7 +164,16 @@ One file per analyzed game, written by `w3stats ai` or the button. `reingest` ne
 - **`unverified`:** numbers and times in the review that appear nowhere in `facts`.
 - **Provenance:** `model` (file, drafter, chat template), `promptVersion` and `timings`.
 
+## Build-order library (`data/builds/`) and mined principles
+
+- **Library:** 66 builds as food-keyed steps (`[food, action, name]`): 40 from Grubby's build-order images (his Discord), 16 from Warcraft 3 Gym, 10 from Liquipedia, each with its source. Names resolve to game codes (`packages/ai/src/builds.ts`; generic upgrade names per race).
+- **Matcher:** a player's key events (non-supply buildings, tier upgrades, expansions, heroes, first unit of each type, research, items, with the food in use at each) are paired with each build's steps by food count. The score is the F1 of "how much of the guide you followed" and "how much of your opening the guide explains", judged over at least 40 food.
+- **Food:** counts finished units; the game's counter (and the guides) also count units in training, so guide numbers run higher early on. Compare with pros, measured the same way.
+- **Mined (`reference/<group>/principles.json`, `docs/PRINCIPLES.md`):** `node scripts/mine-principles.ts` reduces every pro player-game to milestones (time and food at tier 2/3, heroes and their levels, expansion, upgrades, 50/60 food, 3-3-60; workers, time in each upkeep tier, creep camps, items, towers, hero deaths…). Output per race: the distribution of each, wins vs losses, whether it holds across openings, each library build as pros play it (median food per step, win rate), and the plans pros play (order of heroes, tiers and expansions).
+- **Rules** read their "unusual" thresholds from these distributions (pros' 90th percentile per race). `node scripts/eval-findings.ts --holdout` mines from half the games and scores on the other half.
+
 ## Exports
+
 
 - `w3stats export --jsonl`: one compact digest per analyzed game, containing metrics, heroes, the first 40 build orders, caveats and provenance.
 - `w3stats export --md <game>`: one game as Markdown, with a metric definition next to each value.

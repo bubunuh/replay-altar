@@ -1,0 +1,1249 @@
+{
+ "source": {
+  "author": "Warcraft 3 Gym",
+  "where": "warcraft-gym.com build orders (saved by hand)",
+  "url": "https://warcraft-gym.com/learn/guides"
+ },
+ "builds": [
+  {
+   "id": "gym-orc-1-burrow-barracks-shop-before-tech",
+   "name": "1 Burrow, Barracks and Shop before Tech",
+   "race": "O",
+   "vs": [
+    "any"
+   ],
+   "author": "Gym Coaches",
+   "steps": [
+    [
+     5,
+     "build",
+     "Altar of Storms"
+    ],
+    [
+     8,
+     "build",
+     "Barracks"
+    ],
+    [
+     9,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     10,
+     "hero",
+     "Far Seer"
+    ],
+    [
+     16,
+     "build",
+     "Voodoo Lounge"
+    ],
+    [
+     16,
+     "train",
+     "Grunt"
+    ],
+    [
+     20,
+     "tech",
+     "Stronghold"
+    ],
+    [
+     20,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     20,
+     "build",
+     "Orc Burrow"
+    ]
+   ],
+   "notes": [
+    "Never more than 5 peons on gold",
+    "Goal in every matchup: 50 supply of your composition with level 3 on both heroes"
+   ]
+  },
+  {
+   "id": "gym-ne-dh-keeper-dryads-bears-vs-orc",
+   "name": "DH Keeper → Dryads Bears",
+   "race": "N",
+   "vs": [
+    "O"
+   ],
+   "author": "AllSupGoToHeaven",
+   "steps": [
+    [
+     5,
+     "build",
+     "Altar of Elders"
+    ],
+    [
+     6,
+     "build",
+     "Ancient of War"
+    ],
+    [
+     6,
+     "build",
+     "Moon Well"
+    ],
+    [
+     9,
+     "hero",
+     "Demon Hunter"
+    ],
+    [
+     15,
+     "train",
+     "Archer"
+    ],
+    [
+     18,
+     "build",
+     "Moon Well"
+    ],
+    [
+     21,
+     "tech",
+     "Tree of Ages"
+    ],
+    [
+     25,
+     "build",
+     "Moon Well"
+    ],
+    [
+     27,
+     "build",
+     "Hunter's Hall"
+    ],
+    [
+     27,
+     "build",
+     "Ancient of Wonders"
+    ],
+    [
+     26,
+     "hero",
+     "Keeper of the Grove"
+    ],
+    [
+     26,
+     "build",
+     "Ancient of Lore"
+    ],
+    [
+     26,
+     "build",
+     "Ancient of Lore"
+    ],
+    [
+     31,
+     "item",
+     "Staff of Preservation"
+    ],
+    [
+     31,
+     "train",
+     "Dryad"
+    ],
+    [
+     37,
+     "tech",
+     "Tree of Eternity"
+    ],
+    [
+     40,
+     "build",
+     "Moon Well"
+    ],
+    [
+     39,
+     "train",
+     "Druid of the Claw"
+    ]
+   ],
+   "notes": [
+    "9 wisps on wood; at 50 keep making Moon Wells and Bears or expand"
+   ]
+  },
+  {
+   "id": "gym-hu-dark-ranger-tower-rush-vs-ne",
+   "name": "Dark Ranger Tower Rush vs Night Elf",
+   "race": "H",
+   "vs": [
+    "N"
+   ],
+   "author": "randombadgamer",
+   "steps": [
+    [
+     7,
+     "build",
+     "Barracks"
+    ],
+    [
+     8,
+     "build",
+     "Altar of Kings"
+    ],
+    [
+     10,
+     "train",
+     "Footman"
+    ],
+    [
+     20,
+     "build",
+     "Lumber Mill"
+    ],
+    [
+     20,
+     "hero",
+     "Dark Ranger"
+    ],
+    [
+     27,
+     "build",
+     "Scout Tower"
+    ],
+    [
+     31,
+     "build",
+     "Guard Tower"
+    ],
+    [
+     31,
+     "build",
+     "Guard Tower"
+    ],
+    [
+     34,
+     "build",
+     "Guard Tower"
+    ],
+    [
+     36,
+     "build",
+     "Scout Tower"
+    ]
+   ],
+   "notes": [
+    "Barracks first, tavern hero, towers in the enemy base from ~3:00"
+   ]
+  },
+  {
+   "id": "gym-orc-fs-fast-tech-no-barracks-vs-hu",
+   "name": "Far Seer Fast Tech without Barracks",
+   "race": "O",
+   "vs": [
+    "H"
+   ],
+   "author": "Gym Coaches",
+   "steps": [
+    [
+     6,
+     "build",
+     "Altar of Storms"
+    ],
+    [
+     7,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     10,
+     "hero",
+     "Far Seer"
+    ],
+    [
+     17,
+     "tech",
+     "Stronghold"
+    ],
+    [
+     17,
+     "build",
+     "Barracks"
+    ],
+    [
+     17,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     17,
+     "train",
+     "Grunt"
+    ],
+    [
+     20,
+     "build",
+     "Voodoo Lounge"
+    ],
+    [
+     28,
+     "build",
+     "Spirit Lodge"
+    ],
+    [
+     28,
+     "build",
+     "Beastiary"
+    ],
+    [
+     28,
+     "build",
+     "Orc Burrow"
+    ]
+   ],
+   "notes": [
+    "Tier 2 at 17 food before the Barracks; Far Seer harasses"
+   ]
+  },
+  {
+   "id": "gym-orc-fs-hh-2-burrow-tech",
+   "name": "Far Seer Headhunter 2 Burrow Tech",
+   "race": "O",
+   "vs": [
+    "any"
+   ],
+   "author": "Gym Coaches",
+   "steps": [
+    [
+     6,
+     "build",
+     "Altar of Storms"
+    ],
+    [
+     7,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     9,
+     "build",
+     "War Mill"
+    ],
+    [
+     10,
+     "hero",
+     "Far Seer"
+    ],
+    [
+     16,
+     "build",
+     "Barracks"
+    ],
+    [
+     17,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     17,
+     "train",
+     "Troll Headhunter"
+    ],
+    [
+     21,
+     "tech",
+     "Stronghold"
+    ],
+    [
+     27,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     29,
+     "build",
+     "Voodoo Lounge"
+    ],
+    [
+     34,
+     "hero",
+     "Tauren Chieftain"
+    ]
+   ],
+   "notes": [
+    "Six Headhunters, then tier 2; second hero Tauren Chieftain or Shadow Hunter"
+   ]
+  },
+  {
+   "id": "gym-ne-fast-bears-dh-naga",
+   "name": "Fast Bears → DH + Naga",
+   "race": "N",
+   "vs": [
+    "any"
+   ],
+   "author": "AllSupGoToHeaven",
+   "steps": [
+    [
+     5,
+     "build",
+     "Altar of Elders"
+    ],
+    [
+     6,
+     "build",
+     "Ancient of War"
+    ],
+    [
+     6,
+     "build",
+     "Moon Well"
+    ],
+    [
+     9,
+     "hero",
+     "Demon Hunter"
+    ],
+    [
+     15,
+     "train",
+     "Archer"
+    ],
+    [
+     18,
+     "build",
+     "Moon Well"
+    ],
+    [
+     21,
+     "tech",
+     "Tree of Ages"
+    ],
+    [
+     25,
+     "build",
+     "Moon Well"
+    ],
+    [
+     25,
+     "build",
+     "Hunter's Hall"
+    ],
+    [
+     25,
+     "hero",
+     "Naga Sea Witch"
+    ],
+    [
+     30,
+     "build",
+     "Ancient of Lore"
+    ],
+    [
+     31,
+     "tech",
+     "Tree of Eternity"
+    ],
+    [
+     29,
+     "build",
+     "Ancient of Wonders"
+    ],
+    [
+     28,
+     "train",
+     "Druid of the Claw"
+    ]
+   ],
+   "notes": [
+    "Bears until 48-50 food; then Roar and go over 60 or expand"
+   ]
+  },
+  {
+   "id": "gym-ud-fast-dk-fiends",
+   "name": "Fast Death Knight with Fiends",
+   "race": "U",
+   "vs": [
+    "any"
+   ],
+   "author": "Gym Coaches",
+   "steps": [
+    [
+     6,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     6,
+     "build",
+     "Altar of Darkness"
+    ],
+    [
+     7,
+     "build",
+     "Crypt"
+    ],
+    [
+     8,
+     "build",
+     "Tomb of Relics"
+    ],
+    [
+     8,
+     "hero",
+     "Death Knight"
+    ],
+    [
+     13,
+     "build",
+     "Graveyard"
+    ],
+    [
+     13,
+     "train",
+     "Ghoul"
+    ],
+    [
+     17,
+     "item",
+     "Rod of Necromancy"
+    ],
+    [
+     17,
+     "train",
+     "Crypt Fiend"
+    ],
+    [
+     20,
+     "tech",
+     "Halls of the Dead"
+    ],
+    [
+     20,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     25,
+     "hero",
+     "Lich"
+    ],
+    [
+     30,
+     "tech",
+     "Black Citadel"
+    ],
+    [
+     30,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     30,
+     "build",
+     "Slaughterhouse"
+    ],
+    [
+     39,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     39,
+     "hero",
+     "tavern"
+    ],
+    [
+     39,
+     "item",
+     "Orb of Corruption"
+    ]
+   ],
+   "notes": [
+    "At 50 food: 6 Fiends, 2 Statues, 3 heroes"
+   ]
+  },
+  {
+   "id": "gym-ud-fast-fiends-dk-vs-orc",
+   "name": "Fast Fiends and Death Knight",
+   "race": "U",
+   "vs": [
+    "O"
+   ],
+   "author": "Gym Coaches",
+   "steps": [
+    [
+     6,
+     "build",
+     "Graveyard"
+    ],
+    [
+     6,
+     "build",
+     "Crypt"
+    ],
+    [
+     7,
+     "build",
+     "Altar of Darkness"
+    ],
+    [
+     7,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     7,
+     "train",
+     "Ghoul"
+    ],
+    [
+     9,
+     "build",
+     "Tomb of Relics"
+    ],
+    [
+     9,
+     "hero",
+     "Death Knight"
+    ],
+    [
+     9,
+     "train",
+     "Crypt Fiend"
+    ],
+    [
+     17,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     23,
+     "tech",
+     "Halls of the Dead"
+    ],
+    [
+     28,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     28,
+     "hero",
+     "Lich"
+    ],
+    [
+     33,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     33,
+     "train",
+     "Obsidian Statue"
+    ]
+   ],
+   "notes": [
+    "Pressure the Orc; weak late without pressure"
+   ]
+  },
+  {
+   "id": "gym-ne-firelord-fast-expo",
+   "name": "Firelord Fast Expand",
+   "race": "N",
+   "vs": [
+    "any"
+   ],
+   "author": "HoT",
+   "steps": [
+    [
+     7,
+     "expand",
+     "Tree of Life"
+    ],
+    [
+     10,
+     "build",
+     "Altar of Elders"
+    ],
+    [
+     10,
+     "build",
+     "Ancient of War"
+    ],
+    [
+     11,
+     "build",
+     "Moon Well"
+    ],
+    [
+     12,
+     "hero",
+     "Firelord"
+    ],
+    [
+     17,
+     "build",
+     "Moon Well"
+    ],
+    [
+     17,
+     "train",
+     "Archer"
+    ],
+    [
+     30,
+     "build",
+     "Ancient of Wonders"
+    ],
+    [
+     30,
+     "build",
+     "Moon Well"
+    ],
+    [
+     39,
+     "hero",
+     "Naga Sea Witch"
+    ],
+    [
+     22,
+     "tech",
+     "Tree of Ages"
+    ]
+   ],
+   "notes": [
+    "Tree of Life planted at the natural at 7 food; tavern Firelord creeps the expansion"
+   ]
+  },
+  {
+   "id": "gym-ud-ghoul-pull-vs-ne",
+   "name": "Ghoul Pull Build vs Night Elf",
+   "race": "U",
+   "vs": [
+    "N"
+   ],
+   "author": "Barren",
+   "steps": [
+    [
+     6,
+     "build",
+     "Crypt"
+    ],
+    [
+     6,
+     "build",
+     "Altar of Darkness"
+    ],
+    [
+     6,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     7,
+     "expand",
+     "Necropolis"
+    ],
+    [
+     7,
+     "hero",
+     "Death Knight"
+    ],
+    [
+     7,
+     "train",
+     "Ghoul"
+    ],
+    [
+     14,
+     "build",
+     "Nerubian Tower"
+    ],
+    [
+     22,
+     "tech",
+     "Halls of the Dead"
+    ],
+    [
+     24,
+     "build",
+     "Tomb of Relics"
+    ],
+    [
+     24,
+     "build",
+     "Graveyard"
+    ],
+    [
+     24,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     24,
+     "build",
+     "Crypt"
+    ],
+    [
+     28,
+     "train",
+     "Gargoyle"
+    ]
+   ],
+   "notes": [
+    "The starting Ghoul pulls creeps onto the Night Elf's Ancient of War; second Necropolis early; Gargoyles at tier 2"
+   ]
+  },
+  {
+   "id": "gym-hu-mk-pally-mass-hawks-vs-ne",
+   "name": "MK + Paladin Mass Dragonhawks vs Night Elf",
+   "race": "H",
+   "vs": [
+    "N"
+   ],
+   "author": "randombadgamer",
+   "steps": [
+    [
+     7,
+     "build",
+     "Altar of Kings"
+    ],
+    [
+     7,
+     "build",
+     "Farm"
+    ],
+    [
+     7,
+     "build",
+     "Barracks"
+    ],
+    [
+     11,
+     "hero",
+     "Mountain King"
+    ],
+    [
+     16,
+     "train",
+     "Footman"
+    ],
+    [
+     26,
+     "expand",
+     "Town Hall"
+    ],
+    [
+     33,
+     "build",
+     "Arcane Vault"
+    ],
+    [
+     37,
+     "tech",
+     "Keep"
+    ],
+    [
+     37,
+     "build",
+     "Lumber Mill"
+    ],
+    [
+     37,
+     "build",
+     "Scout Tower"
+    ],
+    [
+     39,
+     "build",
+     "Scout Tower"
+    ],
+    [
+     43,
+     "build",
+     "Guard Tower"
+    ],
+    [
+     43,
+     "research",
+     "Lumber Harvesting"
+    ],
+    [
+     45,
+     "build",
+     "Blacksmith"
+    ],
+    [
+     45,
+     "hero",
+     "Paladin"
+    ],
+    [
+     50,
+     "build",
+     "Gryphon Aviary"
+    ]
+   ],
+   "notes": [
+    "Expansion at 26 food (2:59), Keep at 37"
+   ]
+  },
+  {
+   "id": "gym-hu-tower-rush-vs-orc",
+   "name": "Human Tower Rush vs Orc",
+   "race": "H",
+   "vs": [
+    "O"
+   ],
+   "author": "randombadgamer",
+   "steps": [
+    [
+     7,
+     "build",
+     "Barracks"
+    ],
+    [
+     8,
+     "build",
+     "Altar of Kings"
+    ],
+    [
+     10,
+     "train",
+     "Footman"
+    ],
+    [
+     18,
+     "build",
+     "Lumber Mill"
+    ],
+    [
+     20,
+     "hero",
+     "Firelord"
+    ],
+    [
+     28,
+     "build",
+     "Scout Tower"
+    ],
+    [
+     30,
+     "build",
+     "Guard Tower"
+    ],
+    [
+     31,
+     "build",
+     "Guard Tower"
+    ],
+    [
+     31,
+     "build",
+     "Scout Tower"
+    ],
+    [
+     31,
+     "research",
+     "Defend"
+    ]
+   ],
+   "notes": [
+    "Instant tower rush with a tavern hero (Firelord or Dark Ranger)"
+   ]
+  },
+  {
+   "id": "gym-hu-tinker-no-rax-hawks-vs-ne",
+   "name": "Tinker No Barracks Tech to Dragonhawks",
+   "race": "H",
+   "vs": [
+    "N"
+   ],
+   "author": "randombadgamer",
+   "steps": [
+    [
+     7,
+     "build",
+     "Lumber Mill"
+    ],
+    [
+     9,
+     "build",
+     "Altar of Kings"
+    ],
+    [
+     11,
+     "research",
+     "Lumber Harvesting"
+    ],
+    [
+     11,
+     "build",
+     "Scout Tower"
+    ],
+    [
+     12,
+     "build",
+     "Arcane Tower"
+    ],
+    [
+     15,
+     "hero",
+     "Goblin Tinker"
+    ],
+    [
+     20,
+     "tech",
+     "Keep"
+    ],
+    [
+     20,
+     "build",
+     "Scout Tower"
+    ],
+    [
+     20,
+     "build",
+     "Arcane Vault"
+    ],
+    [
+     20,
+     "build",
+     "Guard Tower"
+    ],
+    [
+     20,
+     "build",
+     "Gryphon Aviary"
+    ],
+    [
+     20,
+     "build",
+     "Gryphon Aviary"
+    ],
+    [
+     20,
+     "build",
+     "Blacksmith"
+    ],
+    [
+     20,
+     "train",
+     "Dragonhawk Rider"
+    ]
+   ],
+   "notes": [
+    "No Barracks: towers, fast Keep at 20 food, two Aviaries for Dragonhawks"
+   ]
+  },
+  {
+   "id": "gym-ne-jens-vs-ne-last-refuge",
+   "name": "Jens: Night Elf vs Night Elf (Keeper, Priestess, Hippogryphs)",
+   "race": "N",
+   "vs": [
+    "N"
+   ],
+   "author": "Jens (pro), via Warcraft 3 Gym",
+   "steps": [
+    [
+     7,
+     "build",
+     "Altar of Elders"
+    ],
+    [
+     7,
+     "build",
+     "Moon Well"
+    ],
+    [
+     7,
+     "build",
+     "Ancient of War"
+    ],
+    [
+     12,
+     "hero",
+     "Keeper of the Grove"
+    ],
+    [
+     18,
+     "train",
+     "Archer"
+    ],
+    [
+     20,
+     "build",
+     "Moon Well"
+    ],
+    [
+     31,
+     "tech",
+     "Tree of Ages"
+    ],
+    [
+     33,
+     "build",
+     "Moon Well"
+    ],
+    [
+     35,
+     "build",
+     "Hunter's Hall"
+    ],
+    [
+     39,
+     "build",
+     "Ancient of Wonders"
+    ],
+    [
+     39,
+     "hero",
+     "Priestess of the Moon"
+    ],
+    [
+     44,
+     "research",
+     "Improved Bows"
+    ],
+    [
+     44,
+     "build",
+     "Ancient of Wind"
+    ],
+    [
+     44,
+     "tech",
+     "Tree of Eternity"
+    ],
+    [
+     52,
+     "train",
+     "Hippogryph"
+    ]
+   ],
+   "notes": [
+    "From a pro replay on Last Refuge"
+   ]
+  },
+  {
+   "id": "gym-ud-quick-1-zig-tech-gargoyles-vs-ne",
+   "name": "Quick 1 Ziggurat Tech into Gargoyles",
+   "race": "U",
+   "vs": [
+    "N"
+   ],
+   "author": "Guvenor",
+   "steps": [
+    [
+     6,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     6,
+     "build",
+     "Altar of Darkness"
+    ],
+    [
+     7,
+     "build",
+     "Crypt"
+    ],
+    [
+     8,
+     "build",
+     "Tomb of Relics"
+    ],
+    [
+     8,
+     "hero",
+     "Death Knight"
+    ],
+    [
+     13,
+     "train",
+     "Ghoul"
+    ],
+    [
+     19,
+     "tech",
+     "Halls of the Dead"
+    ],
+    [
+     19,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     19,
+     "build",
+     "Graveyard"
+    ],
+    [
+     19,
+     "build",
+     "Crypt"
+    ],
+    [
+     23,
+     "train",
+     "Gargoyle"
+    ]
+   ],
+   "notes": [
+    "DK harasses wood wisps; tier 2 at 19 food; Gargoyles from two Crypts"
+   ]
+  },
+  {
+   "id": "gym-orc-two-burrow-tech-grunts",
+   "name": "Two Burrow Tech with Grunts",
+   "race": "O",
+   "vs": [
+    "any"
+   ],
+   "author": "Gym Coaches",
+   "steps": [
+    [
+     6,
+     "build",
+     "Altar of Storms"
+    ],
+    [
+     7,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     8,
+     "build",
+     "Barracks"
+    ],
+    [
+     10,
+     "hero",
+     "Blademaster"
+    ],
+    [
+     16,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     16,
+     "train",
+     "Grunt"
+    ],
+    [
+     19,
+     "build",
+     "Voodoo Lounge"
+    ],
+    [
+     23,
+     "tech",
+     "Stronghold"
+    ]
+   ],
+   "notes": [
+    "Tech right about when the second Grunt finishes"
+   ]
+  }
+ ]
+}

@@ -6,7 +6,9 @@
   "exports": {
     ".": "./src/index.ts",
     "./types": "./src/types.ts",
-    "./findings": "./src/findings.ts"
+    "./findings": "./src/findings.ts",
+    "./principles": "./src/principles.ts",
+    "./builds": "./src/builds.ts"
   },
   "dependencies": {
     "@w3stats/core": "*",

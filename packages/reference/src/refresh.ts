@@ -13,8 +13,10 @@ import { w3iRace, w3infoClient, w3iSubjects, type W3iClient, type W3iMapFile } f
 // No documented limit: stay polite.
 const BETWEEN_DOWNLOADS_MS = 3000;
 const BETWEEN_PAGES_MS = 1000;
-const MAX_DOWNLOADS_PER_RUN = 120;
-const MAX_PAGES = 80; // 25 replays a page: about a month of uploads
+/** Replays looked at per update: enough for the target with room for skips (other patch, duplicates). */
+const maxDownloadsFor = (target: number) => Math.max(120, Math.ceil(target * 1.6));
+/** List pages searched (25 replays each, newest first); a race appears in roughly a third of 1v1s. */
+const maxPagesFor = (target: number) => Math.max(80, target * 2);
 /** The list is newest first: this many older-patch replays in a row means the patch is behind us. */
 const OLD_PATCH_STREAK = 6;
 /** Games shorter than this (someone left early) say nothing about how pros play. */
@@ -135,7 +137,7 @@ export async function refreshGroup(group: ReferenceGroup, opts: RefreshOptions):
     let oldStreak = 0;
     if (kept < target) try {
       log(`${group.id}: ${kept}/${target} games; looking at warcraft3.info`);
-      outer: for (let page = 1; page <= MAX_PAGES; page++) {
+      outer: for (let page = 1; page <= maxPagesFor(target); page++) {
         const list = await client.listReplays(page);
         for (const r of list.replays) {
           if (kept >= target) break outer;
@@ -147,7 +149,7 @@ export async function refreshGroup(group: ReferenceGroup, opts: RefreshOptions):
             stop("paused: Warcraft III is running");
             break outer;
           }
-          if (downloaded + skipped >= (opts.maxDownloads ?? MAX_DOWNLOADS_PER_RUN)) {
+          if (downloaded + skipped >= (opts.maxDownloads ?? maxDownloadsFor(target))) {
             stop(`looked at ${downloaded + skipped} replays this run; run it again for more`);
             break outer;
           }

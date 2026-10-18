@@ -57,10 +57,10 @@ export const DEFAULT_CONFIG: Config = {
   notifyAfterGame: true,
   reference: {
     groups: [
-      { id: "pros", label: "Human pros", minMmr: 2400, race: "H", target: 50, gateways: [20, 10] },
-      { id: "pros-orc", label: "Orc pros", minMmr: 2400, race: "O", target: 50, gateways: [20, 10], onlyIfPlayed: true },
-      { id: "pros-undead", label: "Undead pros", minMmr: 2400, race: "U", target: 50, gateways: [20, 10], onlyIfPlayed: true },
-      { id: "pros-nightelf", label: "Night Elf pros", minMmr: 2400, race: "N", target: 50, gateways: [20, 10], onlyIfPlayed: true },
+      { id: "pros", label: "Human pros", minMmr: 2400, race: "H", target: 200, gateways: [20, 10] },
+      { id: "pros-orc", label: "Orc pros", minMmr: 2400, race: "O", target: 200, gateways: [20, 10], onlyIfPlayed: true },
+      { id: "pros-undead", label: "Undead pros", minMmr: 2400, race: "U", target: 200, gateways: [20, 10], onlyIfPlayed: true },
+      { id: "pros-nightelf", label: "Night Elf pros", minMmr: 2400, race: "N", target: 200, gateways: [20, 10], onlyIfPlayed: true },
     ],
   },
   ai: {

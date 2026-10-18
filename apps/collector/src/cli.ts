@@ -46,7 +46,7 @@ const HELP = `w3stats — Warcraft III replay archive & stats
   w3stats sim --resummarize   recompute economy numbers from stored simulations (after a model update)
   w3stats sim <game>          simulate one game
   w3stats ref                 pro reference games: status
-  w3stats ref refresh [--target N] [--group id]   download recent tournament games from warcraft3.info
+  w3stats ref refresh [--target N] [--group id|--all]   download recent tournament games from warcraft3.info
                               until each of your races has its target (same as "Update pro games")
   w3stats ref profile         rebuild the reference statistics from stored games
   w3stats official            fetch the game's own end-of-game stats from W3Champions for W3C games
@@ -224,8 +224,11 @@ switch (cmd) {
     const config = loadConfig();
     const sub = args[0];
     const gi = args.indexOf("--group");
-    // With --group: that group; otherwise the groups for races you play.
-    const groups = gi >= 0 ? config.reference.groups.filter((g) => g.id === args[gi + 1]) : activeReferenceGroups(config, racesPlayed(openDb(paths().db)));
+    // With --group: that group; --all: every race (for research); otherwise the races you play.
+    const groups =
+      gi >= 0 ? config.reference.groups.filter((g) => g.id === args[gi + 1])
+      : args.includes("--all") ? config.reference.groups
+      : activeReferenceGroups(config, racesPlayed(openDb(paths().db)));
     const build = currentReplayBuild(openDb(paths().db));
     if (sub === "refresh") {
       const ti = args.indexOf("--target");

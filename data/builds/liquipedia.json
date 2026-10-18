@@ -1,0 +1,563 @@
+{
+ "source": {
+  "author": "Liquipedia",
+  "where": "liquipedia.net/warcraft build-order pages (read through its API)",
+  "url": "https://liquipedia.net/warcraft/Common_build_orders"
+ },
+ "builds": [
+  {
+   "id": "lp-hu-fast-altar",
+   "name": "Human Fast Altar (standard)",
+   "race": "H",
+   "vs": [
+    "any"
+   ],
+   "url": "https://liquipedia.net/warcraft/Human_Fast_Altar_Build_Order",
+   "steps": [
+    [
+     6,
+     "build",
+     "Altar of Kings"
+    ],
+    [
+     7,
+     "build",
+     "Barracks"
+    ],
+    [
+     8,
+     "build",
+     "Farm"
+    ],
+    [
+     9,
+     "build",
+     "Farm"
+    ],
+    [
+     10,
+     "hero",
+     "Archmage"
+    ],
+    [
+     16,
+     "train",
+     "Footman"
+    ]
+   ],
+   "notes": [
+    "Creep as soon as the hero leaves the altar with 1-2 Footmen and Militia",
+    "Follow-ups: Arcane Tower, Keep on 2-3 farms, or Town Hall after 3-4 farms"
+   ]
+  },
+  {
+   "id": "lp-hu-fast-rifleman",
+   "name": "Human Fast Rifleman",
+   "race": "H",
+   "vs": [
+    "any"
+   ],
+   "url": "https://liquipedia.net/warcraft/Human_Fast_Rifleman_Build_Order",
+   "steps": [
+    [
+     8,
+     "build",
+     "Altar of Kings"
+    ],
+    [
+     8,
+     "build",
+     "Barracks"
+    ],
+    [
+     8,
+     "build",
+     "Blacksmith"
+    ],
+    [
+     9,
+     "build",
+     "Farm"
+    ],
+    [
+     12,
+     "hero",
+     "Paladin"
+    ],
+    [
+     16,
+     "train",
+     "Rifleman"
+    ],
+    [
+     26,
+     "tech",
+     "Keep"
+    ]
+   ],
+   "notes": [
+    "Tech to tier 2 at 2-3 Riflemen"
+   ]
+  },
+  {
+   "id": "lp-hu-tavern-hero",
+   "name": "Human Tavern Hero",
+   "race": "H",
+   "vs": [
+    "any"
+   ],
+   "url": "https://liquipedia.net/warcraft/Human_Tavern_Hero_Build_Order",
+   "steps": [
+    [
+     6,
+     "build",
+     "Barracks"
+    ],
+    [
+     8,
+     "build",
+     "Farm"
+    ],
+    [
+     9,
+     "build",
+     "Altar of Kings"
+    ],
+    [
+     10,
+     "build",
+     "Farm"
+    ],
+    [
+     12,
+     "train",
+     "Footman"
+    ],
+    [
+     16,
+     "hero",
+     "tavern"
+    ]
+   ]
+  },
+  {
+   "id": "lp-orc-altar",
+   "name": "Orc Fast Altar (standard)",
+   "race": "O",
+   "vs": [
+    "any"
+   ],
+   "url": "https://liquipedia.net/warcraft/Orc_Altar_Build_Order",
+   "steps": [
+    [
+     6,
+     "build",
+     "Altar of Storms"
+    ],
+    [
+     7,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     8,
+     "build",
+     "Barracks"
+    ],
+    [
+     10,
+     "hero",
+     "Blademaster"
+    ],
+    [
+     17,
+     "train",
+     "Grunt"
+    ],
+    [
+     17,
+     "build",
+     "Voodoo Lounge"
+    ],
+    [
+     20,
+     "tech",
+     "Stronghold"
+    ]
+   ],
+   "notes": [
+    "Tier 2 at 20/21"
+   ]
+  },
+  {
+   "id": "lp-orc-headhunter",
+   "name": "Orc Headhunter",
+   "race": "O",
+   "vs": [
+    "H"
+   ],
+   "url": "https://liquipedia.net/warcraft/Orc_Headhunter_Build_Order",
+   "steps": [
+    [
+     6,
+     "build",
+     "Altar of Storms"
+    ],
+    [
+     7,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     9,
+     "build",
+     "War Mill"
+    ],
+    [
+     10,
+     "build",
+     "Barracks"
+    ],
+    [
+     10,
+     "hero",
+     "Far Seer"
+    ],
+    [
+     16,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     17,
+     "train",
+     "Troll Headhunter"
+    ],
+    [
+     21,
+     "tech",
+     "Stronghold"
+    ]
+   ],
+   "notes": [
+    "Tier 2 with 12 peons, 2 Headhunters and one hero"
+   ]
+  },
+  {
+   "id": "lp-ne-fast-altar",
+   "name": "Night Elf Fast Altar (standard)",
+   "race": "N",
+   "vs": [
+    "any"
+   ],
+   "url": "https://liquipedia.net/warcraft/Night_elf_fast_altar_build_order",
+   "steps": [
+    [
+     5,
+     "build",
+     "Altar of Elders"
+    ],
+    [
+     6,
+     "build",
+     "Ancient of War"
+    ],
+    [
+     6,
+     "build",
+     "Moon Well"
+    ],
+    [
+     10,
+     "hero",
+     "Demon Hunter"
+    ],
+    [
+     16,
+     "train",
+     "Archer"
+    ],
+    [
+     18,
+     "build",
+     "Moon Well"
+    ]
+   ],
+   "notes": [
+    "Creep as soon as the hero leaves the altar with 1 Archer; the Ancient of War often takes a harder camp"
+   ]
+  },
+  {
+   "id": "lp-ne-fast-huntress",
+   "name": "Night Elf Fast Huntress",
+   "race": "N",
+   "vs": [
+    "H",
+    "O"
+   ],
+   "url": "https://liquipedia.net/warcraft/Night_Elf_Fast_Huntress_Build_Order",
+   "steps": [
+    [
+     5,
+     "build",
+     "Altar of Elders"
+    ],
+    [
+     6,
+     "build",
+     "Moon Well"
+    ],
+    [
+     10,
+     "hero",
+     "Keeper of the Grove"
+    ],
+    [
+     17,
+     "build",
+     "Ancient of War"
+    ],
+    [
+     17,
+     "build",
+     "Hunter's Hall"
+    ],
+    [
+     17,
+     "build",
+     "Moon Well"
+    ],
+    [
+     18,
+     "build",
+     "Ancient of War"
+    ],
+    [
+     20,
+     "train",
+     "Huntress"
+    ]
+   ],
+   "notes": [
+    "Pressure with Huntresses at tier 1; hard to transition if no damage was done"
+   ]
+  },
+  {
+   "id": "lp-ud-fiend",
+   "name": "Undead Fiend (standard)",
+   "race": "U",
+   "vs": [
+    "any"
+   ],
+   "url": "https://liquipedia.net/warcraft/Undead_Fiend_Build_Order",
+   "steps": [
+    [
+     6,
+     "build",
+     "Crypt"
+    ],
+    [
+     6,
+     "build",
+     "Graveyard"
+    ],
+    [
+     7,
+     "build",
+     "Altar of Darkness"
+    ],
+    [
+     7,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     7,
+     "train",
+     "Ghoul"
+    ],
+    [
+     9,
+     "build",
+     "Tomb of Relics"
+    ],
+    [
+     9,
+     "hero",
+     "Death Knight"
+    ],
+    [
+     9,
+     "train",
+     "Crypt Fiend"
+    ],
+    [
+     17,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     23,
+     "tech",
+     "Halls of the Dead"
+    ],
+    [
+     23,
+     "build",
+     "Nerubian Tower"
+    ],
+    [
+     25,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     30,
+     "hero",
+     "Lich"
+    ],
+    [
+     30,
+     "build",
+     "Slaughterhouse"
+    ],
+    [
+     35,
+     "tech",
+     "Black Citadel"
+    ],
+    [
+     35,
+     "train",
+     "Obsidian Statue"
+    ],
+    [
+     35,
+     "train",
+     "Banshee"
+    ],
+    [
+     45,
+     "item",
+     "Orb of Corruption"
+    ],
+    [
+     45,
+     "hero",
+     "tavern"
+    ]
+   ],
+   "notes": [
+    "Start creeping with 1-2 Fiends as soon as the hero is trained"
+   ]
+  },
+  {
+   "id": "lp-ud-ghoul",
+   "name": "Undead Ghoul",
+   "race": "U",
+   "vs": [
+    "any"
+   ],
+   "url": "https://liquipedia.net/warcraft/Undead_Ghoul_Build_Order",
+   "steps": [
+    [
+     6,
+     "build",
+     "Altar of Darkness"
+    ],
+    [
+     6,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     7,
+     "build",
+     "Crypt"
+    ],
+    [
+     8,
+     "hero",
+     "Death Knight"
+    ],
+    [
+     9,
+     "train",
+     "Ghoul"
+    ],
+    [
+     9,
+     "build",
+     "Tomb of Relics"
+    ]
+   ],
+   "notes": [
+    "Creep with Ghouls and Rod of Necromancy skeletons"
+   ]
+  },
+  {
+   "id": "lp-ud-lich-tower-rush",
+   "name": "Lich Tower Rush",
+   "race": "U",
+   "vs": [
+    "O"
+   ],
+   "url": "https://liquipedia.net/warcraft/Lich_Tower_Rush",
+   "steps": [
+    [
+     6,
+     "build",
+     "Crypt"
+    ],
+    [
+     6,
+     "build",
+     "Graveyard"
+    ],
+    [
+     7,
+     "build",
+     "Altar of Darkness"
+    ],
+    [
+     7,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     9,
+     "build",
+     "Tomb of Relics"
+    ],
+    [
+     9,
+     "hero",
+     "Lich"
+    ],
+    [
+     9,
+     "train",
+     "Crypt Fiend"
+    ],
+    [
+     17,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     20,
+     "build",
+     "Nerubian Tower"
+    ],
+    [
+     20,
+     "build",
+     "Spirit Tower"
+    ]
+   ],
+   "notes": [
+    "All-in vs Orc: towers in the Orc base"
+   ]
+  }
+ ]
+}

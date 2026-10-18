@@ -17,3 +17,18 @@ export function nameOf(id: string, kind?: NameKind): string {
 export const abilityName = (id: string) => nameOf(id, "heroAbilities").split(":").pop()!;
 
 export const NAMES_SOURCE: string = names.source;
+
+const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+let reverse: Map<string, { id: string; kind: NameKind }> | null = null;
+
+/** Replay object ID for a display name ("Orc Burrow" -> "otrb"), or null. Case and punctuation are ignored. */
+export function codeOf(name: string, kinds: NameKind[] = ["units", "buildings", "heroes", "upgrades", "items"]): string | null {
+  if (!reverse) {
+    reverse = new Map();
+    for (const kind of ["heroes", "units", "buildings", "upgrades", "items"] as const) {
+      for (const [id, n] of Object.entries(tables[kind])) if (!reverse.has(norm(n))) reverse.set(norm(n), { id, kind });
+    }
+  }
+  const hit = reverse.get(norm(name));
+  return hit && kinds.includes(hit.kind) ? hit.id : null;
+}

@@ -6,6 +6,7 @@ import { getGame, loadConfig, referencePaths, type DB, type GameRecord, type Pat
 import { groupForRace, pickProfile } from "@w3stats/reference/compare";
 import type { RefProfile } from "@w3stats/reference/types";
 import { gameFacts, type FactsRef } from "./facts.ts";
+import type { Principles } from "./principles.ts";
 
 export function factsRefFor(r: GameRecord): FactsRef | null {
   const me = r.players.find((p) => p.isMe);
@@ -17,7 +18,10 @@ export function factsRefFor(r: GameRecord): FactsRef | null {
   });
   const g = groupForRace(groups, me.race);
   const picked = pickProfile(g?.profile, `${me.race}v${opp.race}`);
-  return g && picked ? { label: g.group.label, ...picked } : null;
+  if (!g || !picked) return null;
+  const file = join(referencePaths(g.group.id).root, "principles.json");
+  const principles = existsSync(file) ? (JSON.parse(readFileSync(file, "utf8")) as Principles) : null;
+  return { label: g.group.label, ...picked, principles };
 }
 
 export function factsForGame(db: DB, paths: Paths, gameKey: string): { record: GameRecord; result: string; facts: string } {

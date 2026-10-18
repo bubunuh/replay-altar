@@ -8,9 +8,11 @@ import { nameOf } from "@w3stats/core/names";
 import { assess, TIER_LABEL, TYPICAL_LABEL } from "@w3stats/reference/compare";
 import type { MatchupProfile } from "@w3stats/reference/types";
 import { openingOf } from "./openings.ts";
+import { deviationsFromPros, matchBuilds } from "./builds.ts";
+import { proBuildOf, type Principles } from "./principles.ts";
 import { at, fightLosses, leads, levelSum, mmss, sampleBoth, seriesOf, STEP_MS, type Sampled } from "./series.ts";
 
-export type FactsRef = { label: string; key: string; mp: MatchupProfile };
+export type FactsRef = { label: string; key: string; mp: MatchupProfile; principles?: Principles | null };
 
 /** Whole-game details worth a line besides Core and Mechanics. */
 const DETAIL_KEYS = [
@@ -52,7 +54,7 @@ function grouped(events: { ms: number; name: string }[]) {
   return [...by.entries()].map(([name, t]) => (t.length === 1 ? `${name} ${mmss(t[0])}` : `${name} ×${t.length} (${mmss(t[0])}–${mmss(t.at(-1))})`)).join(", ");
 }
 
-function buildLines(p: PlayerRecord): string[] {
+function orderLines(p: PlayerRecord): string[] {
   const race = RACES[p.race as RaceCode];
   const b = p.build;
   const isTower = (c: string) => race?.towers.includes(c);
@@ -157,6 +159,20 @@ function verdictLines(r: GameRecord, me: PlayerRecord, opp: PlayerRecord, ref: F
   });
 }
 
+/** Closest library build for a player, with how pros play it and where the player differs. */
+export function buildLines(r: GameRecord, p: PlayerRecord, who: string, principles: Principles | null | undefined): string[] {
+  const [best] = matchBuilds(r, p);
+  if (!best) return [];
+  const src = best.build.source.author ?? best.build.source.where ?? "guide";
+  const pro = proBuildOf(principles, best);
+  const lines = [`- ${who}: closest to "${best.build.name}" (${src}; match ${best.score.toFixed(2)})${pro ? `. Pros on this build: ${pro.players}, ${Math.round(pro.winRate * 100)}% won` : ""}.`];
+  if (pro && p.race === principles?.race) {
+    const dev = deviationsFromPros(best, pro);
+    if (dev.length) lines.push(`  - Compared with pros on this build: ${dev.map((d) => (d.yours === null ? `no ${d.label} (pros: ${d.pros} food)` : `${d.label} at ${d.yours} food (pros: ${d.pros})`)).join("; ")}.`);
+  }
+  return lines;
+}
+
 /** Markdown fact sheet for one game, from your side. */
 export function gameFacts(r: GameRecord, opts: { result: string; ref: FactsRef | null }): string {
   const me = r.players.find((p) => p.isMe);
@@ -173,11 +189,15 @@ export function gameFacts(r: GameRecord, opts: { result: string; ref: FactsRef |
     ...heroLines(r, me, "you"),
     ...heroLines(r, opp, "opp"),
     ``,
+    `## Builds (closest build-order guide; food = food in use, finished units)`,
+    ...buildLines(r, me, "You", opts.ref?.principles),
+    ...buildLines(r, opp, "Opp", opp.race === me.race ? opts.ref?.principles : null),
+    ``,
     `## Your build`,
-    ...buildLines(me),
+    ...orderLines(me),
     ``,
     `## Opponent build`,
-    ...buildLines(opp),
+    ...orderLines(opp),
     ``,
     `## Trends (computed from the table below)`,
     ...trendLines(r, me, opp),

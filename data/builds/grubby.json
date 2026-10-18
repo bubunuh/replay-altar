@@ -1,0 +1,3541 @@
+{
+ "source": {
+  "author": "Grubby",
+  "where": "Grubby's Discord, build-orders channel (images)",
+  "url": "https://followgrubby.com"
+ },
+ "builds": [
+  {
+   "id": "grubby-001-orc-tc-mass-zerkers",
+   "name": "TC Mass Zerkers",
+   "race": "O",
+   "vs": [
+    "N",
+    "U"
+   ],
+   "date": "2019-01-12",
+   "steps": [
+    [
+     6,
+     "build",
+     "Altar of Storms"
+    ],
+    [
+     7,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     9,
+     "build",
+     "War Mill"
+    ],
+    [
+     9,
+     "build",
+     "Barracks"
+    ],
+    [
+     9,
+     "hero",
+     "Tauren Chieftain"
+    ],
+    [
+     15,
+     "build",
+     "Barracks"
+    ],
+    [
+     15,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     15,
+     "train",
+     "Troll Headhunter"
+    ],
+    [
+     19,
+     "build",
+     "Voodoo Lounge"
+    ],
+    [
+     25,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     33,
+     "research",
+     "Ranged Attack"
+    ],
+    [
+     35,
+     "tech",
+     "Stronghold"
+    ]
+   ],
+   "notes": [
+    "Two Barracks mass Headhunters, creep with TC + 3 Headhunters at 23 food",
+    "Head to tier 3 for Berserkers"
+   ]
+  },
+  {
+   "id": "grubby-002-ud-dl-fast-expansion",
+   "name": "Dreadlord Fast Expand",
+   "race": "U",
+   "vs": [
+    "H",
+    "N",
+    "U"
+   ],
+   "date": "2019-01-19",
+   "steps": [
+    [
+     5,
+     "build",
+     "Crypt"
+    ],
+    [
+     5,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     7,
+     "build",
+     "Altar of Darkness"
+    ],
+    [
+     7,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     7,
+     "train",
+     "Ghoul"
+    ],
+    [
+     9,
+     "build",
+     "Tomb of Relics"
+    ],
+    [
+     11,
+     "hero",
+     "Dreadlord"
+    ],
+    [
+     23,
+     "expand",
+     "Haunted Gold Mine"
+    ],
+    [
+     23,
+     "build",
+     "Nerubian Tower"
+    ],
+    [
+     26,
+     "build",
+     "Graveyard"
+    ],
+    [
+     29,
+     "build",
+     "Spirit Tower"
+    ],
+    [
+     29,
+     "tech",
+     "Halls of the Dead"
+    ]
+   ],
+   "notes": [
+    "Ghouls + Dreadlord + Acolyte take the expansion at 23 food"
+   ]
+  },
+  {
+   "id": "grubby-003-ne-kotg-mass-huntresses",
+   "name": "Keeper Mass Huntresses",
+   "race": "N",
+   "vs": [
+    "O",
+    "H"
+   ],
+   "date": "2019-01-26",
+   "steps": [
+    [
+     5,
+     "build",
+     "Altar of Elders"
+    ],
+    [
+     7,
+     "build",
+     "Moon Well"
+    ],
+    [
+     10,
+     "hero",
+     "Keeper of the Grove"
+    ],
+    [
+     17,
+     "build",
+     "Hunter's Hall"
+    ],
+    [
+     17,
+     "build",
+     "Ancient of War"
+    ],
+    [
+     18,
+     "build",
+     "Moon Well"
+    ],
+    [
+     18,
+     "build",
+     "Ancient of War"
+    ],
+    [
+     17,
+     "build",
+     "Moon Well"
+    ],
+    [
+     17,
+     "train",
+     "Huntress"
+    ],
+    [
+     35,
+     "build",
+     "Moon Well"
+    ]
+   ],
+   "notes": [
+    "Nonstop Huntresses, attack with 2-3 wisps at ~38 food"
+   ]
+  },
+  {
+   "id": "grubby-005-orc-fs-sh-rax-beastiary",
+   "name": "Far Seer Shadow Hunter Barracks Beastiary",
+   "race": "O",
+   "vs": [
+    "U",
+    "N",
+    "O"
+   ],
+   "date": "2019-02",
+   "steps": [
+    [
+     6,
+     "build",
+     "Altar of Storms"
+    ],
+    [
+     7,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     8,
+     "build",
+     "Barracks"
+    ],
+    [
+     10,
+     "hero",
+     "Far Seer"
+    ],
+    [
+     16,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     16,
+     "train",
+     "Grunt"
+    ],
+    [
+     19,
+     "build",
+     "Voodoo Lounge"
+    ],
+    [
+     23,
+     "tech",
+     "Stronghold"
+    ],
+    [
+     23,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     29,
+     "hero",
+     "Shadow Hunter"
+    ],
+    [
+     29,
+     "build",
+     "Beastiary"
+    ],
+    [
+     29,
+     "build",
+     "War Mill"
+    ],
+    [
+     37,
+     "build",
+     "Orc Burrow"
+    ]
+   ],
+   "notes": [
+    "5 gold + 7 wood peons; Far Seer + 4 Grunts, then Shadow Hunter"
+   ]
+  },
+  {
+   "id": "grubby-006-ud-dk-lich-fiends-fast-t3",
+   "name": "DK Lich Fiends Fast T3",
+   "race": "U",
+   "vs": [
+    "H",
+    "O",
+    "N"
+   ],
+   "date": "2019-02-16",
+   "steps": [
+    [
+     6,
+     "build",
+     "Altar of Darkness"
+    ],
+    [
+     6,
+     "build",
+     "Crypt"
+    ],
+    [
+     7,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     8,
+     "build",
+     "Tomb of Relics"
+    ],
+    [
+     8,
+     "train",
+     "Ghoul"
+    ],
+    [
+     10,
+     "hero",
+     "Death Knight"
+    ],
+    [
+     17,
+     "build",
+     "Graveyard"
+    ],
+    [
+     17,
+     "tech",
+     "Halls of the Dead"
+    ],
+    [
+     17,
+     "build",
+     "Nerubian Tower"
+    ],
+    [
+     17,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     17,
+     "train",
+     "Crypt Fiend"
+    ],
+    [
+     23,
+     "tech",
+     "Black Citadel"
+    ],
+    [
+     23,
+     "build",
+     "Slaughterhouse"
+    ],
+    [
+     23,
+     "hero",
+     "Lich"
+    ],
+    [
+     28,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     28,
+     "train",
+     "Obsidian Statue"
+    ],
+    [
+     34,
+     "item",
+     "Orb of Corruption"
+    ],
+    [
+     34,
+     "hero",
+     "Dark Ranger"
+    ],
+    [
+     34,
+     "build",
+     "Ziggurat"
+    ]
+   ],
+   "notes": [
+    "5 Acolytes, 3 Ghouls on wood, 2-4 Fiends, 2 Statues",
+    "Avoid major fights until Destroyer upgrade and Orb of Corruption"
+   ]
+  },
+  {
+   "id": "grubby-007-hu-am-alchi-rifle-priest",
+   "name": "Archmage Alchemist Rifle Priest",
+   "race": "H",
+   "vs": [
+    "N",
+    "U",
+    "O"
+   ],
+   "date": "2019-02-23",
+   "steps": [
+    [
+     6,
+     "build",
+     "Altar of Kings"
+    ],
+    [
+     7,
+     "build",
+     "Farm"
+    ],
+    [
+     7,
+     "build",
+     "Barracks"
+    ],
+    [
+     9,
+     "build",
+     "Farm"
+    ],
+    [
+     10,
+     "hero",
+     "Archmage"
+    ],
+    [
+     16,
+     "train",
+     "Footman"
+    ],
+    [
+     24,
+     "tech",
+     "Keep"
+    ],
+    [
+     24,
+     "build",
+     "Blacksmith"
+    ],
+    [
+     24,
+     "build",
+     "Farm"
+    ],
+    [
+     24,
+     "build",
+     "Scout Tower"
+    ],
+    [
+     24,
+     "build",
+     "Lumber Mill"
+    ],
+    [
+     24,
+     "build",
+     "Arcane Tower"
+    ],
+    [
+     24,
+     "train",
+     "Rifleman"
+    ],
+    [
+     27,
+     "build",
+     "Farm"
+    ],
+    [
+     27,
+     "hero",
+     "Goblin Alchemist"
+    ],
+    [
+     27,
+     "build",
+     "Arcane Sanctum"
+    ],
+    [
+     32,
+     "train",
+     "Priest"
+    ],
+    [
+     40,
+     "tech",
+     "Castle"
+    ],
+    [
+     40,
+     "hero",
+     "Mountain King"
+    ]
+   ],
+   "notes": [
+    "5 gold + 8 wood peasants, creep to level 2",
+    "At 40-50+ food go Castle: Mountain King third, Inner Fire, Mortars"
+   ]
+  },
+  {
+   "id": "grubby-008-ne-kotg-fast-expand",
+   "name": "Keeper Fast Expand",
+   "race": "N",
+   "vs": [
+    "U",
+    "O",
+    "H"
+   ],
+   "date": "2019-03-02",
+   "steps": [
+    [
+     5,
+     "build",
+     "Altar of Elders"
+    ],
+    [
+     7,
+     "build",
+     "Moon Well"
+    ],
+    [
+     8,
+     "build",
+     "Ancient of War"
+    ],
+    [
+     10,
+     "hero",
+     "Keeper of the Grove"
+    ],
+    [
+     15,
+     "train",
+     "Archer"
+    ],
+    [
+     18,
+     "build",
+     "Moon Well"
+    ],
+    [
+     25,
+     "expand",
+     "Tree of Life"
+    ],
+    [
+     28,
+     "tech",
+     "Tree of Ages"
+    ],
+    [
+     40,
+     "build",
+     "Ancient of Wind"
+    ]
+   ],
+   "notes": [
+    "Ancient of War creeping with the Keeper; Tree of Life near the expansion at 25 food",
+    "Tier 2: Hippogryphs and Faerie Dragons vs Undead"
+   ]
+  },
+  {
+   "id": "grubby-009-orc-bm-sh-grunt-raider-shaman",
+   "name": "Blademaster Shadow Hunter Grunt Raider Shaman",
+   "race": "O",
+   "vs": [
+    "N"
+   ],
+   "date": "2019-03-09",
+   "steps": [
+    [
+     6,
+     "build",
+     "Altar of Storms"
+    ],
+    [
+     7,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     8,
+     "build",
+     "Barracks"
+    ],
+    [
+     10,
+     "hero",
+     "Blademaster"
+    ],
+    [
+     16,
+     "train",
+     "Grunt"
+    ],
+    [
+     19,
+     "build",
+     "Voodoo Lounge"
+    ],
+    [
+     20,
+     "tech",
+     "Stronghold"
+    ],
+    [
+     20,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     20,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     31,
+     "hero",
+     "Shadow Hunter"
+    ],
+    [
+     31,
+     "build",
+     "Spirit Lodge"
+    ],
+    [
+     36,
+     "build",
+     "Beastiary"
+    ],
+    [
+     36,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     36,
+     "train",
+     "Shaman"
+    ],
+    [
+     40,
+     "train",
+     "Raider"
+    ],
+    [
+     40,
+     "build",
+     "War Mill"
+    ]
+   ],
+   "notes": [
+    "5 gold + 7 wood peons, one-Burrow tech",
+    "If they expand at tier 1, counter-expand at tier 2 around 40-44 food"
+   ]
+  },
+  {
+   "id": "grubby-010-ud-lich-t1-tower-rush",
+   "name": "Lich Tier 1 Tower Rush",
+   "race": "U",
+   "vs": [
+    "O"
+   ],
+   "date": "2019-03-16",
+   "steps": [
+    [
+     6,
+     "build",
+     "Crypt"
+    ],
+    [
+     6,
+     "build",
+     "Graveyard"
+    ],
+    [
+     7,
+     "build",
+     "Altar of Darkness"
+    ],
+    [
+     7,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     7,
+     "train",
+     "Ghoul"
+    ],
+    [
+     7,
+     "build",
+     "Tomb of Relics"
+    ],
+    [
+     9,
+     "hero",
+     "Lich"
+    ],
+    [
+     9,
+     "train",
+     "Crypt Fiend"
+    ],
+    [
+     17,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     17,
+     "train",
+     "Crypt Fiend"
+    ],
+    [
+     20,
+     "item",
+     "Rod of Necromancy"
+    ],
+    [
+     24,
+     "build",
+     "Nerubian Tower"
+    ],
+    [
+     24,
+     "build",
+     "Spirit Tower"
+    ]
+   ],
+   "notes": [
+    "All-in: Lich, Fiends and an Acolyte build towers in the Orc base at 24 food"
+   ]
+  },
+  {
+   "id": "grubby-011-hu-am-straight-t1-fast-expo",
+   "name": "Archmage Straight Tier 1 Fast Expand",
+   "race": "H",
+   "vs": [
+    "any"
+   ],
+   "date": "2019-03-23",
+   "steps": [
+    [
+     6,
+     "build",
+     "Altar of Kings"
+    ],
+    [
+     7,
+     "build",
+     "Farm"
+    ],
+    [
+     7,
+     "build",
+     "Barracks"
+    ],
+    [
+     9,
+     "build",
+     "Farm"
+    ],
+    [
+     10,
+     "hero",
+     "Archmage"
+    ],
+    [
+     16,
+     "train",
+     "Footman"
+    ],
+    [
+     21,
+     "build",
+     "Farm"
+    ],
+    [
+     25,
+     "expand",
+     "Town Hall"
+    ],
+    [
+     29,
+     "build",
+     "Scout Tower"
+    ],
+    [
+     29,
+     "build",
+     "Arcane Tower"
+    ],
+    [
+     40,
+     "tech",
+     "Keep"
+    ],
+    [
+     40,
+     "build",
+     "Blacksmith"
+    ],
+    [
+     40,
+     "build",
+     "Lumber Mill"
+    ]
+   ],
+   "notes": [
+    "Archmage, 2 Footmen and 5 Militia straight to the expansion; Town Hall at 25 food",
+    "Tier 2 at 40-50 food; don't overdo towers"
+   ]
+  },
+  {
+   "id": "grubby-012-ud-dk-pitlord-unholy-frenzy",
+   "name": "DK Pit Lord Unholy Frenzy",
+   "race": "U",
+   "vs": [
+    "O",
+    "H"
+   ],
+   "date": "2019-03-30",
+   "steps": [
+    [
+     6,
+     "build",
+     "Altar of Darkness"
+    ],
+    [
+     6,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     7,
+     "build",
+     "Crypt"
+    ],
+    [
+     7,
+     "build",
+     "Tomb of Relics"
+    ],
+    [
+     8,
+     "hero",
+     "Death Knight"
+    ],
+    [
+     13,
+     "build",
+     "Graveyard"
+    ],
+    [
+     13,
+     "train",
+     "Ghoul"
+    ],
+    [
+     17,
+     "tech",
+     "Halls of the Dead"
+    ],
+    [
+     17,
+     "build",
+     "Nerubian Tower"
+    ],
+    [
+     17,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     17,
+     "train",
+     "Crypt Fiend"
+    ],
+    [
+     23,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     28,
+     "hero",
+     "Pit Lord"
+    ],
+    [
+     28,
+     "build",
+     "Slaughterhouse"
+    ],
+    [
+     28,
+     "build",
+     "Temple of the Damned"
+    ],
+    [
+     33,
+     "train",
+     "Obsidian Statue"
+    ],
+    [
+     33,
+     "train",
+     "Necromancer"
+    ],
+    [
+     38,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     40,
+     "tech",
+     "Black Citadel"
+    ]
+   ],
+   "notes": [
+    "At 50 food: 5 Acolytes, 4 Ghouls, 2 heroes, 5 Fiends, 2 Statues, 3 Necromancers",
+    "Push at 50 food with Pit Lord level 3"
+   ]
+  },
+  {
+   "id": "grubby-019-hu-mk-fast-expo",
+   "name": "Mountain King Fast Expand",
+   "race": "H",
+   "vs": [
+    "any"
+   ],
+   "date": "2019-05-18",
+   "steps": [
+    [
+     6,
+     "build",
+     "Altar of Kings"
+    ],
+    [
+     7,
+     "build",
+     "Farm"
+    ],
+    [
+     7,
+     "build",
+     "Barracks"
+    ],
+    [
+     9,
+     "build",
+     "Farm"
+    ],
+    [
+     10,
+     "hero",
+     "Mountain King"
+    ],
+    [
+     16,
+     "train",
+     "Footman"
+    ],
+    [
+     21,
+     "build",
+     "Farm"
+    ],
+    [
+     27,
+     "expand",
+     "Town Hall"
+    ],
+    [
+     27,
+     "build",
+     "Scout Tower"
+    ],
+    [
+     35,
+     "tech",
+     "Keep"
+    ],
+    [
+     35,
+     "build",
+     "Blacksmith"
+    ],
+    [
+     35,
+     "build",
+     "Lumber Mill"
+    ],
+    [
+     40,
+     "build",
+     "Workshop"
+    ],
+    [
+     40,
+     "build",
+     "Arcane Sanctum"
+    ],
+    [
+     40,
+     "build",
+     "Arcane Sanctum"
+    ],
+    [
+     45,
+     "tech",
+     "Castle"
+    ]
+   ],
+   "notes": [
+    "Creep the mercenary camp, hire Troll Priest, then expand at 27 food",
+    "Avoid over-towering: 1 Arcane per base, maybe 1 Guard per base",
+    "80 food army: 3 heroes, casters, mortars, rifles, knights, flying machines"
+   ]
+  },
+  {
+   "id": "grubby-020-orc-fs-2-rax-proxy-hh",
+   "name": "Far Seer Two Barracks Proxy Headhunters",
+   "race": "O",
+   "vs": [
+    "any"
+   ],
+   "date": "2019-05-25",
+   "steps": [
+    [
+     6,
+     "build",
+     "Altar of Storms"
+    ],
+    [
+     7,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     10,
+     "hero",
+     "Far Seer"
+    ],
+    [
+     16,
+     "build",
+     "War Mill"
+    ],
+    [
+     16,
+     "build",
+     "Barracks"
+    ],
+    [
+     16,
+     "build",
+     "Barracks"
+    ],
+    [
+     16,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     16,
+     "train",
+     "Troll Headhunter"
+    ],
+    [
+     24,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     24,
+     "build",
+     "Voodoo Lounge"
+    ],
+    [
+     30,
+     "research",
+     "Ranged Attack"
+    ],
+    [
+     30,
+     "build",
+     "Watch Tower"
+    ]
+   ],
+   "notes": [
+    "5 gold + 6 wood peons; two hidden proxy Barracks, mass Headhunters to 40 food, all-in around 34-40 food"
+   ]
+  },
+  {
+   "id": "grubby-021-hu-am-2-rax-footmen-rush",
+   "name": "Archmage Two Barracks Footmen Rush",
+   "race": "H",
+   "vs": [
+    "N",
+    "O",
+    "U"
+   ],
+   "date": "2019-06-01",
+   "steps": [
+    [
+     6,
+     "build",
+     "Altar of Kings"
+    ],
+    [
+     7,
+     "build",
+     "Farm"
+    ],
+    [
+     7,
+     "build",
+     "Barracks"
+    ],
+    [
+     9,
+     "build",
+     "Farm"
+    ],
+    [
+     10,
+     "hero",
+     "Archmage"
+    ],
+    [
+     16,
+     "train",
+     "Footman"
+    ],
+    [
+     21,
+     "build",
+     "Farm"
+    ],
+    [
+     24,
+     "build",
+     "Barracks"
+    ],
+    [
+     26,
+     "build",
+     "Farm"
+    ],
+    [
+     26,
+     "research",
+     "Defend"
+    ],
+    [
+     32,
+     "build",
+     "Farm"
+    ],
+    [
+     42,
+     "build",
+     "Arcane Tower"
+    ],
+    [
+     42,
+     "build",
+     "Arcane Vault"
+    ]
+   ],
+   "notes": [
+    "5 gold + 8 wood peasants, one hero, rest Footmen; second Barracks hidden at 24 food",
+    "Towers and an expansion in their main at 42+ food"
+   ]
+  },
+  {
+   "id": "grubby-022-ne-dh-safe-archers",
+   "name": "Safe and Easy Demon Hunter Archers",
+   "race": "N",
+   "vs": [
+    "any"
+   ],
+   "date": "2019-06-08",
+   "steps": [
+    [
+     5,
+     "build",
+     "Altar of Elders"
+    ],
+    [
+     7,
+     "build",
+     "Moon Well"
+    ],
+    [
+     8,
+     "build",
+     "Ancient of War"
+    ],
+    [
+     10,
+     "hero",
+     "Demon Hunter"
+    ],
+    [
+     16,
+     "build",
+     "Moon Well"
+    ],
+    [
+     16,
+     "train",
+     "Archer"
+    ],
+    [
+     21,
+     "build",
+     "Moon Well"
+    ],
+    [
+     26,
+     "tech",
+     "Tree of Ages"
+    ],
+    [
+     30,
+     "build",
+     "Moon Well"
+    ],
+    [
+     36,
+     "hero",
+     "Naga Sea Witch"
+    ]
+   ],
+   "notes": [
+    "5 gold + 9 lumber wisps; tier 2 at 26 food",
+    "At 41 food: Demon Hunter level 3, 8 Archers, second hero; can attack"
+   ]
+  },
+  {
+   "id": "grubby-023-ne-safe-semi-fast-expo-vs-orc",
+   "name": "Safe Semi Fast Expand vs Orc",
+   "race": "N",
+   "vs": [
+    "O"
+   ],
+   "date": "2019-06-15",
+   "steps": [
+    [
+     5,
+     "build",
+     "Altar of Elders"
+    ],
+    [
+     7,
+     "build",
+     "Moon Well"
+    ],
+    [
+     8,
+     "build",
+     "Ancient of War"
+    ],
+    [
+     10,
+     "hero",
+     "Keeper of the Grove"
+    ],
+    [
+     15,
+     "train",
+     "Archer"
+    ],
+    [
+     19,
+     "build",
+     "Hunter's Hall"
+    ],
+    [
+     20,
+     "build",
+     "Moon Well"
+    ],
+    [
+     20,
+     "tech",
+     "Tree of Ages"
+    ],
+    [
+     20,
+     "train",
+     "Huntress"
+    ],
+    [
+     23,
+     "build",
+     "Moon Well"
+    ],
+    [
+     29,
+     "hero",
+     "Goblin Alchemist"
+    ],
+    [
+     37,
+     "expand",
+     "Tree of Life"
+    ],
+    [
+     36,
+     "build",
+     "Ancient of War"
+    ],
+    [
+     36,
+     "build",
+     "Moon Well"
+    ]
+   ],
+   "notes": [
+    "Pressure first, expand safely at ~37 food",
+    "Then get to 65-75 food as quickly as possible and attack"
+   ]
+  },
+  {
+   "id": "grubby-024-ud-necromancer-shade-vs-orc",
+   "name": "Necromancer Shade",
+   "race": "U",
+   "vs": [
+    "O"
+   ],
+   "date": "2019-06-22",
+   "steps": [
+    [
+     5,
+     "build",
+     "Altar of Darkness"
+    ],
+    [
+     5,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     7,
+     "build",
+     "Crypt"
+    ],
+    [
+     8,
+     "build",
+     "Tomb of Relics"
+    ],
+    [
+     8,
+     "hero",
+     "Death Knight"
+    ],
+    [
+     8,
+     "build",
+     "Graveyard"
+    ],
+    [
+     8,
+     "train",
+     "Ghoul"
+    ],
+    [
+     17,
+     "tech",
+     "Halls of the Dead"
+    ],
+    [
+     17,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     17,
+     "build",
+     "Nerubian Tower"
+    ],
+    [
+     17,
+     "train",
+     "Crypt Fiend"
+    ],
+    [
+     26,
+     "build",
+     "Slaughterhouse"
+    ],
+    [
+     26,
+     "build",
+     "Temple of the Damned"
+    ],
+    [
+     26,
+     "build",
+     "Sacrificial Pit"
+    ],
+    [
+     26,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     26,
+     "train",
+     "Necromancer"
+    ],
+    [
+     26,
+     "train",
+     "Obsidian Statue"
+    ],
+    [
+     31,
+     "hero",
+     "Lich"
+    ],
+    [
+     38,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     38,
+     "research",
+     "Creature Attack"
+    ],
+    [
+     46,
+     "tech",
+     "Black Citadel"
+    ],
+    [
+     50,
+     "expand",
+     "Haunted Gold Mine"
+    ]
+   ],
+   "notes": [
+    "50 food army: DK, Lich, 5 Fiends, 3 Necromancers, 2 Statues, 1 Shade",
+    "At ~50: Orb of Corruption, third hero Pit Lord, and expand"
+   ]
+  },
+  {
+   "id": "grubby-025-orc-fs-tc-bloodlust",
+   "name": "Far Seer Tauren Chieftain Bloodlust",
+   "race": "O",
+   "vs": [
+    "H",
+    "O"
+   ],
+   "date": "2019-06-29",
+   "steps": [
+    [
+     6,
+     "build",
+     "Altar of Storms"
+    ],
+    [
+     7,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     8,
+     "build",
+     "Barracks"
+    ],
+    [
+     10,
+     "hero",
+     "Far Seer"
+    ],
+    [
+     17,
+     "train",
+     "Grunt"
+    ],
+    [
+     20,
+     "tech",
+     "Stronghold"
+    ],
+    [
+     20,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     20,
+     "build",
+     "Voodoo Lounge"
+    ],
+    [
+     20,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     26,
+     "hero",
+     "Tauren Chieftain"
+    ],
+    [
+     26,
+     "build",
+     "Spirit Lodge"
+    ],
+    [
+     26,
+     "build",
+     "War Mill"
+    ],
+    [
+     31,
+     "tech",
+     "Fortress"
+    ],
+    [
+     36,
+     "build",
+     "Orc Burrow"
+    ]
+   ],
+   "notes": [
+    "5 gold + 7 wood peons; one explosive fight rather than many skirmishes"
+   ]
+  },
+  {
+   "id": "grubby-026-ne-kotg-naga-archer-rush",
+   "name": "Keeper Naga Archer Rush",
+   "race": "N",
+   "vs": [
+    "O",
+    "N",
+    "U"
+   ],
+   "date": "2019-07-06",
+   "steps": [
+    [
+     5,
+     "build",
+     "Altar of Elders"
+    ],
+    [
+     7,
+     "build",
+     "Moon Well"
+    ],
+    [
+     8,
+     "build",
+     "Ancient of War"
+    ],
+    [
+     10,
+     "hero",
+     "Keeper of the Grove"
+    ],
+    [
+     16,
+     "build",
+     "Moon Well"
+    ],
+    [
+     16,
+     "train",
+     "Archer"
+    ],
+    [
+     21,
+     "build",
+     "Moon Well"
+    ],
+    [
+     26,
+     "tech",
+     "Tree of Ages"
+    ],
+    [
+     35,
+     "hero",
+     "Naga Sea Witch"
+    ],
+    [
+     35,
+     "research",
+     "Improved Bows"
+    ],
+    [
+     40,
+     "build",
+     "Moon Well"
+    ],
+    [
+     40,
+     "build",
+     "Ancient of War"
+    ]
+   ],
+   "notes": [
+    "5 gold + 9 lumber wisps; nonstop Archers; all-in at 40 food with Ancients of War"
+   ]
+  },
+  {
+   "id": "grubby-027-orc-fs-firelord-rush",
+   "name": "Far Seer Firelord Rush",
+   "race": "O",
+   "vs": [
+    "O",
+    "H"
+   ],
+   "date": "2019-07-13",
+   "steps": [
+    [
+     6,
+     "build",
+     "Altar of Storms"
+    ],
+    [
+     7,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     10,
+     "hero",
+     "Far Seer"
+    ],
+    [
+     17,
+     "tech",
+     "Stronghold"
+    ],
+    [
+     17,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     17,
+     "build",
+     "Barracks"
+    ],
+    [
+     17,
+     "build",
+     "War Mill"
+    ],
+    [
+     17,
+     "build",
+     "Voodoo Lounge"
+    ],
+    [
+     17,
+     "train",
+     "Grunt"
+    ],
+    [
+     17,
+     "train",
+     "Troll Headhunter"
+    ],
+    [
+     23,
+     "build",
+     "Watch Tower"
+    ],
+    [
+     25,
+     "hero",
+     "Firelord"
+    ],
+    [
+     30,
+     "build",
+     "Orc Burrow"
+    ]
+   ],
+   "notes": [
+    "Momentum strategy: no expansion; ends in a tower rush or Raider rush"
+   ]
+  },
+  {
+   "id": "grubby-028-ne-tri-hero-dott-vs-orc",
+   "name": "Tri-Hero Druids of the Talon",
+   "race": "N",
+   "vs": [
+    "O"
+   ],
+   "date": "2019-09-07",
+   "steps": [
+    [
+     5,
+     "build",
+     "Altar of Elders"
+    ],
+    [
+     7,
+     "build",
+     "Moon Well"
+    ],
+    [
+     8,
+     "build",
+     "Ancient of War"
+    ],
+    [
+     10,
+     "hero",
+     "Demon Hunter"
+    ],
+    [
+     16,
+     "train",
+     "Archer"
+    ],
+    [
+     18,
+     "build",
+     "Moon Well"
+    ],
+    [
+     21,
+     "tech",
+     "Tree of Ages"
+    ],
+    [
+     21,
+     "build",
+     "Moon Well"
+    ],
+    [
+     21,
+     "build",
+     "Moon Well"
+    ],
+    [
+     21,
+     "hero",
+     "Beastmaster"
+    ],
+    [
+     21,
+     "build",
+     "Ancient of Wind"
+    ],
+    [
+     21,
+     "tech",
+     "Tree of Eternity"
+    ],
+    [
+     26,
+     "build",
+     "Ancient of Wind"
+    ],
+    [
+     26,
+     "build",
+     "Ancient of Wonders"
+    ]
+   ],
+   "notes": [
+    "5 gold + 9 lumber wisps; tier 2 at 21 food and straight to tier 3",
+    "Only vs Orc"
+   ]
+  },
+  {
+   "id": "grubby-029-ud-2-crypt-ghoul-garg-fiend-vs-ne",
+   "name": "Two Crypt Ghoul Gargoyle Fiend",
+   "race": "U",
+   "vs": [
+    "N"
+   ],
+   "date": "2019-09-14",
+   "steps": [
+    [
+     5,
+     "build",
+     "Altar of Darkness"
+    ],
+    [
+     5,
+     "build",
+     "Crypt"
+    ],
+    [
+     6,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     7,
+     "build",
+     "Tomb of Relics"
+    ],
+    [
+     8,
+     "train",
+     "Ghoul"
+    ],
+    [
+     10,
+     "hero",
+     "Death Knight"
+    ],
+    [
+     10,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     25,
+     "tech",
+     "Halls of the Dead"
+    ],
+    [
+     25,
+     "build",
+     "Crypt"
+    ],
+    [
+     25,
+     "build",
+     "Graveyard"
+    ],
+    [
+     21,
+     "hero",
+     "Lich"
+    ],
+    [
+     21,
+     "train",
+     "Gargoyle"
+    ]
+   ],
+   "notes": [
+    "Against Keeper + expansion + air: take down the expansion",
+    "3 to 7 Ghouls; Lich and Gargoyles at tier 2"
+   ]
+  },
+  {
+   "id": "grubby-030-orc-tavern-hero-standard-tech",
+   "name": "Tavern Hero Standard Tech",
+   "race": "O",
+   "vs": [
+    "any"
+   ],
+   "level": "beginner",
+   "date": "2019-09-21",
+   "steps": [
+    [
+     7,
+     "build",
+     "Barracks"
+    ],
+    [
+     8,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     10,
+     "build",
+     "Altar of Storms"
+    ],
+    [
+     10,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     10,
+     "train",
+     "Grunt"
+    ],
+    [
+     14,
+     "train",
+     "Grunt"
+    ],
+    [
+     18,
+     "hero",
+     "tavern"
+    ],
+    [
+     23,
+     "tech",
+     "Stronghold"
+    ],
+    [
+     23,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     23,
+     "build",
+     "Voodoo Lounge"
+    ],
+    [
+     29,
+     "hero",
+     "Shadow Hunter"
+    ]
+   ],
+   "notes": [
+    "A clean tier 2 at 23/30 with the first hero from the Tavern; 12 peons total"
+   ]
+  },
+  {
+   "id": "grubby-031-ud-new-dreadlord-fast-expo",
+   "name": "New Dreadlord Fast Expand",
+   "race": "U",
+   "vs": [
+    "any"
+   ],
+   "level": "intermediate",
+   "date": "2019-09-28",
+   "steps": [
+    [
+     5,
+     "build",
+     "Crypt"
+    ],
+    [
+     5,
+     "build",
+     "Altar of Darkness"
+    ],
+    [
+     7,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     7,
+     "expand",
+     "Necropolis"
+    ],
+    [
+     7,
+     "train",
+     "Ghoul"
+    ],
+    [
+     9,
+     "build",
+     "Tomb of Relics"
+    ],
+    [
+     9,
+     "hero",
+     "Dreadlord"
+    ],
+    [
+     14,
+     "train",
+     "Ghoul"
+    ],
+    [
+     23,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     23,
+     "expand",
+     "Haunted Gold Mine"
+    ],
+    [
+     29,
+     "build",
+     "Nerubian Tower"
+    ],
+    [
+     35,
+     "tech",
+     "Halls of the Dead"
+    ],
+    [
+     35,
+     "build",
+     "Graveyard"
+    ]
+   ],
+   "notes": [
+    "Second Necropolis at 7 food, expansion at 23 food; tier 2 at 35"
+   ]
+  },
+  {
+   "id": "grubby-033-orc-bloody-beginner-fs-grunts",
+   "name": "Bloody Beginner – Far Seer Grunts",
+   "race": "O",
+   "vs": [
+    "any"
+   ],
+   "level": "beginner",
+   "date": "2019-10-12",
+   "steps": [
+    [
+     6,
+     "build",
+     "Altar of Storms"
+    ],
+    [
+     7,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     8,
+     "build",
+     "Barracks"
+    ],
+    [
+     10,
+     "hero",
+     "Far Seer"
+    ],
+    [
+     16,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     16,
+     "train",
+     "Grunt"
+    ],
+    [
+     19,
+     "build",
+     "Voodoo Lounge"
+    ],
+    [
+     23,
+     "tech",
+     "Stronghold"
+    ],
+    [
+     23,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     29,
+     "hero",
+     "Shadow Hunter"
+    ],
+    [
+     29,
+     "build",
+     "Beastiary"
+    ],
+    [
+     29,
+     "build",
+     "Tauren Totem"
+    ],
+    [
+     34,
+     "train",
+     "Raider"
+    ],
+    [
+     34,
+     "train",
+     "Spirit Walker"
+    ],
+    [
+     40,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     40,
+     "build",
+     "War Mill"
+    ],
+    [
+     46,
+     "train",
+     "Kodo Beast"
+    ],
+    [
+     50,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     50,
+     "research",
+     "Armor"
+    ]
+   ],
+   "notes": [
+    "Attack at 50-60 food, or expand around 40 food, or go tier 3 for a third hero"
+   ]
+  },
+  {
+   "id": "grubby-034-ne-bloody-beginner-dh-archer",
+   "name": "Bloody Beginner – Demon Hunter Archer",
+   "race": "N",
+   "vs": [
+    "any"
+   ],
+   "level": "beginner",
+   "date": "2019-10-19",
+   "steps": [
+    [
+     5,
+     "build",
+     "Altar of Elders"
+    ],
+    [
+     7,
+     "build",
+     "Moon Well"
+    ],
+    [
+     8,
+     "build",
+     "Ancient of War"
+    ],
+    [
+     9,
+     "hero",
+     "Demon Hunter"
+    ],
+    [
+     16,
+     "build",
+     "Moon Well"
+    ],
+    [
+     16,
+     "train",
+     "Archer"
+    ],
+    [
+     26,
+     "tech",
+     "Tree of Ages"
+    ],
+    [
+     26,
+     "build",
+     "Moon Well"
+    ],
+    [
+     26,
+     "build",
+     "Moon Well"
+    ],
+    [
+     30,
+     "build",
+     "Hunter's Hall"
+    ],
+    [
+     30,
+     "build",
+     "Ancient of Wonders"
+    ],
+    [
+     29,
+     "build",
+     "Ancient of Lore"
+    ],
+    [
+     29,
+     "build",
+     "Ancient of Lore"
+    ],
+    [
+     29,
+     "hero",
+     "Keeper of the Grove"
+    ],
+    [
+     32,
+     "research",
+     "Improved Bows"
+    ],
+    [
+     34,
+     "train",
+     "Dryad"
+    ],
+    [
+     40,
+     "tech",
+     "Tree of Eternity"
+    ]
+   ],
+   "notes": [
+    "5 gold + 9 lumber wisps; 5 Archers before tier 2; Demon Hunter level 2 on green camps",
+    "Army: Demon Hunter + Keeper, Archers, Dryads, Bears"
+   ]
+  },
+  {
+   "id": "grubby-035-ud-bloody-beginner-dk-fiends",
+   "name": "Bloody Beginner – Death Knight Fiends",
+   "race": "U",
+   "vs": [
+    "any"
+   ],
+   "level": "beginner",
+   "date": "2019-10-26",
+   "steps": [
+    [
+     6,
+     "build",
+     "Crypt"
+    ],
+    [
+     6,
+     "build",
+     "Graveyard"
+    ],
+    [
+     7,
+     "build",
+     "Altar of Darkness"
+    ],
+    [
+     7,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     7,
+     "train",
+     "Ghoul"
+    ],
+    [
+     9,
+     "build",
+     "Tomb of Relics"
+    ],
+    [
+     9,
+     "hero",
+     "Death Knight"
+    ],
+    [
+     9,
+     "train",
+     "Crypt Fiend"
+    ],
+    [
+     17,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     20,
+     "tech",
+     "Halls of the Dead"
+    ],
+    [
+     23,
+     "build",
+     "Nerubian Tower"
+    ],
+    [
+     23,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     30,
+     "hero",
+     "Lich"
+    ],
+    [
+     30,
+     "build",
+     "Slaughterhouse"
+    ],
+    [
+     30,
+     "build",
+     "Temple of the Damned"
+    ],
+    [
+     35,
+     "tech",
+     "Black Citadel"
+    ],
+    [
+     35,
+     "train",
+     "Obsidian Statue"
+    ],
+    [
+     35,
+     "train",
+     "Banshee"
+    ],
+    [
+     35,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     45,
+     "item",
+     "Orb of Corruption"
+    ],
+    [
+     45,
+     "hero",
+     "tavern"
+    ]
+   ],
+   "notes": [
+    "Undead is happy one base vs one base, but must act vs expansions: scout gold mines with Rod skeletons"
+   ]
+  },
+  {
+   "id": "grubby-037-orc-orc-for-beginners",
+   "name": "Orc for Beginners – Blademaster Shadow Hunter Tier 2 Expand",
+   "race": "O",
+   "vs": [
+    "any"
+   ],
+   "level": "beginner",
+   "date": "2024-06-29",
+   "steps": [
+    [
+     5,
+     "build",
+     "Altar of Storms"
+    ],
+    [
+     6,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     7,
+     "build",
+     "Barracks"
+    ],
+    [
+     10,
+     "hero",
+     "Blademaster"
+    ],
+    [
+     16,
+     "build",
+     "Voodoo Lounge"
+    ],
+    [
+     16,
+     "train",
+     "Grunt"
+    ],
+    [
+     20,
+     "tech",
+     "Stronghold"
+    ],
+    [
+     20,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     20,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     20,
+     "train",
+     "Grunt"
+    ],
+    [
+     20,
+     "build",
+     "War Mill"
+    ],
+    [
+     26,
+     "hero",
+     "Shadow Hunter"
+    ],
+    [
+     31,
+     "build",
+     "Beastiary"
+    ],
+    [
+     31,
+     "train",
+     "Raider"
+    ],
+    [
+     34,
+     "expand",
+     "Great Hall"
+    ],
+    [
+     34,
+     "research",
+     "Armor"
+    ]
+   ],
+   "notes": [
+    "5 gold + 7 wood peons; expansion at 34 food after the Shadow Hunter",
+    "Fight around power spikes: 0 gold, a new level 3 hero, a finished upgrade, new unit tech"
+   ]
+  },
+  {
+   "id": "grubby-036b-hu-bloody-beginner-am-mk-rifles",
+   "name": "Bloody Beginner – Archmage Mountain King Rifles",
+   "race": "H",
+   "vs": [
+    "any"
+   ],
+   "level": "beginner",
+   "date": "2025-03-18",
+   "steps": [
+    [
+     5,
+     "build",
+     "Altar of Kings"
+    ],
+    [
+     6,
+     "build",
+     "Barracks"
+    ],
+    [
+     7,
+     "build",
+     "Farm"
+    ],
+    [
+     8,
+     "build",
+     "Farm"
+    ],
+    [
+     10,
+     "hero",
+     "Archmage"
+    ],
+    [
+     16,
+     "train",
+     "Footman"
+    ],
+    [
+     19,
+     "build",
+     "Scout Tower"
+    ],
+    [
+     21,
+     "build",
+     "Farm"
+    ],
+    [
+     21,
+     "build",
+     "Arcane Tower"
+    ],
+    [
+     27,
+     "tech",
+     "Keep"
+    ],
+    [
+     27,
+     "build",
+     "Blacksmith"
+    ],
+    [
+     29,
+     "build",
+     "Arcane Vault"
+    ],
+    [
+     29,
+     "train",
+     "Rifleman"
+    ],
+    [
+     34,
+     "hero",
+     "Mountain King"
+    ],
+    [
+     34,
+     "build",
+     "Arcane Sanctum"
+    ],
+    [
+     45,
+     "research",
+     "Long Rifles"
+    ],
+    [
+     45,
+     "research",
+     "Black Gunpowder"
+    ],
+    [
+     45,
+     "train",
+     "Priest"
+    ]
+   ],
+   "notes": [
+    "5 gold + 9 wood peasants (14 total); never replace dead Footmen (5 max)",
+    "At 40-50 food: attack, go Castle, or expand"
+   ]
+  },
+  {
+   "id": "grubby-038-ne-beginner-build",
+   "name": "Night Elf Beginner Build",
+   "race": "N",
+   "vs": [
+    "any"
+   ],
+   "level": "beginner",
+   "date": "2024-06-29",
+   "steps": [
+    [
+     5,
+     "build",
+     "Altar of Elders"
+    ],
+    [
+     6,
+     "build",
+     "Moon Well"
+    ],
+    [
+     7,
+     "build",
+     "Ancient of War"
+    ],
+    [
+     10,
+     "hero",
+     "Demon Hunter"
+    ],
+    [
+     15,
+     "build",
+     "Moon Well"
+    ],
+    [
+     16,
+     "train",
+     "Archer"
+    ],
+    [
+     27,
+     "build",
+     "Moon Well"
+    ],
+    [
+     27,
+     "tech",
+     "Tree of Ages"
+    ],
+    [
+     33,
+     "build",
+     "Hunter's Hall"
+    ],
+    [
+     33,
+     "build",
+     "Ancient of Wonders"
+    ],
+    [
+     33,
+     "build",
+     "Moon Well"
+    ],
+    [
+     32,
+     "hero",
+     "Keeper of the Grove"
+    ],
+    [
+     37,
+     "build",
+     "Ancient of Lore"
+    ],
+    [
+     37,
+     "build",
+     "Ancient of Lore"
+    ],
+    [
+     35,
+     "research",
+     "Improved Bows"
+    ],
+    [
+     41,
+     "item",
+     "Staff of Preservation"
+    ],
+    [
+     41,
+     "tech",
+     "Tree of Eternity"
+    ],
+    [
+     50,
+     "research",
+     "Strength of the Wild"
+    ]
+   ],
+   "notes": [
+    "5 gold + 9 lumber wisps; 7 Archers, tier 2 at 27 food",
+    "At 41 food: attack, expand, or both; or tier 3 for Druids of the Claw"
+   ]
+  },
+  {
+   "id": "grubby-039-orc-fs-mass-wyverns",
+   "name": "Far Seer Mass Wyverns",
+   "race": "O",
+   "vs": [
+    "any"
+   ],
+   "date": "2024-06-30",
+   "steps": [
+    [
+     5,
+     "build",
+     "Altar of Storms"
+    ],
+    [
+     6,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     7,
+     "build",
+     "Barracks"
+    ],
+    [
+     10,
+     "hero",
+     "Far Seer"
+    ],
+    [
+     17,
+     "train",
+     "Grunt"
+    ],
+    [
+     20,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     20,
+     "tech",
+     "Stronghold"
+    ],
+    [
+     20,
+     "build",
+     "Voodoo Lounge"
+    ],
+    [
+     23,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     32,
+     "build",
+     "Beastiary"
+    ],
+    [
+     32,
+     "build",
+     "Beastiary"
+    ],
+    [
+     32,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     32,
+     "train",
+     "Wind Rider"
+    ]
+   ],
+   "notes": [
+    "5 gold + 7 wood peons, Far Seer + 5 Grunts, then mass Wyverns; skip the second hero"
+   ]
+  },
+  {
+   "id": "grubby-040-hu-paladin-rifles-bloodmage",
+   "name": "Paladin Mass Rifles",
+   "race": "H",
+   "vs": [
+    "any"
+   ],
+   "date": "2024-07-01",
+   "steps": [
+    [
+     7,
+     "build",
+     "Altar of Kings"
+    ],
+    [
+     8,
+     "build",
+     "Blacksmith"
+    ],
+    [
+     9,
+     "build",
+     "Farm"
+    ],
+    [
+     9,
+     "build",
+     "Barracks"
+    ],
+    [
+     11,
+     "build",
+     "Farm"
+    ],
+    [
+     12,
+     "hero",
+     "Paladin"
+    ],
+    [
+     17,
+     "build",
+     "Farm"
+    ],
+    [
+     18,
+     "train",
+     "Rifleman"
+    ],
+    [
+     26,
+     "build",
+     "Farm"
+    ],
+    [
+     26,
+     "tech",
+     "Keep"
+    ],
+    [
+     26,
+     "build",
+     "Arcane Tower"
+    ],
+    [
+     35,
+     "research",
+     "Black Gunpowder"
+    ],
+    [
+     38,
+     "hero",
+     "Blood Mage"
+    ],
+    [
+     38,
+     "research",
+     "Long Rifles"
+    ],
+    [
+     43,
+     "build",
+     "Arcane Sanctum"
+    ],
+    [
+     43,
+     "train",
+     "Priest"
+    ]
+   ],
+   "notes": [
+    "5 gold + 10 wood peasants, creep to level 3",
+    "Arcane Vault and attack after the Sanctum"
+   ]
+  },
+  {
+   "id": "grubby-041-ud-easy-fast-tech",
+   "name": "Easy Undead Fast Tech",
+   "race": "U",
+   "vs": [
+    "any"
+   ],
+   "level": "beginner",
+   "date": "2025",
+   "steps": [
+    [
+     5,
+     "build",
+     "Altar of Darkness"
+    ],
+    [
+     5,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     7,
+     "build",
+     "Crypt"
+    ],
+    [
+     8,
+     "build",
+     "Tomb of Relics"
+    ],
+    [
+     8,
+     "hero",
+     "Death Knight"
+    ],
+    [
+     13,
+     "build",
+     "Graveyard"
+    ],
+    [
+     13,
+     "train",
+     "Ghoul"
+    ],
+    [
+     17,
+     "item",
+     "Rod of Necromancy"
+    ],
+    [
+     17,
+     "build",
+     "Nerubian Tower"
+    ],
+    [
+     17,
+     "tech",
+     "Halls of the Dead"
+    ],
+    [
+     17,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     17,
+     "train",
+     "Crypt Fiend"
+    ],
+    [
+     25,
+     "build",
+     "Slaughterhouse"
+    ],
+    [
+     25,
+     "hero",
+     "Lich"
+    ],
+    [
+     25,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     25,
+     "tech",
+     "Black Citadel"
+    ],
+    [
+     30,
+     "train",
+     "Obsidian Statue"
+    ],
+    [
+     30,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     39,
+     "item",
+     "Orb of Corruption"
+    ],
+    [
+     39,
+     "hero",
+     "Crypt Lord"
+    ]
+   ],
+   "notes": [
+    "Tri-hero with an early Orb of Corruption; scout for expansions with skeletons"
+   ]
+  },
+  {
+   "id": "grubby-042-ne-early-expansion-beginner",
+   "name": "Elf Early Expansion Beginner Guide",
+   "race": "N",
+   "vs": [
+    "any"
+   ],
+   "level": "beginner",
+   "date": "2025-03-25",
+   "steps": [
+    [
+     5,
+     "build",
+     "Altar of Elders"
+    ],
+    [
+     6,
+     "build",
+     "Moon Well"
+    ],
+    [
+     7,
+     "build",
+     "Ancient of War"
+    ],
+    [
+     10,
+     "hero",
+     "Keeper of the Grove"
+    ],
+    [
+     16,
+     "build",
+     "Moon Well"
+    ],
+    [
+     16,
+     "train",
+     "Archer"
+    ],
+    [
+     21,
+     "build",
+     "Hunter's Hall"
+    ],
+    [
+     22,
+     "expand",
+     "Tree of Life"
+    ],
+    [
+     23,
+     "build",
+     "Ancient of War"
+    ],
+    [
+     22,
+     "train",
+     "Huntress"
+    ],
+    [
+     25,
+     "build",
+     "Moon Well"
+    ],
+    [
+     28,
+     "build",
+     "Ancient Protector"
+    ],
+    [
+     38,
+     "tech",
+     "Tree of Ages"
+    ],
+    [
+     50,
+     "research",
+     "Improved Bows"
+    ],
+    [
+     50,
+     "research",
+     "Moon Glaive"
+    ],
+    [
+     50,
+     "build",
+     "Ancient of Lore"
+    ]
+   ],
+   "notes": [
+    "5 gold + 10 lumber wisps; Tree of Life at the nearest mine at 22 food; tier 2 at 38 food",
+    "Fill to 50 food with Huntresses and Archers"
+   ]
+  },
+  {
+   "id": "grubby-ud-dk-2-crypt-ghoul-rush",
+   "name": "DK Two Crypt Ghoul Rush",
+   "race": "U",
+   "vs": [
+    "N",
+    "U",
+    "H"
+   ],
+   "date": "2019",
+   "steps": [
+    [
+     6,
+     "build",
+     "Crypt"
+    ],
+    [
+     6,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     7,
+     "build",
+     "Altar of Darkness"
+    ],
+    [
+     7,
+     "build",
+     "Ziggurat"
+    ],
+    [
+     7,
+     "train",
+     "Ghoul"
+    ],
+    [
+     9,
+     "build",
+     "Tomb of Relics"
+    ],
+    [
+     11,
+     "hero",
+     "Death Knight"
+    ],
+    [
+     20,
+     "build",
+     "Crypt"
+    ],
+    [
+     24,
+     "build",
+     "Ziggurat"
+    ]
+   ],
+   "notes": [
+    "All-in: non-stop Ghouls from two Crypts at ~18 food, no tier 2"
+   ]
+  },
+  {
+   "id": "grubby-ne-warden-fast-expo",
+   "name": "Warden Domination 2: Fast Expand",
+   "race": "N",
+   "vs": [
+    "U",
+    "H",
+    "O"
+   ],
+   "date": "2019",
+   "steps": [
+    [
+     5,
+     "build",
+     "Altar of Elders"
+    ],
+    [
+     7,
+     "build",
+     "Moon Well"
+    ],
+    [
+     8,
+     "build",
+     "Ancient of War"
+    ],
+    [
+     10,
+     "hero",
+     "Warden"
+    ],
+    [
+     15,
+     "train",
+     "Archer"
+    ],
+    [
+     18,
+     "build",
+     "Moon Well"
+    ],
+    [
+     25,
+     "expand",
+     "Tree of Life"
+    ],
+    [
+     28,
+     "tech",
+     "Tree of Ages"
+    ],
+    [
+     30,
+     "build",
+     "Hunter's Hall"
+    ]
+   ],
+   "notes": [
+    "Solo Warden until level 5-6; Tree of Life at the expansion at 25 food"
+   ]
+  },
+  {
+   "id": "grubby-ne-warden-fast-tech",
+   "name": "Warden Domination 1: Fast Tech",
+   "race": "N",
+   "vs": [
+    "H",
+    "U",
+    "O"
+   ],
+   "date": "2019",
+   "steps": [
+    [
+     5,
+     "build",
+     "Altar of Elders"
+    ],
+    [
+     7,
+     "build",
+     "Moon Well"
+    ],
+    [
+     8,
+     "build",
+     "Ancient of War"
+    ],
+    [
+     10,
+     "hero",
+     "Warden"
+    ],
+    [
+     15,
+     "train",
+     "Archer"
+    ],
+    [
+     18,
+     "build",
+     "Moon Well"
+    ],
+    [
+     26,
+     "tech",
+     "Tree of Ages"
+    ],
+    [
+     26,
+     "build",
+     "Moon Well"
+    ],
+    [
+     26,
+     "build",
+     "Moon Well"
+    ],
+    [
+     26,
+     "build",
+     "Hunter's Hall"
+    ],
+    [
+     26,
+     "build",
+     "Ancient of Lore"
+    ],
+    [
+     26,
+     "build",
+     "Ancient of Lore"
+    ],
+    [
+     26,
+     "tech",
+     "Tree of Eternity"
+    ],
+    [
+     28,
+     "train",
+     "Dryad"
+    ],
+    [
+     38,
+     "train",
+     "Druid of the Claw"
+    ]
+   ],
+   "notes": [
+    "Solo Warden; tier 2 at 26 food and straight to tier 3 for Bears and Dryads"
+   ]
+  },
+  {
+   "id": "grubby-hu-bloodmage-fast-expo",
+   "name": "Blood Mage First Fast Expand",
+   "race": "H",
+   "vs": [
+    "N",
+    "O"
+   ],
+   "date": "2019",
+   "steps": [
+    [
+     6,
+     "build",
+     "Altar of Kings"
+    ],
+    [
+     7,
+     "build",
+     "Farm"
+    ],
+    [
+     7,
+     "build",
+     "Barracks"
+    ],
+    [
+     9,
+     "build",
+     "Farm"
+    ],
+    [
+     10,
+     "hero",
+     "Blood Mage"
+    ],
+    [
+     16,
+     "train",
+     "Footman"
+    ],
+    [
+     16,
+     "build",
+     "Farm"
+    ],
+    [
+     26,
+     "build",
+     "Farm"
+    ],
+    [
+     31,
+     "expand",
+     "Town Hall"
+    ],
+    [
+     40,
+     "tech",
+     "Keep"
+    ],
+    [
+     40,
+     "build",
+     "Blacksmith"
+    ],
+    [
+     40,
+     "build",
+     "Workshop"
+    ],
+    [
+     40,
+     "build",
+     "Workshop"
+    ]
+   ],
+   "notes": [
+    "Mercenary camp maps only; Town Hall at 31 food; tier 2 around 40 food"
+   ]
+  },
+  {
+   "id": "grubby-013-orc-sh-t3-fast-hh-caster",
+   "name": "Shadow Hunter to Tier 3, Fast Headhunters and Casters",
+   "race": "O",
+   "vs": [
+    "any"
+   ],
+   "date": "2019",
+   "steps": [
+    [
+     7,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     8,
+     "build",
+     "War Mill"
+    ],
+    [
+     9,
+     "build",
+     "Barracks"
+    ],
+    [
+     10,
+     "build",
+     "Altar of Storms"
+    ],
+    [
+     11,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     11,
+     "train",
+     "Troll Headhunter"
+    ],
+    [
+     13,
+     "hero",
+     "Shadow Hunter"
+    ],
+    [
+     26,
+     "tech",
+     "Stronghold"
+    ],
+    [
+     26,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     30,
+     "build",
+     "Voodoo Lounge"
+    ],
+    [
+     30,
+     "research",
+     "Ranged Attack"
+    ],
+    [
+     36,
+     "tech",
+     "Fortress"
+    ],
+    [
+     36,
+     "build",
+     "Spirit Lodge"
+    ],
+    [
+     36,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     38,
+     "train",
+     "Shaman"
+    ],
+    [
+     42,
+     "hero",
+     "Tauren Chieftain"
+    ]
+   ],
+   "notes": [
+    "5 gold + 8 wood peons, 9 Headhunters by 36 food; at 47-50: Kodo, go over 50, expand, or all-in"
+   ]
+  },
+  {
+   "id": "grubby-orc-tri-hero-grunt-raider-kodo-vs-ud",
+   "name": "Tri-Hero Grunt Raider Kodo vs Undead",
+   "race": "O",
+   "vs": [
+    "U"
+   ],
+   "date": "2019-05",
+   "steps": [
+    [
+     6,
+     "build",
+     "Altar of Storms"
+    ],
+    [
+     7,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     8,
+     "build",
+     "Barracks"
+    ],
+    [
+     10,
+     "hero",
+     "Blademaster"
+    ],
+    [
+     16,
+     "train",
+     "Grunt"
+    ],
+    [
+     19,
+     "build",
+     "Voodoo Lounge"
+    ],
+    [
+     20,
+     "tech",
+     "Stronghold"
+    ],
+    [
+     20,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     20,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     20,
+     "hero",
+     "Shadow Hunter"
+    ],
+    [
+     31,
+     "build",
+     "Beastiary"
+    ],
+    [
+     31,
+     "tech",
+     "Fortress"
+    ],
+    [
+     31,
+     "build",
+     "War Mill"
+    ],
+    [
+     31,
+     "train",
+     "Raider"
+    ],
+    [
+     31,
+     "build",
+     "Orc Burrow"
+    ],
+    [
+     41,
+     "hero",
+     "Tauren Chieftain"
+    ]
+   ],
+   "notes": [
+    "50 food army: Blademaster, Shadow Hunter, Tauren Chieftain; 3 Grunts, 2 Raiders, 1 Kodo, 1 Wind Rider"
+   ]
+  }
+ ]
+}
