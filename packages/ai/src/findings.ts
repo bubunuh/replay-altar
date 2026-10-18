@@ -235,6 +235,9 @@ function fightFinding(c: Ctx): Finding | null {
   const theyLost = losses.reduce((n, x) => n + x.opp, 0);
   const trade = proGap(c, "trade_efficiency");
   if (youLost <= theyLost * 1.5 || youLost < 800) return null;
+  // The whole-game trade (all losses, not only detected fights) at or above the pro median
+  // contradicts "your fights cost far more"; seen in reviews of pro games.
+  if (trade && trade.worseThan < 0.5) return null;
   const sim = c.r.sim?.status === "ok" ? c.r.sim.players.find((p) => p.playerId === c.me.playerId)?.heroes ?? [] : [];
   const worst = [...losses].sort((a, b) => b.me - b.opp - (a.me - a.opp)).slice(0, 3).sort((a, b) => a.f.start - b.f.start);
   const deathsNear = (from: number, to: number) => sim.flatMap((h) => h.deaths.filter((d) => d.diedAt >= from - 30_000 && d.diedAt <= to + 30_000).map((d) => `your ${h.name} died ≈${mmss(d.diedAt)}`));
@@ -792,7 +795,7 @@ function becauseFor(f: Finding, c: Ctx): string[] {
   const m = c.me.metrics;
   const o = c.opp.metrics;
   const out: string[] = [];
-  if (f.id === "heroes") {
+  if (f.id === "heroes" && f.headline.startsWith("Your heroes")) {
     const camps = proGap(c, "creep_camps_6m");
     if (camps && camps.worseThan >= 0.6 && (m.creep_camps_6m ?? 0) < camps.median) out.push(`You cleared ${num(m.creep_camps_6m)} creep camp${m.creep_camps_6m === 1 ? "" : "s"} by 6:00 (pros: ${num(camps.median)}): too little creeping.`);
     const appear = Math.min(...simHeroes(c, c.me).map((h) => h.appearAt ?? Infinity));

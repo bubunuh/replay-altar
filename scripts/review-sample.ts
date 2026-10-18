@@ -4,8 +4,8 @@
 //   node scripts/review-sample.ts --race H --band low|avg|high [--n 3]
 //
 // Bands by the subject's MMR: low 1000-1300, avg 1500-1700, high 2000-2300 (the pro corpus covers
-// tournament players). The opponent must be within 150 MMR. Polite: one replay every 20 s (W3C
-// answered 429 after about 25 replays at one per 10 s).
+// tournament players). The opponent must be within 150 MMR. Polite: one replay every 45 s (W3C
+// answered 429 after about 25 replays at one per 10 s, and still an hour later).
 // Prints "<gameKey> <subjectPlayerId> <mmr> <battleTag>" for each game kept.
 import { mkdirSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -50,7 +50,7 @@ outer: for (let page = 0; page < 30; page++) {
       const subject = players.find((p) => W3C_RACE[p.race] === race && p.oldMmr >= lo && p.oldMmr <= hi && !usedPlayers.has(p.battleTag));
       const opponent = players.find((p) => p !== subject);
       if (!subject || !opponent || Math.abs(opponent.oldMmr - subject.oldMmr) > 150) continue;
-      await sleep(20_000);
+      await sleep(45_000);
       const buffer = await w3c.downloadReplay(m.id);
       if (!buffer) {
         skip(id, "replay not available");

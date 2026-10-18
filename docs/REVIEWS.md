@@ -203,6 +203,12 @@ units disappearing.
 
 **e289a1ab · loss, UvH, 10:14.** App: heroes fell behind (0 camps by 6:00, Lich waited 312 s, level 2 from 4:01); fights (three losing fights at 4:44-6:41, one under their towers). Replay: an 18-Ghoul push into a fast-expanding Human that held with Footmen and towers while their Archmage reached level 4; no creeping at all. **Good.**
 
+**8558ab14 · loss, UvN, 16:59.** App: supply blocked 79 s (worse than 99% of pros); their heroes out-levelled yours; no upgrades. Turning point 14:58 (≈950 vs 335; Lich and Naga died). Replay: one-base Fiend/Statue army against Bears and Dryads; the Demon Hunter reached 5. **Good**, but the heroes finding mixed messages ("your pace was at pro level" plus "too little creeping"): creeping causes now only accompany "your heroes fell behind".
+
+**d8946bf3 · loss, UvO, 18:37.** App: "your fights cost far more" with a whole-game trade of 57% (pros' median 45%) in the same evidence. **Contradictory**: the detected fights (2360 vs 1490) and the whole-game trade disagree. Fixed: the fights finding stays out when the overall trade is at or above the pro median (holdout lift 2.0 → 2.2). Replay: Ghouls + Statues vs 29 Headhunters and Raiders; lost the army lead from 12:00 to Orc upgrades (Ranged 2) while having none.
+
+**b3244d52 · win, UvH, 12:16.** App: fights (trade 54% vs pros 53% — now silenced by the same fix); ≈5 workers lost; into upkeep before upgrades. Replay: fast expansion 2:35 and 25 Ghouls; Death Knight only at 11:01. **Partial** before the fix.
+
 ### Night Elf
 
 #### Pros
@@ -212,3 +218,9 @@ units disappearing.
 **64fbe88a · loss, NvH, 26:14.** App: supply blocked 32 s; no upgrades by 15:00 (they had Gunpowder 2, Plating 2, Swords 2). Turning point 13:58 (base defense, ≈1675 vs 565). Replay: Bears/Dryads with no Hunter's Hall upgrades against a fully upgraded, potion-heavy Human (27 healing items). **Good**: the upgrade gap is the story; the items gap (yours 12, mostly not healing) isn't mentioned.
 
 **875003a8 · result unknown, NvO, 10:06.** App: nothing stood out (you ahead in hero XP and workers). **Fine.**
+
+**c48833de · win, NvH, 13:19.** App: supply blocked 55 s. Turning point 10:20 (≈615 vs 1675; their Archmage and Mountain King died). Replay: tavern Beastmaster first, Dryads; the 10:20 tower dive killed both their heroes. **Good.**
+
+**364b43fe · win, NvO, 26:47.** App: heroes fell behind (share 43%; mid-game advice: the gap opened after 15:36); late 3-3-60 (Pit Lord level 3 at 17:40). Replay: fast expansion 2:40 and 35 Wisps, Bears from 10:00; their Shadow Hunter reached 7 while your tavern Pit Lord levelled slowly. **Good.**
+
+**b9d19af7 · win, NvO, 11:30.** App: too few workers (10 at 6:00, 9 at 10:00; target 14). Replay: one-base fast Tree of Ages into Bears; Night Elf Wisps are consumed by buildings, and the worker floor already uses the Night Elf pros' 10th percentile (≈10.6), so this is a borderline call. **Fine.**
