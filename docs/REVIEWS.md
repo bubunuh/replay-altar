@@ -295,6 +295,14 @@ units disappearing.
 
 **fb780dee · win, 1625 vs 1617, NvH, 19:49.** App: no attack or armor upgrades until 17:01. Strengths: 3-3-60 at 11:30, 65% of the hero XP. Replay: Dryads and Druids of the Claw led in army from 4:00 and won. **Good.**
 
+#### High (2000-2300)
+
+**2bf227db · loss, 2145 vs 2125, NvU, 18:03.** App: the recap flags a probable disconnect (your army 3055 vs 2045 at the end); heroes fell behind (first hero level 3 only at 12:00; Demon Hunter level 2 from 3:45 to 12:00); lost ≈5 Wisps; floating ≈863. Strengths: 64% trades. Replay: fast expansion at 4:27, Dryads against 14 Gargoyles and a Frost Wyrm; the 12:50 fight cost the Undead ≈2050 and the Night Elf led in army from 14:00 when the game ended. **Good.**
+
+**716d9649 · win, 2210 vs 2321, NvH, 16:49.** App: mechanics only (147 APM, 31% hotkey selections). Strengths: 67 units killed, 3 camps by 6:00. Replay: fast expansion and 11 Druids of the Claw against 29 Footmen, Riflemen and 11 Spell Breakers; the Night Elf led in army and hero levels from 10:00. **Good.**
+
+**9b2d8a9f · win, 2190 vs 2165, NvH, 16:08.** App: nothing stood out; strengths hero XP by 6:00 (637 vs 273) and hero level 3 at 4:46. Replay: Druids of the Claw with heavy item use against a Rifleman/caster Human that bought no items; won the trades ≈1740 vs 3855. **Good.**
+
 #### Pros
 
 **057ae56c · loss, NvH, 25:50.** App: their heroes out-levelled yours (your own pace at pro level; their Archmage reached 6); no attack/armor upgrades by 15:00. Turning point 16:48 (≈1880 vs 860, going in 3230 vs 1755). Replay: fast expansion 2:36, Bears + Dryads against Knights, Mortars and casters with Swords 2 by 9:00; the 16:48 attack with the bigger army was lost. **Good.** Note: the Night Elf "expansions" list (2:36, 4:04, 5:26, 13:53) counts every Tree of Life order; counts of bases from orders are unreliable for Night Elf and Undead.
