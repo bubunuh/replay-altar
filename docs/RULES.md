@@ -60,6 +60,20 @@ near 1 here means "pros rarely do this either way", not that the advice is wrong
 | `no_items` | no shop purchase in 12+ minutes | Blizzard hero basics | never in pros | – |
 | `no_scout` | your first unit on their side of the map after 9 in 10 pros (and after 5:00) | pro data; Grubby, Liquipedia | never in pros | – |
 
+## On ladder games
+
+`node scripts/scan-reports.ts` also scores the rules on the ladder sample (the "review" group,
+94 perspectives at 1000-2300 MMR: too few for small rules, but a different population than
+pros). The main rules separate losses from wins even better there: heroes 5.7 (72% of losses),
+fights 3.3, hero deaths 30% of losses and 0% of wins, upgrades 1.8, out_expanded 1.4. Into upkeep
+before upgrades, flat on pros (1.0), scores 6.0 on ladder (13% of losses, 2% of wins), so it
+stays. Mechanics fires mostly in wins (lift 0.2) by design: it is only shown when fewer than two
+other findings fire.
+
+The same script flags suspect reports for review: losses with no finding or only minor ones,
+strengths that contradict a shown finding (now removed from the strengths), and losses where
+you led in army all game.
+
 ## Around the findings (no model needed)
 
 `packages/ai/src/report.ts`, `advice.ts`, and `becauseFor` in `findings.ts`:

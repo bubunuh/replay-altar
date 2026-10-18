@@ -41,6 +41,19 @@ units disappearing.
   "kept fighting with all heroes dead" for defending your own base (e1f508dc); "carry a Town
   Portal" to players who had one (9c73463f).
 
+**Targeted scan** (`scripts/scan-reports.ts`, all 961 simulated perspectives of 8+ minutes):
+- 351 reports (before deduplication) praised a strength that contradicted a shown finding:
+  "your heroes fell behind" next to "hero XP share 70%", "fights cost more" next to "units
+  killed", "lost too many workers" next to "workers alive". Strengths covered by a shown finding
+  are now left out (0 left), and when your heroes out-levelled the opponent's but were slow by pro
+  standards the headline says "your heroes levelled slower than pros, though faster than theirs".
+- 23 losses had no finding at all ("no clear problem stood out"). The recap now adds how the game
+  went: "their army was bigger from 6:30 to the end, and their heroes ahead from 16:40", or, when
+  your army was bigger at the end, that the game was decided outside the fights (buildings lost,
+  or a leave).
+- 182 losses have no turning point: no single fight swung 500+. Left as is (the card hides it);
+  those are gradual games.
+
 **Open (not fixed yet):**
 - *They out-expanded you* was the story of several losses (276f7a1a, 08c1cc36). **Done:** the
   `out_expanded` rule (more bases standing for 4+ minutes before 20:00) scores 1.8 on held-out

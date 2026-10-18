@@ -43,7 +43,7 @@ const view: GameRecord = { ...r, players: r.players.map((x) => ({ ...x, isMe: x.
 const result = subject.result ?? "unknown";
 const ref = factsRefFor(view);
 const found = findings(view, ref);
-const good = strengths(view, ref);
+const good = strengths(view, ref, found);
 console.log(`# ${key.slice(0, 8)} ${subject.name} (${subject.race}) vs ${opp.name} (${opp.race})${meta?.subject_mmr ? ` · MMR ${meta.subject_mmr} vs ${meta.opp_mmr}` : ""} · ${result} · ${r.game.map.file} · ${join(p.root)}`);
 console.log(`\n## Report\n${recapOf(view, opp, result, found, good)}`);
 found.forEach((f, i) => {

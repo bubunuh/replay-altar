@@ -210,7 +210,8 @@ function heroFinding(c: Ctx): Finding | null {
   return {
     id: "heroes",
     severity: Math.max(gap?.worseThan ?? 0, losingShare ? 0.6 + (0.45 - share!) : 0),
-    headline: ownPaceFine ? "Their heroes out-levelled yours" : "Your heroes fell behind",
+    // Ahead of the opponent but slow by pro standards: say so, not "fell behind" (scan-reports).
+    headline: ownPaceFine ? "Their heroes out-levelled yours" : (share ?? 0) >= 0.5 ? "Your heroes levelled slower than pros, though faster than theirs" : "Your heroes fell behind",
     ...(ownPaceFine
       ? { advice: "Your own levelling was at pro pace; theirs was faster, much of it from your units. Fight with your heroes alive and focus theirs, don't trade units in small skirmishes, and creep the camps on their side to take that experience away." }
       : {}),
@@ -860,7 +861,7 @@ function becauseFor(f: Finding, c: Ctx): string[] {
   }
   if (f.id === "fights") {
     const items = [m.items_bought ?? 0, o.items_bought ?? 0];
-    if (items[1] >= 5 && items[1] >= 3 * Math.max(1, items[0])) out.push(`You bought ${items[0]} items, they bought ${items[1]}: potions and scrolls decide even fights.`);
+    if (items[1] >= 5 && items[1] >= 3 * Math.max(1, items[0])) out.push(`You bought ${items[0]} item${items[0] === 1 ? "" : "s"}, they bought ${items[1]}: potions and scrolls decide even fights.`);
     const worst = fightLosses(c.r, c.me, c.opp).filter((x) => x.f.playerIds.includes(c.opp.playerId)).sort((a, b) => b.me - b.opp - (a.me - a.opp))[0];
     if (worst) {
       const [mine, theirs] = [levelSum(c.me, worst.f.start), levelSum(c.opp, worst.f.start)];
@@ -945,14 +946,30 @@ export function allFindings(r: GameRecord, ref: FactsRef | null, subjectId?: num
 export const findings = (r: GameRecord, ref: FactsRef | null, subjectId?: number) => allFindings(r, ref, subjectId).slice(0, MAX_FINDINGS);
 
 /** Core metrics at pro level, best first: what went well (at most 2). */
-export function strengths(r: GameRecord, ref: FactsRef | null): string[] {
+/** Strengths that would contradict a finding shown for the same game (found in scripts/scan-reports.ts). */
+const COVERED_BY: Record<string, string[]> = {
+  heroes: ["hero_xp_6m", "hero_xp_10m", "hero_xp_share", "hero_level3_ms", "goal_3360_ms", "creep_camps_6m", "hero2_ms", "hero3_ms"],
+  goal_3360: ["goal_3360_ms", "hero_level3_ms"],
+  fights: ["trade_efficiency", "units_killed"],
+  economy: ["workers_by_6m", "workers_alive_6m", "workers_alive_10m"],
+  workers_lost: ["workers_by_6m", "workers_alive_6m", "workers_alive_10m"],
+  hero_deaths: ["hero_deaths"],
+  expansion: ["expansions"],
+  out_expanded: ["expansions"],
+  mine_dry: ["expansions", "gold_collected"],
+};
+
+export function strengths(r: GameRecord, ref: FactsRef | null, found: Finding[] = []): string[] {
+  const covered = new Set(found.flatMap((f) => COVERED_BY[f.id] ?? []));
   const me = r.players.find((p) => p.isMe);
   const opp = r.players.find((p) => p.playerId === r.classification.opponentId);
   if (!me || !opp || !ref || r.game.durationMs < MIN_GAME_MS) return [];
   const c: Ctx = { r, me, opp, ref };
-  return METRICS.filter((m) => m.section === "core" && m.better && !NOT_STRENGTHS.has(m.key) && !NOT_STRENGTHS_FOR[me.race as RaceCode]?.has(m.key))
+  return METRICS.filter((m) => m.section === "core" && m.better && !NOT_STRENGTHS.has(m.key) && !covered.has(m.key) && !NOT_STRENGTHS_FOR[me.race as RaceCode]?.has(m.key))
     .map((m) => ({ m, g: proGap(c, m.key) }))
     .filter((x) => x.g && x.g.worseThan <= 0.4)
+    // Losing the trade isn't a strength, however it compares with pros.
+    .filter((x) => x.m.key !== "trade_efficiency" || (me.metrics.trade_efficiency ?? 0) > 0.5)
     .sort((a, b) => a.g!.worseThan - b.g!.worseThan)
     .slice(0, 2)
     .map(({ m, g }) => `${m.raceLabels?.[me.race as RaceCode] ?? m.label}: you ${metricValue(m, me.metrics[m.key], r.metricSources?.[m.key] === "official")}, opp ${metricValue(m, opp.metrics[m.key], r.metricSources?.[m.key] === "official")}, better than ${Math.round((1 - g!.worseThan) * 100)}% of pro games.`);

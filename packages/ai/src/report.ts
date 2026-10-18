@@ -5,7 +5,7 @@ import type { GameRecord, PlayerRecord } from "@replay-altar/core/ui";
 import { RACE_NAMES } from "@replay-altar/core/gamedata";
 import { nameOf } from "@replay-altar/core/names";
 import type { Finding } from "./findings.ts";
-import { at, fightLabel, fightLosses, mmss, seriesOf } from "./series.ts";
+import { at, fightLabel, fightLosses, levelXp, mmss, seriesOf } from "./series.ts";
 
 const lowerFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
 const clause = (s: string) => lowerFirst(s.replace(/\.$/, ""));
@@ -67,11 +67,32 @@ function blindSpot(r: GameRecord): string {
   return "";
 }
 
+/**
+ * For a loss with no finding: how the game went from the numbers (seen in scans of pro losses
+ * where "no clear problem" was all the report said).
+ */
+function lossShape(r: GameRecord, opp: PlayerRecord): string {
+  const me = r.players.find((p) => p.playerId !== opp.playerId && p.teamId !== opp.teamId);
+  if (!me || r.sim?.status !== "ok") return "";
+  const sm = seriesOf(r, me).filter((s) => s.t >= 120_000);
+  const so = seriesOf(r, opp);
+  // Since when they led to the end, by one measure; null when you led at the end.
+  const since = (theirs: (t: number) => number, mine: (t: number) => number) => {
+    let from: number | null = null;
+    for (let i = sm.length - 1; i >= 0 && theirs(sm[i].t) > mine(sm[i].t); i--) from = sm[i].t;
+    return from;
+  };
+  const army = since((t) => at(so, t)?.armyValue ?? 0, (t) => at(sm, t)?.armyValue ?? 0);
+  const xp = since((t) => levelXp(opp, t), (t) => levelXp(me, t));
+  if (army === null) return " Your army was bigger at the end, so the game was decided outside the fights the replay shows (buildings lost, or a leave).";
+  return ` Their army was bigger from ${mmss(army)} to the end${xp !== null ? `, and their heroes ahead from ${mmss(xp)}` : ""}: no single mistake explains it, so watch the replay from ${mmss(army)} to see how they pulled ahead.`;
+}
+
 /** One or two sentences: the result, the main problem and its first cause, the next problem. */
 export function recapOf(r: GameRecord, opp: PlayerRecord, result: string, found: Finding[], strengths: string[]): string {
   const outcome = result === "win" ? "You won" : result === "loss" ? "You lost" : "The game lasted";
   const head = `${outcome} ${result === "win" || result === "loss" ? "in " : ""}${mmss(r.game.durationMs)} against ${RACE_NAMES[opp.race] ?? opp.race}.${blindSpot(r)}`;
-  if (!found.length) return `${head} No clear problem stood out${strengths.length ? `; best: ${clause(strengths[0])}` : ""}.`;
+  if (!found.length) return `${head} No clear problem stood out${strengths.length ? `; best: ${clause(strengths[0])}` : ""}.${result === "loss" ? lossShape(r, opp) : ""}`;
   // Lost while clearly ahead at the end: usually a leave or a disconnect, not the findings.
   const me = r.players.find((p) => p.playerId !== opp.playerId && p.teamId !== opp.teamId);
   const last = (p?: PlayerRecord) => (p ? (seriesOf(r, p).at(-1)?.armyValue ?? 0) : 0);

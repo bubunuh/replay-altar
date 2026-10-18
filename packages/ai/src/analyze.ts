@@ -69,7 +69,7 @@ export function buildPrompt(db: DB, paths: Paths, gameKey: string) {
   if (r.game.durationMs < MIN_GAME_MS) throw new Error("the game is too short to analyze (under 3 minutes)");
   const ref = factsRefFor(r);
   const found = findFindings(r, ref);
-  const good = findStrengths(r, ref);
+  const good = findStrengths(r, ref, found);
   const facts = gameFacts(r, { result: detail.row.result ?? "unknown", ref });
   const plan = opponentPlan(r, ref);
   const brief = [
