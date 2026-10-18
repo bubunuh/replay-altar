@@ -14,7 +14,37 @@ Rules version: commit after 92968df (2026-10-18).
 
 ## Patterns so far
 
-(updated as reviews accumulate; see the per-game notes below)
+Updated as reviews accumulate (per-game notes below).
+
+**What works.** In most games the top findings match what a reading of the replay says decided
+it: hero levels and creeping, fights lost (with items and hero levels as causes), windows the
+opponent left open, supply blocks and floating gold at lower levels, high upkeep in long games.
+Turning points land on the decisive fight, including fights the simulation only infers from
+units disappearing.
+
+**Fixed along the way** (each found in a specific game below):
+- Truncated simulations (WC3V stopped reading the replay) were treated as complete: 7-10% of
+  the pro corpus; now they fail and are left out.
+- Losses inferred late (units stop appearing after a battle) were missed by fight attribution;
+  army value counted dead units (the simulation's supply rarely drops).
+- Advice that contradicted the game: early-creeping advice for players whose gap opened
+  mid-game; "creep from the altar" when the opponent's single hero simply took all their XP;
+  "too little creeping" at the pro median; "hero waited" for fast-tech openings whose hero kept
+  pro pace by harassing.
+- Small-sample artifacts: 13 s of supply block in a 5-minute game scaled to "26 s per 10 min";
+  upgrades ordered seconds after passing 50 food.
+- Repetition: the late first creep reported twice; wording ("1 camps", "a engagement").
+
+**Open (not fixed yet):**
+- *They out-expanded you* is the story of several losses (276f7a1a, 08c1cc36) but no rule says
+  it, and base counts from orders are unreliable for Night Elf and Undead (repeated or cancelled
+  Tree of Life / Haunted Gold Mine orders). The simulation's own building list disagrees too.
+  Needs a trustworthy base count first; "unanswered expansion" (the closest rule) scores below 1.
+- Items gap below the 8-item threshold (1 vs 6) goes unmentioned.
+- A late second hero has no rule of its own (only through 3-3-60).
+- "No attack/armor upgrades" fires for caster armies and Orc builds whose research went
+  elsewhere; consider counting caster training.
+- Games with no detected fights at all should carry a low-confidence note.
 
 ## My games (the user, Human, ~1500 MMR Battle.net ladder)
 
@@ -85,6 +115,14 @@ Rules version: commit after 92968df (2026-10-18).
 **3bf2a2ef · loss, 1272 vs 1248, HvO, 16:18.** App: fights (≈2865 vs 1205); heroes fell behind (1 camp by 6:00). Turning point 9:54 (≈705 vs 150). Replay: fast Keep 3:18 on 13 workers, never expanded; the Orc expanded 8:57, Far Seer reached 5 and they bought 18 items; a mixed Rifle/Breaker/Sorceress army lost every fight from 9:54. **Good.** Also fixed: "1 creep camps".
 
 **fd15fa98 · win, 1096 vs 1103, HvO, 15:17.** App: supply blocked 66 s only. Replay: fast Keep 2:18 and Castle 6:24 into Priests/Knights/Breakers beat Grunts/Raiders/Shamans; the army lead from 2:00 decided it. **Good** (thin, but it was a clean win).
+
+**Extra low Human games (sampled twice by mistake):**
+
+**a96b1a6d · loss, 1084 vs 1078, HvU, 21:44.** App: too few workers (8 at 6:00 of 14; 15 at 10:00 of 22 on two bases); supply blocked 89 s; no upgrades. Turning point 17:35 (≈770 vs 0, Paladin died). Replay: Archmage level 3 at 3:56 (better than 92% of pros) but a thin economy; 12 Flying Machines answered their 8 Gargoyles; lost the 17:17-19:51 fights to Ghouls, Statues/Destroyers and Abominations with Unholy upgrades. **Good.** Odd evidence line: "main hall idle 70 s (worse than 18% of pros)" sits under a too-few-workers finding — a good number shown as if it explained the problem; show the idle line only when it is worse than the pro median.
+
+**6edf0b1a · loss, 1086 vs 1067, HvU, 12:52.** App: fights (≈990 vs 480; two creep fights lost at 8:54 and 9:32, Blood Mage died 10:49); supply blocked 39 s. Replay: you led in army and workers from 6:00 but lost units on creeps and the 10:24 fight; their three heroes caught up by 12:00. **Good.**
+
+**069784cd · win, 1201 vs 1263, HvH, 46:16.** Report said "never reached 3-3-60" and showed only ≈235 lost in fights in 46 minutes. The simulation had read only part of the replay (truncated); the review group wasn't covered by the truncation fix until `sim --resummarize` included it. Now failed. **Invalid sample.**
 
 #### Average (1500-1700)
 

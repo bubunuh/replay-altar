@@ -160,7 +160,7 @@ function economyFinding(c: Ctx): Finding | null {
     headline: "You had too few workers",
     evidence: [
       ...checks.map((x) => `Workers at ${mmss(x.t)}: ${x.workers} of the ${x.target} your ${x.bases === 1 ? "base needs" : `${x.bases} bases need`} (5 on gold per base + lumber crew).`),
-      ...(m.hall_idle_6m_s !== null && m.hall_idle_6m_s !== undefined ? [`Your main hall was idle ${num(m.hall_idle_6m_s)} of the first 360 seconds${vsPros(c, "hall_idle_6m_s")}; it should train workers non-stop until the target.`] : []),
+      ...(m.hall_idle_6m_s !== null && m.hall_idle_6m_s !== undefined && (proGap(c, "hall_idle_6m_s")?.worseThan ?? 1) >= 0.5 ? [`Your main hall was idle ${num(m.hall_idle_6m_s)} of the first 360 seconds${vsPros(c, "hall_idle_6m_s")}; it should train workers non-stop until the target.`] : []),
       ...(m.workers_lost_12m ? [`Workers lost by 12:00: ≈${m.workers_lost_12m}.`] : []),
     ],
   };

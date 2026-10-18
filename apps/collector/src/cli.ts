@@ -188,7 +188,9 @@ switch (cmd) {
     if (flag === "--resummarize") {
       const costs = loadCosts(gamedataDir(c.paths.root));
       // Yours, then every reference group (their profiles are rebuilt after).
-      const contexts = [{ name: "your", ctx: c as { db: typeof c.db; paths: typeof c.paths } }, ...c.config.reference.groups.map((g) => ({ name: g.id, ctx: openReference(g.id, c.config), group: g }))];
+      // Also the rule-review sample (scripts/review-sample.ts), when there is one.
+      const review = existsSync(referencePaths("review").db) ? [{ name: "review", ctx: openReference("review", c.config) }] : [];
+      const contexts = [{ name: "your", ctx: c as { db: typeof c.db; paths: typeof c.paths } }, ...c.config.reference.groups.map((g) => ({ name: g.id, ctx: openReference(g.id, c.config), group: g })), ...review];
       for (const { name, ctx, ...rest } of contexts) {
         const rows = ctx.db.prepare("SELECT game_key FROM games WHERE sim_status = 'ok'").all() as { game_key: string }[];
         for (const { game_key } of rows) {
