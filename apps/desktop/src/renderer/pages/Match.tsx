@@ -10,6 +10,7 @@ import { AiCard } from "../AiCard.tsx";
 import { RulesCard } from "../RulesCard.tsx";
 import { MapView } from "../MapView.tsx";
 import { Tip } from "../Tip.tsx";
+import { RaceIcon } from "../RaceIcon.tsx";
 import { Chart, heroLevelsChart, timeLines, type Band, type HeroLine, type Tokens } from "../Chart.tsx";
 import { assess, describeRef, groupForRace, pickProfile } from "@replay-altar/reference/compare";
 import { ProMedian, Standing } from "../Standing.tsx";
@@ -171,12 +172,6 @@ function GameCharts({ record, refMp, refLabel }: { record: GameRecord; refMp: Ma
   );
 }
 
-/** A race's crest from the game (text when it hasn't been extracted). */
-function RaceIcon({ race, icons }: { race?: string; icons: Record<string, string> }) {
-  const name = RACE[race ?? ""] ?? race ?? "?";
-  return race && icons[race] ? <img className="race-icon" src={icons[race]} alt={name} data-tip={name} /> : <span className="muted">{name}</span>;
-}
-
 /** Closest library build, and how the pros who played it did. */
 function BuildLine({ record, player, who, principles }: { record: GameRecord; player: PlayerRecord; who: string; principles: Principles | null | undefined }) {
   const best = useMemo(() => matchBuilds(record, player)[0], [record, player]);
@@ -200,14 +195,10 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
   const [detail, setDetail] = useState<GameDetail | undefined>();
   const [hideWorkers, setHideWorkers] = useState(true);
   const [kinds, setKinds] = useState(new Set(["building", "unit", "upgrade", "item"]));
-  const [icons, setIcons] = useState<Record<string, string>>({});
   const load = useCallback(() => api.getGame(gameKey).then(setDetail), [gameKey]);
   useEffect(() => {
     load();
   }, [load]);
-  useEffect(() => {
-    api.raceIcons().then(setIcons);
-  }, []);
 
   const r = detail?.record;
   const me = r?.players.find((p) => p.isMe);
@@ -248,9 +239,9 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
           <span className={`big ${row.result}`}>{row.result === "win" ? "Victory" : row.result === "loss" ? "Defeat" : "Result unknown"}</span>
           <span className="versus">
             <b>You</b>
-            <RaceIcon race={me?.race} icons={icons} />
+            <RaceIcon race={me?.race} />
             <span className="muted">vs</span>
-            <RaceIcon race={opp?.race} icons={icons} />
+            <RaceIcon race={opp?.race} />
             <b>{opp?.name}</b>
           </span>
         </div>

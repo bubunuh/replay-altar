@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import type { GameRow } from "@replay-altar/core/ui";
 import { dateTime, mmss, RACE, shortName, SOURCE } from "../format.ts";
+import { RaceIcon } from "../RaceIcon.tsx";
 
 export function Result({ result }: { result: string }) {
   return <span className={`result ${result}`}>{result === "win" ? "Win" : result === "loss" ? "Loss" : "Unknown"}</span>;
@@ -80,8 +81,14 @@ export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: str
                 <tr key={g.game_key} className="click" onClick={() => onOpen(g.game_key)}>
                   <td>{dateTime(g.played_at)}</td>
                   <td><Result result={g.result} /></td>
-                  <td>{g.matchup}</td>
-                  <td title={g.opp_name ?? ""}>{shortName(g.opp_name)} <span className="muted small">{RACE[g.opp_race ?? ""]}</span></td>
+                  <td>
+                    <span className="matchup">
+                      <RaceIcon race={g.matchup?.[0]} size="small" />
+                      <span className="muted small">vs</span>
+                      <RaceIcon race={g.opp_race ?? g.matchup?.[2]} size="small" />
+                    </span>
+                  </td>
+                  <td title={g.opp_name ?? ""}>{shortName(g.opp_name)}</td>
                   <td>{g.map_name}</td>
                   <td className="num">{mmss(g.duration_ms)}</td>
                   <td className="num">{g.apm === null ? "—" : Math.round(g.apm)}</td>

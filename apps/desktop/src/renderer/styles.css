@@ -127,6 +127,8 @@ td.num, th.num { text-align: right; }
 @media (max-width: 640px) { .map-view { width: 156px; } }
 .versus { display: inline-flex; align-items: center; gap: 8px; font-size: calc(18px * var(--text-scale)); }
 .race-icon { height: 104px; width: auto; vertical-align: middle; filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.35)) brightness(1.25); }
+.race-icon.small { height: 40px; filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3)) brightness(1.25); }
+.matchup { display: inline-flex; align-items: center; gap: 4px; }
 
 /* Tooltips: .tip is the small "i"; any [data-tip] element shows its text (Tip.tsx TipLayer). */
 .tip { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; border-radius: 50%; border: 1px solid var(--axis); color: var(--muted); font-size: calc(10px * var(--text-scale)); font-weight: 700; font-style: italic; font-family: Georgia, serif; cursor: help; vertical-align: middle; }
@@ -145,7 +147,7 @@ button[data-tip], .map-frame[data-tip] { cursor: pointer; }
 .rules-strengths ul { margin: 4px 0 12px; padding-left: 18px; color: var(--ink-2); }
 .rules-more ul { margin: 4px 0; padding-left: 18px; color: var(--ink-2); }
 .match-head { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: baseline; }
-.match-head .big { font-family: "Blackletter", var(--font); font-size: calc(28px * var(--text-scale)); font-weight: 700; letter-spacing: 0.01em; }
+.match-head .big { font-family: "Blackletter", var(--font); font-size: calc(56px * var(--text-scale)); line-height: 1; font-weight: 700; letter-spacing: 0.01em; }
 .match-head .big.win { color: var(--good-text); }
 .match-head .big.loss { color: var(--critical-text); }
 .key { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; border-radius: 1px; }
