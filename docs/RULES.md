@@ -1,7 +1,7 @@
 # AI analysis rules
 
 What the "AI analysis" looks for. Rules decide what mattered; the local model only writes it up
-(see `packages/ai/src/findings.ts`). Each rule is scored on the pro games by
+(see `packages/ai/src/rules/`: `core.ts`, `basics.ts`, `army.ts`; ranked in `findings.ts`). Each rule is scored on the pro games by
 `node scripts/eval-findings.ts --holdout`: thresholds are mined from half of the pro games and the
 rules scored on the other half, from every pro's side: how often each rule fires in their wins and
 in their losses. A useful rule fires more often in losses ("lift" above 1). Numbers below: 370

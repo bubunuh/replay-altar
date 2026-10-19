@@ -6,6 +6,6 @@ export * from "./metrics.ts";
 export * from "./process.ts";
 export * from "./queries.ts";
 export * from "./store.ts";
-export { mmss } from "./export.ts";
+export { mmss } from "./time.ts";
 export type { GameRecord, PlayerRecord, BuildEvent, HeroRecord } from "./record.ts";
 export type { SimFight, SimSample, SimPlayer, SimSummary, HeroTimeline } from "./sim.ts";

@@ -1,4 +1,8 @@
 import type { MetricDef } from "@replay-altar/core/ui";
+import { mmss } from "@replay-altar/core/time";
+
+export { mmss };
+export { problemName } from "@replay-altar/ai/problems";
 
 export const RACE: Record<string, string> = { H: "Human", O: "Orc", U: "Undead", N: "Night Elf", R: "Random" };
 
@@ -15,12 +19,6 @@ export const SKIP: Record<string, string> = {
   not_me: "You didn't play",
   custom_map: "Custom map",
 };
-
-export function mmss(ms: number | null | undefined): string {
-  if (ms === null || ms === undefined) return "—";
-  const s = Math.round(ms / 1000);
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-}
 
 export const dateTime = (iso: string) =>
   new Date(iso).toLocaleString(undefined, { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
@@ -63,39 +61,3 @@ export const GROUP_LABEL: Record<string, string> = {
   scouting: "Scouting (simulated)",
   items: "Items",
 };
-
-/** Short names for the rules' findings, for lists and filters (the full headline varies with the game). */
-export const PROBLEM: Record<string, string> = {
-  heroes: "Heroes behind",
-  fights: "Costly fights",
-  hero_deaths: "Hero deaths",
-  no_heroes: "Fought without heroes",
-  economy: "Too few workers",
-  workers_lost: "Workers lost",
-  supply: "Supply blocked",
-  floating: "Unspent gold",
-  upgrades: "No upgrades",
-  upkeep: "High upkeep",
-  upkeep_before_upgrades: "Upkeep before upgrades",
-  just_over_50: "Just over 50 food",
-  expansion: "Never expanded",
-  out_expanded: "Out-expanded",
-  unanswered_expansion: "Unanswered expansion",
-  mine_dry: "Mine ran dry",
-  window: "Missed a window",
-  exposed: "Left a window open",
-  unused_spike: "Waited at 50 food",
-  unused_lead: "Unused lead",
-  goal_3360: "Late 3-3-60",
-  one_hero: "One hero",
-  first_creep: "Late first creep",
-  no_items: "No items",
-  no_sustain: "No healing items",
-  no_scout: "No scouting",
-  army_mismatch: "Army mismatch",
-  no_anti_air: "No anti-air",
-  towers: "Too many towers",
-  build_drift: "Build steps late",
-  mechanics: "Speed and hotkeys",
-};
-export const problemName = (id: string) => PROBLEM[id] ?? id.replace(/_/g, " ");

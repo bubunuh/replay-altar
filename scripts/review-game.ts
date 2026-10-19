@@ -7,7 +7,7 @@
 // player id: your side in your games, the review subject in "review", else the first player.
 import { join } from "node:path";
 import { openDb, paths, readRecord, referencePaths, type GameRecord } from "@replay-altar/core";
-import { factsRefFor } from "../packages/ai/src/context.ts";
+import { asPlayer, factsRefFor } from "../packages/ai/src/context.ts";
 import { gameFacts } from "../packages/ai/src/facts.ts";
 import { findings, opponentPlan, strengths } from "../packages/ai/src/findings.ts";
 import { recapOf, turningPoint } from "../packages/ai/src/report.ts";
@@ -38,8 +38,8 @@ const meta = (() => {
 
 // Seen from the subject's side: the fact sheet and the report are written for "you".
 const subject = r.players.find((x) => x.playerId === pid)!;
-const opp = r.players.find((x) => x.playerId !== pid && x.teamId !== subject.teamId)!;
-const view: GameRecord = { ...r, players: r.players.map((x) => ({ ...x, isMe: x.playerId === pid })), classification: { ...r.classification, opponentId: opp.playerId } };
+const view = asPlayer(r, pid);
+const opp = view.players.find((x) => x.playerId === view.classification.opponentId)!;
 const result = subject.result ?? "unknown";
 const ref = factsRefFor(view);
 const found = findings(view, ref);

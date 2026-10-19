@@ -3,14 +3,11 @@
 import type { DB } from "./db.ts";
 import { readRecord, type Paths } from "./store.ts";
 import { METRICS, per10Minutes } from "./metrics.ts";
+import { mmss } from "./time.ts";
 import { RACE_NAMES } from "./gamedata.ts";
 import type { GameRecord, PlayerRecord } from "./record.ts";
 
-export const mmss = (ms: number | null | undefined) => {
-  if (ms === null || ms === undefined) return "—";
-  const s = Math.round(ms / 1000);
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-};
+export { mmss } from "./time.ts";
 
 type GameRow = { game_key: string; result: string };
 

@@ -9,7 +9,8 @@
     "./metrics": "./src/metrics.ts",
     "./heroxp": "./src/heroxp.ts",
     "./gamedata": "./src/gamedata.ts",
-    "./names": "./src/names.ts"
+    "./names": "./src/names.ts",
+    "./time": "./src/time.ts"
   },
   "dependencies": {
     "w3gjs": "^4.3.0"

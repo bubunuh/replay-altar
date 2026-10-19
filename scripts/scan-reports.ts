@@ -6,33 +6,15 @@
 // Flags: a loss with no finding, or only minor ones; a loss with no turning point (and no
 // disconnect note); a strength that contradicts a finding; a loss where you led in army all
 // game without the disconnect note. Prints counts, then up to N games per flag (default 8).
-import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import { loadConfig, paths, readRecord, referencePaths, type GameRecord, type PlayerRecord } from "@replay-altar/core";
-import { groupForRace, pickProfile } from "@replay-altar/reference/compare";
-import type { RefProfile } from "@replay-altar/reference/types";
-import type { FactsRef } from "../packages/ai/src/facts.ts";
+import { existsSync, readdirSync } from "node:fs";
+import { paths, readRecord, referencePaths, type GameRecord } from "@replay-altar/core";
+import { asPlayer, loadRefGroups, refFor } from "../packages/ai/src/context.ts";
 import { allFindings, findings, strengths } from "../packages/ai/src/findings.ts";
 import { recapOf, turningPoint } from "../packages/ai/src/report.ts";
 import { at, seriesOf } from "../packages/ai/src/series.ts";
 
 const listN = Number(process.argv[process.argv.indexOf("--list") + 1]) || 8;
-const config = loadConfig();
-const groups = config.reference.groups.map((group) => {
-  const f = join(referencePaths(group.id).root, "profile.json");
-  return { group, profile: existsSync(f) ? (JSON.parse(readFileSync(f, "utf8")) as RefProfile) : null };
-});
-const principles = new Map<string, unknown>();
-const refFor = (me: PlayerRecord, opp: PlayerRecord): FactsRef | null => {
-  const g = groupForRace(groups, me.race);
-  const picked = pickProfile(g?.profile, `${me.race}v${opp.race}`);
-  if (!g || !picked) return null;
-  if (!principles.has(g.group.id)) {
-    const f = join(referencePaths(g.group.id).root, "principles.json");
-    principles.set(g.group.id, existsSync(f) ? JSON.parse(readFileSync(f, "utf8")) : null);
-  }
-  return { label: g.group.label, ...picked, principles: principles.get(g.group.id) as FactsRef["principles"] };
-};
+const groups = loadRefGroups();
 
 // A strength (by its label) that says the opposite of a finding.
 const CONTRADICTS: Record<string, RegExp> = {
@@ -65,8 +47,8 @@ for (const { id, p } of sources) {
       const result = me.result;
       if (result !== "win" && result !== "loss") continue;
       perspectives++;
-      const view: GameRecord = { ...r, players: r.players.map((x) => ({ ...x, isMe: x.playerId === me.playerId })), classification: { ...r.classification, opponentId: opp.playerId } };
-      const ref = refFor(me, opp);
+      const view = asPlayer(r, me.playerId);
+      const ref = refFor(groups, me, opp);
       const found = findings(view, ref);
       if (id === "review") ladder.push({ win: result === "win", ids: allFindings(view, ref).map((x) => x.id) });
       const good = strengths(view, ref, found);

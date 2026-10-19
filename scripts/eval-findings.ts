@@ -4,11 +4,10 @@
 //
 //   node scripts/eval-findings.ts
 //   node scripts/eval-findings.ts --holdout   (thresholds mined from half the games, scored on the other half)
-import { readdirSync, readFileSync } from "node:fs";
+import { readdirSync } from "node:fs";
 import { join } from "node:path";
-import { loadConfig, openDb, paths, referencePaths, readRecord, listGames, type GameRecord } from "@replay-altar/core";
-import { groupForRace, pickProfile } from "@replay-altar/reference/compare";
-import type { RefProfile } from "@replay-altar/reference/types";
+import { openDb, paths, referencePaths, readRecord, listGames, type GameRecord } from "@replay-altar/core";
+import { loadRefGroups, refFor as refForPlayers } from "../packages/ai/src/context.ts";
 import { allFindings } from "../packages/ai/src/findings.ts";
 import { execFileSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
@@ -19,20 +18,10 @@ const HOLDOUT_DIR = process.argv.includes("--holdout") ? mkdtempSync(join(tmpdir
 if (HOLDOUT_DIR) execFileSync(process.execPath, [join(import.meta.dirname, "mine-principles.ts"), "--sample", "even", "--out", HOLDOUT_DIR], { stdio: "ignore" });
 const scored = (gameKey: string) => !HOLDOUT_DIR || parseInt(gameKey.at(-1)!, 16) % 2 === 1;
 
-const groups = loadConfig().reference.groups.map((group) => {
-  const f = join(referencePaths(group.id).root, "profile.json");
-  try { return { group, profile: JSON.parse(readFileSync(f, "utf8")) as RefProfile }; } catch { return { group, profile: null }; }
-});
+const groups = loadRefGroups(HOLDOUT_DIR ?? undefined);
 const refFor = (r: GameRecord, pid: number) => {
   const me = r.players.find((p) => p.playerId === pid)!;
-  const opp = r.players.find((p) => p.playerId !== pid)!;
-  const g = groupForRace(groups, me.race);
-  const picked = pickProfile(g?.profile, `${me.race}v${opp.race}`);
-  if (!g || !picked) return null;
-  let principles = null;
-  const file = HOLDOUT_DIR ? join(HOLDOUT_DIR, `principles-${g.group.id}.json`) : join(referencePaths(g.group.id).root, "principles.json");
-  try { principles = JSON.parse(readFileSync(file, "utf8")); } catch {}
-  return { label: g.group.label, ...picked, principles };
+  return refForPlayers(groups, me, r.players.find((p) => p.playerId !== pid)!);
 };
 
 type Row = { race: string; win: boolean; ids: string[]; top: string[] };

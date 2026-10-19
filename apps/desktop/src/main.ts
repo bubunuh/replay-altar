@@ -4,7 +4,7 @@ import { existsSync, mkdtempSync, readdirSync, readFileSync, watch, writeFileSyn
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { app, BrowserWindow, ipcMain, nativeTheme, shell } from "electron";
-import { aiNotReady, analyzeGame, ModelServer, readAnalysis, rulesBook } from "@replay-altar/ai";
+import { aiNotReady, analyzeGame, loadRefGroups, ModelServer, readAnalysis, rulesBook } from "@replay-altar/ai";
 import { mapDataName } from "@replay-altar/sim/mapname";
 import { mapMarkers } from "./mapOverlay.ts";
 import { mapActivity } from "./mapActivity.ts";
@@ -258,20 +258,14 @@ if (!app.requestSingleInstanceLock()) {
       execFile("systemctl", ["--user", "is-active", "replay-altar-collector.service"], (_err, out) => resolve(out.trim() || "not installed")),
     ),
   );
-  ipcMain.handle("ref:profiles", () => {
+  ipcMain.handle("ref:profiles", () =>
     // profile.json of each configured reference group (missing until the first refresh).
-    return loadConfig().reference.groups.map((g) => {
-      const file = join(referencePaths(g.id).root, "profile.json");
-      const state = join(referencePaths(g.id).root, "state.json");
-      return {
-        group: g,
-        profile: existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : null,
-        state: existsSync(state) ? JSON.parse(readFileSync(state, "utf8")) : null,
-        principles: existsSync(join(referencePaths(g.id).root, "principles.json")) ? JSON.parse(readFileSync(join(referencePaths(g.id).root, "principles.json"), "utf8")) : null,
-        root: referencePaths(g.id).root,
-      };
-    });
-  });
+    loadRefGroups().map((g) => {
+      const root = referencePaths(g.group.id).root;
+      const state = join(root, "state.json");
+      return { ...g, state: existsSync(state) ? JSON.parse(readFileSync(state, "utf8")) : null, root };
+    }),
+  );
   ipcMain.handle("shell:showFile", (_e, file: string) => shell.showItemInFolder(file));
   ipcMain.handle("shell:openPath", (_e, dir: string) => shell.openPath(dir));
 }

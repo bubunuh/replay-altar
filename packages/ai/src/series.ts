@@ -2,14 +2,11 @@
 import type { GameRecord, PlayerRecord, SimFight, SimSample } from "@replay-altar/core/ui";
 import { RACES, type RaceCode } from "@replay-altar/core/gamedata";
 import { HERO_XP_FOR_LEVEL } from "@replay-altar/core/heroxp";
+import { mmss } from "@replay-altar/core/time";
 
 export const STEP_MS = 120_000;
 
-export const mmss = (ms: number | null | undefined) => {
-  if (ms === null || ms === undefined) return "—";
-  const s = Math.round(ms / 1000);
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-};
+export { mmss };
 
 /** The sample in effect at t (series are 10-second step samples). */
 export const at = (series: SimSample[], t: number) => series.filter((s) => s.t <= t).at(-1);

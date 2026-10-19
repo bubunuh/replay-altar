@@ -9,7 +9,8 @@
     "./findings": "./src/findings.ts",
     "./principles": "./src/principles.ts",
     "./builds": "./src/builds.ts",
-    "./series": "./src/series.ts"
+    "./series": "./src/series.ts",
+    "./problems": "./src/problems.ts"
   },
   "dependencies": {
     "@replay-altar/core": "*",

@@ -6,7 +6,7 @@ import { RACES, type RaceCode } from "@replay-altar/core/gamedata";
 import { nameOf } from "@replay-altar/core/names";
 import type { FactsRef } from "./facts.ts";
 import { mmss } from "./series.ts";
-import { heroStall } from "./findings.ts";
+import { heroStall } from "./rules/core.ts";
 
 export type AdviceCtx = { r: GameRecord; me: PlayerRecord; opp: PlayerRecord; ref: FactsRef | null };
 

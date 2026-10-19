@@ -156,7 +156,7 @@ Each metric has a `section`:
 
 One file per analyzed game, written by `replay-altar ai` or the button. `reingest` never touches these files.
 
-- **`findings`:** what mattered, decided by rules in `packages/ai/src/findings.ts`. Each has an `id`, a `severity` (0–1) and `evidence` lines. Every rule, its source and its score on pro games are listed in [RULES.md](RULES.md).
+- **`findings`:** what mattered, decided by rules in `packages/ai/src/rules/` (run and ranked by `packages/ai/src/findings.ts`). Each has an `id`, a `severity` (0–1) and `evidence` lines. Every rule, its source and its score on pro games are listed in [RULES.md](RULES.md).
 - **`strengths`:** core metrics at pro level.
 - **Openings** (`packages/ai/src/openings.ts`): each player's opening named after Liquipedia's build-order pages: fast altar (standard), tavern hero, Barracks/Crypt before the altar, fast Riflemen/Headhunters/Huntresses, Fiend or Ghoul opening, fast expand (hall by 4:30), fast tech (tier 2 by 3:30, with its supply count), early towers, no army in the first 5 minutes. Tower positions aren't known, so "tower rush" is never claimed. Shown in the fact sheet and the opponent's plan.
 - **`facts`:** exactly what the model was given: the findings, strengths and opponent's plan, then the fact sheet (heroes, builds, trends, a table every 2 minutes, fights, key numbers with the app's verdicts).
