@@ -26,6 +26,7 @@ const SHOPS: Record<string, string> = {
 const CAMP_LINK = 700;
 
 const cache = new Map<string, MapMarker[] | null>();
+const projections = new Map<string, ((x: number, y: number) => { x: number; y: number }) | null>();
 let levels: Record<string, { level?: number }> | null = null;
 
 const readGz = (file: string) => JSON.parse(gunzipSync(readFileSync(file)).toString("utf8"));
@@ -43,13 +44,22 @@ export function mapMarkers(wc3vRoot: string, folder: string): MapMarker[] | null
   return out;
 }
 
-function build(wc3vRoot: string, dir: string): MapMarker[] {
-  if (!levels) {
-    const table = JSON.parse(readFileSync(join(wc3vRoot, "helpers/UnitBalance.json"), "utf8"));
-    levels = (Object.values(table)[0] ?? {}) as Record<string, { level?: number }>;
+/** World coordinates to 0-1 over the map's map.jpg; null when the map isn't in the library. */
+export function projectionFor(wc3vRoot: string, folder: string) {
+  if (projections.has(folder)) return projections.get(folder)!;
+  const file = join(wc3vRoot, "client/maps", folder, "wpm.json.gz");
+  let at: ((x: number, y: number) => { x: number; y: number }) | null = null;
+  try {
+    if (existsSync(file)) at = projection(readGz(file).grid);
+  } catch {
+    at = null;
   }
+  projections.set(folder, at);
+  return at;
+}
+
+function projection(grid: { x: number; y: number }[][]) {
   // The pathing grid covers map.jpg: 32-unit cells from the top-left corner.
-  const grid = readGz(join(dir, "wpm.json.gz")).grid as { x: number; y: number }[][];
   const first = grid[0][0];
   const last = grid.at(-1)!.at(-1)!;
   const [xMin, yMax, xMax, yMin] = [first.x, first.y, last.x + 32, last.y - 32];
@@ -57,7 +67,15 @@ function build(wc3vRoot: string, dir: string): MapMarker[] {
   const size = Math.max(xMax - xMin, yMax - yMin);
   const padX = (size - (xMax - xMin)) / 2;
   const padY = (size - (yMax - yMin)) / 2;
-  const at = (x: number, y: number) => ({ x: (x - xMin + padX) / size, y: (yMax - y + padY) / size });
+  return (x: number, y: number) => ({ x: (x - xMin + padX) / size, y: (yMax - y + padY) / size });
+}
+
+function build(wc3vRoot: string, dir: string): MapMarker[] {
+  if (!levels) {
+    const table = JSON.parse(readFileSync(join(wc3vRoot, "helpers/UnitBalance.json"), "utf8"));
+    levels = (Object.values(table)[0] ?? {}) as Record<string, { level?: number }>;
+  }
+  const at = projection(readGz(join(dir, "wpm.json.gz")).grid);
 
   const units = readGz(join(dir, "unit.json.gz")).units as { type: string; player: number; position: number[]; gold?: number }[];
   const markers: MapMarker[] = [];

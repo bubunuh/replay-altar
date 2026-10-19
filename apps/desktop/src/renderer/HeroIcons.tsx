@@ -1,22 +1,32 @@
 // A player's heroes as portraits with the level they reached, like the game's score screen.
 import { useEffect, useState } from "react";
-import type { PlayerRecord } from "@replay-altar/core/ui";
+import type { GameRecord, PlayerRecord } from "@replay-altar/core/ui";
 import { api } from "./api.ts";
+import { mmss } from "./format.ts";
 
 let loaded: Promise<Record<string, string>> | null = null;
 
-export function HeroIcons({ p }: { p: PlayerRecord }) {
+/** Name and level, skill order with times, and deaths (from the simulation) for a portrait's tooltip. */
+function heroTip(h: PlayerRecord["heroes"][number], deaths: { diedAt: number; revivedAt: number | null }[]) {
+  const lines = [`${h.name}, level ${h.level}`];
+  if (h.skills.length) lines.push(`Skills: ${h.skills.map((s) => `${s.name} ${mmss(s.ms)}`).join(" · ")}`);
+  lines.push(deaths.length ? `Died: ${deaths.map((d) => `≈${mmss(d.diedAt)}${d.revivedAt !== null ? ` (back ${mmss(d.revivedAt)})` : ""}`).join(", ")}` : "Never died");
+  return lines.join("\n");
+}
+
+export function HeroIcons({ p, record }: { p: PlayerRecord; record: GameRecord }) {
   const [icons, setIcons] = useState<Record<string, string>>({});
   useEffect(() => {
     loaded ??= api.heroIcons();
     loaded.then(setIcons);
   }, []);
   const heroes = [...p.heroes].sort((a, b) => a.order - b.order);
+  const sim = record.sim?.status === "ok" ? record.sim.players.find((x) => x.playerId === p.playerId)?.heroes ?? [] : [];
   if (!heroes.length) return null;
   return (
     <div className="hero-icons">
       {heroes.map((h) => (
-        <span key={h.order} className="hero-icon" data-tip={`${h.name}, level ${h.level}`}>
+        <span key={h.order} className="hero-icon" data-tip={heroTip(h, sim.find((x) => x.code === h.code)?.deaths ?? [])}>
           {icons[h.code] ? <img src={icons[h.code]} alt={h.name} /> : <span className="hero-name">{h.name}</span>}
           <span className="hero-level">{h.level}</span>
         </span>

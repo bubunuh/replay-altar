@@ -7,6 +7,8 @@ import { app, BrowserWindow, ipcMain, nativeTheme, shell } from "electron";
 import { aiNotReady, analyzeGame, ModelServer, readAnalysis, rulesBook } from "@replay-altar/ai";
 import { mapDataName } from "@replay-altar/sim/mapname";
 import { mapMarkers } from "./mapOverlay.ts";
+import { mapActivity } from "./mapActivity.ts";
+import type { RulesBook } from "@replay-altar/ai/types";
 import {
   addAnnotation,
   configPath,
@@ -47,6 +49,12 @@ if (!app.requestSingleInstanceLock()) {
   let win: BrowserWindow | null = null;
   const p = paths();
   const db = openDb(p.db);
+  // Rules reports by game, kept until the data or a result changes.
+  const books = new Map<string, RulesBook>();
+  const bookOf = (key: string) => {
+    if (!books.has(key)) books.set(key, rulesBook(db, p, key));
+    return books.get(key)!;
+  };
 
   const show = (launch: Launch) => {
     if (!win) return;
@@ -55,6 +63,12 @@ if (!app.requestSingleInstanceLock()) {
     if (launch.screenshot) {
       const file = launch.screenshot;
       setTimeout(async () => {
+        // Dev/test: click something first (a CSS selector), e.g. to open the map.
+        const click = process.env.REPLAY_ALTAR_SHOT_CLICK;
+        if (click) {
+          await win!.webContents.executeJavaScript(`document.querySelector(${JSON.stringify(click)})?.click()`);
+          await new Promise((r) => setTimeout(r, 1500));
+        }
         const height = await win!.webContents.executeJavaScript("document.querySelector('main').scrollHeight + 52");
         win!.setContentSize(1280, Math.min(Math.max(860, height), 6000));
         await new Promise((r) => setTimeout(r, 800));
@@ -109,6 +123,7 @@ if (!app.requestSingleInstanceLock()) {
     if (existsSync(p.root)) {
       watch(p.root, (_ev, name) => {
         if (name !== "events.jsonl") return;
+        books.clear();
         clearTimeout(timer);
         timer = setTimeout(() => win?.webContents.send("data:changed"), 500);
       });
@@ -154,7 +169,21 @@ if (!app.requestSingleInstanceLock()) {
     return true;
   });
   ipcMain.handle("ai:get", (_e, key: string) => readAnalysis(p, key));
-  ipcMain.handle("rules:get", (_e, key: string) => rulesBook(db, p, key));
+  ipcMain.handle("rules:get", (_e, key: string) => bookOf(key));
+  // Every analyzed game's findings, newest first: for recurring problems and the match list.
+  ipcMain.handle("findings:summary", () =>
+    listGames(db)
+      .filter((g) => g.analyzed === 1)
+      .map((g) => ({ key: g.game_key, playedAt: g.played_at, result: g.result, findings: bookOf(g.game_key).findings.map((f) => ({ id: f.id, headline: f.headline, severity: f.severity, advice: f.advice ?? null })) })),
+  );
+  ipcMain.handle("map:activity", (_e, key: string) => {
+    const r = getGame(db, p, key)?.record;
+    try {
+      return r ? mapActivity(join(import.meta.dirname, "../../../vendor/wc3v"), r) : null;
+    } catch {
+      return null;
+    }
+  });
   // The map's minimap, as WC3V's data tool extracts it when a game on that map is first simulated.
   ipcMain.handle("map:markers", (_e, mapFile: string) => mapMarkers(join(import.meta.dirname, "../../../vendor/wc3v"), mapDataName(mapFile)));
   // Race crests from the game's own menu art, copied out of the install by
@@ -214,6 +243,7 @@ if (!app.requestSingleInstanceLock()) {
   ipcMain.handle("games:get", (_e, key: string) => getGame(db, p, key));
   ipcMain.handle("perf:data", () => performanceData(db));
   ipcMain.handle("games:override", (_e, key: string, result: "win" | "loss" | null) => {
+    books.delete(key);
     // result null = back to the detected result (the view takes the latest override).
     addAnnotation(db, { gameKey: key, kind: "result_override", source: "user", author: "desktop", body: { result } });
   });

@@ -245,7 +245,7 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
                 <b>You</b>
                 <RaceIcon race={me?.race} />
               </div>
-              {me && <HeroIcons p={me} />}
+              {me && <HeroIcons p={me} record={r} />}
             </div>
             <span className="muted versus-vs">vs</span>
             <div className="versus-side opp">
@@ -253,7 +253,7 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
                 <RaceIcon race={opp?.race} />
                 <b>{opp?.name}</b>
               </div>
-              {opp && <HeroIcons p={opp} />}
+              {opp && <HeroIcons p={opp} record={r} />}
             </div>
           </div>
           <p className="sub" data-tip={`${r.game.map.file} · ${SOURCE[r.classification.source]}`}>
@@ -285,7 +285,7 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
           )}
         </div>
         <div className="match-side">
-          <MapView mapFile={r.game.map.file} />
+          <MapView mapFile={r.game.map.file} gameKey={r.gameKey} />
         </div>
       </div>
 

@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { api, type GameFindings } from "../api.ts";
 import type { GameRow } from "@replay-altar/core/ui";
-import { dateTime, mmss, RACE, shortName, SOURCE } from "../format.ts";
+import { dateTime, mmss, problemName, RACE, shortName, SOURCE } from "../format.ts";
 import { RaceIcon } from "../RaceIcon.tsx";
 
 export function Result({ result }: { result: string }) {
@@ -12,6 +13,17 @@ export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: str
   const [result, setResult] = useState("all");
   const [oppRace, setOppRace] = useState("all");
   const [q, setQ] = useState("");
+  const [problem, setProblem] = useState("all");
+  const [found, setFound] = useState<Map<string, GameFindings["findings"]>>(new Map());
+  useEffect(() => {
+    api.findingsSummary().then((list) => setFound(new Map(list.map((g) => [g.key, g.findings]))));
+  }, [games]);
+  // Problems that come up in the reports (the top three each), most frequent first.
+  const problems = useMemo(() => {
+    const n = new Map<string, number>();
+    for (const f of found.values()) for (const x of f.slice(0, 3)) n.set(x.id, (n.get(x.id) ?? 0) + 1);
+    return [...n.entries()].sort((a, b) => b[1] - a[1]).map(([id]) => id);
+  }, [found]);
 
   const rows = useMemo(
     () =>
@@ -21,9 +33,10 @@ export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: str
           (source === "all" || g.source === source) &&
           (result === "all" || g.result === result) &&
           (oppRace === "all" || g.opp_race === oppRace) &&
+          (problem === "all" || (found.get(g.game_key) ?? []).slice(0, 3).some((f) => f.id === problem)) &&
           (!q || `${g.opp_name} ${g.map_name} ${g.user_label ?? ""}`.toLowerCase().includes(q.toLowerCase())),
       ),
-    [games, source, result, oppRace, q],
+    [games, source, result, oppRace, q, problem, found],
   );
 
   return (
@@ -55,6 +68,15 @@ export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: str
             ))}
           </select>
         </label>
+        <label>
+          Problem
+          <select value={problem} onChange={(e) => setProblem(e.target.value)}>
+            <option value="all">All</option>
+            {problems.map((id) => (
+              <option key={id} value={id}>{problemName(id)}</option>
+            ))}
+          </select>
+        </label>
         <input type="text" placeholder="Search opponent, map, label" value={q} onChange={(e) => setQ(e.target.value)} />
         <span className="muted small">{rows.length} games</span>
       </div>
@@ -73,7 +95,7 @@ export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: str
                 <th className="num">Length</th>
                 <th className="num">APM</th>
                 <th>Source</th>
-                <th>Your label</th>
+                <th data-tip="The report's most important finding; hover for the full sentence.">Main problem</th>
               </tr>
             </thead>
             <tbody>
@@ -93,7 +115,12 @@ export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: str
                   <td className="num">{mmss(g.duration_ms)}</td>
                   <td className="num">{g.apm === null ? "—" : Math.round(g.apm)}</td>
                   <td className="muted">{SOURCE[g.source]}</td>
-                  <td className="muted">{g.user_label ?? ""}</td>
+                  <td>
+                    {(() => {
+                      const top = found.get(g.game_key)?.[0];
+                      return top ? <span data-tip={top.headline}>{problemName(top.id)}</span> : <span className="muted">—</span>;
+                    })()}
+                  </td>
                 </tr>
               ))}
             </tbody>

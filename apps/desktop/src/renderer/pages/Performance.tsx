@@ -9,6 +9,7 @@ import { groupDetails, SECTION_INFO, splitMetrics } from "../sections.ts";
 import { proText, researchTimes, upgradeRows, upgradeStanding } from "../upgrades.ts";
 import type { RaceCode } from "@replay-altar/core/gamedata";
 import type { RefGroupInfo } from "../api.ts";
+import { Recurring } from "../Recurring.tsx";
 import { dateTime, GROUP_LABEL, mean, metricValue, mmss, pct, RACE, shortName, SOURCE } from "../format.ts";
 
 type Group = { label: string; wins: number; losses: number };
@@ -163,9 +164,11 @@ export function Performance({ games: all, metrics, refs, onOpen }: { games: Perf
     return lineOption(pts, (v) => `${Math.round(v * 100)}%`, 1);
   }, [decided]);
 
-  const trendDef = metrics.find((m) => m.key === trendMetric)!;
+  // Undefined until the data has loaded (the first render gets no metrics).
+  const trendDef = metrics.find((m) => m.key === trendMetric);
   const trendOption = useMemo(() => {
     // Whole-game totals are plotted per 10 minutes, so games (and the pros) of any length compare.
+    if (!trendDef) return null;
     const scaled = trendDef.scalesWithLength;
     const pts = games.map((g) => {
       const v = g.me[trendMetric];
@@ -194,7 +197,7 @@ export function Performance({ games: all, metrics, refs, onOpen }: { games: Perf
     return [...m.values()].sort((a, b) => b.wins + b.losses - (a.wins + a.losses) || b.last.played_at.localeCompare(a.last.played_at));
   }, [games]);
 
-  if (all.length === 0) return <div className="page"><div className="empty">No analyzed games yet.</div></div>;
+  if (all.length === 0 || !trendDef || !trendOption) return <div className="page"><div className="empty">No analyzed games yet.</div></div>;
 
   return (
     <div className="page">
@@ -252,6 +255,8 @@ export function Performance({ games: all, metrics, refs, onOpen }: { games: Perf
           <div className="note">opponents {mmss(mean(games.map((g) => g.opp.tier2_ms)))}</div>
         </div>
       </div>
+
+      <Recurring games={games} onOpen={onOpen} />
 
       <div className="grid-3">
         <BarCard title="Win rate by matchup" sub="Your race first." rows={byMatchup} />

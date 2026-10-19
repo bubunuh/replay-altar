@@ -32,6 +32,8 @@ const api = {
   raceIcons: () => ipcRenderer.invoke("race:icons"),
   uiFont: () => ipcRenderer.invoke("ui:font"),
   heroIcons: () => ipcRenderer.invoke("hero:icons"),
+  findingsSummary: () => ipcRenderer.invoke("findings:summary"),
+  mapActivity: (key: string) => ipcRenderer.invoke("map:activity", key),
   aiStatus: () => ipcRenderer.invoke("ai:status"),
   aiRun: (key: string) => ipcRenderer.invoke("ai:run", key),
   /** Progress of AI analyses; returns a function that stops listening. */

@@ -3,6 +3,9 @@ import type { RefProfile } from "@replay-altar/reference/types";
 import type { AiAnalysis, RulesBook } from "@replay-altar/ai/types";
 import type { Principles } from "@replay-altar/ai/principles";
 import type { MapMarker } from "../mapOverlay.ts";
+import type { MapActivity } from "../mapActivity.ts";
+
+export type GameFindings = { key: string; playedAt: string; result: string; findings: { id: string; headline: string; severity: number; advice: string | null }[] };
 
 export type AiStatus = { problem: string | null; warcraftRunning: boolean; running: string[] };
 
@@ -41,6 +44,10 @@ type W3Api = {
   uiFont(): Promise<string | null>;
   /** Hero portraits as data URLs by hero code (empty until extracted). */
   heroIcons(): Promise<Record<string, string>>;
+  /** Every analyzed game's findings (most important first), newest game first. */
+  findingsSummary(): Promise<GameFindings[]>;
+  /** Fights and creep camps cleared, positioned on the map; null without a simulation or map data. */
+  mapActivity(key: string): Promise<MapActivity | null>;
   aiStatus(): Promise<AiStatus>;
   aiRun(key: string): Promise<AiAnalysis | null>;
   onAi(fn: (event: "progress" | "done", key: string, stage?: string) => void): () => void;
