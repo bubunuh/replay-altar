@@ -7,6 +7,9 @@ import type { MapActivity } from "../mapActivity.ts";
 
 export type GameFindings = { key: string; playedAt: string; result: string; findings: { id: string; headline: string; severity: number; advice: string | null }[] };
 
+/** Replay folders: found by themselves, added by you, and how many folders that can hold replays exist. */
+export type Folders = { found: string[]; added: string[]; replayDirs: number };
+
 export type RefGroupInfo = {
   group: ReferenceGroup;
   profile: RefProfile | null;
@@ -24,6 +27,10 @@ type W3Api = {
   getConfig(): Promise<{ config: Config; configPath: string; paths: Paths }>;
   setConfig(config: Config): Promise<void>;
   collectorStatus(): Promise<string>;
+  folders(): Promise<Folders>;
+  /** Opens a folder picker; null when cancelled. */
+  addFolder(): Promise<Folders | null>;
+  removeFolder(folder: string): Promise<Folders>;
   referenceProfiles(): Promise<RefGroupInfo[]>;
   showFile(file: string): Promise<void>;
   openPath(dir: string): Promise<void>;

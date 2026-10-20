@@ -8,6 +8,7 @@ import { Settings, Skipped } from "./pages/Other.tsx";
 import { Performance } from "./pages/Performance.tsx";
 import { TipLayer } from "./Tip.tsx";
 import { applyTextScale } from "./textSize.ts";
+import { tr } from "@replay-altar/core/i18n";
 import "./styles.css";
 import icon from "../../assets/icons/64.png";
 
@@ -22,10 +23,10 @@ api.uiFont().then((url) => {
 
 type Page = "matches" | "performance" | "skipped" | "settings";
 const TABS: [Page, string][] = [
-  ["matches", "Matches"],
-  ["performance", "Performance"],
-  ["skipped", "Skipped"],
-  ["settings", "Settings"],
+  ["matches", tr("Matches", "Partidas")],
+  ["performance", tr("Performance", "Desempenho")],
+  ["skipped", tr("Skipped", "Ignoradas")],
+  ["settings", tr("Settings", "Configurações")],
 ];
 
 function App() {
@@ -84,7 +85,8 @@ function App() {
           ))}
         </nav>
         <span className="status">
-          {analyzed} analyzed · {games.length - analyzed} skipped{simulating ? ` · ${simulating} waiting for simulation` : ""}
+          {tr(`${analyzed} analyzed · ${games.length - analyzed} skipped`, `${analyzed} analisadas · ${games.length - analyzed} ignoradas`)}
+          {simulating ? tr(` · ${simulating} waiting for simulation`, ` · ${simulating} aguardando simulação`) : ""}
         </span>
       </header>
       <main>

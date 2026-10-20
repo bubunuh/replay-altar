@@ -5,6 +5,7 @@ import { per10Minutes } from "@replay-altar/core/metrics";
 import { assess } from "@replay-altar/reference/compare";
 import type { MatchupProfile } from "@replay-altar/reference/types";
 import { metricValue } from "./format.ts";
+import { tr } from "@replay-altar/core/i18n";
 
 /** Rows in order; where the game's official number is missing (Battle.net games), the replay's own stands in. */
 const ROWS: string[][] = [
@@ -28,8 +29,8 @@ export function ScorePanel({ record, me, opp, metrics, mp }: { record: GameRecor
       <thead>
         <tr>
           <th />
-          <th className="num"><span className="key me" />You</th>
-          <th className="num"><span className="key opp" />Opp</th>
+          <th className="num"><span className="key me" />{tr("You", "Você")}</th>
+          <th className="num"><span className="key opp" />{tr("Opp", "Oponente")}</th>
         </tr>
       </thead>
       <tbody>
@@ -39,7 +40,10 @@ export function ScorePanel({ record, me, opp, metrics, mp }: { record: GameRecor
           const b = opp.metrics[m.key];
           const lead = typeof a === "number" && typeof b === "number" && a !== b ? (a > b ? "me" : "opp") : null;
           const pro = assess(def, mp, { value: a, per10: typeof a === "number" ? per10Minutes(a, record.game.durationMs) : null }, b);
-          const tip = [m.description, pro.proMedian !== null ? `Pros' median: ${metricValue(def, pro.proMedian)}${pro.per10 ? " per 10 minutes" : ""}${pro.text !== "—" ? `; this game: ${pro.text}` : ""}.` : ""].filter(Boolean).join(" ");
+          const tip = [m.description, pro.proMedian !== null ? tr(
+            `Pros' median: ${metricValue(def, pro.proMedian)}${pro.per10 ? " per 10 minutes" : ""}${pro.text !== "—" ? `; this game: ${pro.text}` : ""}.`,
+            `Mediana dos pros: ${metricValue(def, pro.proMedian)}${pro.per10 ? " a cada 10 minutos" : ""}${pro.text !== "—" ? `; esta partida: ${pro.text}` : ""}.`,
+          ) : ""].filter(Boolean).join(" ");
           return (
             <tr key={m.key} data-tip={tip}>
               <td>{m.label}</td>

@@ -3,14 +3,19 @@ import { useEffect, useState } from "react";
 import type { GameRecord, PlayerRecord } from "@replay-altar/core/ui";
 import { api } from "./api.ts";
 import { mmss } from "./format.ts";
+import { tr } from "@replay-altar/core/i18n";
 
 let loaded: Promise<Record<string, string>> | null = null;
 
 /** Name and level, skill order with times, and deaths (from the simulation) for a portrait's tooltip. */
 function heroTip(h: PlayerRecord["heroes"][number], deaths: { diedAt: number; revivedAt: number | null }[]) {
-  const lines = [`${h.name}, level ${h.level}`];
-  if (h.skills.length) lines.push(`Skills: ${h.skills.map((s) => `${s.name} ${mmss(s.ms)}`).join(" · ")}`);
-  lines.push(deaths.length ? `Died: ${deaths.map((d) => `≈${mmss(d.diedAt)}${d.revivedAt !== null ? ` (back ${mmss(d.revivedAt)})` : ""}`).join(", ")}` : "Never died");
+  const lines = [tr(`${h.name}, level ${h.level}`, `${h.name}, nível ${h.level}`)];
+  if (h.skills.length) lines.push(`${tr("Skills", "Habilidades")}: ${h.skills.map((s) => `${s.name} ${mmss(s.ms)}`).join(" · ")}`);
+  lines.push(
+    deaths.length
+      ? `${tr("Died", "Morreu")}: ${deaths.map((d) => `≈${mmss(d.diedAt)}${d.revivedAt !== null ? tr(` (back ${mmss(d.revivedAt)})`, ` (voltou ${mmss(d.revivedAt)})`) : ""}`).join(", ")}`
+      : tr("Never died", "Nunca morreu"),
+  );
   return lines.join("\n");
 }
 

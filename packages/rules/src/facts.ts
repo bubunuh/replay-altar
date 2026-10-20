@@ -4,6 +4,7 @@ import type { GameRecord, PlayerRecord } from "@replay-altar/core/ui";
 import { RACE_NAMES, RACES, researchLevels, TIER_NAMES, upgradeMaxLevel, type RaceCode } from "@replay-altar/core/gamedata";
 import { CORE_METRICS, MECHANICS_METRICS, METRICS, per10Minutes, type MetricDef } from "@replay-altar/core/metrics";
 import { nameOf } from "@replay-altar/core/names";
+import { decimal } from "@replay-altar/core/i18n";
 import { assess, TIER_LABEL, TYPICAL_LABEL } from "@replay-altar/reference/compare";
 import type { MatchupProfile } from "@replay-altar/reference/types";
 import { openingOf } from "./openings.ts";
@@ -42,7 +43,7 @@ export function metricValue(def: MetricDef, v: number | null | undefined, offici
     case "per_min":
       return approx + String(Math.round(v));
     default:
-      return approx + (Number.isInteger(v) ? String(v) : v.toFixed(1));
+      return approx + (Number.isInteger(v) ? String(v) : decimal(v));
   }
 }
 

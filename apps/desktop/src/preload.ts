@@ -2,6 +2,8 @@
 import { contextBridge, ipcRenderer } from "electron";
 
 const api = {
+  /** The window's language, known before any of the page's modules run (core/i18n reads it). */
+  language: ipcRenderer.sendSync("lang:get") as string,
   listGames: () => ipcRenderer.invoke("games:list"),
   getGame: (key: string) => ipcRenderer.invoke("games:get", key),
   performance: () => ipcRenderer.invoke("perf:data"),
@@ -9,6 +11,9 @@ const api = {
   getConfig: () => ipcRenderer.invoke("config:get"),
   setConfig: (config: unknown) => ipcRenderer.invoke("config:set", config),
   collectorStatus: () => ipcRenderer.invoke("collector:status"),
+  folders: () => ipcRenderer.invoke("folders:get"),
+  addFolder: () => ipcRenderer.invoke("folders:add"),
+  removeFolder: (folder: string) => ipcRenderer.invoke("folders:remove", folder),
   referenceProfiles: () => ipcRenderer.invoke("ref:profiles"),
   showFile: (file: string) => ipcRenderer.invoke("shell:showFile", file),
   openPath: (dir: string) => ipcRenderer.invoke("shell:openPath", dir),

@@ -4,6 +4,8 @@
 import { CORE_UPGRADES, dropRepeatedBuildOrders, isRaceCode, POTION_ITEMS, RACES, researchLevels, TIER_NAMES, TOWN_PORTAL, type RaceCode } from "./gamedata.ts";
 import { heroesXpAt, levelUpTimes } from "./heroxp.ts";
 import type { RawReplay } from "./parse.ts";
+import { language } from "./i18n.ts";
+import { METRIC_PT, tierLabelPt } from "./metrics.pt.ts";
 
 export const METRICS_VERSION = 10;
 
@@ -196,6 +198,14 @@ const REPLAY_SPECS: MetricSpec[] = [
 ];
 
 export const METRICS: MetricDef[] = [...REPLAY_SPECS.map(withBetter), ...SIM_METRICS];
+
+/** The metric with its name and description in the current language. */
+export function localizeMetric(m: MetricDef): MetricDef {
+  const pt = language() === "pt" ? METRIC_PT[m.key] : undefined;
+  if (!pt) return m;
+  const raceLabels = m.raceLabels && Object.fromEntries(Object.entries(m.raceLabels).map(([r, l]) => [r, tierLabelPt(l)]));
+  return { ...m, label: pt[0], description: pt[1], raceLabels };
+}
 
 export const SIM_METRIC_KEYS = new Set(SIM_METRICS.map((m) => m.key));
 

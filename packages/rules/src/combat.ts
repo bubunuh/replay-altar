@@ -5,6 +5,7 @@
 import type { PlayerRecord } from "@replay-altar/core/ui";
 import { RACES, type RaceCode } from "@replay-altar/core/gamedata";
 import { nameOf } from "@replay-altar/core/names";
+import { tr, trTable } from "@replay-altar/core/i18n";
 import combat from "../../../data/gamedata/combat.json" with { type: "json" };
 
 type Attack = { type: string; air: boolean; ground: boolean };
@@ -20,8 +21,12 @@ export const ROSTER: Record<RaceCode, string[]> = {
   N: ["earc", "esen", "ebal", "edry", "edoc", "emtg", "ehip", "ehpr", "efdr", "echm"],
 };
 
-export const ARMOR_NAME: Record<string, string> = { small: "light", medium: "medium", large: "heavy", fort: "fortified", hero: "hero", none: "unarmored", divine: "divine", normal: "normal" };
-export const ATTACK_NAME: Record<string, string> = { normal: "normal", pierce: "piercing", siege: "siege", magic: "magic", chaos: "chaos", hero: "hero", spells: "spell" };
+export const ARMOR_NAME: Record<string, string> = trTable({
+  small: ["light", "leve"], medium: ["medium", "média"], large: ["heavy", "pesada"], fort: ["fortified", "fortificada"], hero: ["hero", "de herói"], none: ["unarmored", "sem armadura"], divine: ["divine", "divina"], normal: ["normal", "normal"],
+});
+export const ATTACK_NAME: Record<string, string> = trTable({
+  normal: ["normal", "normal"], pierce: ["piercing", "perfurante"], siege: ["siege", "de cerco"], magic: ["magic", "mágico"], chaos: ["chaos", "caos"], hero: ["hero", "de herói"], spells: ["spell", "mágico (feitiço)"],
+});
 
 /** Research that brings air units down for a ground unit to hit: Web (Crypt Fiend), Ensnare (Raider). */
 const GROUNDS_AIR: Record<string, string> = { ucry: "Ruwb", orai: "Roen" };
@@ -86,5 +91,9 @@ export function bestAgainst(race: RaceCode, against: MixEntry[], pred: (u: UnitD
 export const describeMix = (mix: MixEntry[], what: "attack" | "armor", n = 3) =>
   mix
     .slice(0, n)
-    .map((e) => `${e.name} ×${e.count} (${what === "armor" ? `${e.unit.armor === "none" ? "unarmored" : `${ARMOR_NAME[e.unit.armor] ?? e.unit.armor} armor`}${e.unit.air ? ", air" : ""}` : e.unit.attacks.map((a) => ATTACK_NAME[a.type] ?? a.type).filter((x, i, all) => all.indexOf(x) === i).join("/") + " attack"})`)
+    .map((e) => {
+      const attacks = e.unit.attacks.map((a) => ATTACK_NAME[a.type] ?? a.type).filter((x, i, all) => all.indexOf(x) === i).join("/");
+      const armor = e.unit.armor === "none" ? ARMOR_NAME.none : tr(`${ARMOR_NAME[e.unit.armor] ?? e.unit.armor} armor`, `armadura ${ARMOR_NAME[e.unit.armor] ?? e.unit.armor}`);
+      return `${e.name} ×${e.count} (${what === "armor" ? `${armor}${e.unit.air ? tr(", air", ", aérea") : ""}` : tr(`${attacks} attack`, `ataque ${attacks}`)})`;
+    })
     .join(", ");

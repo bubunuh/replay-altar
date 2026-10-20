@@ -2,6 +2,7 @@
 // quiet for good players and speak up for new ones (they rank below the main findings, core.ts).
 import type { PlayerRecord } from "@replay-altar/core/ui";
 import { RACES, type RaceCode } from "@replay-altar/core/gamedata";
+import { tr } from "@replay-altar/core/i18n";
 import { deviationsFromPros, matchBuilds } from "../builds.ts";
 import { proBuildOf } from "../principles.ts";
 import { at, mmss, seriesOf } from "../series.ts";
@@ -21,8 +22,8 @@ export function firstCreepFinding(c: Ctx): Finding | null {
   return {
     id: "first_creep",
     severity: BASIC,
-    headline: "Your hero waited before creeping",
-    evidence: [`Your first hero appeared at ${mmss(hero)} and first fought creeps at ${mmss(creep)}: ${Math.round((creep - hero) / 1000)} s later (pros: within about 10 s, almost always within 70 s).`],
+    headline: tr("Your hero waited before creeping", "Seu herói demorou para creepar"),
+    evidence: [tr(`Your first hero appeared at ${mmss(hero)} and first fought creeps at ${mmss(creep)}: ${Math.round((creep - hero) / 1000)} s later (pros: within about 10 s, almost always within 70 s).`, `Seu primeiro herói apareceu às ${mmss(hero)} e lutou contra creeps pela primeira vez às ${mmss(creep)}: ${Math.round((creep - hero) / 1000)} s depois (pros: em uns 10 s, quase sempre em menos de 70 s).`)],
   };
 }
 
@@ -40,10 +41,10 @@ export function upgradesFinding(c: Ctx): Finding | null {
   return {
     id: "upgrades",
     severity: BASIC + 0.05,
-    headline: "No attack or armor upgrades for 15 minutes",
+    headline: tr("No attack or armor upgrades for 15 minutes", "Nenhum upgrade de ataque ou armadura em 15 minutos"),
     evidence: [
-      `Your first attack upgrade: ${mmss(m.first_attack_upgrade_ms)}; first armor upgrade: ${mmss(m.first_armor_upgrade_ms)} ${c.ref?.mp.metrics.first_attack_upgrade_ms ? ` (pros in this matchup: first attack upgrade by ${mmss(c.ref.mp.metrics.first_attack_upgrade_ms.p50)}, median of those who got one)` : ""}.`,
-      `Opp's: attack ${mmss(c.opp.metrics.first_attack_upgrade_ms)}, armor ${mmss(c.opp.metrics.first_armor_upgrade_ms)}.`,
+      tr(`Your first attack upgrade: ${mmss(m.first_attack_upgrade_ms)}; first armor upgrade: ${mmss(m.first_armor_upgrade_ms)} ${c.ref?.mp.metrics.first_attack_upgrade_ms ? ` (pros in this matchup: first attack upgrade by ${mmss(c.ref.mp.metrics.first_attack_upgrade_ms.p50)}, median of those who got one)` : ""}.`, `Seu primeiro upgrade de ataque: ${mmss(m.first_attack_upgrade_ms)}; primeiro upgrade de armadura: ${mmss(m.first_armor_upgrade_ms)} ${c.ref?.mp.metrics.first_attack_upgrade_ms ? ` (pros neste confronto: primeiro upgrade de ataque até ${mmss(c.ref.mp.metrics.first_attack_upgrade_ms.p50)}, mediana dos que fizeram)` : ""}.`),
+      tr(`Opp's: attack ${mmss(c.opp.metrics.first_attack_upgrade_ms)}, armor ${mmss(c.opp.metrics.first_armor_upgrade_ms)}.`, `Os do oponente: ataque ${mmss(c.opp.metrics.first_attack_upgrade_ms)}, armadura ${mmss(c.opp.metrics.first_armor_upgrade_ms)}.`),
     ],
   };
 }
@@ -54,8 +55,8 @@ export function oneHeroFinding(c: Ctx): Finding | null {
   return {
     id: "one_hero",
     severity: BASIC,
-    headline: "One hero against several",
-    evidence: [`You played ${mmss(c.r.game.durationMs)} with one hero (${c.me.heroes[0].name}); opp had ${c.opp.heroes.length} (${c.opp.heroes.map((h) => h.name).join(", ")}). Pros get their second hero around 7:00.`],
+    headline: tr("One hero against several", "Um herói contra vários"),
+    evidence: [tr(`You played ${mmss(c.r.game.durationMs)} with one hero (${c.me.heroes[0].name}); opp had ${c.opp.heroes.length} (${c.opp.heroes.map((h) => h.name).join(", ")}). Pros get their second hero around 7:00.`, `Você jogou ${mmss(c.r.game.durationMs)} com um herói (${c.me.heroes[0].name}); o oponente teve ${c.opp.heroes.length} (${c.opp.heroes.map((h) => h.name).join(", ")}). Os pros pegam o segundo herói por volta de 7:00.`)],
   };
 }
 
@@ -65,8 +66,8 @@ export function noItemsFinding(c: Ctx): Finding | null {
   return {
     id: "no_items",
     severity: BASIC,
-    headline: "You never used the shop",
-    evidence: [`Items bought: you 0, opp ${num(c.opp.metrics.items_bought)} (pros: about 5 a game). Potions, healing scrolls and a Town Portal save heroes and units.`],
+    headline: tr("You never used the shop", "Você nunca usou a loja"),
+    evidence: [tr(`Items bought: you 0, opp ${num(c.opp.metrics.items_bought)} (pros: about 5 a game). Potions, healing scrolls and a Town Portal save heroes and units.`, `Itens comprados: você 0, oponente ${num(c.opp.metrics.items_bought)} (pros: uns 5 por partida). Poções, pergaminhos de cura e um Town Portal salvam heróis e unidades.`)],
   };
 }
 
@@ -80,8 +81,8 @@ export function floatingFinding(c: Ctx): Finding | null {
   return {
     id: "floating",
     severity: BASIC,
-    headline: "Gold sat unspent",
-    evidence: [`Average unspent gold over the first 10 minutes: ≈${Math.round(avg)} (pros median ≈${Math.round(pro.p50)}; 9 in 10 below ≈${Math.round(p90)}). Estimated from your workers and spending.`],
+    headline: tr("Gold sat unspent", "Ouro ficou parado"),
+    evidence: [tr(`Average unspent gold over the first 10 minutes: ≈${Math.round(avg)} (pros median ≈${Math.round(pro.p50)}; 9 in 10 below ≈${Math.round(p90)}). Estimated from your workers and spending.`, `Média de ouro parado nos primeiros 10 minutos: ≈${Math.round(avg)} (mediana dos pros ≈${Math.round(pro.p50)}; 9 em cada 10 abaixo de ≈${Math.round(p90)}). Estimado pelos seus trabalhadores e gastos.`)],
   };
 }
 
@@ -97,8 +98,8 @@ export function unansweredExpansionFinding(c: Ctx): Finding | null {
   return {
     id: "unanswered_expansion",
     severity: BASIC,
-    headline: "Their expansion went unchallenged",
-    evidence: [`Opp started an expansion at ${mmss(t)} while your army was bigger (≈${mine} vs ≈${theirs}); no fight between you in the next 4 minutes.`],
+    headline: tr("Their expansion went unchallenged", "A expansão deles ficou sem resposta"),
+    evidence: [tr(`Opp started an expansion at ${mmss(t)} while your army was bigger (≈${mine} vs ≈${theirs}); no fight between you in the next 4 minutes.`, `O oponente começou uma expansão às ${mmss(t)} com o seu exército maior (≈${mine} contra ≈${theirs}); nenhuma luta entre vocês nos 4 minutos seguintes.`)],
   };
 }
 
@@ -114,8 +115,8 @@ export function justOver50Finding(c: Ctx): Finding | null {
   return {
     id: "just_over_50",
     severity: BASIC,
-    headline: "You sat just over 50 food",
-    evidence: [`You spent ${Math.round(seconds)} s at 51-54 food without fighting: that already costs 30% of your gold income (low upkeep) for one or two extra units. Stay at 50 and invest (upgrades, items, a production building), then go well past it right before a fight.`],
+    headline: tr("You sat just over 50 food", "Você ficou logo acima de 50 de food"),
+    evidence: [tr(`You spent ${Math.round(seconds)} s at 51-54 food without fighting: that already costs 30% of your gold income (low upkeep) for one or two extra units. Stay at 50 and invest (upgrades, items, a production building), then go well past it right before a fight.`, `Você passou ${Math.round(seconds)} s entre 51 e 54 de food sem lutar: isso já custa 30% da sua renda de ouro (upkeep baixo) por uma ou duas unidades a mais. Fique em 50 e invista (upgrades, itens, um prédio de produção), depois passe bem disso logo antes de uma luta.`)],
   };
 }
 
@@ -127,8 +128,8 @@ export function towersFinding(c: Ctx): Finding | null {
   return {
     id: "towers",
     severity: BASIC,
-    headline: "More towers than they're worth",
-    evidence: [`Tower build/upgrade orders: ${towers} for ${bases} base${bases > 1 ? "s" : ""} (a guide rule of thumb: an arcane tower and maybe a guard tower per base; after that units are worth more). Kills by towers give your heroes no experience.`],
+    headline: tr("More towers than they're worth", "Mais torres do que elas valem"),
+    evidence: [tr(`Tower build/upgrade orders: ${towers} for ${bases} base${bases > 1 ? "s" : ""} (a guide rule of thumb: an arcane tower and maybe a guard tower per base; after that units are worth more). Kills by towers give your heroes no experience.`, `Ordens de construir/melhorar torres: ${towers} para ${bases} base${bases > 1 ? "s" : ""} (regra prática dos guias: uma arcane tower e talvez uma guard tower por base; depois disso, unidades valem mais). Abates de torres não dão experiência aos seus heróis.`)],
   };
 }
 
@@ -139,8 +140,8 @@ export function workersLostFinding(c: Ctx): Finding | null {
   return {
     id: "workers_lost",
     severity: BASIC + 0.1,
-    headline: "You lost too many workers",
-    evidence: [`Workers lost by ${c.r.game.durationMs < 12 * 60_000 ? `the end (${mmss(c.r.game.durationMs)})` : "12:00"}: ≈${lost} (pros: usually 0-4; deaths are inferred and tend to be undercounted).`],
+    headline: tr("You lost too many workers", "Você perdeu trabalhadores demais"),
+    evidence: [tr(`Workers lost by ${c.r.game.durationMs < 12 * 60_000 ? `the end (${mmss(c.r.game.durationMs)})` : "12:00"}: ≈${lost} (pros: usually 0-4; deaths are inferred and tend to be undercounted).`, `Trabalhadores perdidos até ${c.r.game.durationMs < 12 * 60_000 ? `o fim (${mmss(c.r.game.durationMs)})` : "12:00"}: ≈${lost} (pros: normalmente 0-4; as mortes são deduzidas e costumam ser subcontadas).`)],
   };
 }
 
@@ -157,9 +158,9 @@ export function goal3360Finding(c: Ctx): Finding | null {
   return {
     id: "goal_3360",
     severity: BASIC,
-    headline: got ? "Late to the 3-3-60 goal" : "Never reached the 3-3-60 goal",
+    headline: got ? tr("Late to the 3-3-60 goal", "Atrasado na meta 3-3-60") : tr("Never reached the 3-3-60 goal", "Nunca alcançou a meta 3-3-60"),
     evidence: [
-      `Grubby's beginner goal: first hero level 3, second hero level 3, 60 food. You: first hero level 3 at ${mmss(byOrder[0]?.levelUps[2] ?? null)}, second hero level 3 at ${mmss(byOrder[1]?.levelUps[2] ?? null)}, 60 food at ${mmss(food60)}${got ? ` (all three at ${mmss(got)})` : ""}. Pros: median ${mmss(pro.p50)}.`,
+      tr(`Grubby's beginner goal: first hero level 3, second hero level 3, 60 food. You: first hero level 3 at ${mmss(byOrder[0]?.levelUps[2] ?? null)}, second hero level 3 at ${mmss(byOrder[1]?.levelUps[2] ?? null)}, 60 food at ${mmss(food60)}${got ? ` (all three at ${mmss(got)})` : ""}. Pros: median ${mmss(pro.p50)}.`, `Meta para iniciantes do Grubby: primeiro herói nível 3, segundo herói nível 3, 60 de food. Você: primeiro herói nível 3 às ${mmss(byOrder[0]?.levelUps[2] ?? null)}, segundo herói nível 3 às ${mmss(byOrder[1]?.levelUps[2] ?? null)}, 60 de food às ${mmss(food60)}${got ? ` (os três às ${mmss(got)})` : ""}. Pros: mediana ${mmss(pro.p50)}.`),
     ],
   };
 }
@@ -184,8 +185,8 @@ export function unusedSpikeFinding(c: Ctx): Finding | null {
   return {
     id: "unused_spike",
     severity: BASIC + 0.05,
-    headline: "You reached 50 food and waited",
-    evidence: [`You first had 50 food at ${mmss(t50)}. In the next 4 minutes you started no fight with the opponent, took no expansion and didn't start tier 3. Guides: at 50 food (heroes level 3), attack, expand or tech.`],
+    headline: tr("You reached 50 food and waited", "Você chegou a 50 de food e ficou esperando"),
+    evidence: [tr(`You first had 50 food at ${mmss(t50)}. In the next 4 minutes you started no fight with the opponent, took no expansion and didn't start tier 3. Guides: at 50 food (heroes level 3), attack, expand or tech.`, `Você chegou a 50 de food pela primeira vez às ${mmss(t50)}. Nos 4 minutos seguintes não começou nenhuma luta com o oponente, não expandiu e não começou o tier 3. Guias: com 50 de food (heróis nível 3), ataque, expanda ou suba de tier.`)],
   };
 }
 
@@ -209,8 +210,10 @@ export function upkeepBeforeUpgradesFinding(c: Ctx): Finding | null {
   return {
     id: "upkeep_before_upgrades",
     severity: BASIC,
-    headline: "Into upkeep before any upgrade",
-    evidence: [`You went over 50 food at ${mmss(over)} with no attack or armor upgrade and no expansion yet (first upgrade: ${mmss(Math.min(m.first_attack_upgrade_ms ?? Infinity, m.first_armor_upgrade_ms ?? Infinity) === Infinity ? null : Math.min(m.first_attack_upgrade_ms ?? Infinity, m.first_armor_upgrade_ms ?? Infinity))}). Guides: invest at 50 food (upgrades, items, a production building), then break upkeep.`],
+    headline: tr("Into upkeep before any upgrade", "Upkeep antes de qualquer upgrade"),
+    evidence: [
+      tr(`You went over 50 food at ${mmss(over)} with no attack or armor upgrade and no expansion yet (first upgrade: ${mmss(Math.min(m.first_attack_upgrade_ms ?? Infinity, m.first_armor_upgrade_ms ?? Infinity) === Infinity ? null : Math.min(m.first_attack_upgrade_ms ?? Infinity, m.first_armor_upgrade_ms ?? Infinity))}). Guides: invest at 50 food (upgrades, items, a production building), then break upkeep.`, `Você passou de 50 de food às ${mmss(over)} sem nenhum upgrade de ataque ou armadura e sem expansão (primeiro upgrade: ${mmss(Math.min(m.first_attack_upgrade_ms ?? Infinity, m.first_armor_upgrade_ms ?? Infinity) === Infinity ? null : Math.min(m.first_attack_upgrade_ms ?? Infinity, m.first_armor_upgrade_ms ?? Infinity))}). Guias: invista com 50 de food (upgrades, itens, um prédio de produção) e só depois entre no upkeep.`),
+    ],
   };
 }
 
@@ -223,8 +226,8 @@ export function mineDryFinding(c: Ctx): Finding | null {
   return {
     id: "mine_dry",
     severity: BASIC + 0.1,
-    headline: "Your gold mine ran dry with no second base",
-    evidence: [`You collected ≈${Math.round(collected)} gold from one base; a mine holds ${MINE_GOLD}. No expansion was ordered.`],
+    headline: tr("Your gold mine ran dry with no second base", "Sua mina de ouro secou sem uma segunda base"),
+    evidence: [tr(`You collected ≈${Math.round(collected)} gold from one base; a mine holds ${MINE_GOLD}. No expansion was ordered.`, `Você coletou ≈${Math.round(collected)} de ouro com uma base; uma mina tem ${MINE_GOLD}. Nenhuma expansão foi pedida.`)],
   };
 }
 
@@ -245,11 +248,11 @@ export function buildDriftFinding(c: Ctx): Finding | null {
   return {
     id: "build_drift",
     severity: BASIC,
-    headline: "Your key steps came late for your build",
+    headline: tr("Your key steps came late for your build", "Os passos principais da sua build vieram tarde"),
     evidence: [
-      `Closest build: "${best.build.name}" (${best.build.source.author ?? "guide"}); ${pro.players} pros played it (${Math.round(pro.winRate * 100)}% won).`,
-      ...late.map((d) => (d.yours === null ? `No ${d.label}; pros on this build: at ${d.pros} food.` : `${d.label} at ${d.yours} food; pros on this build: ${d.pros} food.`)),
-      "Food counts finished units (the game's counter also includes units in training).",
+      tr(`Closest build: "${best.build.name}" (${best.build.source.author ?? "guide"}); ${pro.players} pros played it (${Math.round(pro.winRate * 100)}% won).`, `Build mais próxima: "${best.build.name}" (${best.build.source.author ?? "guia"}); ${pro.players} pros jogaram ela (${Math.round(pro.winRate * 100)}% venceram).`),
+      ...late.map((d) => (d.yours === null ? tr(`No ${d.label}; pros on this build: at ${d.pros} food.`, `Sem ${d.label}; pros nessa build: com ${d.pros} de food.`) : tr(`${d.label} at ${d.yours} food; pros on this build: ${d.pros} food.`, `${d.label} com ${d.yours} de food; pros nessa build: ${d.pros} de food.`))),
+      tr("Food counts finished units (the game's counter also includes units in training).", "O food conta unidades prontas (o contador do jogo também inclui unidades em treinamento)."),
     ],
   };
 }

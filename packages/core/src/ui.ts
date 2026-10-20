@@ -11,3 +11,4 @@ export * from "./store.ts";
 export { mmss } from "./time.ts";
 export type { GameRecord, PlayerRecord, BuildEvent, HeroRecord } from "./record.ts";
 export type { SimFight, SimSample, SimPlayer, SimSummary, HeroTimeline } from "./sim.ts";
+export * from "./i18n.ts";

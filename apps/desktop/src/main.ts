@@ -3,7 +3,7 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, watch, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { app, BrowserWindow, ipcMain, nativeTheme, shell } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, nativeTheme, shell } from "electron";
 import { loadRefGroups, rulesBook } from "@replay-altar/rules";
 import { mapDataName } from "@replay-altar/sim/mapname";
 import { mapMarkers } from "./mapOverlay.ts";
@@ -14,6 +14,9 @@ import {
   collectorState,
   configPath,
   dataDir,
+  detectedWarcraftDocuments,
+  folderToAdd,
+  replayDirs,
   getGame,
   projectRoot,
   isInstalled,
@@ -21,6 +24,7 @@ import {
   enableCollector,
   windowsLauncher,
   isWarcraftRunning,
+  language,
   listGames,
   loadConfig,
   openDb,
@@ -28,7 +32,10 @@ import {
   performanceData,
   referencePaths,
   restartCollectorIfRunning,
+  resolveLanguage,
   saveConfig,
+  setLanguage,
+  tr,
   type Config,
 } from "@replay-altar/core/ui";
 
@@ -73,6 +80,8 @@ if (!app.requestSingleInstanceLock()) {
 } else {
   let win: BrowserWindow | null = null;
   const p = paths();
+  // The language of the reports and the window (the preload asks for it before the page loads).
+  const applyLanguage = () => setLanguage(resolveLanguage(loadConfig().language, app.getLocale()));
   const db = openDb(p.db);
   // Rules reports by game, kept until the data or a result changes.
   const books = new Map<string, RulesBook>();
@@ -115,6 +124,7 @@ if (!app.requestSingleInstanceLock()) {
   app.on("second-instance", (_e, argv) => show({ ...parseArgs(argv), screenshot: null }));
 
   app.whenReady().then(() => {
+    applyLanguage();
     const launch = parseArgs(process.argv);
     if (!launch.screenshot) ensureWindowsCollector();
     const theme = arg(process.argv, "theme"); // dev/test: force light or dark
@@ -255,10 +265,41 @@ if (!app.requestSingleInstanceLock()) {
   });
   ipcMain.handle("config:get", () => ({ config: loadConfig(), configPath: configPath(), paths: p }));
   ipcMain.handle("config:set", (_e, config: Config) => {
+    const before = loadConfig().language;
     saveConfig(config);
+    if (config.language !== before) {
+      applyLanguage();
+      books.clear(); // reports are written in the language
+    }
     restartCollectorIfRunning();
   });
+  ipcMain.on("lang:get", (e) => {
+    e.returnValue = language();
+  });
   ipcMain.handle("collector:status", () => collectorState());
+  // Replay folders: the ones found by themselves, the ones you added, and how many hold replays.
+  const folders = () => {
+    const config = loadConfig();
+    return { found: detectedWarcraftDocuments(), added: config.warcraftDocuments, replayDirs: replayDirs(config).length };
+  };
+  ipcMain.handle("folders:get", () => folders());
+  ipcMain.handle("folders:add", async () => {
+    const pick = await dialog.showOpenDialog(win!, { properties: ["openDirectory"], title: tr("Your replays folder", "Sua pasta de replays") });
+    if (pick.canceled || !pick.filePaths[0]) return null;
+    const config = loadConfig();
+    const folder = folderToAdd(pick.filePaths[0]);
+    if (!config.warcraftDocuments.includes(folder)) {
+      saveConfig({ ...config, warcraftDocuments: [...config.warcraftDocuments, folder] });
+      restartCollectorIfRunning();
+    }
+    return folders();
+  });
+  ipcMain.handle("folders:remove", (_e, folder: string) => {
+    const config = loadConfig();
+    saveConfig({ ...config, warcraftDocuments: config.warcraftDocuments.filter((d) => d !== folder) });
+    restartCollectorIfRunning();
+    return folders();
+  });
   ipcMain.handle("ref:profiles", () =>
     // profile.json of each configured reference group (missing until the first refresh).
     loadRefGroups().map((g) => {

@@ -1,6 +1,6 @@
 // Read API for the desktop app. Everything here is plain JSON so it can cross Electron IPC.
 import type { DB } from "./db.ts";
-import { METRICS, type MetricDef } from "./metrics.ts";
+import { localizeMetric, METRICS, type MetricDef } from "./metrics.ts";
 import type { GameRecord } from "./record.ts";
 import { readRecord, type Paths } from "./store.ts";
 
@@ -92,5 +92,5 @@ export function performanceData(db: DB): { games: PerfGame[]; metrics: MetricDef
     const g = byKey.get(h.game_key);
     if (g) g.first_hero = h.name;
   }
-  return { games: [...byKey.values()], metrics: METRICS };
+  return { games: [...byKey.values()], metrics: METRICS.map(localizeMetric) };
 }

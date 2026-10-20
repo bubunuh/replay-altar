@@ -3,9 +3,11 @@ import { api, type GameFindings } from "../api.ts";
 import type { GameRow } from "@replay-altar/core/ui";
 import { dateTime, mmss, problemName, RACE, shortName, SOURCE } from "../format.ts";
 import { RaceIcon } from "../RaceIcon.tsx";
+import { tr } from "@replay-altar/core/i18n";
+import { ReplayFolders } from "./Other.tsx";
 
 export function Result({ result }: { result: string }) {
-  return <span className={`result ${result}`}>{result === "win" ? "Win" : result === "loss" ? "Loss" : "Unknown"}</span>;
+  return <span className={`result ${result}`}>{result === "win" ? tr("Win", "Vitória") : result === "loss" ? tr("Loss", "Derrota") : tr("Unknown", "Desconhecido")}</span>;
 }
 
 export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: string) => void }) {
@@ -43,59 +45,64 @@ export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: str
     <div className="page">
       <div className="filters">
         <label>
-          Source
+          {tr("Source", "Origem")}
           <select value={source} onChange={(e) => setSource(e.target.value)}>
-            <option value="all">All</option>
+            <option value="all">{tr("All", "Todas")}</option>
             {Object.entries(SOURCE).map(([k, v]) => (
               <option key={k} value={k}>{v}</option>
             ))}
           </select>
         </label>
         <label>
-          Result
+          {tr("Result", "Resultado")}
           <select value={result} onChange={(e) => setResult(e.target.value)}>
-            <option value="all">All</option>
-            <option value="win">Wins</option>
-            <option value="loss">Losses</option>
+            <option value="all">{tr("All", "Todos")}</option>
+            <option value="win">{tr("Wins", "Vitórias")}</option>
+            <option value="loss">{tr("Losses", "Derrotas")}</option>
           </select>
         </label>
         <label>
-          Opponent race
+          {tr("Opponent race", "Raça do oponente")}
           <select value={oppRace} onChange={(e) => setOppRace(e.target.value)}>
-            <option value="all">All</option>
+            <option value="all">{tr("All", "Todas")}</option>
             {["H", "O", "U", "N"].map((r) => (
               <option key={r} value={r}>{RACE[r]}</option>
             ))}
           </select>
         </label>
         <label>
-          Problem
+          {tr("Problem", "Problema")}
           <select value={problem} onChange={(e) => setProblem(e.target.value)}>
-            <option value="all">All</option>
+            <option value="all">{tr("All", "Todos")}</option>
             {problems.map((id) => (
               <option key={id} value={id}>{problemName(id)}</option>
             ))}
           </select>
         </label>
-        <input type="text" placeholder="Search opponent, map, label" value={q} onChange={(e) => setQ(e.target.value)} />
-        <span className="muted small">{rows.length} games</span>
+        <input type="text" placeholder={tr("Search opponent, map, label", "Buscar oponente, mapa, nome")} value={q} onChange={(e) => setQ(e.target.value)} />
+        <span className="muted small">{tr(`${rows.length} games`, `${rows.length} partidas`)}</span>
       </div>
+      {games.length === 0 && <ReplayFolders empty />}
       <div className="card" style={{ padding: 0 }}>
         {rows.length === 0 ? (
-          <div className="empty">No analyzed games yet. Play a 1v1 — it shows up here when the game ends.</div>
+          <div className="empty">
+            {games.some((g) => g.analyzed === 1)
+              ? tr("No games match these filters.", "Nenhuma partida com esses filtros.")
+              : tr("No analyzed games yet. Play a 1v1 — it shows up here when the game ends.", "Nenhuma partida analisada ainda. Jogue um 1v1 — ele aparece aqui quando a partida acabar.")}
+          </div>
         ) : (
           <table>
             <thead>
               <tr>
-                <th>Played</th>
-                <th>Result</th>
-                <th>Matchup</th>
-                <th>Opponent</th>
-                <th>Map</th>
-                <th className="num">Length</th>
+                <th>{tr("Played", "Jogada em")}</th>
+                <th>{tr("Result", "Resultado")}</th>
+                <th>{tr("Matchup", "Confronto")}</th>
+                <th>{tr("Opponent", "Oponente")}</th>
+                <th>{tr("Map", "Mapa")}</th>
+                <th className="num">{tr("Length", "Duração")}</th>
                 <th className="num">APM</th>
-                <th>Source</th>
-                <th data-tip="The report's most important finding; hover for the full sentence.">Main problem</th>
+                <th>{tr("Source", "Origem")}</th>
+                <th data-tip={tr("The report's most important finding; hover for the full sentence.", "O problema mais importante da análise; passe o mouse para ver a frase completa.")}>{tr("Main problem", "Problema principal")}</th>
               </tr>
             </thead>
             <tbody>

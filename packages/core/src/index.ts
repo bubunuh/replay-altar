@@ -17,3 +17,4 @@ export * from "./heroxp.ts";
 export * from "./official.ts";
 export * from "./service.ts";
 export * from "./root.ts";
+export * from "./i18n.ts";

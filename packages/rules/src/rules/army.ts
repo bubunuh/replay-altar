@@ -1,6 +1,7 @@
 // Army and habits: composition against the opponent's, items, production, scouting.
 import type { GameRecord, PlayerRecord } from "@replay-altar/core/ui";
 import { POTION_ITEMS, TOWN_PORTAL, type RaceCode } from "@replay-altar/core/gamedata";
+import { tr } from "@replay-altar/core/i18n";
 import { fightLosses, mmss, sampleBoth, sampleTimes } from "../series.ts";
 import { ATTACK_NAME, airShare, antiAirShare, armyMix, bestAgainst, canHitAir, describeMix, mixValue, mixVsMix } from "../combat.ts";
 import { type Ctx, type Finding, TOWN_HALL_BUILD_MS, expansionTimes, simHeroes, BASIC } from "./shared.ts";
@@ -25,14 +26,14 @@ export function noAntiAirFinding(c: Ctx): Finding | null {
   return {
     id: "no_anti_air",
     severity: 0.6,
-    headline: "Their air army met little anti-air",
+    headline: tr("Their air army met little anti-air", "O exército aéreo deles encontrou pouco anti-aéreo"),
     evidence: [
-      `Their units ordered ${mmss(t - MIX_WINDOW_MS)}–${mmss(t)}: ${describeMix(theirs, "armor")}; ${Math.round(airShare(theirs) * 100)}% of the value flies.`,
-      `Yours: ${describeMix(mine, "attack") || "none"}; ${Math.round(antiAirShare(mine) * 100)}% of the value can attack air.`,
+      tr(`Their units ordered ${mmss(t - MIX_WINDOW_MS)}–${mmss(t)}: ${describeMix(theirs, "armor")}; ${Math.round(airShare(theirs) * 100)}% of the value flies.`, `Unidades deles pedidas ${mmss(t - MIX_WINDOW_MS)}–${mmss(t)}: ${describeMix(theirs, "armor")}; ${Math.round(airShare(theirs) * 100)}% do valor voa.`),
+      tr(`Yours: ${describeMix(mine, "attack") || "none"}; ${Math.round(antiAirShare(mine) * 100)}% of the value can attack air.`, `As suas: ${describeMix(mine, "attack") || "nenhuma"}; ${Math.round(antiAirShare(mine) * 100)}% do valor pode atacar unidades aéreas.`),
     ],
     advice: answers.length
-      ? `When you see their first air units, add units that shoot up: ${answers.map((x) => `${x.name} (${Math.round(x.vs * 100)}% damage against their air)`).join(", ")}.`
-      : "When you see their first air units, add units that can attack air.",
+      ? tr(`When you see their first air units, add units that shoot up: ${answers.map((x) => `${x.name} (${Math.round(x.vs * 100)}% damage against their air)`).join(", ")}.`, `Quando vir as primeiras unidades aéreas deles, adicione unidades que atiram para cima: ${answers.map((x) => `${x.name} (${Math.round(x.vs * 100)}% de dano contra as aéreas deles)`).join(", ")}.`)
+      : tr("When you see their first air units, add units that can attack air.", "Quando vir as primeiras unidades aéreas deles, adicione unidades que atacam unidades aéreas."),
   };
 }
 
@@ -48,13 +49,16 @@ export function armyMismatchFinding(c: Ctx): Finding | null {
   return {
     id: "army_mismatch",
     severity: 0.55,
-    headline: "Your units' attacks were weak against their armor",
+    headline: tr("Your units' attacks were weak against their armor", "Os ataques das suas unidades foram fracos contra a armadura deles"),
     evidence: [
-      `Your units ordered ${mmss(t - MIX_WINDOW_MS)}–${mmss(t)}: ${describeMix(mine, "attack")}.`,
-      `Theirs: ${describeMix(theirs, "armor")}.`,
-      `On average your attacks did ${Math.round(ours * 100)}% damage against their armor (game damage table: e.g. piercing does 75% to medium armor, magic 200% to heavy).`,
+      tr(`Your units ordered ${mmss(t - MIX_WINDOW_MS)}–${mmss(t)}: ${describeMix(mine, "attack")}.`, `Suas unidades pedidas ${mmss(t - MIX_WINDOW_MS)}–${mmss(t)}: ${describeMix(mine, "attack")}.`),
+      tr(`Theirs: ${describeMix(theirs, "armor")}.`, `As deles: ${describeMix(theirs, "armor")}.`),
+      tr(`On average your attacks did ${Math.round(ours * 100)}% damage against their armor (game damage table: e.g. piercing does 75% to medium armor, magic 200% to heavy).`, `Em média seus ataques causaram ${Math.round(ours * 100)}% de dano contra a armadura deles (tabela de dano do jogo: por exemplo, perfurante causa 75% em armadura média, mágico 200% em pesada).`),
     ],
-    advice: `Against this army, ${better.map((x) => `${x.name} (${ATTACK_NAME[x.unit.attacks[0]?.type] ?? "?"} attack, ${Math.round(x.vs * 100)}%)`).join(", ")} do more damage; mix them in once you see their composition.`,
+    advice: tr(
+      `Against this army, ${better.map((x) => `${x.name} (${ATTACK_NAME[x.unit.attacks[0]?.type] ?? "?"} attack, ${Math.round(x.vs * 100)}%)`).join(", ")} do more damage; mix them in once you see their composition.`,
+      `Contra esse exército, ${better.map((x) => `${x.name} (ataque ${ATTACK_NAME[x.unit.attacks[0]?.type] ?? "?"}, ${Math.round(x.vs * 100)}%)`).join(", ")} causam mais dano; misture essas unidades assim que vir a composição deles.`,
+    ),
   };
 }
 
@@ -79,11 +83,11 @@ export function noSustainFinding(c: Ctx): Finding | null {
   return {
     id: "no_sustain",
     severity: BASIC,
-    headline: "No healing or Town Portal when your hero died",
+    headline: tr("No healing or Town Portal when your hero died", "Sem cura nem Town Portal quando seu herói morreu"),
     evidence: [
-      `Your first hero death (≈${mmss(t)}) came with ${before.length ? `only ${before.map((b) => b.name).join(", ")} bought` : "no items bought yet"}; no potion, healing scroll or Town Portal. Opp had bought ${theirs} such items by then.`,
+      tr(`Your first hero death (≈${mmss(t)}) came with ${before.length ? `only ${before.map((b) => b.name).join(", ")} bought` : "no items bought yet"}; no potion, healing scroll or Town Portal. Opp had bought ${theirs} such items by then.`, `A primeira morte de um herói seu (≈${mmss(t)}) veio ${before.length ? `com só ${before.map((b) => b.name).join(", ")} comprado` : "sem nenhum item comprado ainda"}; nenhuma poção, pergaminho de cura ou Town Portal. O oponente já tinha comprado ${theirs} itens desses.`),
     ],
-    advice: "Carry a Potion of Healing (or healing scroll/salve) on your main hero before every big fight, and a Town Portal to get out: they decide close fights and save heroes.",
+    advice: tr("Carry a Potion of Healing (or healing scroll/salve) on your main hero before every big fight, and a Town Portal to get out: they decide close fights and save heroes.", "Leve uma Potion of Healing (ou pergaminho/pomada de cura) no seu herói principal antes de toda luta grande, e um Town Portal para fugir: eles decidem lutas equilibradas e salvam heróis."),
   };
 }
 
@@ -99,9 +103,9 @@ export function noScoutFinding(c: Ctx): Finding | null {
   return {
     id: "no_scout",
     severity: BASIC,
-    headline: "You scouted late",
-    evidence: [`First unit of yours on the opponent's side of the map: ${mmss(ms)}; pros: median ${mmss(pro.p50)}.`],
-    advice: "Scout their base around 2:00-3:00 (a worker, your hero on the way to a camp, or a cheap unit): their tech, towers and expansion tell you what is coming and what to build.",
+    headline: tr("You scouted late", "Você fez scout tarde"),
+    evidence: [tr(`First unit of yours on the opponent's side of the map: ${mmss(ms)}; pros: median ${mmss(pro.p50)}.`, `Primeira unidade sua no lado do mapa do oponente: ${mmss(ms)}; pros: mediana ${mmss(pro.p50)}.`)],
+    advice: tr("Scout their base around 2:00-3:00 (a worker, your hero on the way to a camp, or a cheap unit): their tech, towers and expansion tell you what is coming and what to build.", "Faça scout da base deles por volta de 2:00-3:00 (um trabalhador, seu herói a caminho de um acampamento, ou uma unidade barata): o tier, as torres e a expansão deles dizem o que vem por aí e o que construir."),
   };
 }
 
@@ -131,12 +135,12 @@ export function unusedLeadFinding(c: Ctx): Finding | null {
   return {
     id: "unused_lead",
     severity: Math.min(0.85, 0.55 + (to - from) / 1_800_000),
-    headline: "You were well ahead and didn't attack",
+    headline: tr("You were well ahead and didn't attack", "Você estava bem na frente e não atacou"),
     evidence: [
-      `From ${mmss(from)} to ${mmss(to)} your army value was at least 1.5x theirs (at ${mmss(peak.t)}: ${peak.me} vs ${peak.opp}) and you had at least as many workers (${workers[best.i]?.me} vs ${workers[best.i]?.opp} at ${mmss(from)}).`,
-      `In that time you started no fight against them, didn't expand, and they lost under 300 in fights.`,
+      tr(`From ${mmss(from)} to ${mmss(to)} your army value was at least 1.5x theirs (at ${mmss(peak.t)}: ${peak.me} vs ${peak.opp}) and you had at least as many workers (${workers[best.i]?.me} vs ${workers[best.i]?.opp} at ${mmss(from)}).`, `De ${mmss(from)} a ${mmss(to)} o valor do seu exército foi pelo menos 1,5x o deles (às ${mmss(peak.t)}: ${peak.me} contra ${peak.opp}) e você tinha pelo menos tantos trabalhadores quanto eles (${workers[best.i]?.me} contra ${workers[best.i]?.opp} às ${mmss(from)}).`),
+      tr(`In that time you started no fight against them, didn't expand, and they lost under 300 in fights.`, `Nesse tempo você não começou nenhuma luta contra eles, não expandiu, e eles perderam menos de 300 em lutas.`),
     ],
-    advice: "When you are this far ahead, use it before they catch up: attack their expansion or creeping hero, or their base with your heroes leading, or take an expansion yourself. Waiting lets them tech to stronger units.",
+    advice: tr("When you are this far ahead, use it before they catch up: attack their expansion or creeping hero, or their base with your heroes leading, or take an expansion yourself. Waiting lets them tech to stronger units.", "Quando estiver tão na frente, aproveite antes que eles alcancem: ataque a expansão deles ou o herói creepando, ou a base deles com seus heróis na frente, ou pegue uma expansão você mesmo. Esperar deixa eles subirem de tier para unidades mais fortes."),
   };
 }
 
@@ -172,10 +176,10 @@ export function outExpandedFinding(c: Ctx): Finding | null {
   return {
     id: "out_expanded",
     severity: 0.55,
-    headline: "They had more bases than you",
+    headline: tr("They had more bases than you", "Eles tiveram mais bases que você"),
     evidence: [
-      `From ${mmss(best.from)} to ${mmss(best.to)} they had more bases standing than you (at ${mmss(best.to)}: ${at.opp} vs ${at.me}). Your expansions: ${expansionTimes(c.r, c.me).map((t) => mmss(t)).join(", ") || "none"}; theirs: ${expansionTimes(c.r, c.opp).map((t) => mmss(t)).join(", ") || "none"}.`,
+      tr(`From ${mmss(best.from)} to ${mmss(best.to)} they had more bases standing than you (at ${mmss(best.to)}: ${at.opp} vs ${at.me}). Your expansions: ${expansionTimes(c.r, c.me).map((t) => mmss(t)).join(", ") || "none"}; theirs: ${expansionTimes(c.r, c.opp).map((t) => mmss(t)).join(", ") || "none"}.`, `De ${mmss(best.from)} a ${mmss(best.to)} eles tiveram mais bases de pé que você (às ${mmss(best.to)}: ${at.opp} contra ${at.me}). Suas expansões: ${expansionTimes(c.r, c.me).map((t) => mmss(t)).join(", ") || "nenhuma"}; as deles: ${expansionTimes(c.r, c.opp).map((t) => mmss(t)).join(", ") || "nenhuma"}.`),
     ],
-    advice: "When they take an extra base, either take one yourself or attack theirs while it builds (about two minutes); letting them mine more for minutes decides long games.",
+    advice: tr("When they take an extra base, either take one yourself or attack theirs while it builds (about two minutes); letting them mine more for minutes decides long games.", "Quando eles pegarem uma base a mais, pegue uma você também ou ataque a deles enquanto constrói (uns dois minutos); deixar eles minerarem mais por minutos decide partidas longas."),
   };
 }

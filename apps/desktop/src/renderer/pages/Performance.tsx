@@ -10,7 +10,8 @@ import { proText, researchTimes, upgradeRows, upgradeStanding } from "../upgrade
 import type { RaceCode } from "@replay-altar/core/gamedata";
 import type { RefGroupInfo } from "../api.ts";
 import { Recurring } from "../Recurring.tsx";
-import { dateTime, GROUP_LABEL, mean, metricValue, mmss, pct, RACE, shortName, SOURCE } from "../format.ts";
+import { dateTime, GROUP_LABEL, groupLabel, mean, metricValue, mmss, pct, RACE, shortName, SOURCE } from "../format.ts";
+import { locale, tr } from "@replay-altar/core/i18n";
 
 type Group = { label: string; wins: number; losses: number };
 
@@ -30,7 +31,7 @@ function groupBy(games: PerfGame[], keyOf: (g: PerfGame) => string | null, order
     : rows.sort((a, b) => b.wins + b.losses - (a.wins + a.losses) || a.label.localeCompare(b.label));
 }
 
-const LENGTHS = ["Under 10 min", "10–20 min", "Over 20 min"];
+const LENGTHS = [tr("Under 10 min", "Menos de 10 min"), "10–20 min", tr("Over 20 min", "Mais de 20 min")];
 const lengthBucket = (ms: number) => (ms < 600_000 ? LENGTHS[0] : ms <= 1_200_000 ? LENGTHS[1] : LENGTHS[2]);
 
 function BarCard({ title, sub, rows }: { title: string; sub: string; rows: Group[] }) {
@@ -39,7 +40,7 @@ function BarCard({ title, sub, rows }: { title: string; sub: string; rows: Group
     <div className="card">
       <h2>{title}</h2>
       <p className="sub">{sub}</p>
-      {rows.length === 0 ? <div className="empty">No games</div> : <Chart option={option} height={Math.max(60, rows.length * 34 + 8)} label={`${title}: ${rows.map((r) => `${r.label} ${r.wins} wins ${r.losses} losses`).join("; ")}`} />}
+      {rows.length === 0 ? <div className="empty">{tr("No games", "Nenhuma partida")}</div> : <Chart option={option} height={Math.max(60, rows.length * 34 + 8)} label={`${title}: ${rows.map((r) => tr(`${r.label} ${r.wins} wins ${r.losses} losses`, `${r.label} ${r.wins} vitórias ${r.losses} derrotas`)).join("; ")}`} />}
     </div>
   );
 }
@@ -100,7 +101,7 @@ function lineOption(
                 silent: true,
                 symbol: "none",
                 lineStyle: { color: t.ink2, width: 1.5, type: "solid", opacity: 0.7 },
-                label: { formatter: `${ref.label} median`, color: t.ink2, fontSize: 11, position: "insideEndTop" },
+                label: { formatter: tr(`${ref.label} median`, `mediana dos ${ref.label}`), color: t.ink2, fontSize: 11, position: "insideEndTop" },
                 data: [{ yAxis: ref.p50 }],
               }
             : undefined,
@@ -156,9 +157,12 @@ export function Performance({ games: all, metrics, refs, onOpen }: { games: Perf
     const pts = decided.map((g, i) => {
       const window = decided.slice(Math.max(0, i - 9), i + 1);
       return {
-        label: new Date(g.played_at).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+        label: new Date(g.played_at).toLocaleDateString(locale(), { month: "short", day: "numeric" }),
         value: window.filter((x) => x.result === "win").length / window.length,
-        note: `after ${dateTime(g.played_at)} vs ${shortName(g.opp_name)} (${g.result}) · last ${window.length} games`,
+        note: tr(
+          `after ${dateTime(g.played_at)} vs ${shortName(g.opp_name)} (${g.result}) · last ${window.length} games`,
+          `depois de ${dateTime(g.played_at)} contra ${shortName(g.opp_name)} (${g.result === "win" ? "vitória" : "derrota"}) · últimas ${window.length} partidas`,
+        ),
       };
     });
     return lineOption(pts, (v) => `${Math.round(v * 100)}%`, 1);
@@ -173,9 +177,12 @@ export function Performance({ games: all, metrics, refs, onOpen }: { games: Perf
     const pts = games.map((g) => {
       const v = g.me[trendMetric];
       return {
-        label: new Date(g.played_at).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+        label: new Date(g.played_at).toLocaleDateString(locale(), { month: "short", day: "numeric" }),
         value: typeof v === "number" ? (scaled ? per10Minutes(v, g.duration_ms) : v) : null,
-        note: `${dateTime(g.played_at)} · ${g.result} vs ${shortName(g.opp_name)} on ${g.map_name}${scaled ? " · per 10 min" : ""}`,
+        note: tr(
+          `${dateTime(g.played_at)} · ${g.result} vs ${shortName(g.opp_name)} on ${g.map_name}${scaled ? " · per 10 min" : ""}`,
+          `${dateTime(g.played_at)} · ${g.result === "win" ? "vitória" : g.result === "loss" ? "derrota" : g.result} contra ${shortName(g.opp_name)} em ${g.map_name}${scaled ? " · a cada 10 min" : ""}`,
+        ),
       };
     });
     const entry = ref?.mp.metrics[trendMetric];
@@ -197,107 +204,110 @@ export function Performance({ games: all, metrics, refs, onOpen }: { games: Perf
     return [...m.values()].sort((a, b) => b.wins + b.losses - (a.wins + a.losses) || b.last.played_at.localeCompare(a.last.played_at));
   }, [games]);
 
-  if (all.length === 0 || !trendDef || !trendOption) return <div className="page"><div className="empty">No analyzed games yet.</div></div>;
+  if (all.length === 0 || !trendDef || !trendOption) return <div className="page"><div className="empty">{tr("No analyzed games yet.", "Nenhuma partida analisada ainda.")}</div></div>;
 
   return (
     <div className="page">
       <div className="filters">
         <label>
-          Period
+          {tr("Period", "Período")}
           <select value={period} onChange={(e) => setPeriod(e.target.value)}>
-            <option value="all">All time</option>
-            <option value="90">Last 90 days</option>
-            <option value="30">Last 30 days</option>
-            <option value="7">Last 7 days</option>
+            <option value="all">{tr("All time", "Desde o início")}</option>
+            <option value="90">{tr("Last 90 days", "Últimos 90 dias")}</option>
+            <option value="30">{tr("Last 30 days", "Últimos 30 dias")}</option>
+            <option value="7">{tr("Last 7 days", "Últimos 7 dias")}</option>
           </select>
         </label>
         <label>
-          Source
+          {tr("Source", "Origem")}
           <select value={source} onChange={(e) => setSource(e.target.value)}>
-            <option value="all">All</option>
+            <option value="all">{tr("All", "Todas")}</option>
             {Object.entries(SOURCE).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
         </label>
         <label>
-          Opponent race
+          {tr("Opponent race", "Raça do oponente")}
           <select value={oppRace} onChange={(e) => setOppRace(e.target.value)}>
-            <option value="all">All</option>
+            <option value="all">{tr("All", "Todas")}</option>
             {["H", "O", "U", "N"].map((r) => <option key={r} value={r}>{RACE[r]}</option>)}
           </select>
         </label>
-        <span className="muted small">{games.length} games</span>
+        <span className="muted small">{tr(`${games.length} games`, `${games.length} partidas`)}</span>
       </div>
 
       <div className="tiles">
         <div className="card tile">
-          <div className="label">Win rate</div>
+          <div className="label">{tr("Win rate", "Taxa de vitórias")}</div>
           <div className="value hero">{pct(winrate)}</div>
-          <div className="note">{wins.length} wins · {losses.length} losses</div>
+          <div className="note">{tr(`${wins.length} wins · ${losses.length} losses`, `${wins.length} vitórias · ${losses.length} derrotas`)}</div>
         </div>
         <div className="card tile">
-          <div className="label">Average APM</div>
+          <div className="label">{tr("Average APM", "APM médio")}</div>
           <div className="value">{metricValue({ unit: "apm" }, mean(games.map((g) => g.me.apm)))}</div>
-          <div className="note">opponents {metricValue({ unit: "apm" }, mean(games.map((g) => g.opp.apm)))}</div>
+          <div className="note">{tr("opponents", "oponentes")} {metricValue({ unit: "apm" }, mean(games.map((g) => g.opp.apm)))}</div>
         </div>
         <div className="card tile">
-          <div className="label">Average game length</div>
+          <div className="label">{tr("Average game length", "Duração média das partidas")}</div>
           <div className="value">{mmss(mean(games.map((g) => g.duration_ms)))}</div>
-          <div className="note">wins {mmss(mean(wins.map((g) => g.duration_ms)))} · losses {mmss(mean(losses.map((g) => g.duration_ms)))}</div>
+          <div className="note">{tr("wins", "vitórias")} {mmss(mean(wins.map((g) => g.duration_ms)))} · {tr("losses", "derrotas")} {mmss(mean(losses.map((g) => g.duration_ms)))}</div>
         </div>
         <div className="card tile">
-          <div className="label">Supply blocked per game</div>
+          <div className="label">{tr("Supply blocked per game", "Travado no food por partida")}</div>
           <div className="value">{metricValue({ unit: "count" }, mean(games.map((g) => g.me.supply_blocked_s)))} s</div>
-          <div className="note">opponents {metricValue({ unit: "count" }, mean(games.map((g) => g.opp.supply_blocked_s)))} s · from the simulation</div>
+          <div className="note">{tr("opponents", "oponentes")} {metricValue({ unit: "count" }, mean(games.map((g) => g.opp.supply_blocked_s)))} s · {tr("from the simulation", "pela simulação")}</div>
         </div>
         <div className="card tile">
-          <div className="label">Tier 2 started</div>
+          <div className="label">{tr("Tier 2 started", "Tier 2 iniciado")}</div>
           <div className="value">{mmss(mean(games.map((g) => g.me.tier2_ms)))}</div>
-          <div className="note">opponents {mmss(mean(games.map((g) => g.opp.tier2_ms)))}</div>
+          <div className="note">{tr("opponents", "oponentes")} {mmss(mean(games.map((g) => g.opp.tier2_ms)))}</div>
         </div>
       </div>
 
       <Recurring games={games} onOpen={onOpen} />
 
       <div className="grid-3">
-        <BarCard title="Win rate by matchup" sub="Your race first." rows={byMatchup} />
-        <BarCard title="Win rate by map" sub="Wins–losses at the bar end." rows={byMap} />
-        <BarCard title="Win rate by game length" sub="Do you win short or long games?" rows={byLength} />
+        <BarCard title={tr("Win rate by matchup", "Vitórias por confronto")} sub={tr("Your race first.", "Sua raça primeiro.")} rows={byMatchup} />
+        <BarCard title={tr("Win rate by map", "Vitórias por mapa")} sub={tr("Wins–losses at the bar end.", "Vitórias–derrotas no fim da barra.")} rows={byMap} />
+        <BarCard title={tr("Win rate by game length", "Vitórias por duração")} sub={tr("Do you win short or long games?", "Você ganha partidas curtas ou longas?")} rows={byLength} />
       </div>
 
       <div className="grid-2">
         <div className="card">
-          <h2>Form</h2>
-          <p className="sub">Win rate over your last 10 games, after each game.</p>
-          {decided.length < 2 ? <div className="empty">Needs at least 2 games</div> : <Chart option={formOption} height={220} label="Rolling win rate over the last 10 games" />}
+          <h2>{tr("Form", "Fase")}</h2>
+          <p className="sub">{tr("Win rate over your last 10 games, after each game.", "Taxa de vitórias nas suas últimas 10 partidas, depois de cada partida.")}</p>
+          {decided.length < 2 ? <div className="empty">{tr("Needs at least 2 games", "Precisa de pelo menos 2 partidas")}</div> : <Chart option={formOption} height={220} label={tr("Rolling win rate over the last 10 games", "Taxa de vitórias nas últimas 10 partidas")} />}
         </div>
         <div className="card">
           <h2>
-            <select value={trendMetric} onChange={(e) => setTrendMetric(e.target.value)} aria-label="Metric to plot">
+            <select value={trendMetric} onChange={(e) => setTrendMetric(e.target.value)} aria-label={tr("Metric to plot", "Número no gráfico")}>
               {(["core", "mechanics", "details"] as const).map((sec) => (
                 <optgroup key={sec} label={SECTION_INFO[sec].title}>
                   {splitMetrics(metrics)[sec].map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}
                 </optgroup>
               ))}
             </select>{" "}
-            over time
+            {tr("over time", "ao longo do tempo")}
           </h2>
           <p className="sub">
             {trendDef.description}
-            {trendDef.scalesWithLength ? " Shown per 10 minutes of game time." : ""}
-            {ref?.mp.metrics[trendMetric] ? ` Grey: pros (${describeRef(ref)}), median and middle 50%.` : ""}
+            {trendDef.scalesWithLength ? tr(" Shown per 10 minutes of game time.", " Mostrado a cada 10 minutos de jogo.") : ""}
+            {ref?.mp.metrics[trendMetric] ? tr(` Grey: pros (${describeRef(ref)}), median and middle 50%.`, ` Cinza: pros (${describeRef(ref)}), mediana e os 50% do meio.`) : ""}
           </p>
-          <Chart option={trendOption} height={220} label={`${trendDef.label} per game over time`} />
+          <Chart option={trendOption} height={220} label={tr(`${trendDef.label} per game over time`, `${trendDef.label} por partida ao longo do tempo`)} />
         </div>
       </div>
 
       <div className="card">
-        <h2>How you play in wins vs losses</h2>
+        <h2>{tr("How you play in wins vs losses", "Como você joga nas vitórias e nas derrotas")}</h2>
         <p className="sub">
-          Averages over the filtered games; (3/6) means only 3 of 6 games had that event. The opponents column is everyone you faced.
+          {tr("Averages over the filtered games; (3/6) means only 3 of 6 games had that event. The opponents column is everyone you faced.", "Médias das partidas filtradas; (3/6) significa que só 3 de 6 partidas tiveram aquele evento. A coluna dos oponentes reúne todos que você enfrentou.")}
           {ref
-            ? ` Pros: ${pros!.group.label}, ${describeRef(ref)}. Core and Mechanics get a verdict: green = pro level (at or above the pro median), yellow = not yet but at least as good as your opponents, red = below both; for timings with no better direction (heroes, tiers, expansions): green = like pros (their middle 50%), yellow = unusual, red = far from pros. Whole-game totals are compared per 10 minutes.`
-            : " Pro comparison appears once reference games are downloaded (replay-altar ref refresh)."}
-          {" "}Hover a metric for its definition.
+            ? tr(
+                ` Pros: ${groupLabel(pros!.group)}, ${describeRef(ref)}. Core and Mechanics get a verdict: green = pro level (at or above the pro median), yellow = not yet but at least as good as your opponents, red = below both; for timings with no better direction (heroes, tiers, expansions): green = like pros (their middle 50%), yellow = unusual, red = far from pros. Whole-game totals are compared per 10 minutes.`,
+                ` Pros: ${groupLabel(pros!.group)}, ${describeRef(ref)}. Essencial e Mecânica recebem um veredito: verde = nível pro (na mediana dos pros ou acima), amarelo = ainda não, mas pelo menos tão bom quanto os seus oponentes, vermelho = abaixo dos dois; para tempos sem direção melhor (heróis, tiers, expansões): verde = como os pros (os 50% do meio deles), amarelo = incomum, vermelho = longe dos pros. Totais da partida inteira são comparados a cada 10 minutos.`,
+              )
+            : tr(" Pro comparison appears once reference games are downloaded (replay-altar ref refresh).", " A comparação com os pros aparece depois que as partidas de referência forem baixadas (Atualizar partidas de pros).")}
+          {" "}{tr("Hover a metric for its definition.", "Passe o mouse num número para ver a definição.")}
         </p>
         {(() => {
           const cols = ref ? 7 : 5;
@@ -328,13 +338,13 @@ export function Performance({ games: all, metrics, refs, onOpen }: { games: Perf
           const head = (
             <thead>
               <tr>
-                <th>Metric</th>
-                <th className="num">In your wins ({wins.length})</th>
-                <th className="num">In your losses ({losses.length})</th>
-                <th className="num">All your games</th>
-                <th className="num">Your opponents</th>
-                {ref && <th className="num">Pros (median)</th>}
-                {ref && <th>Where you stand</th>}
+                <th>{tr("Metric", "Número")}</th>
+                <th className="num">{tr(`In your wins (${wins.length})`, `Nas suas vitórias (${wins.length})`)}</th>
+                <th className="num">{tr(`In your losses (${losses.length})`, `Nas suas derrotas (${losses.length})`)}</th>
+                <th className="num">{tr("All your games", "Todas as suas partidas")}</th>
+                <th className="num">{tr("Your opponents", "Seus oponentes")}</th>
+                {ref && <th className="num">{tr("Pros (median)", "Pros (mediana)")}</th>}
+                {ref && <th>{tr("Where you stand", "Onde você está")}</th>}
               </tr>
             </thead>
           );
@@ -388,16 +398,16 @@ export function Performance({ games: all, metrics, refs, onOpen }: { games: Perf
                   {sectionRow("core")}
                   {core.map((m) => row(m, true))}
                   {sectionRow("upgrades")}
-                  {subRow("Attack and armor")}
+                  {subRow(tr("Attack and armor", "Ataque e armadura"))}
                   {ups.core.map(upRow)}
-                  {ups.other.length > 0 && subRow("Other upgrades")}
+                  {ups.other.length > 0 && subRow(tr("Other upgrades", "Outros upgrades"))}
                   {ups.other.map(upRow)}
                   {sectionRow("mechanics")}
                   {mechanics.map((m) => row(m, true))}
                 </tbody>
               </table>
               <details className="more-metrics">
-                <summary>{SECTION_INFO.details.title}: {details.length} more metrics. {SECTION_INFO.details.note}</summary>
+                <summary>{SECTION_INFO.details.title}: {tr(`${details.length} more metrics.`, `mais ${details.length} números.`)} {SECTION_INFO.details.note}</summary>
                 <table>
                   {head}
                   <tbody>
@@ -415,10 +425,10 @@ export function Performance({ games: all, metrics, refs, onOpen }: { games: Perf
 
       <div className="grid-2">
         <div className="card">
-          <h2>First hero</h2>
-          <p className="sub">The hero you skilled first.</p>
+          <h2>{tr("First hero", "Primeiro herói")}</h2>
+          <p className="sub">{tr("The hero you skilled first.", "O herói em que você aprendeu a primeira habilidade.")}</p>
           <table>
-            <thead><tr><th>Hero</th><th className="num">Games</th><th className="num">Win rate</th></tr></thead>
+            <thead><tr><th>{tr("Hero", "Herói")}</th><th className="num">{tr("Games", "Partidas")}</th><th className="num">{tr("Win rate", "Vitórias")}</th></tr></thead>
             <tbody>
               {heroes.map((h) => (
                 <tr key={h.label}><td>{h.label}</td><td className="num">{h.wins + h.losses}</td><td className="num">{pct(h.wins / Math.max(1, h.wins + h.losses))} <span className="muted">{h.wins}–{h.losses}</span></td></tr>
@@ -427,10 +437,10 @@ export function Performance({ games: all, metrics, refs, onOpen }: { games: Perf
           </table>
         </div>
         <div className="card">
-          <h2>Opponents</h2>
-          <p className="sub">Head-to-head; click to open the last game against them.</p>
+          <h2>{tr("Opponents", "Oponentes")}</h2>
+          <p className="sub">{tr("Head-to-head; click to open the last game against them.", "Confronto direto; clique para abrir a última partida contra eles.")}</p>
           <table>
-            <thead><tr><th>Opponent</th><th>Race</th><th className="num">Record</th><th>Last played</th></tr></thead>
+            <thead><tr><th>{tr("Opponent", "Oponente")}</th><th>{tr("Race", "Raça")}</th><th className="num">{tr("Record", "Placar")}</th><th>{tr("Last played", "Última partida")}</th></tr></thead>
             <tbody>
               {opponents.map((o) => (
                 <tr key={o.name} className="click" onClick={() => onOpen(o.last.game_key)}>

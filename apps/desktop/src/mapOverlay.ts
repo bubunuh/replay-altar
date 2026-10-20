@@ -7,6 +7,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { gunzipSync } from "node:zlib";
 import { nameOf } from "@replay-altar/core/names";
+import { tr } from "@replay-altar/core/i18n";
 
 export type MapMarker = { x: number; y: number; kind: "gold" | "shop" | "start" | "camp"; label: string; level?: number };
 
@@ -81,8 +82,8 @@ function build(wc3vRoot: string, dir: string): MapMarker[] {
   const markers: MapMarker[] = [];
   for (const u of units) {
     const [x, y] = u.position;
-    if (u.type === "ngol") markers.push({ ...at(x, y), kind: "gold", label: `Gold mine${u.gold ? ` (${u.gold} gold)` : ""}` });
-    else if (u.type === "sloc") markers.push({ ...at(x, y), kind: "start", label: "Start location" });
+    if (u.type === "ngol") markers.push({ ...at(x, y), kind: "gold", label: tr(`Gold mine${u.gold ? ` (${u.gold} gold)` : ""}`, `Mina de ouro${u.gold ? ` (${u.gold} de ouro)` : ""}`) });
+    else if (u.type === "sloc") markers.push({ ...at(x, y), kind: "start", label: tr("Start location", "Posição inicial") });
     else if (SHOPS[u.type]) markers.push({ ...at(x, y), kind: "shop", label: SHOPS[u.type] });
   }
 

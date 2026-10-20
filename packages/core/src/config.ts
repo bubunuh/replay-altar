@@ -1,6 +1,8 @@
+import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { dirname, join } from "node:path";
+import { basename, dirname, join, parse, sep } from "node:path";
+import type { Language } from "./i18n.ts";
 
 export type ReferenceGroup = {
   id: string;
@@ -20,8 +22,13 @@ export type ReferenceGroup = {
 export type Config = {
   /** Battletags that are you. Games where none of them played are archived as "observed". */
   accounts: string[];
-  /** "Documents/Warcraft III" folders; replays are found under BattleNet/<account>/Replays. */
+  /**
+   * Folders you added on top of the ones found by themselves (warcraftFolders): a
+   * "Documents/Warcraft III" folder (replays under BattleNet/<account>/Replays), or any folder of replays.
+   */
   warcraftDocuments: string[];
+  /** The app's language; unset: the system's (resolveLanguage). */
+  language?: Language;
   /** Show the stats window (without focus) when Warcraft III starts. */
   openWindowOnGameStart: boolean;
   /** Desktop notification after each analyzed game. */
@@ -42,14 +49,72 @@ export const appDirs = () =>
     ? { data: process.env.LOCALAPPDATA ?? join(home, "AppData/Local"), config: process.env.APPDATA ?? join(home, "AppData/Roaming") }
     : { data: process.env.XDG_DATA_HOME ?? join(home, ".local/share"), config: process.env.XDG_CONFIG_HOME ?? join(home, ".config") };
 
-/** The game's "Documents/Warcraft III" folders: Windows' own (also under OneDrive), or the Wine prefix Lutris installs Battle.net in. */
-const warcraftDocuments = () =>
-  windows ? [join(home, "Documents/Warcraft III"), join(home, "OneDrive/Documents/Warcraft III")] : [join(home, "Games/battlenet/drive_c/users/steamuser/Documents/Warcraft III")];
+/** What the settings file got by default before folders were found at run time; dropped on load. */
+const OLD_DEFAULTS = windows
+  ? [join(home, "Documents/Warcraft III"), join(home, "OneDrive/Documents/Warcraft III")]
+  : [join(home, "Games/battlenet/drive_c/users/steamuser/Documents/Warcraft III")];
+
+/** Windows' own Documents folder from the registry: it may be moved (D:\Documentos) or kept by OneDrive. */
+function windowsDocuments(): string | null {
+  try {
+    const out = execFileSync("reg", ["query", "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders", "/v", "Personal"], { encoding: "utf8", windowsHide: true });
+    const raw = out.match(/Personal\s+REG_(?:EXPAND_)?SZ\s+(.+)/)?.[1]?.trim();
+    return raw ? raw.replace(/%([^%]+)%/g, (m, name: string) => process.env[name] ?? m) : null;
+  } catch {
+    return null;
+  }
+}
+
+let detected: string[] | null = null;
+
+/**
+ * The game's "Documents/Warcraft III" folders that exist on this computer. Windows: the
+ * registry's Documents folder, the usual one, and OneDrive's (whose folder name follows the
+ * language, e.g. "OneDrive\Documentos"). Linux: the Wine prefix Lutris installs Battle.net in.
+ */
+export function detectedWarcraftDocuments(): string[] {
+  if (detected) return detected;
+  const docs = windows ? [windowsDocuments(), join(home, "Documents")] : [join(home, "Games/battlenet/drive_c/users/steamuser/Documents")];
+  if (windows) {
+    for (const onedrive of safeList(home).filter((d) => d.startsWith("OneDrive"))) {
+      for (const name of ["Documents", "Documentos"]) docs.push(join(home, onedrive, name));
+    }
+  }
+  detected = unique(docs.filter((d): d is string => !!d).map((d) => join(d, "Warcraft III"))).filter((d) => existsSync(d));
+  return detected;
+}
+
+const safeList = (dir: string) => {
+  try {
+    return readdirSync(dir);
+  } catch {
+    return [];
+  }
+};
+/** Without repeats; Windows paths compare case-insensitively. */
+const unique = (dirs: string[]) => {
+  const key = (d: string) => (windows ? d.toLowerCase() : d).replace(/[\\/]+$/, "");
+  return dirs.filter((d, i) => dirs.findIndex((e) => key(e) === key(d)) === i);
+};
+
+/** Every folder the app reads replays (and maps) from: the ones found, then the ones you added. */
+export const warcraftFolders = (config: Config) => unique([...detectedWarcraftDocuments(), ...config.warcraftDocuments]);
+
+/**
+ * The folder to keep for one you picked: the "Warcraft III" folder when the pick is it or
+ * anything inside its BattleNet folder (so its Maps are found too); otherwise the pick itself.
+ */
+export function folderToAdd(picked: string): string {
+  const parts = picked.split(/[\\/]+/);
+  const i = parts.findIndex((p) => p.toLowerCase() === "battlenet");
+  if (i > 0) return parts.slice(0, i).join(sep) || parse(picked).root;
+  return picked;
+}
 
 export const DEFAULT_CONFIG: Config = {
   // Found from your replays on the first run (apps/collector/src/firstrun.ts), or set in Settings.
   accounts: [],
-  warcraftDocuments: warcraftDocuments(),
+  warcraftDocuments: [],
   openWindowOnGameStart: true,
   notifyAfterGame: true,
   reference: {
@@ -96,7 +161,8 @@ export function loadConfig(): Config {
   const saved = JSON.parse(readFileSync(file, "utf8")) as Partial<Config>;
   // Settings from before the language model was removed (2026-10-20) still carry an "ai" section.
   const { ai: _model, ...rest } = saved as Partial<Config> & { ai?: unknown };
-  return { ...DEFAULT_CONFIG, ...rest };
+  const config = { ...DEFAULT_CONFIG, ...rest };
+  return { ...config, warcraftDocuments: config.warcraftDocuments.filter((d) => !OLD_DEFAULTS.includes(d)) };
 }
 
 export function saveConfig(config: Config) {
@@ -104,16 +170,22 @@ export function saveConfig(config: Config) {
   writeFileSync(configPath(), JSON.stringify(config, null, 2) + "\n");
 }
 
-/** Every folder under BattleNet/<account>/Replays (recursively) that can hold replays. */
+/**
+ * Every folder that can hold replays: under each "Warcraft III" folder, BattleNet/<account>/Replays
+ * (recursively); any other folder you added, as a whole.
+ */
 export function replayDirs(config: Config): string[] {
   const dirs: string[] = [];
   const walk = (dir: string) => {
     dirs.push(dir);
     for (const e of readdirSync(dir, { withFileTypes: true })) if (e.isDirectory()) walk(join(dir, e.name));
   };
-  for (const docs of config.warcraftDocuments) {
+  for (const docs of warcraftFolders(config)) {
     const bnet = join(docs, "BattleNet");
-    if (!existsSync(bnet)) continue;
+    if (!existsSync(bnet)) {
+      if (existsSync(docs) && statSync(docs).isDirectory() && basename(docs).toLowerCase() !== "warcraft iii") walk(docs);
+      continue;
+    }
     for (const account of readdirSync(bnet)) {
       const replays = join(bnet, account, "Replays");
       if (existsSync(replays) && statSync(replays).isDirectory()) walk(replays);

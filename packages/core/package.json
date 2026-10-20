@@ -10,7 +10,8 @@
     "./heroxp": "./src/heroxp.ts",
     "./gamedata": "./src/gamedata.ts",
     "./names": "./src/names.ts",
-    "./time": "./src/time.ts"
+    "./time": "./src/time.ts",
+    "./i18n": "./src/i18n.ts"
   },
   "dependencies": {
     "w3gjs": "^4.3.0"

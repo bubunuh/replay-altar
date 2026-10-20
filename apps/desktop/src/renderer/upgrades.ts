@@ -5,6 +5,7 @@ import { nameOf } from "@replay-altar/core/names";
 import { percentileOf } from "@replay-altar/reference/quantiles";
 import type { MatchupProfile, UpgradeStat } from "@replay-altar/reference/types";
 import { mmss } from "./format.ts";
+import { tr } from "@replay-altar/core/i18n";
 
 export type UpgradeRow = { key: string; code: string; level: number; label: string; detail: string | null; kind: UpgradeKind | null; pro: UpgradeStat | null };
 
@@ -52,10 +53,12 @@ export function proText(p: UpgradeStat | null): string {
 
 /** Your timing among the pro games that researched it, or a note when you skipped it. */
 export function upgradeStanding(p: UpgradeStat | null, yourTime: number | null): string {
-  if (yourTime === null) return p && p.share >= 0.5 ? `skipped; most pro games research it` : "skipped";
-  if (!p || p.values.length < 3) return "few pro games research it";
+  if (yourTime === null) return p && p.share >= 0.5 ? tr("skipped; most pro games research it", "não fez; a maioria das partidas de pros faz essa pesquisa") : tr("skipped", "não fez");
+  if (!p || p.values.length < 3) return tr("few pro games research it", "poucas partidas de pros fazem essa pesquisa");
   const below = percentileOf(p.values, yourTime);
-  if (below <= 0.005) return "earlier than every pro who researches it";
-  if (below >= 0.995) return "later than every pro who researches it";
-  return below < 0.5 ? `earlier than ${Math.round((1 - below) * 100)}% of pros who research it` : `later than ${Math.round(below * 100)}% of pros who research it`;
+  if (below <= 0.005) return tr("earlier than every pro who researches it", "mais cedo que todos os pros que fazem essa pesquisa");
+  if (below >= 0.995) return tr("later than every pro who researches it", "mais tarde que todos os pros que fazem essa pesquisa");
+  return below < 0.5
+    ? tr(`earlier than ${Math.round((1 - below) * 100)}% of pros who research it`, `mais cedo que ${Math.round((1 - below) * 100)}% dos pros que fazem essa pesquisa`)
+    : tr(`later than ${Math.round(below * 100)}% of pros who research it`, `mais tarde que ${Math.round(below * 100)}% dos pros que fazem essa pesquisa`);
 }

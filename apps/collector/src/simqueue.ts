@@ -1,5 +1,5 @@
 // Runs game simulations one at a time, after the fast analysis has been stored and announced.
-import { applySim, readRecord, type IngestContext } from "@replay-altar/core";
+import { applySim, readRecord, warcraftFolders, type IngestContext } from "@replay-altar/core";
 import { simulateGame } from "@replay-altar/sim";
 
 export class SimQueue {
@@ -36,7 +36,7 @@ export class SimQueue {
       for (let key = this.queue.shift(); key; key = this.queue.shift()) {
         const record = readRecord(this.ctx.paths, key);
         if (!record) continue;
-        const sim = await simulateGame(record, { dataRoot: this.ctx.paths.root, warcraftDocuments: this.ctx.config.warcraftDocuments });
+        const sim = await simulateGame(record, { dataRoot: this.ctx.paths.root, warcraftDocuments: warcraftFolders(this.ctx.config) });
         applySim(this.ctx, key, sim);
         this.log(sim.status === "ok" ? `simulated ${key.slice(0, 8)} in ${(sim.runMs / 1000).toFixed(1)}s` : `simulation failed for ${key.slice(0, 8)}: ${sim.reason}`);
       }

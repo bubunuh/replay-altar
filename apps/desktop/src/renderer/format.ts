@@ -1,27 +1,32 @@
-import type { MetricDef } from "@replay-altar/core/ui";
+import type { MetricDef, ReferenceGroup } from "@replay-altar/core/ui";
 import { mmss } from "@replay-altar/core/time";
+import { decimal, locale, tr } from "@replay-altar/core/i18n";
 
 export { mmss };
 export { problemName } from "@replay-altar/rules/problems";
 
-export const RACE: Record<string, string> = { H: "Human", O: "Orc", U: "Undead", N: "Night Elf", R: "Random" };
+export const RACE: Record<string, string> = { H: "Human", O: "Orc", U: "Undead", N: "Night Elf", R: tr("Random", "Aleatório") };
 
+// The window reloads when the language changes, so these tables can be built at load time.
 export const SOURCE: Record<string, string> = {
-  bnet_ladder: "Battle.net ladder",
+  bnet_ladder: tr("Battle.net ladder", "Ladder do Battle.net"),
   w3champions: "W3Champions",
-  custom: "Custom game",
+  custom: tr("Custom game", "Partida customizada"),
 };
 
 export const SKIP: Record<string, string> = {
-  not_1v1: "Not a 1v1",
-  vs_ai: "Against computer",
-  observed: "You observed",
-  not_me: "You didn't play",
-  custom_map: "Custom map",
+  not_1v1: tr("Not a 1v1", "Não é 1v1"),
+  vs_ai: tr("Against computer", "Contra o computador"),
+  observed: tr("You observed", "Você assistiu"),
+  not_me: tr("You didn't play", "Você não jogou"),
+  custom_map: tr("Custom map", "Mapa customizado"),
 };
 
+/** "Human pros" (the settings file's label) in the window's language. */
+export const groupLabel = (g: Pick<ReferenceGroup, "label" | "race">) => tr(g.label, `Pros de ${RACE[g.race] ?? g.race}`);
+
 export const dateTime = (iso: string) =>
-  new Date(iso).toLocaleString(undefined, { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  new Date(iso).toLocaleString(locale(), { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 
 export const pct = (x: number | null) => (x === null ? "—" : `${Math.round(x * 100)}%`);
 
@@ -38,7 +43,7 @@ export function metricValue(def: Pick<MetricDef, "unit"> & { source?: MetricDef[
     case "per_min":
       return String(Math.round(v));
     default:
-      return Math.abs(v) >= 100 ? Math.round(v).toLocaleString("en-US") : Number.isInteger(v) ? String(v) : v.toFixed(1);
+      return Math.abs(v) >= 100 ? Math.round(v).toLocaleString(locale()) : Number.isInteger(v) ? String(v) : decimal(v);
   }
 }
 
@@ -50,14 +55,14 @@ export const mean = (xs: (number | null | undefined)[]): number | null => {
 export const shortName = (battletag: string | null) => (battletag ?? "?").replace(/#\d+$/, "");
 
 export const GROUP_LABEL: Record<string, string> = {
-  speed: "Speed",
-  control: "Control",
-  heroes: "Heroes",
+  speed: tr("Speed", "Velocidade"),
+  control: tr("Control", "Controle"),
+  heroes: tr("Heroes", "Heróis"),
   macro: "Macro",
-  economy: "Economy (simulated)",
-  supply: "Supply (simulated)",
-  army: "Army",
-  fights: "Fights (simulated)",
-  scouting: "Scouting (simulated)",
-  items: "Items",
+  economy: tr("Economy (simulated)", "Economia (simulada)"),
+  supply: tr("Supply (simulated)", "Food (simulado)"),
+  army: tr("Army", "Exército"),
+  fights: tr("Fights (simulated)", "Lutas (simuladas)"),
+  scouting: tr("Scouting (simulated)", "Scout (simulado)"),
+  items: tr("Items", "Itens"),
 };

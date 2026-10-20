@@ -2,6 +2,7 @@
 import type { GameRecord, PlayerRecord } from "@replay-altar/core/ui";
 import type { RaceCode } from "@replay-altar/core/gamedata";
 import { METRICS, per10Minutes } from "@replay-altar/core/metrics";
+import { decimal, tr } from "@replay-altar/core/i18n";
 import { percentileOf } from "@replay-altar/reference/quantiles";
 import type { FactsRef } from "../facts.ts";
 import { expansionsOf } from "../series.ts";
@@ -16,8 +17,9 @@ export type Finding = {
     | "no_anti_air" | "army_mismatch" | "no_sustain" | "no_scout" | "unused_lead" | "out_expanded";
   /** 0–1: how much it likely cost (problems) or how well it went (strengths). */
   severity: number;
-  /** Fallback title when the model is not available. */
   headline: string;
+  /** Variant of the finding, for links that depend on it (heroes: "slow" when your own pace was the problem). */
+  variant?: string;
   evidence: string[];
   /** What to do differently next time (advice.ts, or the rule's own). */
   advice?: string;
@@ -43,14 +45,14 @@ export function proGap(c: Ctx, key: string): { worseThan: number; median: number
   return { worseThan: def.better === "higher" ? 1 - below : below, median: stat.p50 };
 }
 
-export const num = (v: number | null | undefined) => (v === null || v === undefined ? "—" : Number.isInteger(v) ? String(v) : v.toFixed(1));
+export const num = (v: number | null | undefined) => (v === null || v === undefined ? "—" : Number.isInteger(v) ? String(v) : decimal(v));
 export const vsPros = (c: Ctx, key: string, fmt: (v: number) => string = num) => {
   const g = proGap(c, key);
-  return g ? ` (pros median ${fmt(g.median)}; worse than ${Math.round(g.worseThan * 100)}% of pro games)` : "";
+  return g ? tr(` (pros median ${fmt(g.median)}; worse than ${Math.round(g.worseThan * 100)}% of pro games)`, ` (mediana dos pros ${fmt(g.median)}; pior que ${Math.round(g.worseThan * 100)}% das partidas de pros)`) : "";
 };
 
 export const heroLevelSum = (p: PlayerRecord, t: number) => p.heroes.reduce((n, h) => n + h.levelUps.filter((x) => x <= t).length, 0);
-export const heroLevels = (p: PlayerRecord, t: number) => p.heroes.map((h) => `${h.name} level ${Math.max(1, h.levelUps.filter((x) => x <= t).length)}`).join(", ") || "no heroes";
+export const heroLevels = (p: PlayerRecord, t: number) => p.heroes.map((h) => tr(`${h.name} level ${Math.max(1, h.levelUps.filter((x) => x <= t).length)}`, `${h.name} nível ${Math.max(1, h.levelUps.filter((x) => x <= t).length)}`)).join(", ") || tr("no heroes", "nenhum herói");
 
 /**
  * Workers a race needs: 5 on gold per base plus a lumber crew (Grubby, beginner guide #3 and the

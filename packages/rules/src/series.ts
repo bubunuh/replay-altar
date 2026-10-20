@@ -3,6 +3,7 @@ import type { GameRecord, PlayerRecord, SimFight, SimSample } from "@replay-alta
 import { RACES, type RaceCode } from "@replay-altar/core/gamedata";
 import { HERO_XP_FOR_LEVEL } from "@replay-altar/core/heroxp";
 import { mmss } from "@replay-altar/core/time";
+import { language, tr } from "@replay-altar/core/i18n";
 
 export const STEP_MS = 120_000;
 
@@ -141,7 +142,18 @@ export function productionGap(r: GameRecord, p: PlayerRecord, worker: string, un
 }
 
 /** A fight's category in words. */
-export const fightLabel = (category: string) => (category === "unseen-fight" ? "fight (inferred from units lost)" : category.replace(/-/g, " "));
+const FIGHT_PT: Record<string, string> = {
+  "pitched-battle": "batalha campal",
+  "tower-dive": "ataque sob torres",
+  "creep-fight": "luta contra creeps",
+  "base-defense": "defesa de base",
+  "expansion-fight": "luta na expansão",
+  "unknown-combat": "combate",
+  harass: "harass",
+  engagement: "confronto",
+};
+export const fightLabel = (category: string) =>
+  category === "unseen-fight" ? tr("fight (inferred from units lost)", "luta (deduzida pelas unidades perdidas)") : language() === "pt" ? (FIGHT_PT[category] ?? category.replace(/-/g, " ")) : category.replace(/-/g, " ");
 
 /**
  * When a player started each expansion: the simulation's standing halls (one per site) when it

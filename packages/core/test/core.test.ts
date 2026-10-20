@@ -261,3 +261,41 @@ describe("repeated build orders", () => {
     expect(dropRepeatedBuildOrders([o(29_000, "hbar"), o(31_000, "hbar"), o(40_000, "hbar"), o(41_000, "hhou")]).map((x) => x.ms)).toEqual([29_000, 40_000, 41_000]);
   });
 });
+
+describe("replay folders", () => {
+  test("a pick inside BattleNet keeps its Warcraft III folder; any other pick stays as it is", async () => {
+    const { folderToAdd } = await import("../src/config.ts");
+    expect(folderToAdd("/home/a/Documents/Warcraft III/BattleNet/393113008/Replays")).toBe("/home/a/Documents/Warcraft III");
+    expect(folderToAdd("/home/a/Documents/Warcraft III/BattleNet")).toBe("/home/a/Documents/Warcraft III");
+    expect(folderToAdd("/home/a/Downloads/replays")).toBe("/home/a/Downloads/replays");
+  });
+
+  test("an added folder of replays is read as a whole; a Warcraft III folder only under BattleNet/*/Replays", async () => {
+    const { mkdirSync } = await import("node:fs");
+    const { replayDirs } = await import("../src/config.ts");
+    const root = mkdtempSync(join(tmpdir(), "replay-altar-dirs-"));
+    const docs = join(root, "Warcraft III");
+    for (const d of ["BattleNet/1/Replays/Multiplayer", "Maps", "CustomMapData"]) mkdirSync(join(docs, d), { recursive: true });
+    mkdirSync(join(root, "mine/old"), { recursive: true });
+    const dirs = replayDirs({ ...DEFAULT_CONFIG, warcraftDocuments: [docs, join(root, "mine"), join(root, "missing")] }).filter((d) => d.startsWith(root));
+    expect(dirs).toEqual([join(docs, "BattleNet/1/Replays"), join(docs, "BattleNet/1/Replays/Multiplayer"), join(root, "mine"), join(root, "mine/old")]);
+  });
+});
+
+describe("languages", () => {
+  test("every metric has a Portuguese name and description", async () => {
+    const { METRICS } = await import("../src/metrics.ts");
+    const { METRIC_PT } = await import("../src/metrics.pt.ts");
+    expect(METRICS.map((m) => m.key).filter((k) => !METRIC_PT[k])).toEqual([]);
+  });
+
+  test("tables follow the language when read; the system locale picks the default", async () => {
+    const { resolveLanguage, setLanguage, trTable } = await import("../src/i18n.ts");
+    const t = trTable({ win: ["Win", "Vitória"] });
+    setLanguage("pt");
+    expect(t.win).toBe("Vitória");
+    setLanguage("en");
+    expect(t.win).toBe("Win");
+    expect([resolveLanguage(undefined, "pt-BR"), resolveLanguage(undefined, "en-US"), resolveLanguage("en", "pt-BR")]).toEqual(["pt", "en", "en"]);
+  });
+});

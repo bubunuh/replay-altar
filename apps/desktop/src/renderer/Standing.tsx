@@ -1,6 +1,7 @@
 import type { MetricDef } from "@replay-altar/core/ui";
 import { TIER_LABEL, TYPICAL_LABEL, type Assessment } from "@replay-altar/reference/compare";
 import { metricValue } from "./format.ts";
+import { tr } from "@replay-altar/core/i18n";
 
 /** Coloured label (with words, never colour alone) plus the plain-language comparison. */
 export function Standing({ a }: { a: Assessment }) {
@@ -18,7 +19,7 @@ export function ProMedian({ def, a }: { def: MetricDef; a: Assessment }) {
   return (
     <>
       {metricValue(def, a.proMedian)}
-      {a.per10 && <span className="muted small"> /10 min</span>}
+      {a.per10 && <span className="muted small"> {tr("/10 min", "a cada 10 min")}</span>}
     </>
   );
 }

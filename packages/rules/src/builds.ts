@@ -6,6 +6,7 @@
 import type { GameRecord, PlayerRecord } from "@replay-altar/core/ui";
 import { CORE_UPGRADES, dropRepeatedBuildOrders, RACES, type RaceCode } from "@replay-altar/core/gamedata";
 import { codeOf, nameOf } from "@replay-altar/core/names";
+import { tr } from "@replay-altar/core/i18n";
 import grubby from "../../../data/builds/grubby.json" with { type: "json" };
 import gym from "../../../data/builds/gym.json" with { type: "json" };
 import liquipedia from "../../../data/builds/liquipedia.json" with { type: "json" };
@@ -181,9 +182,9 @@ export function matchBuilds(r: GameRecord, p: PlayerRecord, library: BuildEntry[
 export function deviations(m: Match, minFood = 4): string[] {
   const out: string[] = [];
   for (const { step, event } of m.steps) {
-    const label = step.code === TAVERN ? "tavern hero" : step.action === "tech" ? nameOf(step.code ?? "") : step.name;
-    if (!event) out.push(`no ${label} (build: ${step.food} food)`);
-    else if (Math.abs(event.food - step.food) >= minFood) out.push(`${label} at ${event.food} food (build: ${step.food})`);
+    const label = step.code === TAVERN ? tr("tavern hero", "herói da taverna") : step.action === "tech" ? nameOf(step.code ?? "") : step.name;
+    if (!event) out.push(tr(`no ${label} (build: ${step.food} food)`, `sem ${label} (build: ${step.food} de food)`));
+    else if (Math.abs(event.food - step.food) >= minFood) out.push(tr(`${label} at ${event.food} food (build: ${step.food})`, `${label} com ${event.food} de food (build: ${step.food})`));
   }
   return out;
 }
@@ -200,7 +201,7 @@ export function deviationsFromPros(m: Match, pro: { steps: { step: string; proFo
     const ps = pro.steps[i];
     if (!ps || ps.proFood === null || ps.share < 0.6) return;
     if (!["tech", "expand", "hero", "build"].includes(step.action)) return;
-    const label = step.code === TAVERN ? "tavern hero" : step.name;
+    const label = step.code === TAVERN ? tr("tavern hero", "herói da taverna") : step.name;
     if (!event) out.push({ label, yours: null, pros: Math.round(ps.proFood), action: step.action });
     else if (Math.abs(event.food - ps.proFood) >= minFood) out.push({ label, yours: event.food, pros: Math.round(ps.proFood), action: step.action });
   });

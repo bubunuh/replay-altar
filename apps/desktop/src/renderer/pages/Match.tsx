@@ -19,7 +19,17 @@ import { groupDetails, SECTION_INFO, splitMetrics } from "../sections.ts";
 import { proText, researchTimes, upgradeRows, upgradeStanding } from "../upgrades.ts";
 import type { RaceCode } from "@replay-altar/core/gamedata";
 import type { CurvePoint, MatchupProfile } from "@replay-altar/reference/types";
-import { dateTime, GROUP_LABEL, metricValue, mmss, RACE, shortName, SOURCE } from "../format.ts";
+import { dateTime, GROUP_LABEL, groupLabel, metricValue, mmss, RACE, shortName, SOURCE } from "../format.ts";
+import { decimal, tr } from "@replay-altar/core/i18n";
+
+/** Build-order entry kinds, in the window's language. */
+const KIND: Record<string, [one: string, many: string]> = {
+  building: [tr("building", "construção"), tr("buildings", "construções")],
+  unit: [tr("unit", "unidade"), tr("units", "unidades")],
+  upgrade: ["upgrade", "upgrades"],
+  item: [tr("item", "item"), tr("items", "itens")],
+  hero: [tr("hero", "herói"), tr("heroes", "heróis")],
+};
 
 const WORKERS = new Set(["hpea", "opeo", "uaco", "ewsp"]);
 
@@ -44,7 +54,7 @@ function BuildList({ p, hideWorkers, kinds }: { p: PlayerRecord; hideWorkers: bo
           <li key={i}>
             <span className="muted">{mmss(e.ms)}</span>
             <span>{e.name}{e.count > 1 ? ` ×${e.count}` : ""}</span>
-            <span className="tag">{e.kind}</span>
+            <span className="tag">{KIND[e.kind]?.[0] ?? e.kind}</span>
           </li>
         ))}
       </ol>
@@ -56,13 +66,13 @@ function Heroes({ p }: { p: PlayerRecord }) {
   return (
     <div>
       <h2><span className={`key ${p.isMe ? "me" : "opp"}`} />{shortName(p.name)}</h2>
-      {p.heroes.length === 0 && <p className="muted">No hero skilled.</p>}
+      {p.heroes.length === 0 && <p className="muted">{tr("No hero skilled.", "Nenhum herói aprendeu habilidades.")}</p>}
       {p.heroes.map((h) => (
         <div key={h.order}>
-          <div><b>{h.name}</b> <span className="muted small">level {h.level}{h.retrainings ? ` · retrained ${h.retrainings}×` : ""}</span></div>
+          <div><b>{h.name}</b> <span className="muted small">{tr("level", "nível")} {h.level}{h.retrainings ? tr(` · retrained ${h.retrainings}×`, ` · retreinado ${h.retrainings}×`) : ""}</span></div>
           <div className="skills">
             {h.skills.map((s, i) => (
-              <span key={i} className="tag" title={`learned at ${mmss(s.ms)}`}>{i + 1}. {s.name} <span className="muted">{mmss(s.ms)}</span></span>
+              <span key={i} className="tag" title={tr(`learned at ${mmss(s.ms)}`, `aprendida às ${mmss(s.ms)}`)}>{i + 1}. {s.name} <span className="muted">{mmss(s.ms)}</span></span>
             ))}
           </div>
         </div>
@@ -86,19 +96,19 @@ function GameCharts({ record, refMp, refLabel }: { record: GameRecord; refMp: Ma
   const theirs = simOf(opp)?.series ?? [];
   const end = record.game.durationMs;
   const both = (pick: (s: SimSample) => number) => (t: Tokens) => [
-    { name: shortName(me?.name ?? "You"), color: t.series1, points: mine.map((s) => [s.t, pick(s)] as [number, number]) },
-    { name: shortName(opp?.name ?? "Opponent"), color: t.series2, points: theirs.map((s) => [s.t, pick(s)] as [number, number]) },
+    { name: shortName(me?.name ?? tr("You", "Você")), color: t.series1, points: mine.map((s) => [s.t, pick(s)] as [number, number]) },
+    { name: shortName(opp?.name ?? tr("Opponent", "Oponente")), color: t.series2, points: theirs.map((s) => [s.t, pick(s)] as [number, number]) },
   ];
   const army = useMemo(() => timeLines(both((s) => s.armyValue ?? 0), undefined, bandOf(refMp?.curves.armyValue, refLabel)), [mine, theirs, refMp]);
   const spent = useMemo(() => timeLines(both((s) => s.goldSpent + s.lumberSpent), undefined, bandOf(refMp?.curves.spent, refLabel)), [mine, theirs, refMp]);
   const workers = useMemo(() => timeLines(both((s) => s.workers), undefined, bandOf(refMp?.curves.workers, refLabel)), [mine, theirs, refMp]);
   const supplyFor = (series: SimSample[], mineColor: boolean, band: Band | null = null) =>
     timeLines((t) => [
-      { name: "food used", color: mineColor ? t.series1 : t.series2, points: series.map((s) => [s.t, s.foodUsed] as [number, number]), step: true },
+      { name: tr("food used", "food usado"), color: mineColor ? t.series1 : t.series2, points: series.map((s) => [s.t, s.foodUsed] as [number, number]), step: true },
       // Cap in the main text colour so it stays distinct from the grey pro reference.
-      { name: "food cap", color: t.ink, points: series.map((s) => [s.t, Math.min(100, s.foodMax)] as [number, number]), step: true, muted: true },
+      { name: tr("food cap", "limite de food"), color: t.ink, points: series.map((s) => [s.t, Math.min(100, s.foodMax)] as [number, number]), step: true, muted: true },
     ], undefined, band);
-  const mySupply = useMemo(() => supplyFor(mine, true, bandOf(refMp?.curves.food, `${refLabel} food used`)), [mine, refMp]);
+  const mySupply = useMemo(() => supplyFor(mine, true, bandOf(refMp?.curves.food, tr(`${refLabel} food used`, `${refLabel}: food usado`))), [mine, refMp]);
   const oppSupply = useMemo(() => supplyFor(theirs, false), [theirs]);
   const apm = useMemo(
     () =>
@@ -126,49 +136,54 @@ function GameCharts({ record, refMp, refLabel }: { record: GameRecord; refMp: Ma
   const heroes = useMemo(() => heroLevelsChart(heroLines, end), [heroLines, end]);
 
   const note = !sim
-    ? "Not simulated yet: army, resources, workers and supply appear about a minute after a game ends (older games: replay-altar sim --backfill)."
+    ? tr("Not simulated yet: army, resources, workers and supply appear about a minute after a game ends (older games: replay-altar sim --backfill).", "Ainda não simulada: exército, recursos, trabalhadores e food aparecem cerca de um minuto depois que a partida acaba.")
     : !ok
-      ? `Simulation failed: ${(sim as { reason: string }).reason}`
+      ? tr(`Simulation failed: ${(sim as { reason: string }).reason}`, `A simulação falhou: ${(sim as { reason: string }).reason}`)
       : null;
   return (
     <div className="card">
       <h2>
-        Game over time{" "}
-        <Tip text={`You in blue, your opponent in orange${refMp ? `; grey: ${refLabel.toLowerCase()} (median and middle 50%)` : ""}. Army and resources are reconstructed by simulating the replay (WC3V); army value is an estimate.`} />
+        {tr("Game over time", "A partida ao longo do tempo")}{" "}
+        <Tip
+          text={tr(
+            `You in blue, your opponent in orange${refMp ? `; grey: ${refLabel.toLowerCase()} (median and middle 50%)` : ""}. Army and resources are reconstructed by simulating the replay (WC3V); army value is an estimate.`,
+            `Você em azul, o oponente em laranja${refMp ? `; cinza: ${refLabel.toLowerCase()} (mediana e os 50% do meio)` : ""}. Exército e recursos são reconstruídos simulando o replay (WC3V); o valor do exército é uma estimativa.`,
+          )}
+        />
       </h2>
       {note && <p className="sub">{note}</p>}
       {ok && (
         <>
-          <h3 className="chart-title" data-tip="Gold and lumber in living army units, heroes excluded; estimated by the simulation.">≈ Army value</h3>
-          <Chart option={army} height={240} label="Estimated army value over time for both players" />
+          <h3 className="chart-title" data-tip={tr("Gold and lumber in living army units, heroes excluded; estimated by the simulation.", "Ouro e madeira nas unidades de exército vivas, sem heróis; estimado pela simulação.")}>≈ {tr("Army value", "Valor do exército")}</h3>
+          <Chart option={army} height={240} label={tr("Estimated army value over time for both players", "Valor estimado do exército dos dois jogadores ao longo do tempo")} />
         </>
       )}
-      <h3 className="chart-title" data-tip="✕ died, ○ back after revive; death times are approximate.">Hero levels</h3>
-      <Chart option={heroes} height={260} label="Hero levels over time for both players, with deaths and revives" />
+      <h3 className="chart-title" data-tip={tr("✕ died, ○ back after revive; death times are approximate.", "✕ morreu, ○ voltou depois de reviver; os horários das mortes são aproximados.")}>{tr("Hero levels", "Níveis dos heróis")}</h3>
+      <Chart option={heroes} height={260} label={tr("Hero levels over time for both players, with deaths and revives", "Níveis dos heróis dos dois jogadores ao longo do tempo, com mortes e revives")} />
       {ok && (
         <div className="grid-2">
           <div>
-            <h3 className="chart-title" data-tip="Gold plus lumber spent, cumulative.">Resources spent</h3>
-            <Chart option={spent} height={200} label="Cumulative gold plus lumber spent by both players" />
+            <h3 className="chart-title" data-tip={tr("Gold plus lumber spent, cumulative.", "Ouro mais madeira gastos, acumulado.")}>{tr("Resources spent", "Recursos gastos")}</h3>
+            <Chart option={spent} height={200} label={tr("Cumulative gold plus lumber spent by both players", "Ouro mais madeira gastos pelos dois jogadores, acumulado")} />
           </div>
           <div>
-            <h3 className="chart-title">Workers alive</h3>
-            <Chart option={workers} height={200} label="Workers alive over time for both players" />
+            <h3 className="chart-title">{tr("Workers alive", "Trabalhadores vivos")}</h3>
+            <Chart option={workers} height={200} label={tr("Workers alive over time for both players", "Trabalhadores vivos dos dois jogadores ao longo do tempo")} />
           </div>
           <div>
-            <h3 className="chart-title">Supply: {shortName(me?.name ?? "You")}</h3>
-            <Chart option={mySupply} height={200} label="Your food used against food cap" />
+            <h3 className="chart-title">{tr("Supply", "Food")}: {shortName(me?.name ?? tr("You", "Você"))}</h3>
+            <Chart option={mySupply} height={200} label={tr("Your food used against food cap", "Seu food usado contra o limite de food")} />
           </div>
           {opp && (
             <div>
-              <h3 className="chart-title">Supply: {shortName(opp.name)}</h3>
-              <Chart option={oppSupply} height={200} label="Opponent food used against food cap" />
+              <h3 className="chart-title">{tr("Supply", "Food")}: {shortName(opp.name)}</h3>
+              <Chart option={oppSupply} height={200} label={tr("Opponent food used against food cap", "Food usado do oponente contra o limite de food")} />
             </div>
           )}
         </div>
       )}
-      <h3 className="chart-title">Actions per minute</h3>
-      <Chart option={apm} height={220} label="Actions per minute for both players over the game" />
+      <h3 className="chart-title">{tr("Actions per minute", "Ações por minuto")}</h3>
+      <Chart option={apm} height={220} label={tr("Actions per minute for both players over the game", "Ações por minuto dos dois jogadores ao longo da partida")} />
     </div>
   );
 }
@@ -179,11 +194,16 @@ function BuildLine({ record, player, who, principles }: { record: GameRecord; pl
   if (!best) return null;
   const pro = proBuildOf(principles, best);
   const dev = pro ? deviationsFromPros(best, pro).filter((d) => ["tech", "expand", "hero"].includes(d.action)) : [];
-  const source = best.build.source.author ?? best.build.source.where ?? "guide";
+  const source = best.build.source.author ?? best.build.source.where ?? tr("guide", "guia");
   const details = [
-    `Closest build-order guide: "${best.build.name}" (${source}).`,
-    pro ? `${pro.players} pros played it, ${Math.round(pro.winRate * 100)}% won.` : "",
-    dev.length ? `Compared with those pros: ${dev.map((d) => (d.yours === null ? `no ${d.label}` : `${d.label} at ${d.yours} food (pros ${d.pros})`)).join(", ")}.` : "",
+    tr(`Closest build-order guide: "${best.build.name}" (${source}).`, `Guia de build mais próximo: "${best.build.name}" (${source}).`),
+    pro ? tr(`${pro.players} pros played it, ${Math.round(pro.winRate * 100)}% won.`, `${pro.players} pros jogaram ela, ${Math.round(pro.winRate * 100)}% venceram.`) : "",
+    dev.length
+      ? tr(
+          `Compared with those pros: ${dev.map((d) => (d.yours === null ? `no ${d.label}` : `${d.label} at ${d.yours} food (pros ${d.pros})`)).join(", ")}.`,
+          `Comparado com esses pros: ${dev.map((d) => (d.yours === null ? `sem ${d.label}` : `${d.label} com ${d.yours} de food (pros ${d.pros})`)).join(", ")}.`,
+        )
+      : "",
   ].filter(Boolean).join(" ");
   return (
     <p className="sub" style={{ margin: "4px 0 0" }} data-tip={details}>
@@ -226,22 +246,22 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
     );
   }, [r, me, opp, ref]);
 
-  if (detail === undefined) return <div className="page"><div className="empty">Loading…</div></div>;
-  if (detail === null || !r) return <div className="page"><div className="empty">Game not found.</div></div>;
+  if (detail === undefined) return <div className="page"><div className="empty">{tr("Loading…", "Carregando…")}</div></div>;
+  if (detail === null || !r) return <div className="page"><div className="empty">{tr("Game not found.", "Partida não encontrada.")}</div></div>;
   const { row } = detail;
   const overridden = row.result !== row.result_detected;
 
   return (
     <div className="page">
-      <div><button className="btn" onClick={onBack}>← All matches</button></div>
+      <div><button className="btn" onClick={onBack}>← {tr("All matches", "Todas as partidas")}</button></div>
       <div className="card match-card">
         <div className="match-side">{me && opp && <ScorePanel record={r} me={me} opp={opp} metrics={metrics} mp={ref?.mp ?? null} />}</div>
         <div className="match-head">
-          <div className={`big ${row.result}`}>{row.result === "win" ? "Victory" : row.result === "loss" ? "Defeat" : "Result unknown"}</div>
+          <div className={`big ${row.result}`}>{row.result === "win" ? tr("Victory", "Vitória") : row.result === "loss" ? tr("Defeat", "Derrota") : tr("Result unknown", "Resultado desconhecido")}</div>
           <div className="versus">
             <div className="versus-side me">
               <div className="versus-name">
-                <b>You</b>
+                <b>{tr("You", "Você")}</b>
                 <RaceIcon race={me?.race} />
               </div>
               {me && <HeroIcons p={me} record={r} />}
@@ -260,8 +280,8 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
             {r.userLabel ? ` · “${r.userLabel}”` : ""}
           </p>
           <div className="filters">
-            <label data-tip="Correct the result if it was detected wrong.">
-              Result
+            <label data-tip={tr("Correct the result if it was detected wrong.", "Corrija o resultado se ele foi detectado errado.")}>
+              {tr("Result", "Resultado")}
               <select
                 value={overridden ? row.result : "detected"}
                 onChange={async (e) => {
@@ -269,17 +289,17 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
                   load();
                 }}
               >
-                <option value="detected">Detected: {row.result_detected}</option>
-                <option value="win">Win (manual)</option>
-                <option value="loss">Loss (manual)</option>
+                <option value="detected">{tr("Detected", "Detectado")}: {({ win: tr("win", "vitória"), loss: tr("loss", "derrota") } as Record<string, string>)[row.result_detected] ?? row.result_detected}</option>
+                <option value="win">{tr("Win (manual)", "Vitória (manual)")}</option>
+                <option value="loss">{tr("Loss (manual)", "Derrota (manual)")}</option>
               </select>
             </label>
-            <button className="btn" onClick={() => api.showFile(r.provenance.archivePath)} data-tip={r.provenance.archivePath}>Replay file</button>
+            <button className="btn" onClick={() => api.showFile(r.provenance.archivePath)} data-tip={r.provenance.archivePath}>{tr("Replay file", "Arquivo do replay")}</button>
           </div>
           {r.sim?.status === "ok" && me && opp && (
             <div className="build-lines small">
-              <BuildLine record={r} player={me} who="Your build" principles={pros?.principles} />
-              <BuildLine record={r} player={opp} who="Opponent's build" principles={groupForRace(refs, opp.race)?.principles} />
+              <BuildLine record={r} player={me} who={tr("Your build", "Sua build")} principles={pros?.principles} />
+              <BuildLine record={r} player={opp} who={tr("Opponent's build", "Build do oponente")} principles={groupForRace(refs, opp.race)?.principles} />
             </div>
           )}
         </div>
@@ -296,13 +316,20 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
 
       <div className="card">
         <h2>
-          Key numbers{" "}
+          {tr("Key numbers", "Números principais")}{" "}
           <Tip
-            text={`Order times are when the order was issued (cancels included). Economy and supply rows come from the simulation; ≈ marks estimates.${
-              ref
-                ? ` Pros: ${pros!.group.label}, ${describeRef(ref)}. Green = pro level (at or above the pro median), yellow = at least as good as your opponent, red = below both; for timings with no better direction (heroes, tiers, expansions): green = like pros, yellow = unusual, red = far from pros. Whole-game totals are compared per 10 minutes.`
-                : ""
-            } Hover a metric for its definition.`}
+            text={tr(
+              `Order times are when the order was issued (cancels included). Economy and supply rows come from the simulation; ≈ marks estimates.${
+                ref
+                  ? ` Pros: ${groupLabel(pros!.group)}, ${describeRef(ref)}. Green = pro level (at or above the pro median), yellow = at least as good as your opponent, red = below both; for timings with no better direction (heroes, tiers, expansions): green = like pros, yellow = unusual, red = far from pros. Whole-game totals are compared per 10 minutes.`
+                  : ""
+              } Hover a metric for its definition.`,
+              `Os horários das ordens são de quando a ordem foi dada (cancelamentos incluídos). As linhas de economia e food vêm da simulação; ≈ marca estimativas.${
+                ref
+                  ? ` Pros: ${groupLabel(pros!.group)}, ${describeRef(ref)}. Verde = nível pro (na mediana dos pros ou acima), amarelo = pelo menos tão bom quanto o seu oponente, vermelho = abaixo dos dois; para tempos sem direção melhor (heróis, tiers, expansões): verde = como os pros, amarelo = incomum, vermelho = longe dos pros. Totais da partida inteira são comparados a cada 10 minutos.`
+                  : ""
+              } Passe o mouse num número para ver a definição.`,
+            )}
           />
         </h2>
         {(() => {
@@ -318,7 +345,7 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
               <tr key={m.key} title={m.description} className={ref && shown.tier ? `tier-row-${shown.tier}` : undefined}>
                 <td>
                   {m.raceLabels?.[race] ?? m.label}
-                  {r.metricSources?.[m.key] === "official" && <span className="tag" style={{ marginLeft: 8 }} title="The game's own end-of-game number (from W3Champions)">official</span>}
+                  {r.metricSources?.[m.key] === "official" && <span className="tag" style={{ marginLeft: 8 }} title={tr("The game's own end-of-game number (from W3Champions)", "O número do próprio jogo no fim da partida (do W3Champions)")}>{tr("official", "oficial")}</span>}
                 </td>
                 <td className="num">{metricValue(m, mine)}</td>
                 <td className="num">{metricValue(m, opp?.metrics[m.key])}</td>
@@ -330,11 +357,11 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
           const head = (
             <thead>
               <tr>
-                <th>Metric</th>
-                <th className="num"><span className="key me" />{shortName(me?.name ?? "You")}</th>
-                <th className="num"><span className="key opp" />{shortName(opp?.name ?? "Opponent")}</th>
-                {ref && <th className="num">Pros (median)</th>}
-                {ref && <th>This game vs pros</th>}
+                <th>{tr("Metric", "Número")}</th>
+                <th className="num"><span className="key me" />{shortName(me?.name ?? tr("You", "Você"))}</th>
+                <th className="num"><span className="key opp" />{shortName(opp?.name ?? tr("Opponent", "Oponente"))}</th>
+                {ref && <th className="num">{tr("Pros (median)", "Pros (mediana)")}</th>}
+                {ref && <th>{tr("This game vs pros", "Esta partida vs pros")}</th>}
               </tr>
             </thead>
           );
@@ -372,16 +399,16 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
                   {sectionRow("core")}
                   {core.map((m) => row(m, true))}
                   {sectionRow("upgrades")}
-                  {subRow("Attack and armor")}
+                  {subRow(tr("Attack and armor", "Ataque e armadura"))}
                   {ups.core.map(upRow)}
-                  {ups.other.length > 0 && subRow("Other upgrades")}
+                  {ups.other.length > 0 && subRow(tr("Other upgrades", "Outros upgrades"))}
                   {ups.other.map(upRow)}
                   {sectionRow("mechanics")}
                   {mechanics.map((m) => row(m, true))}
                 </tbody>
               </table>
               <details className="more-metrics">
-                <summary data-tip={SECTION_INFO.details.note}>{details.length} more metrics</summary>
+                <summary data-tip={SECTION_INFO.details.note}>{tr(`${details.length} more metrics`, `mais ${details.length} números`)}</summary>
                 <table>
                   {head}
                   <tbody>
@@ -399,10 +426,15 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
 
       <div className="card">
         <h2>
-          Heroes{" "}
-          <Tip text={`Hero experience over time (all heroes), from level-up times; levels are exact, the XP between them is interpolated. Creeps give no experience to a hero of level 5 or more.${ref ? " Grey: pros." : ""} Below: skill order; a hero's first skill marks roughly when it arrived.`} />
+          {tr("Heroes", "Heróis")}{" "}
+          <Tip
+            text={tr(
+              `Hero experience over time (all heroes), from level-up times; levels are exact, the XP between them is interpolated. Creeps give no experience to a hero of level 5 or more.${ref ? " Grey: pros." : ""} Below: skill order; a hero's first skill marks roughly when it arrived.`,
+              `Experiência dos heróis ao longo do tempo (todos os heróis), pelos horários de subida de nível; os níveis são exatos, o XP entre eles é interpolado. Creeps não dão experiência a heróis de nível 5 ou mais.${ref ? " Cinza: pros." : ""} Abaixo: ordem das habilidades; a primeira habilidade de um herói marca mais ou menos quando ele chegou.`,
+            )}
+          />
         </h2>
-        {xpOption && <Chart option={xpOption} height={220} label="Hero experience over time for both players" />}
+        {xpOption && <Chart option={xpOption} height={220} label={tr("Hero experience over time for both players", "Experiência dos heróis dos dois jogadores ao longo do tempo")} />}
         <div className="grid-2">
           {me && <Heroes p={me} />}
           {opp && <Heroes p={opp} />}
@@ -410,7 +442,7 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
       </div>
 
       <div className="card">
-        <h2>Build order</h2>
+        <h2>{tr("Build order", "Ordem de construção")}</h2>
         <div className="filters" style={{ margin: "4px 0 12px" }}>
           {["building", "unit", "upgrade", "item"].map((k) => (
             <label key={k}>
@@ -424,10 +456,10 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
                   setKinds(next);
                 }}
               />
-              {k}s
+              {KIND[k][1]}
             </label>
           ))}
-          <label><input type="checkbox" checked={hideWorkers} onChange={(e) => setHideWorkers(e.target.checked)} />hide workers</label>
+          <label><input type="checkbox" checked={hideWorkers} onChange={(e) => setHideWorkers(e.target.checked)} />{tr("hide workers", "esconder trabalhadores")}</label>
         </div>
         <div className="build">
           {me && <BuildList p={me} hideWorkers={hideWorkers} kinds={kinds} />}
@@ -454,7 +486,7 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
 
       <div className="card">
         <details>
-          <summary>Data sources</summary>
+          <summary>{tr("Data sources", "Fontes dos dados")}</summary>
           <table style={{ marginTop: 10 }}>
             <tbody>
               {r.classification.rules.map((x, i) => (
@@ -463,28 +495,28 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
                   <td className="small">{x.evidence}</td>
                 </tr>
               ))}
-              <tr><td>result</td><td className="small">{r.result.method} ({r.result.confidence}) — {r.result.evidence}</td></tr>
-              <tr><td>game key</td><td><code>{r.gameKey}</code></td></tr>
-              <tr><td>archived replay</td><td><code>{r.provenance.archivePath}</code></td></tr>
+              <tr><td>{tr("result", "resultado")}</td><td className="small">{r.result.method} ({r.result.confidence}) — {r.result.evidence}</td></tr>
+              <tr><td>{tr("game key", "chave da partida")}</td><td><code>{r.gameKey}</code></td></tr>
+              <tr><td>{tr("archived replay", "replay arquivado")}</td><td><code>{r.provenance.archivePath}</code></td></tr>
               {r.provenance.files.map((f, i) => (
-                <tr key={i}><td>{i === 0 ? "seen as" : ""}</td><td className="small"><code>{f.path}</code> <span className="muted">({f.timeSource})</span></td></tr>
+                <tr key={i}><td>{i === 0 ? tr("seen as", "visto como") : ""}</td><td className="small"><code>{f.path}</code> <span className="muted">({f.timeSource})</span></td></tr>
               ))}
-              <tr><td>parser</td><td className="small">{r.provenance.parser.name}@{r.provenance.parser.version}, classifier v{r.provenance.classifierVersion}, metrics v{r.provenance.metricsVersion}</td></tr>
+              <tr><td>parser</td><td className="small">{r.provenance.parser.name}@{r.provenance.parser.version}, {tr("classifier", "classificador")} v{r.provenance.classifierVersion}, {tr("metrics", "números")} v{r.provenance.metricsVersion}</td></tr>
               {r.sim?.status === "ok" && (
                 <>
-                  <tr><td>simulation</td><td className="small">WC3V {r.sim.engine.commit}, game data {r.sim.gameData.version}, income model v{r.sim.model.version}, ran in {(r.sim.runMs / 1000).toFixed(1)} s</td></tr>
+                  <tr><td>{tr("simulation", "simulação")}</td><td className="small">WC3V {r.sim.engine.commit}, {tr("game data", "dados do jogo")} {r.sim.gameData.version}, {tr("income model", "modelo de renda")} v{r.sim.model.version}, {tr("ran in", "rodou em")} {decimal(r.sim.runMs / 1000)} s</td></tr>
                   {r.sim.players.map((p) => (
-                    <tr key={p.playerId}><td /><td className="small">{shortName(r.players.find((x) => x.playerId === p.playerId)?.name ?? String(p.playerId))}: parse confidence {Math.round(p.parseConfidence * 100)}%{p.validationWarnings.length ? `, ${p.validationWarnings.length} validator note(s)` : ""}</td></tr>
+                    <tr key={p.playerId}><td /><td className="small">{shortName(r.players.find((x) => x.playerId === p.playerId)?.name ?? String(p.playerId))}: {tr("parse confidence", "confiança da leitura")} {Math.round(p.parseConfidence * 100)}%{p.validationWarnings.length ? tr(`, ${p.validationWarnings.length} validator note(s)`, `, ${p.validationWarnings.length} nota(s) do validador`) : ""}</td></tr>
                   ))}
-                  {r.sim.warnings.map((w, i) => <tr key={`w${i}`}><td className="rule-fail">model check</td><td className="small">{w}</td></tr>)}
-                  <tr><td>simulation output</td><td><code>{r.sim.outputPath}</code></td></tr>
+                  {r.sim.warnings.map((w, i) => <tr key={`w${i}`}><td className="rule-fail">{tr("model check", "verificação do modelo")}</td><td className="small">{w}</td></tr>)}
+                  <tr><td>{tr("simulation output", "saída da simulação")}</td><td><code>{r.sim.outputPath}</code></td></tr>
                 </>
               )}
-              {r.sim?.status === "failed" && <tr><td className="rule-fail">simulation</td><td className="small">failed: {r.sim.reason}</td></tr>}
+              {r.sim?.status === "failed" && <tr><td className="rule-fail">{tr("simulation", "simulação")}</td><td className="small">{tr("failed", "falhou")}: {r.sim.reason}</td></tr>}
               {r.official?.status === "ok" && (
-                <tr><td>official stats</td><td className="small">W3Champions match {r.official.matchId}, fetched {dateTime(r.official.fetchedAt)}</td></tr>
+                <tr><td>{tr("official stats", "estatísticas oficiais")}</td><td className="small">{tr("W3Champions match", "Partida do W3Champions")} {r.official.matchId}, {tr("fetched", "obtida em")} {dateTime(r.official.fetchedAt)}</td></tr>
               )}
-              {r.official?.status === "missing" && <tr><td>official stats</td><td className="small">not available: {r.official.reason}</td></tr>}
+              {r.official?.status === "missing" && <tr><td>{tr("official stats", "estatísticas oficiais")}</td><td className="small">{tr("not available", "não disponível")}: {r.official.reason}</td></tr>}
             </tbody>
           </table>
         </details>
