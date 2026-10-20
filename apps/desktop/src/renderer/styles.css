@@ -67,7 +67,8 @@ a { color: var(--accent); }
 
 .app { display: grid; grid-template-rows: auto 1fr; height: 100%; }
 .topbar { display: flex; align-items: center; gap: 24px; padding: 0 20px; height: 52px; background: var(--surface); border-bottom: 1px solid var(--border); }
-.brand { font-weight: 650; letter-spacing: 0.01em; }
+.brand img { image-rendering: pixelated; }
+.brand { font-weight: 650; letter-spacing: 0.01em; display: inline-flex; align-items: center; gap: 8px; }
 .tabs { display: flex; gap: 4px; }
 .tab { background: none; border: 0; padding: 8px 12px; border-radius: 8px; color: var(--ink-2); cursor: pointer; }
 .tab:hover { background: var(--surface-2); }

@@ -102,6 +102,8 @@ if (!app.requestSingleInstanceLock()) {
       minHeight: 600,
       show: false,
       title: "Replay Altar",
+      // Taskbar and window icon (scripts/icon.py): Windows takes the .ico with all its sizes.
+      icon: join(import.meta.dirname, process.platform === "win32" ? "../assets/replay-altar.ico" : "../assets/icons/512.png"),
       backgroundColor: nativeTheme.shouldUseDarkColors ? "#0d0d0d" : "#f9f9f7",
       autoHideMenuBar: true,
       webPreferences: {

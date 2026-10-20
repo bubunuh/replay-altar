@@ -134,13 +134,13 @@ function windowsShortcuts(remove = false) {
     "  $lnk = Join-Path $dir $env:RA_NAME",
     remove
       ? "  if (Test-Path $lnk) { Remove-Item $lnk; Write-Output \"  removed $lnk\" }"
-      : "  $s = $sh.CreateShortcut($lnk); $s.TargetPath = $env:RA_EXE; $s.Arguments = $env:RA_ARGS; $s.Description = 'Warcraft III replay stats'; $s.Save(); Write-Output \"  wrote $lnk\"",
+      : "  $s = $sh.CreateShortcut($lnk); $s.TargetPath = $env:RA_EXE; $s.Arguments = $env:RA_ARGS; $s.Description = 'Warcraft III replay stats'; $s.IconLocation = $env:RA_ICON; $s.Save(); Write-Output \"  wrote $lnk\"",
     "}",
   ].join("\n");
   const out = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", script], {
     encoding: "utf8",
     windowsHide: true,
-    env: { ...process.env, RA_NAME: SHORTCUT, RA_EXE: app.exe, RA_ARGS: app.args.map((a) => `"${a}"`).join(" ") },
+    env: { ...process.env, RA_NAME: SHORTCUT, RA_EXE: app.exe, RA_ARGS: app.args.map((a) => `"${a}"`).join(" "), RA_ICON: join(PROJECT, "apps/desktop/assets/replay-altar.ico") },
   });
   process.stdout.write(out);
 }

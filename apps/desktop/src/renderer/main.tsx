@@ -9,6 +9,7 @@ import { Performance } from "./pages/Performance.tsx";
 import { TipLayer } from "./Tip.tsx";
 import { applyTextScale } from "./textSize.ts";
 import "./styles.css";
+import icon from "../../assets/icons/64.png";
 
 applyTextScale();
 
@@ -63,7 +64,10 @@ function App() {
     <div className="app">
       <TipLayer />
       <header className="topbar">
-        <span className="brand">Replay Altar</span>
+        <span className="brand">
+          <img src={icon} alt="" width={24} height={24} />
+          Replay Altar
+        </span>
         <nav className="tabs">
           {TABS.map(([id, label]) => (
             <button
