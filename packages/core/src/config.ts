@@ -47,7 +47,8 @@ const warcraftDocuments = () =>
   windows ? [join(home, "Documents/Warcraft III"), join(home, "OneDrive/Documents/Warcraft III")] : [join(home, "Games/battlenet/drive_c/users/steamuser/Documents/Warcraft III")];
 
 export const DEFAULT_CONFIG: Config = {
-  accounts: ["Pedrovisk#1486"],
+  // Found from your replays on the first run (apps/collector/src/firstrun.ts), or set in Settings.
+  accounts: [],
   warcraftDocuments: warcraftDocuments(),
   openWindowOnGameStart: true,
   notifyAfterGame: true,

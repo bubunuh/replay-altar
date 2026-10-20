@@ -5,6 +5,7 @@ export * from "./gamedata.ts";
 export * from "./metrics.ts";
 export * from "./process.ts";
 export * from "./service.ts";
+export * from "./root.ts";
 export * from "./queries.ts";
 export * from "./store.ts";
 export { mmss } from "./time.ts";

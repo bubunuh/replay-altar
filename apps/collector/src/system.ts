@@ -2,7 +2,7 @@
 import { spawn } from "node:child_process";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { isWarcraftRunning } from "@replay-altar/core";
+import { isInstalled, isWarcraftRunning } from "@replay-altar/core";
 import { windowsDesktop } from "./install.ts";
 
 const windows = process.platform === "win32";
@@ -24,12 +24,16 @@ export function watchWarcraft(onStart: () => void, onStop: () => void) {
 /** The desktop app as a program and its leading arguments (REPLAY_ALTAR_DESKTOP overrides the program). */
 export function desktopCommand(): { exe: string; args: string[] } {
   if (process.env.REPLAY_ALTAR_DESKTOP) return { exe: process.env.REPLAY_ALTAR_DESKTOP, args: [] };
+  // Installed: the collector runs on the app's own executable (as Node), which is the app.
+  if (isInstalled()) return { exe: process.execPath, args: [] };
   return windows ? windowsDesktop() : { exe: join(homedir(), ".local/bin/replay-altar-desktop"), args: [] };
 }
 
 export function openDesktop(args: string[]) {
   const app = desktopCommand();
-  const child = spawn(app.exe, [...app.args, ...args], { detached: true, stdio: "ignore" });
+  // Without ELECTRON_RUN_AS_NODE, so an installed copy opens as the app rather than as Node.
+  const { ELECTRON_RUN_AS_NODE: _node, ...env } = process.env;
+  const child = spawn(app.exe, [...app.args, ...args], { detached: true, stdio: "ignore", env });
   child.on("error", () => {}); // not installed yet: nothing to open
   child.unref();
 }

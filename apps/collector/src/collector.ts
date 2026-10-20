@@ -4,6 +4,7 @@ import { OfficialQueue } from "./officialqueue.ts";
 import { SimQueue } from "./simqueue.ts";
 import { notify, openDesktop, watchWarcraft } from "./system.ts";
 import { ReplayWatcher } from "./watcher.ts";
+import { firstRun } from "./firstrun.ts";
 
 const log = (msg: string) => console.log(`[replay-altar] ${msg}`);
 
@@ -19,8 +20,9 @@ function describe(r: GameRecord) {
 }
 
 export async function runCollector() {
-  const config = loadConfig();
   const p = paths();
+  const found = replayDirs(loadConfig());
+  const config = await firstRun(loadConfig(), found, log);
   const db = openDb(p.db);
   markCollectorRunning();
   const ctx = { db, config, paths: p };

@@ -3,10 +3,11 @@ import { dirname, join } from "node:path";
 import W3GReplay, { type ParserOutput, type LeaveGameBlock } from "w3gjs";
 
 const require = createRequire(import.meta.url);
-// w3gjs does not export package.json; require.resolve("w3gjs") is dist/cjs/index.js.
+// w3gjs does not export package.json; require.resolve("w3gjs") is dist/cjs/index.js. Bundles
+// (the installed collector) have no node_modules to look in: the packager writes the version in.
 export const PARSER = {
   name: "w3gjs",
-  version: require(join(dirname(require.resolve("w3gjs")), "../../package.json")).version as string,
+  version: process.env.REPLAY_ALTAR_W3GJS_VERSION ?? (require(join(dirname(require.resolve("w3gjs")), "../../package.json")).version as string),
 };
 
 export type SlotRecord = W3GReplay["slots"][number];

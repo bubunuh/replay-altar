@@ -12,13 +12,13 @@
 // pictures under <data>/ui/.
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
+import { copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
-import { join, resolve } from "node:path";
-import { dataDir } from "@replay-altar/core";
+import { join } from "node:path";
+import { dataDir, projectRoot } from "@replay-altar/core";
 import { decodeDds, encodePng } from "./dds.ts";
 
-const ROOT = resolve(import.meta.dirname, "../../..");
+const ROOT = projectRoot();
 const IMAGE = "localhost/replay-altar-casc:latest";
 const windows = process.platform === "win32";
 
@@ -75,12 +75,17 @@ function extract(wc3: string, out: string, names: string[]) {
 
 const sha256 = (file: string) => createHash("sha256").update(readFileSync(file)).digest("hex");
 
-/** Points sim/gamedata/current at this version: a relative symlink on Linux, a junction on Windows (no admin needed). */
+/**
+ * Points sim/gamedata/current at this version: a relative symlink on Linux. Windows gets a copy
+ * (a few MB): links there need admin rights or are junctions, which some tools mishandle.
+ */
 function pointCurrent(dir: string, version: string) {
-  const link = join(dir, "current");
-  if (lstatSync(link, { throwIfNoEntry: false })) unlinkSync(link); // the link only, never what it points to
-  if (windows) symlinkSync(join(dir, version), link, "junction");
-  else symlinkSync(version, link);
+  const current = join(dir, "current");
+  const st = lstatSync(current, { throwIfNoEntry: false });
+  if (st?.isSymbolicLink()) unlinkSync(current); // the link only, never what it points to
+  else if (st) rmSync(current, { recursive: true, force: true }); // an earlier copy
+  if (windows) cpSync(join(dir, version), current, { recursive: true });
+  else symlinkSync(version, current);
 }
 
 export function extractGameData(wc3 = defaultWarcraftDir()) {

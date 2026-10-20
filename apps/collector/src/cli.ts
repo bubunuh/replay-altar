@@ -16,7 +16,7 @@ import {
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { activeReferenceGroups, applyOfficial, applySim, collectorState, readRecord, referencePaths, type RefLookup } from "@replay-altar/core";
+import { activeReferenceGroups, applyOfficial, applySim, collectorState, projectRoot, readRecord, referencePaths, type RefLookup } from "@replay-altar/core";
 import { CONSTANTS, gamedataDir, loadCosts, readSimOutput, simNotReady, simulateGame, summarize } from "@replay-altar/sim";
 import { buildProfile, officialForMatch, officialForOwnGame, openReference, readState, refreshGroup, w3cClient } from "@replay-altar/reference";
 import { rulesBook } from "@replay-altar/rules";
@@ -162,7 +162,7 @@ switch (cmd) {
     break;
   }
   case "setup-sim": {
-    const root = join(import.meta.dirname, "../../..");
+    const root = projectRoot();
     // npm is a .cmd script on Windows, which only runs through the shell.
     const run = (cmd: string, cmdArgs: string[], cwd = root, shell = false) => {
       console.log(`$ ${cmd} ${cmdArgs.join(" ")}`);

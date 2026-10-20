@@ -115,10 +115,13 @@ export function restartCollectorIfRunning() {
 
 /**
  * The hidden launcher Windows runs at login: `command` (program and arguments) with no console
- * window, its output appended to the log. VBScript doubles quotes inside strings.
+ * window, its output appended to the log, with `env` set first (an installed copy runs the
+ * collector with its own Electron as Node: ELECTRON_RUN_AS_NODE=1). VBScript doubles quotes
+ * inside strings.
  */
-export function windowsLauncher(command: string[]): string {
+export function windowsLauncher(command: string[], env: Record<string, string> = {}): string {
   const files = collectorFiles();
-  const line = `cmd /c "${command.map((a) => `"${a}"`).join(" ")} >> "${files.log}" 2>&1"`;
+  const sets = Object.entries(env).map(([k, v]) => `set "${k}=${v}" && `).join("");
+  const line = `cmd /c "${sets}${command.map((a) => `"${a}"`).join(" ")} >> "${files.log}" 2>&1"`;
   return `' Replay Altar collector (started at login from the Run key; see replay-altar status)\r\nCreateObject("WScript.Shell").Run "${line.replaceAll('"', '""')}", 0, False\r\n`;
 }

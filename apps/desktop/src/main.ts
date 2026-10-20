@@ -1,8 +1,8 @@
 // Electron main process: one window, read-mostly access to the Replay Altar database.
 import { spawn, type ChildProcess } from "node:child_process";
-import { existsSync, mkdtempSync, readdirSync, readFileSync, watch, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, watch, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { app, BrowserWindow, ipcMain, nativeTheme, shell } from "electron";
 import { loadRefGroups, rulesBook } from "@replay-altar/rules";
 import { mapDataName } from "@replay-altar/sim/mapname";
@@ -15,6 +15,11 @@ import {
   configPath,
   dataDir,
   getGame,
+  projectRoot,
+  isInstalled,
+  collectorFiles,
+  enableCollector,
+  windowsLauncher,
   isWarcraftRunning,
   listGames,
   loadConfig,
@@ -27,7 +32,25 @@ import {
   type Config,
 } from "@replay-altar/core/ui";
 
-app.setName("replay-altar"); // window class, so the .desktop entry's StartupWMClass matches
+app.setName("replay-altar");
+
+/**
+ * An installed copy on Windows sets up its own collector: started now and at every login, on this
+ * executable as Node (the launcher is rewritten when an update moves the executable).
+ */
+function ensureWindowsCollector() {
+  if (process.platform !== "win32" || !isInstalled()) return;
+  const files = collectorFiles();
+  const launcher = windowsLauncher([process.execPath, join(projectRoot(), "collector/collector.mjs"), "collector"], { ELECTRON_RUN_AS_NODE: "1" });
+  const changed = !existsSync(files.launcher) || readFileSync(files.launcher, "utf8") !== launcher;
+  if (changed) {
+    mkdirSync(dirname(files.launcher), { recursive: true });
+    mkdirSync(dirname(files.log), { recursive: true });
+    writeFileSync(files.launcher, launcher);
+    restartCollectorIfRunning();
+  }
+  enableCollector();
+} // window class, so the .desktop entry's StartupWMClass matches
 
 type Launch = { background: boolean; game: string | null; page: string | null; screenshot: string | null };
 const arg = (argv: string[], name: string) => argv.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3) ?? null;
@@ -93,6 +116,7 @@ if (!app.requestSingleInstanceLock()) {
 
   app.whenReady().then(() => {
     const launch = parseArgs(process.argv);
+    if (!launch.screenshot) ensureWindowsCollector();
     const theme = arg(process.argv, "theme"); // dev/test: force light or dark
     if (theme === "light" || theme === "dark") nativeTheme.themeSource = theme;
     win = new BrowserWindow({
@@ -147,12 +171,16 @@ if (!app.requestSingleInstanceLock()) {
     refLog.length = 0;
     // Linux: the launcher `install` wrote. Windows: node on PATH with this checkout's CLI (the
     // .cmd shim would need a shell).
+    // Installed: the bundled CLI on this executable, as Node.
     const [cli, ...cliArgs] = process.env.REPLAY_ALTAR_CLI
       ? [process.env.REPLAY_ALTAR_CLI]
-      : process.platform === "win32"
-        ? ["node", join(app.getAppPath(), "../collector/src/cli.ts")]
-        : [join(homedir(), ".local/bin/replay-altar")];
-    const child = spawn(cli, [...cliArgs, "ref", "refresh"], { stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
+      : isInstalled()
+        ? [process.execPath, join(projectRoot(), "collector/collector.mjs")]
+        : process.platform === "win32"
+          ? ["node", join(app.getAppPath(), "../collector/src/cli.ts")]
+          : [join(homedir(), ".local/bin/replay-altar")];
+    const env = isInstalled() ? { ...process.env, ELECTRON_RUN_AS_NODE: "1" } : process.env;
+    const child = spawn(cli, [...cliArgs, "ref", "refresh"], { stdio: ["ignore", "pipe", "pipe"], windowsHide: true, env });
     refUpdate = child;
     const send = (channel: string, ...args: unknown[]) => {
       if (!e.sender.isDestroyed()) e.sender.send(channel, ...args);
@@ -182,13 +210,13 @@ if (!app.requestSingleInstanceLock()) {
   ipcMain.handle("map:activity", (_e, key: string) => {
     const r = getGame(db, p, key)?.record;
     try {
-      return r ? mapActivity(join(import.meta.dirname, "../../../vendor/wc3v"), r) : null;
+      return r ? mapActivity(join(projectRoot(), "vendor/wc3v"), r) : null;
     } catch {
       return null;
     }
   });
   // The map's minimap, as WC3V's data tool extracts it when a game on that map is first simulated.
-  ipcMain.handle("map:markers", (_e, mapFile: string) => mapMarkers(join(import.meta.dirname, "../../../vendor/wc3v"), mapDataName(mapFile)));
+  ipcMain.handle("map:markers", (_e, mapFile: string) => mapMarkers(join(projectRoot(), "vendor/wc3v"), mapDataName(mapFile)));
   // Race crests from the game's own menu art, copied out of the install by
   // scripts/extract-gamedata.ts (never shipped in the repo).
   ipcMain.handle("race:icons", () => {
@@ -213,7 +241,7 @@ if (!app.requestSingleInstanceLock()) {
     return existsSync(f) ? `data:font/ttf;base64,${readFileSync(f).toString("base64")}` : null;
   });
   ipcMain.handle("map:image", (_e, mapFile: string) => {
-    const file = join(import.meta.dirname, "../../../vendor/wc3v/client/maps", mapDataName(mapFile), "map.jpg");
+    const file = join(projectRoot(), "vendor/wc3v/client/maps", mapDataName(mapFile), "map.jpg");
     return existsSync(file) ? `data:image/jpeg;base64,${readFileSync(file).toString("base64")}` : null;
   });
   ipcMain.handle("warcraft:running", () => isWarcraftRunning());

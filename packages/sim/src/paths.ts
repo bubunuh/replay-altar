@@ -1,8 +1,9 @@
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
+import { projectRoot } from "@replay-altar/core";
 
-export const PROJECT_DIR = resolve(import.meta.dirname, "../../..");
+export const PROJECT_DIR = projectRoot();
 export const WC3V_DIR = join(PROJECT_DIR, "vendor/wc3v");
 export const DRIVER = join(PROJECT_DIR, "packages/sim/driver/wc3v-driver.cjs");
 

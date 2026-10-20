@@ -5,13 +5,13 @@
 import { execFileSync } from "node:child_process";
 import { chmodSync, copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { delimiter, dirname, join, resolve } from "node:path";
+import { delimiter, dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import { collectorFiles, configPath, dataDir, disableCollector, enableCollector, SERVICE, windowsLauncher } from "@replay-altar/core";
+import { collectorFiles, configPath, dataDir, disableCollector, enableCollector, projectRoot, SERVICE, windowsLauncher } from "@replay-altar/core";
 
 const home = homedir();
 const windows = process.platform === "win32";
-export const PROJECT = resolve(import.meta.dirname, "../../..");
+export const PROJECT = projectRoot();
 const CLI = join(PROJECT, "apps/collector/src/cli.ts");
 
 export const INSTALLED = {

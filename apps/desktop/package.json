@@ -10,18 +10,19 @@
   },
   "dependencies": {
     "@replay-altar/core": "*",
+    "@replay-altar/reference": "*",
+    "@replay-altar/rules": "*",
+    "@replay-altar/sim": "*",
     "echarts": "^6.1.0",
     "electron": "^44.9.0",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1",
-    "@replay-altar/reference": "*",
-    "@replay-altar/rules": "*",
-    "@replay-altar/sim": "*"
+    "react-dom": "^19.3.1"
   },
   "devDependencies": {
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
+    "electron-builder": "^26.15.3",
     "esbuild": "^0.28.2",
     "vite": "^8.3.4"
   }
