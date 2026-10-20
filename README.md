@@ -49,6 +49,23 @@ To remove everything, run `replay-altar uninstall --purge` (this also deletes th
 | Icons | `~/Desktop/replay-altar.desktop`, `~/.local/share/applications/replay-altar.desktop`, `~/.local/share/icons/hicolor/scalable/apps/replay-altar.svg` |
 | Folder it watches (read-only) | `~/Games/battlenet/drive_c/users/steamuser/Documents/Warcraft III/BattleNet/*/Replays` |
 
+### On Windows (not yet tested on a real Windows PC)
+
+The same commands work from a Windows checkout (`node apps\collector\src\cli.ts install`). What differs:
+
+| What | Path |
+|---|---|
+| Data (archive, records, database, simulation, pictures) | `%LOCALAPPDATA%\replay-altar\` (same layout as above) |
+| Settings | `%APPDATA%\replay-altar\config.json` |
+| Background collector | started at login from `HKCU\…\CurrentVersion\Run` (value `ReplayAltarCollector`) through `%LOCALAPPDATA%\replay-altar\bin\collector.vbs`, which hides its window; log `logs\collector.log`, pid `collector.pid` |
+| Commands | `%LOCALAPPDATA%\replay-altar\bin\replay-altar.cmd` (add the folder to PATH) |
+| Icons | "Replay Altar" in the Start menu and on the desktop |
+| Folder it watches (read-only) | `Documents\Warcraft III\BattleNet\*\Replays` (also under OneDrive) |
+| Game-data extractor | `scripts\casc\bin\casc-extract.exe`, built on Linux with `scripts/casc/build-windows.sh`; its CascLib is patched to open every file read-only |
+| Local model | `%LOCALAPPDATA%\replay-altar\llama\llama-server.exe` (llama.cpp's Windows build; set in Settings) |
+
+Notifications are Windows toasts (shown under PowerShell's name). Simulations run at low priority instead of `nice`.
+
 ## Behaviour
 
 - **When Warcraft III starts:** the window opens behind the game without taking focus.
