@@ -28,7 +28,7 @@ export function Recurring({ games, onOpen }: { games: PerfGame[]; onOpen: (key: 
         <Tip text="The rules' findings across the games in view (the three a report shows). Trend: your last 5 games against the 5 before. Click a row to open the latest game with it." />
       </h2>
       {view.focus && (
-        <p className="ai-one">
+        <p className="one-thing">
           <b>Work on this now</b>
           <br />
           {problemName(view.focus.id)}: in {view.focus.n} of your last {view.last10} games. {view.focusRow?.advice}

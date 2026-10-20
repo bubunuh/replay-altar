@@ -7,10 +7,10 @@
 // player id: your side in your games, the review subject in "review", else the first player.
 import { join } from "node:path";
 import { openDb, paths, readRecord, referencePaths, type GameRecord } from "@replay-altar/core";
-import { asPlayer, factsRefFor } from "../packages/ai/src/context.ts";
-import { gameFacts } from "../packages/ai/src/facts.ts";
-import { findings, opponentPlan, strengths } from "../packages/ai/src/findings.ts";
-import { recapOf, turningPoint } from "../packages/ai/src/report.ts";
+import { asPlayer, factsRefFor } from "../packages/rules/src/context.ts";
+import { gameFacts } from "../packages/rules/src/facts.ts";
+import { findings, opponentPlan, strengths } from "../packages/rules/src/findings.ts";
+import { recapOf, turningPoint } from "../packages/rules/src/report.ts";
 
 const [group, prefix, pidArg] = process.argv.slice(2);
 if (!group || !prefix) throw new Error("usage: <group|me> <game-key-prefix> [playerId]");

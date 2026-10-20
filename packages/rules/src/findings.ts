@@ -1,7 +1,7 @@
-// What mattered in a game, decided by rules rather than by the language model: tested on Gemma 4
-// 26B, the model restated facts reliably but could not tell what decided a game (it missed a
-// 6-minute window where the opponent had no army). Told the situation, it explains it well.
-// Each finding carries its evidence as plain lines; the model writes the words around them.
+// What mattered in a game, decided by rules. (A local language model wrote these up until
+// 2026-10-20; tested on Gemma 4 26B it restated facts reliably but could not tell what decided a
+// game, and the rules' own text turned out to be enough.) Each finding carries its evidence as
+// plain lines.
 // The rules live in rules/: core.ts (what decides games), basics.ts (beginner mistakes) and
 // army.ts (composition and habits); this file runs them, ranks them and adds the links.
 import type { GameRecord, PlayerRecord } from "@replay-altar/core/ui";
@@ -174,10 +174,7 @@ export function strengths(r: GameRecord, ref: FactsRef | null, found: Finding[] 
     .map(({ m, g }) => `${m.raceLabels?.[me.race as RaceCode] ?? m.label}: you ${metricValue(m, me.metrics[m.key], r.metricSources?.[m.key] === "official")}, opp ${metricValue(m, opp.metrics[m.key], r.metricSources?.[m.key] === "official")}, better than ${Math.round((1 - g!.worseThan) * 100)}% of pro games.`);
 }
 
-/**
- * The opponent's plan in numbers, so the model describes their strategy from facts (left to
- * itself it guessed: "focused on hero leveling" for heroes that stayed level 1 for 15 minutes).
- */
+/** The opponent's plan in numbers: opening, tech, towers, expansions, army, heroes and items. */
 export function opponentPlan(r: GameRecord, ref: FactsRef | null): string[] {
   const opp = r.players.find((p) => p.playerId === r.classification.opponentId);
   if (!opp) return [];

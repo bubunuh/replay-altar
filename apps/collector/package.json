@@ -10,6 +10,7 @@
   "dependencies": {
     "@replay-altar/core": "*",
     "@replay-altar/sim": "*",
-    "@replay-altar/reference": "*"
+    "@replay-altar/reference": "*",
+    "@replay-altar/rules": "*"
   }
 }

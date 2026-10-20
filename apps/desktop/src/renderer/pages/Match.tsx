@@ -3,10 +3,9 @@ import type { BuildEvent, GameDetail, GameRecord, MetricDef, PlayerRecord, SimSa
 import { per10Minutes } from "@replay-altar/core/metrics";
 import { heroesXpAt } from "@replay-altar/core/heroxp";
 import { api, type RefGroupInfo } from "../api.ts";
-import { MIN_GAME_MS } from "@replay-altar/ai/findings";
-import { deviationsFromPros, matchBuilds } from "@replay-altar/ai/builds";
-import { proBuildOf, type Principles } from "@replay-altar/ai/principles";
-import { AiCard } from "../AiCard.tsx";
+import { MIN_GAME_MS } from "@replay-altar/rules/findings";
+import { deviationsFromPros, matchBuilds } from "@replay-altar/rules/builds";
+import { proBuildOf, type Principles } from "@replay-altar/rules/principles";
 import { RulesCard } from "../RulesCard.tsx";
 import { MapView } from "../MapView.tsx";
 import { Tip } from "../Tip.tsx";
@@ -290,10 +289,7 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
       </div>
 
       {row.analyzed === 1 && me && opp && r.game.durationMs >= MIN_GAME_MS && (
-        <>
-          <RulesCard key={`rules-${r.gameKey}`} gameKey={r.gameKey} />
-          <AiCard key={r.gameKey} gameKey={r.gameKey} />
-        </>
+        <RulesCard key={`rules-${r.gameKey}`} gameKey={r.gameKey} />
       )}
 
       <GameCharts record={r} refMp={ref?.mp ?? null} refLabel="Pros" />

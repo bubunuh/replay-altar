@@ -4,11 +4,11 @@ import { existsSync, mkdtempSync, readdirSync, readFileSync, watch, writeFileSyn
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { app, BrowserWindow, ipcMain, nativeTheme, shell } from "electron";
-import { aiNotReady, analyzeGame, loadRefGroups, ModelServer, readAnalysis, rulesBook } from "@replay-altar/ai";
+import { loadRefGroups, rulesBook } from "@replay-altar/rules";
 import { mapDataName } from "@replay-altar/sim/mapname";
 import { mapMarkers } from "./mapOverlay.ts";
 import { mapActivity } from "./mapActivity.ts";
-import type { RulesBook } from "@replay-altar/ai/types";
+import type { RulesBook } from "@replay-altar/rules/types";
 import {
   addAnnotation,
   collectorState,
@@ -134,12 +134,6 @@ if (!app.requestSingleInstanceLock()) {
 
   app.on("window-all-closed", () => app.quit());
 
-  // AI analysis: one game at a time; the model server is started on demand and stopped when idle
-  // or when the app quits.
-  let model: { key: string; server: ModelServer } | null = null;
-  let queue: Promise<unknown> = Promise.resolve();
-  const runningAi = new Set<string>();
-  app.on("will-quit", () => model?.server.stop());
   // "Update pro games": runs `replay-altar ref refresh` (download + simulation take minutes) and
   // streams its lines to the page.
   let refUpdate: ChildProcess | null = null;
@@ -176,7 +170,6 @@ if (!app.requestSingleInstanceLock()) {
     });
     return true;
   });
-  ipcMain.handle("ai:get", (_e, key: string) => readAnalysis(p, key));
   ipcMain.handle("rules:get", (_e, key: string) => bookOf(key));
   // Every analyzed game's findings, newest first: for recurring problems and the match list.
   ipcMain.handle("findings:summary", () =>
@@ -221,32 +214,7 @@ if (!app.requestSingleInstanceLock()) {
     const file = join(import.meta.dirname, "../../../vendor/wc3v/client/maps", mapDataName(mapFile), "map.jpg");
     return existsSync(file) ? `data:image/jpeg;base64,${readFileSync(file).toString("base64")}` : null;
   });
-  ipcMain.handle("ai:status", () => ({ problem: aiNotReady(loadConfig().ai), warcraftRunning: isWarcraftRunning(), running: [...runningAi] }));
-  ipcMain.handle("ai:run", (e, key: string) => {
-    if (runningAi.has(key)) return null;
-    runningAi.add(key);
-    const send = (channel: string, ...args: unknown[]) => {
-      if (!e.sender.isDestroyed()) e.sender.send(channel, ...args);
-    };
-    send("ai:progress", key, "Waiting for another analysis to finish");
-    const job = queue.then(async () => {
-      const cfg = loadConfig().ai;
-      // A settings change gets a fresh server; the old one stops.
-      if (!model || model.key !== JSON.stringify(cfg)) {
-        model?.server.stop();
-        model = { key: JSON.stringify(cfg), server: new ModelServer(cfg, p.ai) };
-      }
-      try {
-        return await analyzeGame(db, p, cfg, model.server, key, (stage) => send("ai:progress", key, stage));
-      } finally {
-        runningAi.delete(key);
-        send("ai:done", key);
-      }
-    });
-    queue = job.catch(() => {});
-    return job;
-  });
-
+  ipcMain.handle("warcraft:running", () => isWarcraftRunning());
   ipcMain.handle("games:list", () => listGames(db));
   ipcMain.handle("games:get", (_e, key: string) => getGame(db, p, key));
   ipcMain.handle("perf:data", () => performanceData(db));

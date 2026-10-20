@@ -46,7 +46,7 @@ function ProGames({ refs, onChanged }: { refs: RefGroupInfo[]; onChanged: () => 
       setRunning(s.running);
       setLog(s.log);
     });
-    api.aiStatus().then((s) => setWarcraft(s.warcraftRunning));
+    api.warcraftRunning().then(setWarcraft);
     return api.onRefUpdate((event, value) => {
       if (event === "progress") setLog((l) => [...l.slice(-39), String(value)]);
       else {
@@ -61,7 +61,7 @@ function ProGames({ refs, onChanged }: { refs: RefGroupInfo[]; onChanged: () => 
   };
   return (
     <div className="card">
-      <div className="ai-head">
+      <div className="card-head">
         <h2>Pro games</h2>
         <button className="btn" disabled={running} onClick={start}>
           {running ? "Updating…" : "Update pro games"}
@@ -89,7 +89,7 @@ function ProGames({ refs, onChanged }: { refs: RefGroupInfo[]; onChanged: () => 
           ))}
         </tbody>
       </table>
-      {log.length > 0 && <pre className="ai-facts">{log.join("\n")}</pre>}
+      {log.length > 0 && <pre className="fact-sheet">{log.join("\n")}</pre>}
     </div>
   );
 }

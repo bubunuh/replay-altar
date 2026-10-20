@@ -203,7 +203,6 @@ describe.skipIf(files.length === 0)("ingest", () => {
     games: join(root, "games"),
     raw: join(root, "raw"),
     events: join(root, "events.jsonl"),
-    ai: join(root, "ai"),
     maps: join(root, "maps"),
   };
   const config: Config = { ...DEFAULT_CONFIG, accounts: ME, warcraftDocuments: [], openWindowOnGameStart: false, notifyAfterGame: false };

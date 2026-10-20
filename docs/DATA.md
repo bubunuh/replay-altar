@@ -1,4 +1,4 @@
-# Data format (for audits, scripts and LLMs)
+# Data format (for audits and scripts)
 
 All data lives in `~/.local/share/replay-altar/`. The trust order is:
 
@@ -143,30 +143,27 @@ Each metric has a `section`:
 | `v_my_metrics` | Your metrics joined to result, matchup, map and date. The base for "how I play". |
 | `v_matchup_winrates`, `v_map_winrates`, `v_opponents` | Win-rate summaries |
 
-## Annotations (reserved for the LLM phase)
+## Annotations
 
 `annotations(game_key, kind, source, author, model, prompt_hash, body JSON, created_at)`:
 
 - **`kind`:** `result_override` (`{"result":"win"|"loss"|null}`), `note`, `coach_report` or `audit_finding`.
 - **`source`:** `user`, `llm` or `rule`.
-- **Identifying an LLM run:** an LLM writes `model` and `prompt_hash`, so every generated claim can be traced back to the model and prompt that produced it.
+- **`model`, `prompt_hash`:** left from the language-model analysis, removed on 2026-10-20; unused.
 - **`game_key`:** `NULL` means the annotation is about your whole history.
 
-## AI analyses (`ai/<gameKey>.json`)
+## The rules' report (`replay-altar report`, the Findings card)
 
-One file per analyzed game, written by `replay-altar ai` or the button. `reingest` never touches these files.
+Built on demand, never stored (`packages/rules/src/book.ts`). Older installs may still have an `ai/` folder of language-model write-ups; nothing reads it anymore.
 
-- **`findings`:** what mattered, decided by rules in `packages/ai/src/rules/` (run and ranked by `packages/ai/src/findings.ts`). Each has an `id`, a `severity` (0–1) and `evidence` lines. Every rule, its source and its score on pro games are listed in [RULES.md](RULES.md).
+- **`findings`:** what mattered, decided by rules in `packages/rules/src/rules/` (run and ranked by `packages/rules/src/findings.ts`). Each has an `id`, a `severity` (0–1), `evidence` lines, `because` (facts that explain it) and `advice`. Every rule, its source and its score on pro games are listed in [RULES.md](RULES.md).
 - **`strengths`:** core metrics at pro level.
-- **Openings** (`packages/ai/src/openings.ts`): each player's opening named after Liquipedia's build-order pages: fast altar (standard), tavern hero, Barracks/Crypt before the altar, fast Riflemen/Headhunters/Huntresses, Fiend or Ghoul opening, fast expand (hall by 4:30), fast tech (tier 2 by 3:30, with its supply count), early towers, no army in the first 5 minutes. Tower positions aren't known, so "tower rush" is never claimed. Shown in the fact sheet and the opponent's plan.
-- **`facts`:** exactly what the model was given: the findings, strengths and opponent's plan, then the fact sheet (heroes, builds, trends, a table every 2 minutes, fights, key numbers with the app's verdicts).
-- **`review`:** the model's JSON. Its shape is enforced while it is generated: `recap`, `opponent_strategy`, one `{title, explanation, next_time}` per finding id, `strengths` and `one_thing`.
-- **`unverified`:** numbers and times in the review that appear nowhere in `facts`.
-- **Provenance:** `model` (file, drafter, chat template), `promptVersion` and `timings`.
+- **Openings** (`packages/rules/src/openings.ts`): each player's opening named after Liquipedia's build-order pages: fast altar (standard), tavern hero, Barracks/Crypt before the altar, fast Riflemen/Headhunters/Huntresses, Fiend or Ghoul opening, fast expand (hall by 4:30), fast tech (tier 2 by 3:30, with its supply count), early towers, no army in the first 5 minutes. Tower positions aren't known, so "tower rush" is never claimed. Shown in the fact sheet and the opponent's plan.
+- **`facts`:** the fact sheet: heroes, builds, trends, a table every 2 minutes, fights, key numbers with the app's verdicts.
 
 ## Build-order library (`data/builds/`) and mined principles
 
-- **Library:** 66 builds as food-keyed steps (`[food, action, name]`): 40 from Grubby's build-order images (his Discord), 16 from Warcraft 3 Gym, 10 from Liquipedia, each with its source. Names resolve to game codes (`packages/ai/src/builds.ts`; generic upgrade names per race).
+- **Library:** 66 builds as food-keyed steps (`[food, action, name]`): 40 from Grubby's build-order images (his Discord), 16 from Warcraft 3 Gym, 10 from Liquipedia, each with its source. Names resolve to game codes (`packages/rules/src/builds.ts`; generic upgrade names per race).
 - **Matcher:** a player's key events (non-supply buildings, tier upgrades, expansions, heroes, first unit of each type, research, items, with the food in use at each) are paired with each build's steps by food count. The score is the F1 of "how much of the guide you followed" and "how much of your opening the guide explains", judged over at least 40 food.
 - **Food:** counts finished units; the game's counter (and the guides) also count units in training, so guide numbers run higher early on. Compare with pros, measured the same way.
 - **Mined (`reference/<group>/principles.json`, `docs/PRINCIPLES.md`):** `node scripts/mine-principles.ts` reduces every pro player-game to milestones (time and food at tier 2/3, heroes and their levels, expansion, upgrades, 50/60 food, 3-3-60; workers, time in each upkeep tier, creep camps, items, towers, hero deaths…). Output per race: the distribution of each, wins vs losses, whether it holds across openings, each library build as pros play it (median food per step, win rate), and the plans pros play (order of heroes, tiers and expansions).

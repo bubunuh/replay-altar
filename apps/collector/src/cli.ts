@@ -19,7 +19,7 @@ import { join } from "node:path";
 import { activeReferenceGroups, applyOfficial, applySim, collectorState, readRecord, referencePaths, type RefLookup } from "@replay-altar/core";
 import { CONSTANTS, gamedataDir, loadCosts, readSimOutput, simNotReady, simulateGame, summarize } from "@replay-altar/sim";
 import { buildProfile, officialForMatch, officialForOwnGame, openReference, readState, refreshGroup, w3cClient } from "@replay-altar/reference";
-import { analyzeGame, buildPrompt, ModelServer, rulesBook } from "@replay-altar/ai";
+import { rulesBook } from "@replay-altar/rules";
 import { currentReplayBuild, racesPlayed } from "./reference.ts";
 import { runCollector } from "./collector.ts";
 import { isReplayFile } from "./watcher.ts";
@@ -53,8 +53,7 @@ const HELP = `replay-altar — Warcraft III replay archive & stats
   replay-altar official            fetch the game's own end-of-game stats from W3Champions for W3C games
                               (yours and reference games) that don't have them yet
   replay-altar report <game|latest> the rules' report of one game: recap, findings with causes and advice, turning point
-  replay-altar ai <game|latest>    AI analysis of one game with the local model (also: button in the window)
-  replay-altar ai <game> --facts   print what the model would be given, without running it
+  replay-altar report <game> --facts  the fact sheet behind the report
   replay-altar collector           run the collector in the foreground (what the service runs)
 `;
 
@@ -325,6 +324,10 @@ switch (cmd) {
         : resolveKey(c.db, target);
     const b = rulesBook(c.db, c.paths, key);
     if (b.problem) throw new Error(b.problem);
+    if (args.includes("--facts")) {
+      console.log(b.facts);
+      break;
+    }
     console.log(`${b.recap}\n`);
     b.findings.forEach((f, i) => {
       console.log(`${i + 1}. ${f.headline}`);
@@ -335,35 +338,6 @@ switch (cmd) {
     });
     if (b.turningPoint) console.log(`Turning point: ${b.turningPoint}\n`);
     if (b.oneThing) console.log(`One thing for next game: ${b.oneThing}`);
-    break;
-  }
-  case "ai": {
-    const c = ctx();
-    const target = args.find((a) => !a.startsWith("--")) ?? "latest";
-    const key =
-      target === "latest"
-        ? (c.db.prepare("SELECT game_key FROM games WHERE analyzed = 1 ORDER BY played_at DESC LIMIT 1").get() as { game_key: string }).game_key
-        : resolveKey(c.db, target);
-    if (args.includes("--facts")) {
-      console.log(buildPrompt(c.db, c.paths, key).prompt);
-      break;
-    }
-    const server = new ModelServer(c.config.ai, c.paths.ai);
-    try {
-      const a = await analyzeGame(c.db, c.paths, c.config.ai, server, key, (stage) => console.error(`${stage}…`));
-      if (a.error || !a.review) throw new Error(a.error ?? "no review");
-      const r = a.review;
-      console.log(`${r.recap}\n\nOpponent: ${r.opponent_strategy}\n`);
-      for (const f of a.findings) {
-        const w = r.findings[f.id];
-        console.log(`## ${w?.title ?? f.headline}\n${w?.explanation ?? ""}\nNext time: ${w?.next_time ?? ""}\n  evidence: ${f.evidence.join("\n            ")}\n`);
-      }
-      if (r.strengths) console.log(`Went well: ${r.strengths}`);
-      console.log(`One thing: ${r.one_thing}\n`);
-      console.log(`${(a.timings.totalMs / 1000).toFixed(0)} s, ${a.model.file}; numbers not found in the facts: ${a.unverified.length ? a.unverified.join(", ") : "none"}`);
-    } finally {
-      server.stop();
-    }
     break;
   }
   default:

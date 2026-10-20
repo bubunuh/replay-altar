@@ -1,7 +1,7 @@
-# AI analysis rules
+# Rules
 
-What the "AI analysis" looks for. Rules decide what mattered; the local model only writes it up
-(see `packages/ai/src/rules/`: `core.ts`, `basics.ts`, `army.ts`; ranked in `findings.ts`). Each rule is scored on the pro games by
+What the Findings card looks for: rules decide what mattered in a game, no language model involved
+(see `packages/rules/src/rules/`: `core.ts`, `basics.ts`, `army.ts`; ranked in `findings.ts`). Each rule is scored on the pro games by
 `node scripts/eval-findings.ts --holdout`: thresholds are mined from half of the pro games and the
 rules scored on the other half, from every pro's side: how often each rule fires in their wins and
 in their losses. A useful rule fires more often in losses ("lift" above 1). Numbers below: 370
@@ -76,7 +76,7 @@ you led in army all game.
 
 ## Around the findings (no model needed)
 
-`packages/ai/src/report.ts`, `advice.ts`, and `becauseFor` in `findings.ts`:
+`packages/rules/src/report.ts`, `advice.ts`, and `becauseFor` in `findings.ts`:
 
 - **Next time:** hand-written advice per rule, with the race's own buildings and units and the pros' numbers (`advice.ts`). The composition, items and scouting rules write theirs from the game (the units that would do more damage, the units that shoot air).
 - **Why:** facts from elsewhere in the game that explain a finding: few creep camps or an idle first hero or early hero deaths behind "heroes fell behind"; items bought, hero levels and upgrades at the costliest fight, and fights under towers behind "fights"; the opponent's tech behind "window".
@@ -91,7 +91,7 @@ you led in army all game.
 - **Tested and dropped (2026-10-18, from the reviews):** a separate "hero stall" rule (lift 0.7: pros' second heroes often idle at levels 4+), "late second hero" (lift 1.0), "first creep came late" as its own finding (0.5 once the heroes finding names it as a cause), battle-summary loss estimates in fights (lowered the fights lift 1.9 → 1.5). See REVIEWS.md.
 - **Tested and dropped (2026-10-18):** "production stood still with gold in the bank" (the longest stretch to 10:00 with ≈300+ gold, supply room and no army unit trained): pros of every race do it about as often in wins as in losses (lift 0.9), partly because the bank is an estimate. The measure stays in PRINCIPLES.md.
 - **Changed after the 4-race corpus:** the worker rule used only the guide targets and fired in a third of pro games, mostly Orc and Undead (lift 0.9); with the pro floor it fires in 3% / 7% (lift 2.0). "Over 50 food before upgrades" now accepts tier 3 as the investment (it fired in 27% of pro wins).
-- **Build library** (`data/builds/`, `packages/ai/src/builds.ts`): 66 food-keyed builds from Grubby, Warcraft 3 Gym and Liquipedia. Each player's opening is matched against them; the match page and the fact sheet show the closest build and where you differ from how pros play it.
+- **Build library** (`data/builds/`, `packages/rules/src/builds.ts`): 66 food-keyed builds from Grubby, Warcraft 3 Gym and Liquipedia. Each player's opening is matched against them; the match page and the fact sheet show the closest build and where you differ from how pros play it.
 - **Vortix's general-concepts video (2026-10-20)** (Spanish; a former top-2 W3Champions player): tested on 856 pro and 94 ladder perspectives.
   - **Became "Why" lines, not findings:**
     - "They cleared 2+ camps on your side of the map by 10:00" under "heroes fell behind": pros 16% of losses, 9% of wins, lift 1.8; on ladder it didn't separate (0.6, small sample). The side of the map comes from the distance to each start (`camps` in the simulation summary).

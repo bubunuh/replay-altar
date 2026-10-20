@@ -2,7 +2,7 @@ import type { MetricDef } from "@replay-altar/core/ui";
 import { mmss } from "@replay-altar/core/time";
 
 export { mmss };
-export { problemName } from "@replay-altar/ai/problems";
+export { problemName } from "@replay-altar/rules/problems";
 
 export const RACE: Record<string, string> = { H: "Human", O: "Orc", U: "Undead", N: "Night Elf", R: "Random" };
 

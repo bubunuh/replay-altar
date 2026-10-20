@@ -1,15 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { GameRecord, SimSample } from "@replay-altar/core/ui";
-import { findings, opponentPlan, unverifiedNumbers } from "@replay-altar/ai";
+import { findings, opponentPlan } from "@replay-altar/rules";
 import { leads } from "../src/series.ts";
-
-describe("number check", () => {
-  test("flags numbers and times that are not in the sources", () => {
-    const sources = "Workers at 10:00: you 13, opp 12 (pros median 20). Lost ≈1,790 at 17:41.";
-    expect(unverifiedNumbers("You had 13 workers at 10:00 and lost 1790 at 17:41.", sources)).toEqual([]);
-    expect(unverifiedNumbers("You had 14 workers at 10:30 and 3 heroes.", sources)).toEqual(["10:30", "14"]); // single digits pass
-  });
-});
 
 describe("leads", () => {
   test("spans of who was ahead; ties keep the current leader", () => {

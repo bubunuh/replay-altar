@@ -2,7 +2,7 @@
 // that explain each and what to do next time, the fight that turned the game, the one thing to
 // work on and the strengths; the opponent's plan and the full fact sheet behind "Show more".
 import { useEffect, useState } from "react";
-import type { RulesBook } from "@replay-altar/ai/types";
+import type { RulesBook } from "@replay-altar/rules/types";
 import { api } from "./api.ts";
 import { Tip } from "./Tip.tsx";
 
@@ -25,7 +25,7 @@ export function RulesCard({ gameKey }: { gameKey: string }) {
   return (
     <div className="card rules-card">
       <h2>
-        Findings <Tip text="Computed by Replay Altar's rules from the replay, compared with pro games of your matchup. Most important first; no AI involved." />
+        Findings <Tip text="Computed by Replay Altar's rules from the replay, compared with pro games of your matchup. Most important first." />
       </h2>
       <p className="rules-recap">{book.recap}</p>
       <ol className="rules-findings">
@@ -56,7 +56,7 @@ export function RulesCard({ gameKey }: { gameKey: string }) {
         </p>
       )}
       {book.oneThing && (
-        <p className="ai-one">
+        <p className="one-thing">
           <b>One thing for next game</b> {book.oneThing}
         </p>
       )}
@@ -84,7 +84,7 @@ export function RulesCard({ gameKey }: { gameKey: string }) {
             ))}
           </ul>
           <h3>Fact sheet</h3>
-          <pre className="ai-facts">{book.facts}</pre>
+          <pre className="fact-sheet">{book.facts}</pre>
         </div>
       )}
     </div>

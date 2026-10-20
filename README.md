@@ -20,8 +20,7 @@ Local Warcraft III replay archive and stats. A background service saves every re
 | `replay-altar sim` | Simulation status; `--backfill`, `--retry-failed`, `--rerun`, `--resummarize` |
 | `replay-altar official` | Fetch the game's own end-of-game stats from W3Champions for W3C games that lack them (the collector does this by itself for new games) |
 | `replay-altar ref` | Pro reference games: status. `ref refresh [--target N]` updates them (same as "Update pro games"), `ref profile` rebuilds the statistics |
-| `replay-altar report <game\|latest>` | The rules' report of one game, as in the Findings card: recap, findings with causes and advice, turning point |
-| `replay-altar ai <game\|latest>` | AI analysis of one game with the local model (same as the button in a match). `--facts` prints what the model would get |
+| `replay-altar report <game\|latest>` | The rules' report of one game, as in the Findings card: recap, findings with causes and advice, turning point. `--facts` prints the fact sheet behind it |
 
 To remove everything, run `replay-altar uninstall --purge` (this also deletes the `localhost/replay-altar-casc` podman image), then delete `~/Projects/replay-altar`.
 
@@ -41,8 +40,6 @@ To remove everything, run `replay-altar uninstall --purge` (this also deletes th
 | Pro reference games (own database, `profile.json`), one folder per race | `~/.local/share/replay-altar/reference/pros/` (Human), `pros-orc/`, `pros-undead/`, `pros-nightelf/` |
 | Maps downloaded for tournament games | `~/.local/share/replay-altar/maps/` |
 | Game-data extractor | podman image `localhost/replay-altar-casc` (reads your install through a throwaway overlay; never writes to it) |
-| AI analyses (review + everything the model was given) | `~/.local/share/replay-altar/ai/<game>.json`, model server log `ai/server.log` |
-| Local model (not part of Replay Altar) | `~/models/unsloth/gemma-4-26B-A4B-it-GGUF/` (model, MTP drafter, chat template), run by `~/.local/bin/llama-server` |
 | Settings | `~/.config/replay-altar/config.json` |
 | Background service | `~/.config/systemd/user/replay-altar-collector.service` (logs: `journalctl --user -u replay-altar-collector`) |
 | Commands | `~/.local/bin/replay-altar`, `~/.local/bin/replay-altar-desktop` |
@@ -62,7 +59,6 @@ The same commands work from a Windows checkout (`node apps\collector\src\cli.ts 
 | Icons | "Replay Altar" in the Start menu and on the desktop |
 | Folder it watches (read-only) | `Documents\Warcraft III\BattleNet\*\Replays` (also under OneDrive) |
 | Game-data extractor | `scripts\casc\bin\casc-extract.exe`, built on Linux with `scripts/casc/build-windows.sh`; its CascLib is patched to open every file read-only |
-| Local model | `%LOCALAPPDATA%\replay-altar\llama\llama-server.exe` (llama.cpp's Windows build; set in Settings) |
 
 Notifications are Windows toasts (shown under PowerShell's name). Simulations run at low priority instead of `nice`.
 
@@ -88,16 +84,9 @@ Your numbers are compared with 50 games per race of tournament players, analyzed
 
 Matchup-specific numbers are used when the pros have 10 or more games of that matchup; otherwise all matchups are combined.
 
-## AI analysis
+## Findings
 
-Each match has an **Analyze with AI** button. It runs on demand only, because it uses most of the graphics card for about 30 seconds.
-
-- **Who decides what:** Replay Altar's rules decide what mattered in the game, by comparing with pros and spotting windows the opponent left open. They also write the opponent's plan from their orders. The local model only writes the review around those findings.
-- **Why it works this way:** tested on its own, Gemma 4 26B restated facts correctly but couldn't tell what decided a game, and it gets unit facts wrong.
-- **Rules:** [docs/RULES.md](docs/RULES.md) lists every rule, where it comes from (Grubby's guides, Blizzard's basics, Liquipedia…) and how it scores on pro games.
-- **Checking:** every number in the review is checked against the data the model was given. Each finding shows its evidence.
-- **Model:** set in the `ai` section of the settings file: `llama-server` path, model, MTP drafter, chat template, port 8089, extra arguments. Replay Altar starts the server when needed and stops it after 10 idle minutes or when the window closes. A server you started yourself with the same model on that port is reused.
-- **While Warcraft III runs:** the button warns you, since the model takes most of the graphics card's memory.
+Each match has a **Findings** card, worked out by Replay Altar's rules. There's no language model: the rules compare the game with pros of your matchup, spot windows the opponent left open, and say what to do next time. The card also has the turning point, your strengths and the opponent's plan from their orders. [docs/RULES.md](docs/RULES.md) lists every rule, where it comes from (Grubby's guides, Blizzard's basics, Liquipedia, Vortix…) and how it scores on pro games.
 
 ## Which metrics matter
 

@@ -1,4 +1,4 @@
-// Scores the AI-analysis rules (packages/ai/src/findings.ts) on the pro games, from every
+// Scores the AI-analysis rules (packages/rules/src/findings.ts) on the pro games, from every
 // perspective of your groups' races: a useful rule fires more in losses than in wins ("lift").
 // Then lists the top findings for each of your games. Run it when reviewing the rules:
 //
@@ -7,8 +7,8 @@
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import { openDb, paths, referencePaths, readRecord, listGames, type GameRecord } from "@replay-altar/core";
-import { loadRefGroups, refFor as refForPlayers } from "../packages/ai/src/context.ts";
-import { allFindings } from "../packages/ai/src/findings.ts";
+import { loadRefGroups, refFor as refForPlayers } from "../packages/rules/src/context.ts";
+import { allFindings } from "../packages/rules/src/findings.ts";
 import { execFileSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";

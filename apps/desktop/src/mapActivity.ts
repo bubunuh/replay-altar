@@ -1,11 +1,11 @@
 // What happened where in one game, for the expanded map: fights between the players (where,
 // how big, who came out ahead) and the creep camps each player cleared, in order. Positions
 // come from the game's WC3V output (battle centres, camp bounds); losses from the same
-// series-based count the report uses (packages/ai fightLosses), so the map agrees with it.
+// series-based count the report uses (packages/rules fightLosses), so the map agrees with it.
 import { existsSync, readFileSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
 import type { GameRecord } from "@replay-altar/core/ui";
-import { fightLabel, fightLosses } from "@replay-altar/ai/series";
+import { fightLabel, fightLosses } from "@replay-altar/rules/series";
 import { projectionFor } from "./mapOverlay.ts";
 import { mapDataName } from "@replay-altar/sim/mapname";
 

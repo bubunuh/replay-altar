@@ -25,7 +25,6 @@ const api = {
       ipcRenderer.removeListener("ref:done", done);
     };
   },
-  aiGet: (key: string) => ipcRenderer.invoke("ai:get", key),
   rules: (key: string) => ipcRenderer.invoke("rules:get", key),
   mapImage: (mapFile: string) => ipcRenderer.invoke("map:image", mapFile),
   mapMarkers: (mapFile: string) => ipcRenderer.invoke("map:markers", mapFile),
@@ -34,19 +33,7 @@ const api = {
   heroIcons: () => ipcRenderer.invoke("hero:icons"),
   findingsSummary: () => ipcRenderer.invoke("findings:summary"),
   mapActivity: (key: string) => ipcRenderer.invoke("map:activity", key),
-  aiStatus: () => ipcRenderer.invoke("ai:status"),
-  aiRun: (key: string) => ipcRenderer.invoke("ai:run", key),
-  /** Progress of AI analyses; returns a function that stops listening. */
-  onAi: (fn: (event: "progress" | "done", key: string, stage?: string) => void) => {
-    const progress = (_e: unknown, key: string, stage: string) => fn("progress", key, stage);
-    const done = (_e: unknown, key: string) => fn("done", key);
-    ipcRenderer.on("ai:progress", progress);
-    ipcRenderer.on("ai:done", done);
-    return () => {
-      ipcRenderer.removeListener("ai:progress", progress);
-      ipcRenderer.removeListener("ai:done", done);
-    };
-  },
+  warcraftRunning: () => ipcRenderer.invoke("warcraft:running"),
   onDataChanged: (fn: () => void) => ipcRenderer.on("data:changed", () => fn()),
   onNavGame: (fn: (key: string) => void) => ipcRenderer.on("nav:game", (_e, key: string) => fn(key)),
   onNavPage: (fn: (page: string) => void) => ipcRenderer.on("nav:page", (_e, page: string) => fn(page)),

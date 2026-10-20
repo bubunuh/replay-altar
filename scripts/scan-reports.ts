@@ -8,10 +8,10 @@
 // game without the disconnect note. Prints counts, then up to N games per flag (default 8).
 import { existsSync, readdirSync } from "node:fs";
 import { paths, readRecord, referencePaths, type GameRecord } from "@replay-altar/core";
-import { asPlayer, loadRefGroups, refFor } from "../packages/ai/src/context.ts";
-import { allFindings, findings, strengths } from "../packages/ai/src/findings.ts";
-import { recapOf, turningPoint } from "../packages/ai/src/report.ts";
-import { at, seriesOf } from "../packages/ai/src/series.ts";
+import { asPlayer, loadRefGroups, refFor } from "../packages/rules/src/context.ts";
+import { allFindings, findings, strengths } from "../packages/rules/src/findings.ts";
+import { recapOf, turningPoint } from "../packages/rules/src/report.ts";
+import { at, seriesOf } from "../packages/rules/src/series.ts";
 
 const listN = Number(process.argv[process.argv.indexOf("--list") + 1]) || 8;
 const groups = loadRefGroups();

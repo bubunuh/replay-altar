@@ -1,6 +1,5 @@
-// The fact sheet a local language model gets for one game. Everything that can be computed is
-// computed here (times, counts, comparisons, the app's verdicts), so the model only has to read
-// and explain; small models are good at that and bad at arithmetic and Warcraft III trivia.
+// The fact sheet behind a game's report ("Show more" on the Findings card, `replay-altar report
+// --facts`): times, counts, comparisons and the app's verdicts, all computed, in plain lines.
 import type { GameRecord, PlayerRecord } from "@replay-altar/core/ui";
 import { RACE_NAMES, RACES, researchLevels, TIER_NAMES, upgradeMaxLevel, type RaceCode } from "@replay-altar/core/gamedata";
 import { CORE_METRICS, MECHANICS_METRICS, METRICS, per10Minutes, type MetricDef } from "@replay-altar/core/metrics";

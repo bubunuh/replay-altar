@@ -1,13 +1,11 @@
 import type { Config, GameDetail, GameRow, MetricDef, Paths, PerfGame, ReferenceGroup } from "@replay-altar/core/ui";
 import type { RefProfile } from "@replay-altar/reference/types";
-import type { AiAnalysis, RulesBook } from "@replay-altar/ai/types";
-import type { Principles } from "@replay-altar/ai/principles";
+import type { RulesBook } from "@replay-altar/rules/types";
+import type { Principles } from "@replay-altar/rules/principles";
 import type { MapMarker } from "../mapOverlay.ts";
 import type { MapActivity } from "../mapActivity.ts";
 
 export type GameFindings = { key: string; playedAt: string; result: string; findings: { id: string; headline: string; severity: number; advice: string | null }[] };
-
-export type AiStatus = { problem: string | null; warcraftRunning: boolean; running: string[] };
 
 export type RefGroupInfo = {
   group: ReferenceGroup;
@@ -32,7 +30,6 @@ type W3Api = {
   refUpdate(): Promise<boolean>;
   refUpdateStatus(): Promise<{ running: boolean; log: string[] }>;
   onRefUpdate(fn: (event: "progress" | "done", value: string | number | null) => void): () => void;
-  aiGet(key: string): Promise<AiAnalysis | null>;
   rules(key: string): Promise<RulesBook>;
   /** The map's minimap as a data URL, or null when there is none yet. */
   mapImage(mapFile: string): Promise<string | null>;
@@ -48,9 +45,8 @@ type W3Api = {
   findingsSummary(): Promise<GameFindings[]>;
   /** Fights and creep camps cleared, positioned on the map; null without a simulation or map data. */
   mapActivity(key: string): Promise<MapActivity | null>;
-  aiStatus(): Promise<AiStatus>;
-  aiRun(key: string): Promise<AiAnalysis | null>;
-  onAi(fn: (event: "progress" | "done", key: string, stage?: string) => void): () => void;
+  /** Is Warcraft III running (heavy work would slow it down)? */
+  warcraftRunning(): Promise<boolean>;
   onDataChanged(fn: () => void): void;
   onNavGame(fn: (key: string) => void): void;
   onNavPage(fn: (page: string) => void): void;

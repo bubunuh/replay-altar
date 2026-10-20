@@ -221,18 +221,11 @@ tr.tier-row-below td:first-child { box-shadow: inset 3px 0 0 var(--critical); }
 .more-metrics summary { padding: 8px 0; color: var(--ink-2); }
 .standing { flex-wrap: nowrap; white-space: nowrap; }
 
-/* AI analysis */
-.ai-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.ai-head h2 { margin: 0; }
-.ai-actions { display: flex; gap: 8px; }
-.ai-busy { color: var(--ink-2); }
-.ai-body p { margin: 8px 0; line-height: 1.5; max-width: 900px; }
-.ai-body.stale { opacity: 0.5; }
-.ai-finding { border-left: 3px solid var(--critical); padding: 2px 0 2px 12px; margin: 14px 0; }
-.ai-finding h3 { margin: 0 0 4px; font-size: calc(14px * var(--text-scale)); }
-.ai-finding ul { margin: 6px 0 0; padding-left: 18px; color: var(--ink-2); }
-.ai-one { background: var(--surface-2); border-radius: 6px; padding: 8px 12px; }
-.ai-facts { white-space: pre-wrap; font-size: calc(11.5px * var(--text-scale)); color: var(--ink-2); max-height: 420px; overflow: auto; background: var(--surface-2); padding: 10px; border-radius: 6px; }
+/* A card title with a button beside it; the one thing to work on; the fact sheet. */
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.card-head h2 { margin: 0; }
+.one-thing { background: var(--surface-2); border-radius: 6px; padding: 8px 12px; }
+.fact-sheet { white-space: pre-wrap; font-size: calc(11.5px * var(--text-scale)); color: var(--ink-2); max-height: 420px; overflow: auto; background: var(--surface-2); padding: 10px; border-radius: 6px; }
 
 /* Recurring problems trend: words and arrows carry it, colour only helps. */
 .trend { font-size: calc(12.5px * var(--text-scale)); font-weight: 600; white-space: nowrap; }
