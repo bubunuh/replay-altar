@@ -31,6 +31,10 @@ const NOT_STRENGTHS_FOR: Partial<Record<RaceCode, Set<string>>> = { U: new Set([
 
 // ---- Links: facts from elsewhere in the game that explain a finding.
 
+/** Neutral-shop items whose stock players race for (Scroll of Healing, Potion of Lesser Invulnerability). */
+const SHOP_RACE = new Set(["shea", "pnvl"]);
+const campsOf = (c: Ctx, p: PlayerRecord) => (c.r.sim?.status === "ok" ? (c.r.sim.players.find((x) => x.playerId === p.playerId)?.camps ?? []) : []);
+
 function becauseFor(f: Finding, c: Ctx): string[] {
   const m = c.me.metrics;
   const o = c.opp.metrics;
@@ -44,10 +48,19 @@ function becauseFor(f: Finding, c: Ctx): string[] {
     if (early >= 1) out.push(`Your heroes died ${early === 1 ? "once" : `${early} times`} before 10:00: each death gave their heroes experience and cost you creeping time.`);
     const h2 = proGap(c, "hero2_ms");
     if (h2 && h2.worseThan >= 0.8) out.push(`Your second hero came at ${mmss(m.hero2_ms)} (pros: ${mmss(h2.median)}).`);
+    // Camps they took near your start, and you near theirs (pros: 2+ by 10:00 in 16% of losses, 9% of wins).
+    const onTheirSide = (p: PlayerRecord) => campsOf(c, p).filter((x) => x.side === "theirs" && x.at <= 600_000).length;
+    const [raided, raids] = [onTheirSide(c.opp), onTheirSide(c.me)];
+    if (raided >= 2 && raided > raids) out.push(`By 10:00 they had cleared ${raided} camps on your side of the map, you ${raids} on theirs: each camp they take near you is one you can't.`);
   }
   if (f.id === "fights") {
     const items = [m.items_bought ?? 0, o.items_bought ?? 0];
-    if (items[1] >= 5 && items[1] >= 3 * Math.max(1, items[0])) out.push(`You bought ${items[0]} item${items[0] === 1 ? "" : "s"}, they bought ${items[1]}: potions and scrolls decide even fights.`);
+    const fewItems = items[1] >= 5 && items[1] >= 3 * Math.max(1, items[0]);
+    if (fewItems) out.push(`You bought ${items[0]} item${items[0] === 1 ? "" : "s"}, they bought ${items[1]}: potions and scrolls decide even fights.`);
+    // Vortix: long games are often decided by who got the neutral shop's healing scrolls and invulnerability potions.
+    const shop = (p: PlayerRecord) => p.build.filter((b) => b.kind === "item" && SHOP_RACE.has(b.code)).length;
+    const [myShop, theirShop] = [shop(c.me), shop(c.opp)];
+    if (!fewItems && c.r.game.durationMs >= 15 * 60_000 && theirShop >= myShop + 3) out.push(`They bought ${theirShop} Scrolls of Healing and invulnerability potions, you ${myShop}: in long games these neutral-shop items often decide the fights.`);
     const worst = fightLosses(c.r, c.me, c.opp).filter((x) => x.f.playerIds.includes(c.opp.playerId)).sort((a, b) => b.me - b.opp - (a.me - a.opp))[0];
     if (worst) {
       const [mine, theirs] = [levelSum(c.me, worst.f.start), levelSum(c.opp, worst.f.start)];

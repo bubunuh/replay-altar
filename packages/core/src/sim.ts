@@ -62,6 +62,8 @@ export type SimPlayer = {
    * overcount: cancelled or re-placed halls (a Night Elf Tree of Life placed three times).
    */
   bases?: { at: number; lostAt: number | null }[];
+  /** Creep camps credited to this player, with the side of the map: nearer their start, the opponent's, or in between. */
+  camps?: { at: number; level: number; side: "own" | "middle" | "theirs" }[];
 };
 
 export type SimSummary =

@@ -92,6 +92,19 @@ you led in army all game.
 - **Tested and dropped (2026-10-18):** "production stood still with gold in the bank" (the longest stretch to 10:00 with ≈300+ gold, supply room and no army unit trained): pros of every race do it about as often in wins as in losses (lift 0.9), partly because the bank is an estimate. The measure stays in PRINCIPLES.md.
 - **Changed after the 4-race corpus:** the worker rule used only the guide targets and fired in a third of pro games, mostly Orc and Undead (lift 0.9); with the pro floor it fires in 3% / 7% (lift 2.0). "Over 50 food before upgrades" now accepts tier 3 as the investment (it fired in 27% of pro wins).
 - **Build library** (`data/builds/`, `packages/ai/src/builds.ts`): 66 food-keyed builds from Grubby, Warcraft 3 Gym and Liquipedia. Each player's opening is matched against them; the match page and the fact sheet show the closest build and where you differ from how pros play it.
+- **Vortix's general-concepts video (2026-10-20)** (Spanish; a former top-2 W3Champions player): tested on 856 pro and 94 ladder perspectives.
+  - **Became "Why" lines, not findings:**
+    - "They cleared 2+ camps on your side of the map by 10:00" under "heroes fell behind": pros 16% of losses, 9% of wins, lift 1.8; on ladder it didn't separate (0.6, small sample). The side of the map comes from the distance to each start (`camps` in the simulation summary).
+    - "They bought 3+ more Scrolls of Healing and invulnerability potions" under "fights" in games of 15+ minutes: lift 1.2 on pros, 3.5 on ladder (68 perspectives).
+  - **Dropped as findings:** contested middle camps taken by the opponent (lift 0.9), Boots of Speed by 8:00 (1.2 on pros, 0.8 on ladder), Circlet of Nobility by 10:00 (1.3 and 1.0).
+  - **Advice updated:**
+    - Fights: hit the army; switch to a hero only when it's exposed or its healer just spent the heal, and not while it has an invulnerability potion. This replaces "focus their heroes".
+    - Upkeep: when you go over 50, go in one step toward 70-80 with about 1000 gold banked. Above 80 is almost never worth it in 1v1.
+    - Creeping between fights: contest the camps between the bases and take the hardest camp you can safely reach.
+    - Items: the neutral shop's contested items.
+    - Mechanics: heroes on F1-F3, Tab, a grid layout and two item keys.
+  - **Matches what we have:** 5 workers per gold mine and about 8 on lumber (Undead about 3 ghouls with Crypt Fiends).
+  - **Not measurable:** who your units target in a fight, body-blocking and surrounds, creeping at night while camps sleep.
 - **Not measurable from a replay:** creep-camp micro (aggro pulls, purge, ensnare), spell and mana use, positioning, unit counters by armor type (possible later from game data).
 
 ## Sources

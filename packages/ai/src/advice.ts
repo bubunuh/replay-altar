@@ -36,7 +36,7 @@ const pro = (c: AdviceCtx, key: string) => c.ref?.mp.metrics[key]?.p50 ?? null;
 const race = (c: AdviceCtx) => (c.me.race as RaceCode) in RACES ? (c.me.race as RaceCode) : "H";
 
 const midGame = (c: AdviceCtx) =>
-  "Between fights, keep both heroes creeping: clear the camps on your side and the bigger camps with your army while you wait for production, and give the second hero the last hits so it levels too. A hero that stands in base for minutes falls behind theirs.";
+  "Between fights, keep both heroes creeping: clear the camps on your side, then contest the ones between the bases (each one you take is one they can't), and take the hardest camp you can safely reach; give the second hero the last hits so it levels too. A hero that stands in base for minutes falls behind theirs.";
 
 /** The advice for a finding, or null when the rule has none. */
 export function adviceFor(id: string, c: AdviceCtx): string | null {
@@ -56,7 +56,7 @@ export function adviceFor(id: string, c: AdviceCtx): string | null {
     case "fights": {
       const items = [m.items_bought ?? 0, c.opp.metrics.items_bought ?? 0];
       const fewItems = items[1] >= 5 && items[1] >= 3 * Math.max(1, items[0]);
-      return `Take fights only where you are stronger: with your heroes alive and at least as high level, after an upgrade, never under their towers. ${fewItems ? `Bring potions and a Town Portal (${nameOf(SHOP[R])}) before the fight. ` : ""}Focus their heroes, and pull back wounded units and heroes instead of losing them.`;
+      return `Take fights only where you are stronger: with your heroes alive and at least as high level, after an upgrade, never under their towers. ${fewItems ? `Bring potions and a Town Portal (${nameOf(SHOP[R])}) before the fight. ` : ""}Hit their army; switch to a hero only when it is exposed or their healer has just spent its heal (Holy Light, Death Coil), and not while it can drink an invulnerability potion. Pull back wounded units and heroes instead of losing them: each one gives their heroes experience.`;
     }
     case "window":
       return "When the opponent has no army for minutes (fast tech or towers), take an expansion right away, or go hit their creeping hero and their expansion: every minute of that window is free.";
@@ -74,7 +74,7 @@ export function adviceFor(id: string, c: AdviceCtx): string | null {
     case "no_heroes":
       return "When all your heroes are dead, retreat and wait for the revive: units without heroes lose fights and feed experience to theirs.";
     case "upkeep":
-      return "Stay at 80 food or less unless you are about to fight; put the extra gold into an expansion or upgrades instead of units that sit at home.";
+      return "Above 80 food you keep only 40% of what your workers mine; in 1v1 even pros almost never go there. Stay at 80 or less unless you are about to fight, and put the extra gold into an expansion, upgrades or items.";
     case "expansion":
       return "Take an expansion when it is safe: after you win a fight, while their army is away, or when they tech. Pros who expanded did it by about " + mmss(pro(c, "expansion_ms")) + ".";
     case "first_creep":
@@ -84,13 +84,13 @@ export function adviceFor(id: string, c: AdviceCtx): string | null {
     case "one_hero":
       return "Get a second hero around tier 2 (pros: around 38 food); Grubby: two heroes usually beat one, and the second one creeps too.";
     case "no_items":
-      return `Visit the ${nameOf(SHOP[R])} or a neutral shop: a Potion of Healing and a Scroll of Town Portal save heroes, and items from creeps should be used, not kept.`;
+      return `Visit the ${nameOf(SHOP[R])} or a neutral shop: a Potion of Healing and a Scroll of Town Portal save heroes, and items from creeps should be used, not kept. At the neutral shop, Scrolls of Healing and invulnerability potions decide late fights, and Boots of Speed or the Circlet of Nobility go to whoever buys them first.`;
     case "floating":
       return "When gold piles up above about 500, spend it: another production building, an upgrade, or units. Pros spend nearly everything they mine in the first 10 minutes.";
     case "unanswered_expansion":
       return "When they start an expansion and your army is bigger, attack it before the town hall finishes (about two minutes): it is their weakest moment.";
     case "just_over_50":
-      return "Stay at 50 food and invest (upgrades, items, a production building), then go well past 50 right before a fight.";
+      return "Stay at 50 food and bank or invest (upgrades, shop items); when you go over, go in one step toward 70-80 food with about 1000 gold banked, right before a fight, instead of one unit at a time.";
     case "towers":
       return "Stop at an arcane or guard tower per base and put the rest into units: kills by towers give your heroes no experience.";
     case "workers_lost":
@@ -106,7 +106,7 @@ export function adviceFor(id: string, c: AdviceCtx): string | null {
     case "build_drift":
       return "Follow your build's timings: start the tier upgrade and the expansion at the food counts the pros on that build use (shown above), and add other buildings around them.";
     case "mechanics":
-      return "Put heroes and army on control groups 1-3 and production buildings on 4-6, and select with the number keys instead of clicking; it frees time for the map.";
+      return "Put the army on control groups 1-3 and production buildings on 4-6, heroes on F1-F3, and select with keys instead of clicking; use Tab to switch between unit types in a group, a grid layout for abilities (QWER, ASDF, ZXCV), and two item keys (invulnerability potion, Town Portal). It frees time for the map.";
     case "unused_lead":
     case "army_mismatch":
     case "no_anti_air":

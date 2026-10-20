@@ -3,7 +3,7 @@ import { execFile } from "node:child_process";
 import { constants, setPriority } from "node:os";
 import { existsSync, readFileSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
-import { RACES, type GameRecord, type RaceCode, type SimFight, type SimSummary } from "@replay-altar/core";
+import { RACES, type GameRecord, type RaceCode, type SimFight, type SimPlayer, type SimSummary } from "@replay-altar/core";
 import { loadCosts, type CostTables } from "./costs.ts";
 import { buildTimelines, economyMetrics, ESTIMATE_HORIZON_MS, runIncome, type EconomyConstants, type WOutput } from "./economy.ts";
 import constantsJson from "./economy-constants.json" with { type: "json" };
@@ -87,7 +87,7 @@ export function summarize(record: GameRecord, o: WOutput, costs: CostTables, k: 
     const food60 = series.find((s) => s.foodUsed >= 60)?.t ?? null;
     metrics.goal_3360_ms = l3(0) !== null && l3(1) !== null && food60 !== null ? Math.max(l3(0)!, l3(1)!, food60) : null;
     metrics.workers_lost_12m = workersLost(o, tl.playerId, rp.race, 720_000);
-    return { playerId: tl.playerId, parseConfidence: tl.parseConfidence, validationWarnings: pw, series, metrics, heroes, bases: basesOf(o, tl.playerId, rp.race) };
+    return { playerId: tl.playerId, parseConfidence: tl.parseConfidence, validationWarnings: pw, series, metrics, heroes, bases: basesOf(o, tl.playerId, rp.race), camps: campsOf(o, tl.playerId, record) };
   });
   return {
     status: "ok",
@@ -127,6 +127,30 @@ function basesOf(o: WOutput, playerId: number, race: string): { at: number; lost
     sites.push({ x: pos.x, y: pos.y, at, lostAt });
   }
   return sites.sort((a, b) => a.at - b.at).map(({ at, lostAt }) => ({ at, lostAt }));
+}
+
+/** A camp this much closer to one start than to the other is on that player's side (Vortix: your camps, theirs, contested). */
+const SIDE_RATIO = 0.8;
+
+/**
+ * Creep camps WC3V credits this player with clearing, and whose side of the map they were on:
+ * nearer the player's start than the opponent's, nearer the opponent's, or in between.
+ */
+function campsOf(o: WOutput, playerId: number, record: GameRecord): NonNullable<SimPlayer["camps"]> {
+  type Group = { bounds?: { minX: number; minY: number; maxX: number; maxY: number }; totalLevel?: number; clearedTime?: number | null; playerCredit?: Record<string, { credited?: boolean }> };
+  const startOf = (id: number) => (o.players[String(id)] as unknown as { startingPosition?: { x: number; y: number } } | undefined)?.startingPosition;
+  const me = record.players.find((p) => p.playerId === playerId);
+  const opp = record.players.find((p) => p.teamId !== me?.teamId);
+  const [mine, theirs] = [startOf(playerId), opp ? startOf(opp.playerId) : undefined];
+  if (!mine || !theirs) return [];
+  const out: NonNullable<SimPlayer["camps"]> = [];
+  for (const g of Object.values((o.world?.neutralGroups ?? {}) as unknown as Record<string, Group>)) {
+    if (!g.bounds || typeof g.clearedTime !== "number" || !g.playerCredit?.[String(playerId)]?.credited) continue;
+    const c = { x: (g.bounds.minX + g.bounds.maxX) / 2, y: (g.bounds.minY + g.bounds.maxY) / 2 };
+    const ratio = Math.hypot(c.x - mine.x, c.y - mine.y) / Math.max(1, Math.hypot(c.x - theirs.x, c.y - theirs.y));
+    out.push({ at: g.clearedTime, level: g.totalLevel ?? 0, side: ratio < SIDE_RATIO ? "own" : ratio > 1 / SIDE_RATIO ? "theirs" : "middle" });
+  }
+  return out.sort((a, b) => a.at - b.at);
 }
 
 /** Workers of this race the simulation saw die (lost or possibly lost) by a time. */
