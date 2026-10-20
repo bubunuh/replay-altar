@@ -1,14 +1,18 @@
 // install / suspend / resume / uninstall: everything this app puts outside its project folder.
+// Linux: launchers in ~/.local/bin, menu and desktop entries, a systemd user service. Windows:
+// command shims in the data folder's bin, Start menu and desktop shortcuts, and the collector
+// started at login from the Run key (packages/core/src/service.ts).
 import { execFileSync } from "node:child_process";
 import { chmodSync, copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { delimiter, dirname, join, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import { configPath, dataDir } from "@replay-altar/core";
+import { collectorFiles, configPath, dataDir, disableCollector, enableCollector, SERVICE, windowsLauncher } from "@replay-altar/core";
 
 const home = homedir();
-const PROJECT = resolve(import.meta.dirname, "../../..");
-const SERVICE = "replay-altar-collector.service";
+const windows = process.platform === "win32";
+export const PROJECT = resolve(import.meta.dirname, "../../..");
+const CLI = join(PROJECT, "apps/collector/src/cli.ts");
 
 export const INSTALLED = {
   cli: join(home, ".local/bin/replay-altar"),
@@ -20,15 +24,14 @@ export const INSTALLED = {
   icon: join(home, ".local/share/icons/hicolor/scalable/apps/replay-altar.svg"),
 };
 
-// REPLAY_ALTAR_NO_SYSTEMD=1 (tests): write files only, never touch the running user session.
-const systemctl = (...args: string[]) => {
-  if (process.env.REPLAY_ALTAR_NO_SYSTEMD) return console.log(`  (skipped) systemctl --user ${args.join(" ")}`);
-  try {
-    execFileSync("systemctl", ["--user", ...args], { stdio: "inherit" });
-  } catch {
-    // e.g. stopping a unit that is not loaded
-  }
+/** What install writes on Windows (the Start menu and desktop shortcuts are found by PowerShell). */
+const WINDOWS = {
+  cli: () => join(dataDir(), "bin/replay-altar.cmd"),
+  cliAlias: () => join(dataDir(), "bin/altar.cmd"),
 };
+/** The desktop app in this checkout, as Windows starts it: Electron with the app folder. */
+export const windowsDesktop = () => ({ exe: join(PROJECT, "node_modules/electron/dist/electron.exe"), args: [join(PROJECT, "apps/desktop")] });
+const SHORTCUT = "Replay Altar.lnk";
 
 function write(path: string, content: string, mode = 0o644) {
   mkdirSync(dirname(path), { recursive: true });
@@ -38,9 +41,9 @@ function write(path: string, content: string, mode = 0o644) {
 }
 
 /** First `node` on PATH, unresolved: Homebrew's bin/node survives upgrades, the Cellar path it links to doesn't. */
-function findNode(): string {
-  for (const dir of (process.env.PATH ?? "").split(":")) {
-    const candidate = join(dir, "node");
+export function findNode(): string {
+  for (const dir of (process.env.PATH ?? "").split(delimiter)) {
+    const candidate = join(dir, windows ? "node.exe" : "node");
     if (dir && existsSync(candidate)) return candidate;
   }
   return process.execPath;
@@ -68,7 +71,13 @@ function filesUnder(dir: string, exts: string[]): string[] {
  * paths (archive copies, simulation output), so those are rewritten too.
  */
 function migrateLegacy() {
-  if (existsSync(join(home, ".config/systemd/user", LEGACY.service))) systemctl("disable", "--now", LEGACY.service);
+  if (existsSync(join(home, ".config/systemd/user", LEGACY.service))) {
+    try {
+      execFileSync("systemctl", ["--user", "disable", "--now", LEGACY.service], { stdio: "inherit" });
+    } catch {
+      // already stopped
+    }
+  }
   for (const f of LEGACY.files) {
     if (existsSync(f)) {
       rmSync(f);
@@ -109,19 +118,58 @@ function migrateLegacy() {
   }
 }
 
+function ensureDesktopBuilt(node: string) {
+  if (existsSync(join(PROJECT, "apps/desktop/out/main.cjs"))) return;
+  console.log("  building the desktop app…");
+  execFileSync(node, [join(PROJECT, "apps/desktop/build.ts")], { stdio: "inherit" });
+}
+
+/** Creates (or with `remove`, deletes) the Start menu and desktop shortcuts, through PowerShell's WScript.Shell. */
+function windowsShortcuts(remove = false) {
+  if (process.env.REPLAY_ALTAR_NO_SYSTEMD) return console.log(`  (skipped) ${remove ? "remove" : "create"} shortcuts`);
+  const app = windowsDesktop();
+  const script = [
+    "$sh = New-Object -ComObject WScript.Shell",
+    "foreach ($dir in @([Environment]::GetFolderPath('Programs'), [Environment]::GetFolderPath('Desktop'))) {",
+    "  $lnk = Join-Path $dir $env:RA_NAME",
+    remove
+      ? "  if (Test-Path $lnk) { Remove-Item $lnk; Write-Output \"  removed $lnk\" }"
+      : "  $s = $sh.CreateShortcut($lnk); $s.TargetPath = $env:RA_EXE; $s.Arguments = $env:RA_ARGS; $s.Description = 'Warcraft III replay stats'; $s.Save(); Write-Output \"  wrote $lnk\"",
+    "}",
+  ].join("\n");
+  const out = execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", script], {
+    encoding: "utf8",
+    windowsHide: true,
+    env: { ...process.env, RA_NAME: SHORTCUT, RA_EXE: app.exe, RA_ARGS: app.args.map((a) => `"${a}"`).join(" ") },
+  });
+  process.stdout.write(out);
+}
+
+function installWindows(node: string) {
+  write(WINDOWS.cli(), `@"${node}" "${CLI}" %*\r\n`);
+  write(WINDOWS.cliAlias(), `@call "${WINDOWS.cli()}" %*\r\n`);
+  if (existsSync(join(PROJECT, "apps/desktop"))) {
+    ensureDesktopBuilt(node);
+    windowsShortcuts();
+  }
+  mkdirSync(dirname(collectorFiles().log), { recursive: true });
+  write(collectorFiles().launcher, windowsLauncher([node, CLI, "collector"]));
+  enableCollector();
+  console.log(`\nDone. Collector is running and starts at login; Replay Altar is in the Start menu and on your desktop.`);
+  console.log(`For the command line, add ${dirname(WINDOWS.cli())} to your PATH (or run ${WINDOWS.cli()}).`);
+}
+
 export function install() {
   const node = findNode();
   console.log("Installing Replay Altar:");
+  if (windows) return installWindows(node);
   migrateLegacy();
   write(INSTALLED.cli, `#!/bin/sh\nexec "${node}" "${PROJECT}/apps/collector/src/cli.ts" "$@"\n`, 0o755);
   write(INSTALLED.cliAlias, `#!/bin/sh\nexec "${INSTALLED.cli}" "$@"\n`, 0o755);
 
   const desktopApp = join(PROJECT, "apps/desktop/bin/replay-altar-desktop");
   const hasDesktop = existsSync(desktopApp);
-  if (hasDesktop && !existsSync(join(PROJECT, "apps/desktop/out/main.cjs"))) {
-    console.log("  building the desktop app…");
-    execFileSync(node, [join(PROJECT, "apps/desktop/build.ts")], { stdio: "inherit" });
-  }
+  if (hasDesktop) ensureDesktopBuilt(node);
   if (hasDesktop) {
     write(INSTALLED.desktopLauncher, `#!/bin/sh\nexec "${desktopApp}" "$@"\n`, 0o755);
     mkdirSync(dirname(INSTALLED.icon), { recursive: true });
@@ -160,41 +208,44 @@ export function install() {
       "",
     ].join("\n"),
   );
-  systemctl("daemon-reload");
-  systemctl("enable", "--now", SERVICE);
+  enableCollector();
   console.log(`\nDone. Collector is running${hasDesktop ? "; Replay Altar is on your desktop and in the app menu" : " (desktop app not built yet)"}.`);
 }
 
 export function suspend() {
-  systemctl("disable", "--now", SERVICE);
+  disableCollector();
   console.log("Collector stopped and won't start at login. New replays are not archived until `replay-altar resume`.");
 }
 
 export function resume() {
-  systemctl("enable", "--now", SERVICE);
+  enableCollector();
   console.log("Collector running again; it will pick up replays played while suspended (except overwritten LastReplay.w3g).");
 }
 
 export function uninstall(purge: boolean) {
-  systemctl("disable", "--now", SERVICE);
-  for (const f of Object.values(INSTALLED)) {
+  disableCollector();
+  const files = windows ? [WINDOWS.cli(), WINDOWS.cliAlias(), collectorFiles().launcher] : Object.values(INSTALLED);
+  for (const f of files) {
     if (existsSync(f)) {
       rmSync(f);
       console.log(`  removed ${f}`);
     }
   }
-  systemctl("daemon-reload");
+  if (windows) windowsShortcuts(true);
+  else if (!process.env.REPLAY_ALTAR_NO_SYSTEMD) execFileSync("systemctl", ["--user", "daemon-reload"], { stdio: "inherit" });
   if (purge) {
     for (const d of [dataDir(), dirname(configPath())]) {
       rmSync(d, { recursive: true, force: true });
       console.log(`  removed ${d}`);
     }
-    // The game-data extractor's container image (scripts/casc), if it was ever built.
-    try {
-      execFileSync("podman", ["rmi", "-f", "localhost/replay-altar-casc:latest"], { stdio: "ignore" });
-      console.log("  removed podman image localhost/replay-altar-casc");
-    } catch {
-      // podman missing or image never built
+    // The game-data extractor's container image (scripts/casc, Linux), if it was ever built.
+    if (!windows) {
+      try {
+        execFileSync("podman", ["rmi", "-f", "localhost/replay-altar-casc:latest"], { stdio: "ignore" });
+        console.log("  removed podman image localhost/replay-altar-casc");
+      } catch {
+        // podman missing or image never built
+      }
     }
   } else {
     console.log(`Kept your archive and stats in ${dataDir()} and settings in ${configPath()} (use --purge to delete them).`);

@@ -1,5 +1,6 @@
 // The simulation layer: run WC3V on an archived replay and turn its output into economy data.
 import { execFile } from "node:child_process";
+import { constants, setPriority } from "node:os";
 import { existsSync, readFileSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
 import { RACES, type GameRecord, type RaceCode, type SimFight, type SimSummary } from "@replay-altar/core";
@@ -23,8 +24,10 @@ type DriverResult = { ok: boolean; ms: number; error?: string };
 
 function runDriver(replay: string, out: string): Promise<DriverResult> {
   return new Promise((resolve) => {
-    // nice: the game may be running; the simulation can wait.
-    execFile("nice", ["-n", "19", process.execPath, DRIVER, replay, out], { timeout: RUN_TIMEOUT_MS, maxBuffer: 16 << 20 }, (err, stdout) => {
+    // Lowest priority: the game may be running; the simulation can wait. Linux uses nice (it also
+    // covers the threads node starts); Windows sets the priority class once the process exists.
+    const [cmd, args] = process.platform === "win32" ? [process.execPath, [DRIVER, replay, out]] : ["nice", ["-n", "19", process.execPath, DRIVER, replay, out]];
+    const child = execFile(cmd, args, { timeout: RUN_TIMEOUT_MS, maxBuffer: 16 << 20, windowsHide: true }, (err, stdout) => {
       const line = stdout.trim().split("\n").at(-1) ?? "";
       try {
         resolve(JSON.parse(line) as DriverResult);
@@ -32,6 +35,13 @@ function runDriver(replay: string, out: string): Promise<DriverResult> {
         resolve({ ok: false, ms: 0, error: err ? `${err.message}`.slice(0, 500) : `unexpected driver output: ${line.slice(0, 200)}` });
       }
     });
+    if (process.platform === "win32" && child.pid) {
+      try {
+        setPriority(child.pid, constants.priority.PRIORITY_LOW);
+      } catch {
+        // exited already
+      }
+    }
   });
 }
 

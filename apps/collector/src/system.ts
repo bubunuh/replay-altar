@@ -3,6 +3,9 @@ import { spawn } from "node:child_process";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { isWarcraftRunning } from "@replay-altar/core";
+import { windowsDesktop } from "./install.ts";
+
+const windows = process.platform === "win32";
 
 export { isWarcraftRunning };
 
@@ -18,20 +21,58 @@ export function watchWarcraft(onStart: () => void, onStop: () => void) {
   }, POLL_MS);
 }
 
-export const desktopLauncher = () => process.env.REPLAY_ALTAR_DESKTOP ?? join(homedir(), ".local/bin/replay-altar-desktop");
+/** The desktop app as a program and its leading arguments (REPLAY_ALTAR_DESKTOP overrides the program). */
+export function desktopCommand(): { exe: string; args: string[] } {
+  if (process.env.REPLAY_ALTAR_DESKTOP) return { exe: process.env.REPLAY_ALTAR_DESKTOP, args: [] };
+  return windows ? windowsDesktop() : { exe: join(homedir(), ".local/bin/replay-altar-desktop"), args: [] };
+}
 
 export function openDesktop(args: string[]) {
-  const child = spawn(desktopLauncher(), args, { detached: true, stdio: "ignore" });
+  const app = desktopCommand();
+  const child = spawn(app.exe, [...app.args, ...args], { detached: true, stdio: "ignore" });
   child.on("error", () => {}); // not installed yet: nothing to open
   child.unref();
 }
 
 /** Shows a notification; resolves with the action the user clicked, if any. */
 export function notify(title: string, body: string, action?: { id: string; label: string }): Promise<string | null> {
+  return windows ? toast(title, body, action) : notifySend(title, body, action);
+}
+
+function notifySend(title: string, body: string, action?: { id: string; label: string }): Promise<string | null> {
   return new Promise((resolve) => {
     const args = ["--app-name=Replay Altar", "--icon=replay-altar", "--expire-time=15000"];
     if (action) args.push(`--action=${action.id}=${action.label}`, "--wait");
     const child = spawn("notify-send", [...args, title, body], { stdio: ["ignore", "pipe", "ignore"] });
+    let out = "";
+    child.stdout.on("data", (d) => (out += d));
+    child.on("error", () => resolve(null));
+    child.on("close", () => resolve(out.trim() || null));
+  });
+}
+
+/**
+ * A Windows toast through PowerShell's WinRT bridge (Windows 10 and 11, nothing to install),
+ * shown under PowerShell's app id. With an action, waits up to 20 s for a click on the toast and
+ * prints the action id. Texts go in through the environment, never through the script.
+ */
+function toast(title: string, body: string, action?: { id: string; label: string }): Promise<string | null> {
+  const script = [
+    "[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null",
+    "$xml = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText02)",
+    "$t = $xml.GetElementsByTagName('text'); $t.Item(0).InnerText = $env:RA_TITLE; $t.Item(1).InnerText = $env:RA_BODY",
+    "$toast = [Windows.UI.Notifications.ToastNotification]::new($xml)",
+    "$appId = '{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\\WindowsPowerShell\\v1.0\\powershell.exe'",
+    "if ($env:RA_ACTION) { Register-ObjectEvent -InputObject $toast -EventName Activated -SourceIdentifier ra | Out-Null }",
+    "[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($appId).Show($toast)",
+    "if ($env:RA_ACTION) { if (Wait-Event -SourceIdentifier ra -Timeout 20) { Write-Output $env:RA_ACTION } }",
+  ].join("\n");
+  return new Promise((resolve) => {
+    const child = spawn("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", script], {
+      stdio: ["ignore", "pipe", "ignore"],
+      windowsHide: true,
+      env: { ...process.env, RA_TITLE: title, RA_BODY: body, RA_ACTION: action?.id ?? "" },
+    });
     let out = "";
     child.stdout.on("data", (d) => (out += d));
     child.on("error", () => resolve(null));

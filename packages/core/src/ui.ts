@@ -4,6 +4,7 @@ export * from "./db.ts";
 export * from "./gamedata.ts";
 export * from "./metrics.ts";
 export * from "./process.ts";
+export * from "./service.ts";
 export * from "./queries.ts";
 export * from "./store.ts";
 export { mmss } from "./time.ts";

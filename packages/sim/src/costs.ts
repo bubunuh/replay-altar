@@ -1,4 +1,4 @@
-// What things cost, from the game data extracted out of the local install (scripts/extract-gamedata.sh).
+// What things cost, from the game data extracted out of the local install (scripts/extract-gamedata.ts).
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";

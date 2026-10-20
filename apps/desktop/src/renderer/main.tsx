@@ -12,7 +12,7 @@ import "./styles.css";
 
 applyTextScale();
 
-// The game's own font when it has been extracted (scripts/extract-gamedata.sh); system font otherwise.
+// The game's own font when it has been extracted (scripts/extract-gamedata.ts); system font otherwise.
 api.uiFont().then((url) => {
   if (!url) return;
   const face = new FontFace("Warcraft", `url(${url})`);

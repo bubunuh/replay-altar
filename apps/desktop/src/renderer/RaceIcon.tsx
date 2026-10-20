@@ -1,4 +1,4 @@
-// Race crests from the game (scripts/extract-gamedata.sh copies them out); the race's name as
+// Race crests from the game (scripts/extract-gamedata.ts copies them out); the race's name as
 // text until they are there. Loaded once for the whole app.
 import { useEffect, useState } from "react";
 import { api } from "./api.ts";

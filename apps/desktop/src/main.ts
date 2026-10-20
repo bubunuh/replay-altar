@@ -1,5 +1,5 @@
 // Electron main process: one window, read-mostly access to the Replay Altar database.
-import { execFile, spawn, type ChildProcess } from "node:child_process";
+import { spawn, type ChildProcess } from "node:child_process";
 import { existsSync, mkdtempSync, readdirSync, readFileSync, watch, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
@@ -11,6 +11,7 @@ import { mapActivity } from "./mapActivity.ts";
 import type { RulesBook } from "@replay-altar/ai/types";
 import {
   addAnnotation,
+  collectorState,
   configPath,
   dataDir,
   getGame,
@@ -21,6 +22,7 @@ import {
   paths,
   performanceData,
   referencePaths,
+  restartCollectorIfRunning,
   saveConfig,
   type Config,
 } from "@replay-altar/core/ui";
@@ -147,14 +149,20 @@ if (!app.requestSingleInstanceLock()) {
   ipcMain.handle("ref:update", (e) => {
     if (refUpdate) return false;
     refLog.length = 0;
-    const cli = process.env.REPLAY_ALTAR_CLI ?? join(homedir(), ".local/bin/replay-altar");
-    const child = spawn(cli, ["ref", "refresh"], { stdio: ["ignore", "pipe", "pipe"] });
+    // Linux: the launcher `install` wrote. Windows: node on PATH with this checkout's CLI (the
+    // .cmd shim would need a shell).
+    const [cli, ...cliArgs] = process.env.REPLAY_ALTAR_CLI
+      ? [process.env.REPLAY_ALTAR_CLI]
+      : process.platform === "win32"
+        ? ["node", join(app.getAppPath(), "../collector/src/cli.ts")]
+        : [join(homedir(), ".local/bin/replay-altar")];
+    const child = spawn(cli, [...cliArgs, "ref", "refresh"], { stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
     refUpdate = child;
     const send = (channel: string, ...args: unknown[]) => {
       if (!e.sender.isDestroyed()) e.sender.send(channel, ...args);
     };
     const onData = (chunk: Buffer) => {
-      for (const line of chunk.toString().split("\n").filter(Boolean)) {
+      for (const line of chunk.toString().split(/\r?\n/).filter(Boolean)) {
         refLog.push(line);
         send("ref:progress", line);
       }
@@ -187,7 +195,7 @@ if (!app.requestSingleInstanceLock()) {
   // The map's minimap, as WC3V's data tool extracts it when a game on that map is first simulated.
   ipcMain.handle("map:markers", (_e, mapFile: string) => mapMarkers(join(import.meta.dirname, "../../../vendor/wc3v"), mapDataName(mapFile)));
   // Race crests from the game's own menu art, copied out of the install by
-  // scripts/extract-gamedata.sh (never shipped in the repo).
+  // scripts/extract-gamedata.ts (never shipped in the repo).
   ipcMain.handle("race:icons", () => {
     const dir = join(dataDir(), "ui/races");
     const files: Record<string, string> = { H: "human", O: "orc", U: "undead", N: "nightelf", R: "random" };
@@ -250,14 +258,9 @@ if (!app.requestSingleInstanceLock()) {
   ipcMain.handle("config:get", () => ({ config: loadConfig(), configPath: configPath(), paths: p }));
   ipcMain.handle("config:set", (_e, config: Config) => {
     saveConfig(config);
-    // The collector reads its settings at start.
-    execFile("systemctl", ["--user", "try-restart", "replay-altar-collector.service"], () => {});
+    restartCollectorIfRunning();
   });
-  ipcMain.handle("collector:status", () =>
-    new Promise<string>((resolve) =>
-      execFile("systemctl", ["--user", "is-active", "replay-altar-collector.service"], (_err, out) => resolve(out.trim() || "not installed")),
-    ),
-  );
+  ipcMain.handle("collector:status", () => collectorState());
   ipcMain.handle("ref:profiles", () =>
     // profile.json of each configured reference group (missing until the first refresh).
     loadRefGroups().map((g) => {

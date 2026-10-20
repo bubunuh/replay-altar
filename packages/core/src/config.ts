@@ -48,11 +48,25 @@ export type Config = {
 };
 
 const home = homedir();
+const windows = process.platform === "win32";
 const gemma = join(home, "models/unsloth/gemma-4-26B-A4B-it-GGUF");
+
+/**
+ * Where the app keeps its data and settings: XDG folders on Linux; on Windows %LOCALAPPDATA%
+ * for data (large, machine-specific) and %APPDATA% for settings.
+ */
+export const appDirs = () =>
+  windows
+    ? { data: process.env.LOCALAPPDATA ?? join(home, "AppData/Local"), config: process.env.APPDATA ?? join(home, "AppData/Roaming") }
+    : { data: process.env.XDG_DATA_HOME ?? join(home, ".local/share"), config: process.env.XDG_CONFIG_HOME ?? join(home, ".config") };
+
+/** The game's "Documents/Warcraft III" folders: Windows' own (also under OneDrive), or the Wine prefix Lutris installs Battle.net in. */
+const warcraftDocuments = () =>
+  windows ? [join(home, "Documents/Warcraft III"), join(home, "OneDrive/Documents/Warcraft III")] : [join(home, "Games/battlenet/drive_c/users/steamuser/Documents/Warcraft III")];
 
 export const DEFAULT_CONFIG: Config = {
   accounts: ["Pedrovisk#1486"],
-  warcraftDocuments: [join(home, "Games/battlenet/drive_c/users/steamuser/Documents/Warcraft III")],
+  warcraftDocuments: warcraftDocuments(),
   openWindowOnGameStart: true,
   notifyAfterGame: true,
   reference: {
@@ -64,7 +78,7 @@ export const DEFAULT_CONFIG: Config = {
     ],
   },
   ai: {
-    serverPath: join(home, ".local/bin/llama-server"),
+    serverPath: windows ? join(appDirs().data, "replay-altar/llama/llama-server.exe") : join(home, ".local/bin/llama-server"),
     model: join(gemma, "gemma-4-26B-A4B-it-UD-Q5_K_XL.gguf"),
     draftModel: join(gemma, "mtp-gemma-4-26B-A4B-it-Q8_0.gguf"),
     chatTemplate: join(gemma, "chat_template-2026-07-17.jinja"),
@@ -76,10 +90,8 @@ export const DEFAULT_CONFIG: Config = {
 };
 
 // REPLAY_ALTAR_DATA / REPLAY_ALTAR_CONFIG let tests and dry runs use throwaway locations.
-export const dataDir = () =>
-  process.env.REPLAY_ALTAR_DATA ?? join(process.env.XDG_DATA_HOME ?? join(home, ".local/share"), "replay-altar");
-export const configPath = () =>
-  process.env.REPLAY_ALTAR_CONFIG ?? join(process.env.XDG_CONFIG_HOME ?? join(home, ".config"), "replay-altar/config.json");
+export const dataDir = () => process.env.REPLAY_ALTAR_DATA ?? join(appDirs().data, "replay-altar");
+export const configPath = () => process.env.REPLAY_ALTAR_CONFIG ?? join(appDirs().config, "replay-altar/config.json");
 
 export const paths = (root = dataDir()) => {
   return {

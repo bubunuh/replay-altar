@@ -1,5 +1,5 @@
 // The always-on service: archive + analyze new replays, react to Warcraft III starting.
-import { ingestFile, loadConfig, mmss, openDb, paths, replayDirs, type GameRecord } from "@replay-altar/core";
+import { ingestFile, loadConfig, markCollectorRunning, mmss, openDb, paths, replayDirs, type GameRecord } from "@replay-altar/core";
 import { OfficialQueue } from "./officialqueue.ts";
 import { SimQueue } from "./simqueue.ts";
 import { notify, openDesktop, watchWarcraft } from "./system.ts";
@@ -22,6 +22,7 @@ export async function runCollector() {
   const config = loadConfig();
   const p = paths();
   const db = openDb(p.db);
+  markCollectorRunning();
   const ctx = { db, config, paths: p };
   const sims = new SimQueue(ctx, log);
   const officials = new OfficialQueue(ctx, log);

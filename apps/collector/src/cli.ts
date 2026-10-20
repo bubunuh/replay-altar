@@ -16,7 +16,7 @@ import {
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { activeReferenceGroups, applyOfficial, applySim, readRecord, referencePaths, type RefLookup } from "@replay-altar/core";
+import { activeReferenceGroups, applyOfficial, applySim, collectorState, readRecord, referencePaths, type RefLookup } from "@replay-altar/core";
 import { CONSTANTS, gamedataDir, loadCosts, readSimOutput, simNotReady, simulateGame, summarize } from "@replay-altar/sim";
 import { buildProfile, officialForMatch, officialForOwnGame, openReference, readState, refreshGroup, w3cClient } from "@replay-altar/reference";
 import { analyzeGame, buildPrompt, ModelServer, rulesBook } from "@replay-altar/ai";
@@ -24,6 +24,7 @@ import { currentReplayBuild, racesPlayed } from "./reference.ts";
 import { runCollector } from "./collector.ts";
 import { isReplayFile } from "./watcher.ts";
 import { install, resume, suspend, uninstall } from "./install.ts";
+import { extractGameData } from "./gamedata.ts";
 
 const HELP = `replay-altar — Warcraft III replay archive & stats
 
@@ -163,13 +164,14 @@ switch (cmd) {
   }
   case "setup-sim": {
     const root = join(import.meta.dirname, "../../..");
-    const run = (cmd: string, cmdArgs: string[], cwd = root) => {
+    // npm is a .cmd script on Windows, which only runs through the shell.
+    const run = (cmd: string, cmdArgs: string[], cwd = root, shell = false) => {
       console.log(`$ ${cmd} ${cmdArgs.join(" ")}`);
-      execFileSync(cmd, cmdArgs, { cwd, stdio: "inherit" });
+      execFileSync(cmd, cmdArgs, { cwd, stdio: "inherit", shell });
     };
     if (!existsSync(join(root, "vendor/wc3v/wc3v.js"))) run("git", ["submodule", "update", "--init", "--depth", "1", "vendor/wc3v"]);
-    if (!existsSync(join(root, "vendor/wc3v/node_modules/w3gjs"))) run("npm", ["ci", "--omit=dev", "--no-audit", "--no-fund"], join(root, "vendor/wc3v"));
-    run(join(root, "scripts/extract-gamedata.sh"), []);
+    if (!existsSync(join(root, "vendor/wc3v/node_modules/w3gjs"))) run("npm", ["ci", "--omit=dev", "--no-audit", "--no-fund"], join(root, "vendor/wc3v"), process.platform === "win32");
+    extractGameData();
     const problem = simNotReady(paths().root);
     console.log(problem ? `Not ready: ${problem}` : "Simulation ready. Run `replay-altar sim --backfill` to simulate existing games.");
     break;
@@ -303,13 +305,7 @@ switch (cmd) {
   }
   case "status": {
     const { db } = ctx();
-    const { execFileSync } = await import("node:child_process");
-    let state = "not installed";
-    try {
-      state = execFileSync("systemctl", ["--user", "is-active", "replay-altar-collector.service"], { encoding: "utf8" }).trim();
-    } catch (e) {
-      state = ((e as { stdout?: string }).stdout ?? "").trim() || state;
-    }
+    const state = collectorState();
     const totals = db.prepare("SELECT COUNT(*) total, SUM(analyzed) analyzed FROM games").get() as { total: number; analyzed: number };
     console.log(`collector: ${state}\ndata: ${paths().root}\ngames: ${totals.total} archived, ${totals.analyzed ?? 0} analyzed\n`);
     const recent = db.prepare("SELECT played_at, result, matchup, map_name, opp_name, duration_ms, source, analyzed, skip_reason FROM v_games ORDER BY played_at DESC LIMIT 10").all() as Record<string, string | number>[];

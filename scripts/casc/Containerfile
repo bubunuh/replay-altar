@@ -1,5 +1,5 @@
 # Builds casc-extract (casc-extract.cpp) against upstream CascLib, to read files
-# out of the local Warcraft III install. Used by scripts/extract-gamedata.sh.
+# out of the local Warcraft III install. Used by scripts/extract-gamedata.ts.
 FROM quay.io/fedora/fedora:latest
 RUN dnf install -y --setopt=install_weak_deps=False git cmake make gcc-c++ zlib-devel && dnf clean all
 # Pinned: 903d9500ce (2026-09-25) uses Windows-only types and breaks the Linux build.

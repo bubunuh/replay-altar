@@ -107,7 +107,7 @@ A replay records *commands*, not game state. So:
   - **Workers, supply, camps, hero levels:** from the simulation.
   - **Losses and trades:** marked **≈**, because deaths are inferred.
   - **Mined income and unspent resources:** marked **≈**. They come from a mining model calibrated on your games and are shown for the first 10 minutes only.
-- **After a game patch:** run `scripts/extract-gamedata.sh` so costs match the new balance, then `node scripts/extract-combat.ts` (attack and armor types for the army-composition rules).
+- **After a game patch:** run `node scripts/extract-gamedata.ts` so costs match the new balance, then `node scripts/extract-combat.ts` (attack and armor types for the army-composition rules).
 
 ## Development
 

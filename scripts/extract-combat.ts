@@ -1,6 +1,6 @@
 // Writes data/gamedata/combat.json: each melee unit's cost (gold + lumber), armor type, attack
 // types (and whether they hit air or ground) and whether it flies, plus the game's
-// attack-vs-armor damage table. Read from the tables scripts/extract-gamedata.sh copies out of
+// attack-vs-armor damage table. Read from the tables scripts/extract-gamedata.ts copies out of
 // your install (unitbalance.slk, unitweapons.slk, unitdata.slk, miscgame.txt). Re-run after a
 // game patch:
 //
