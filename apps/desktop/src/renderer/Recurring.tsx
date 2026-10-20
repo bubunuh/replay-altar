@@ -1,14 +1,10 @@
-// Recurring problems: how often each finding came up in your games (in view on Performance),
-// whether it is getting better (your last 5 games against the 5 before), and the one habit to
-// work on now: the problem in most of your last 10 games.
+// Recurring problems on Performance: the table and the habit to work on now (recurring.ts).
 import { useEffect, useMemo, useState } from "react";
 import type { PerfGame } from "@replay-altar/core/ui";
 import { api, type GameFindings } from "./api.ts";
 import { problemName } from "./format.ts";
+import { recurringView } from "./recurring.ts";
 import { Tip } from "./Tip.tsx";
-
-/** Only the findings a report shows count (the top three). */
-const SHOWN = 3;
 
 export function Recurring({ games, onOpen }: { games: PerfGame[]; onOpen: (key: string) => void }) {
   const [all, setAll] = useState<GameFindings[] | null>(null);
@@ -16,42 +12,7 @@ export function Recurring({ games, onOpen }: { games: PerfGame[]; onOpen: (key: 
     api.findingsSummary().then(setAll);
   }, [games.length]);
 
-  const view = useMemo(() => {
-    if (!all) return null;
-    const byKey = new Map(all.map((g) => [g.key, g]));
-    // Oldest first, decided games only, as on the rest of the page.
-    const list = games.filter((g) => g.result === "win" || g.result === "loss").map((g) => ({ g, f: byKey.get(g.game_key)?.findings.slice(0, SHOWN) ?? [] }));
-    const has = (x: (typeof list)[number], id: string) => x.f.some((f) => f.id === id);
-    const ids = [...new Set(list.flatMap((x) => x.f.map((f) => f.id)))];
-    const losses = list.filter((x) => x.g.result === "loss");
-    const wins = list.filter((x) => x.g.result === "win");
-    const last5 = list.slice(-5);
-    const prev5 = list.slice(-10, -5);
-    const rows = ids
-      .map((id) => {
-        const latest = [...list].reverse().find((x) => has(x, id))!;
-        const f = latest.f.find((x) => x.id === id)!;
-        return {
-          id,
-          inLosses: losses.filter((x) => has(x, id)).length,
-          inWins: wins.filter((x) => has(x, id)).length,
-          recent: last5.filter((x) => has(x, id)).length,
-          before: prev5.filter((x) => has(x, id)).length,
-          latest: latest.g.game_key,
-          headline: f.headline,
-          advice: f.advice,
-        };
-      })
-      .sort((a, b) => b.inLosses + b.inWins - (a.inLosses + a.inWins) || b.inLosses - a.inLosses)
-      .slice(0, 8);
-    const last10 = list.slice(-10);
-    const focus = ids
-      .map((id) => ({ id, n: last10.filter((x) => has(x, id)).length, losses: last10.filter((x) => x.g.result === "loss" && has(x, id)).length }))
-      .filter((x) => x.id !== "mechanics" && x.n >= 2)
-      .sort((a, b) => b.n - a.n || b.losses - a.losses)[0];
-    const focusRow = focus && rows.find((r) => r.id === focus.id);
-    return { rows, losses: losses.length, wins: wins.length, focus, focusRow, last10: last10.length, enough: prev5.length === 5 };
-  }, [all, games]);
+  const view = useMemo(() => (all ? recurringView(games, all) : null), [all, games]);
 
   if (!view || !view.rows.length) return null;
   const trend = (r: (typeof view.rows)[number]) => {
@@ -68,7 +29,9 @@ export function Recurring({ games, onOpen }: { games: PerfGame[]; onOpen: (key: 
       </h2>
       {view.focus && (
         <p className="ai-one">
-          <b>Work on this now</b> {problemName(view.focus.id)}: in {view.focus.n} of your last {view.last10} games. {view.focusRow?.advice}
+          <b>Work on this now</b>
+          <br />
+          {problemName(view.focus.id)}: in {view.focus.n} of your last {view.last10} games. {view.focusRow?.advice}
         </p>
       )}
       <table>
