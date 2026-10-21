@@ -4,6 +4,8 @@
 
 Replay Altar is a Warcraft III: Reforged replay analyzer for 1v1 players. It runs on your own computer, keeps every game you play, and after each one tells you what decided it and what to do differently next time, compared with tournament players of your race.
 
+[Download it][https://github.com/bubunuh/replay-altar/releases]
+
 - **Every replay kept.** A small background program saves each replay the moment a game ends, before the game overwrites `LastReplay.w3g`. Battle.net ladder, W3Champions and custom melee games are all picked up.
 - **The game reconstructed.** Each 1v1 is simulated from its replay with [WC3V](https://github.com/jblanchette/wc3v): workers, army value, supply, creep camps, hero levels and fights over time.
 - **Compared with pros.** Your numbers are set against about 200 recent tournament games per race, played on your current patch and analyzed on your computer the same way.
