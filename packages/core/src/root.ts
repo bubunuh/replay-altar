@@ -1,5 +1,5 @@
 // Where Replay Altar's own files are (vendor/wc3v, the simulation driver, the game-data
-// extractor, the starting pro data): the project checkout when run from source, the install's
+// extractor, the shipped data/ with the pro statistics): the project checkout when run from source, the install's
 // resources folder when installed. REPLAY_ALTAR_ROOT overrides it.
 import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";

@@ -13,7 +13,6 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, write
 import { join, relative } from "node:path";
 import * as esbuild from "esbuild";
 import { Arch, build, Platform } from "electron-builder";
-import { referencePaths } from "@replay-altar/core";
 
 const desktop = import.meta.dirname;
 const root = join(desktop, "../..");
@@ -59,14 +58,6 @@ cpSync(casc, join(res, "scripts/casc/bin/casc-extract.exe"));
 cpSync(join(root, "data"), join(res, "data"), { recursive: true });
 // GPL-3.0: the license travels with the program.
 cpSync(join(root, "LICENSE"), join(res, "LICENSE.txt"));
-
-// Starting pro data: each group's statistics, not the games behind them.
-for (const group of ["pros", "pros-orc", "pros-undead", "pros-nightelf"]) {
-  for (const f of ["profile.json", "principles.json", "state.json"]) {
-    const from = join(referencePaths(group).root, f);
-    if (existsSync(from)) cpSync(from, join(res, "seed/reference", group, f));
-  }
-}
 
 await build({
   projectDir: app,

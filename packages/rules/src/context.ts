@@ -3,7 +3,7 @@
 // rules, so the app and the scores judge games against the same pro data.
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { getGame, loadConfig, referencePaths, type DB, type GameRecord, type Paths, type PlayerRecord, type ReferenceGroup } from "@replay-altar/core/ui";
+import { getGame, loadConfig, proDataDir, type DB, type GameRecord, type Paths, type PlayerRecord, type ReferenceGroup } from "@replay-altar/core/ui";
 import { groupForRace, pickProfile } from "@replay-altar/reference/compare";
 import type { RefProfile } from "@replay-altar/reference/types";
 import { gameFacts, type FactsRef } from "./facts.ts";
@@ -14,13 +14,13 @@ export type RefGroup = { group: ReferenceGroup; profile: RefProfile | null; prin
 const readJson = (file: string) => (existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : null);
 
 /**
- * profile.json and principles.json of each configured reference group (null until the first
- * refresh). With `principlesDir`, principles come from its principles-<group>.json instead
+ * profile.json and principles.json of each configured reference group, as shipped in
+ * data/reference (null when missing). With `principlesDir`, principles come from its principles-<group>.json instead
  * (eval-findings' holdout).
  */
 export function loadRefGroups(principlesDir?: string): RefGroup[] {
   return loadConfig().reference.groups.map((group) => {
-    const root = referencePaths(group.id).root;
+    const root = proDataDir(group.id);
     return {
       group,
       profile: readJson(join(root, "profile.json")),

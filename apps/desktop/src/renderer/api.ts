@@ -13,8 +13,6 @@ export type Folders = { found: string[]; added: string[]; replayDirs: number };
 export type RefGroupInfo = {
   group: ReferenceGroup;
   profile: RefProfile | null;
-  state: { lastRefreshAt: string | null; lastResult: { kept: number; stopReason: string | null } | null } | null;
-  root: string;
   /** Mined from the pro games (scripts/mine-principles.ts); null until mined. */
   principles: Principles | null;
 };
@@ -34,9 +32,6 @@ type W3Api = {
   referenceProfiles(): Promise<RefGroupInfo[]>;
   showFile(file: string): Promise<void>;
   openPath(dir: string): Promise<void>;
-  refUpdate(): Promise<boolean>;
-  refUpdateStatus(): Promise<{ running: boolean; log: string[] }>;
-  onRefUpdate(fn: (event: "progress" | "done", value: string | number | null) => void): () => void;
   rules(key: string): Promise<RulesBook>;
   /** The map's minimap as a data URL, or null when there is none yet. */
   mapImage(mapFile: string): Promise<string | null>;
@@ -52,8 +47,6 @@ type W3Api = {
   findingsSummary(): Promise<GameFindings[]>;
   /** Fights and creep camps cleared, positioned on the map; null without a simulation or map data. */
   mapActivity(key: string): Promise<MapActivity | null>;
-  /** Is Warcraft III running (heavy work would slow it down)? */
-  warcraftRunning(): Promise<boolean>;
   onDataChanged(fn: () => void): void;
   onNavGame(fn: (key: string) => void): void;
   onNavPage(fn: (page: string) => void): void;

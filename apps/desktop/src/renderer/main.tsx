@@ -4,7 +4,7 @@ import type { GameRow, MetricDef, PerfGame } from "@replay-altar/core/ui";
 import { api, type RefGroupInfo } from "./api.ts";
 import { Match } from "./pages/Match.tsx";
 import { Matches } from "./pages/Matches.tsx";
-import { Settings, Skipped } from "./pages/Other.tsx";
+import { Settings } from "./pages/Other.tsx";
 import { Performance } from "./pages/Performance.tsx";
 import { TipLayer } from "./Tip.tsx";
 import { applyTextScale } from "./textSize.ts";
@@ -21,11 +21,10 @@ api.uiFont().then((url) => {
   face.load().then((f) => document.fonts.add(f)).catch(() => {});
 });
 
-type Page = "matches" | "performance" | "skipped" | "settings";
+type Page = "matches" | "performance" | "settings";
 const TABS: [Page, string][] = [
   ["matches", tr("Matches", "Partidas")],
   ["performance", tr("Performance", "Desempenho")],
-  ["skipped", tr("Skipped", "Ignoradas")],
   ["settings", tr("Settings", "Configurações")],
 ];
 
@@ -85,7 +84,7 @@ function App() {
           ))}
         </nav>
         <span className="status">
-          {tr(`${analyzed} analyzed · ${games.length - analyzed} skipped`, `${analyzed} analisadas · ${games.length - analyzed} ignoradas`)}
+          {tr(`${analyzed} games analyzed`, `${analyzed} partidas analisadas`)}
           {simulating ? tr(` · ${simulating} waiting for simulation`, ` · ${simulating} aguardando simulação`) : ""}
         </span>
       </header>
@@ -96,10 +95,8 @@ function App() {
           <Matches games={games} onOpen={open} />
         ) : page === "performance" ? (
           <Performance games={perf.games} metrics={perf.metrics} refs={refs} onOpen={open} />
-        ) : page === "skipped" ? (
-          <Skipped games={games} onOpen={open} />
         ) : (
-          <Settings refs={refs} onRefsChanged={load} />
+          <Settings refs={refs} />
         )}
       </main>
     </div>

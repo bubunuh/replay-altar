@@ -1,9 +1,9 @@
 // What the collector sets up by itself the first time it runs (an installed copy has no one at a
-// terminal to run setup commands): who you are, the starting pro data, the game data the
-// simulation needs. Each step only runs when its result is missing.
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync } from "node:fs";
+// terminal to run setup commands): who you are and the game data the simulation needs. Each
+// step only runs when its result is missing.
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { dataDir, loadConfig, parseReplay, projectRoot, referencePaths, saveConfig, seatsOf, type Config } from "@replay-altar/core";
+import { dataDir, loadConfig, parseReplay, saveConfig, seatsOf, type Config } from "@replay-altar/core";
 import { simNotReady } from "@replay-altar/sim";
 import { defaultWarcraftDir, extractGameData } from "./gamedata.ts";
 import { isReplayFile } from "./watcher.ts";
@@ -39,19 +39,6 @@ export async function detectAccounts(dirs: string[], log: (msg: string) => void)
   return found;
 }
 
-/** Copies the pro data shipped with the install (seed/reference/<group>/*.json) where none was downloaded yet. */
-export function seedReference(log: (msg: string) => void) {
-  const seed = join(projectRoot(), "seed/reference");
-  if (!existsSync(seed)) return;
-  for (const group of readdirSync(seed)) {
-    const to = referencePaths(group).root;
-    if (existsSync(join(to, "profile.json"))) continue;
-    mkdirSync(to, { recursive: true });
-    for (const f of readdirSync(join(seed, group))) copyFileSync(join(seed, group, f), join(to, f));
-    log(`pro data for ${group} copied from the install`);
-  }
-}
-
 /** Extracts the game data the simulation needs when it is missing and the game is installed. */
 export function ensureGameData(log: (msg: string) => void) {
   const problem = simNotReady(dataDir());
@@ -66,7 +53,6 @@ export function ensureGameData(log: (msg: string) => void) {
 }
 
 export async function firstRun(config: Config, dirs: string[], log: (msg: string) => void): Promise<Config> {
-  seedReference(log);
   ensureGameData(log);
   if (config.accounts.length || !dirs.length) return config;
   const accounts = await detectAccounts(dirs, log);

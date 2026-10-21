@@ -179,7 +179,7 @@ Built on demand, never stored (`packages/rules/src/book.ts`). Older installs may
 
 - **One group per race:** Human pros (`pros`), plus Orc, Undead and Night Elf groups that only download once you have played that race (`onlyIfPlayed`).
 - **Matching:** pages and exports compare you with the group for the race you played.
-- **Source and updates:** tournament replays from warcraft3.info, on request only (`replay-altar ref refresh`, "Update pro games"). See the README for the rules. Older games in the Human group came from the W3Champions ladder; they keep their official stats.
+- **Source and updates:** tournament replays from warcraft3.info, downloaded by the maintainers (`replay-altar ref refresh --all`), never by the app. Their statistics are published in `data/reference/<group>/` (`replay-altar ref publish`), which is what the app reads. See the README for the rules. Older games in the Human group came from the W3Champions ladder; they keep their official stats.
 - **Maps:** map versions you don't have are fetched by the SHA-1 in the replay header and stored in `maps/` in your data folder.
 
 - **Layout:** the same files as your data (`archive/`, `games/`, `raw/`, `sim/out/`), plus `reference.sqlite`. Records are "observed", so both players have metrics.

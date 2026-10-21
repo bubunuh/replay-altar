@@ -104,7 +104,7 @@ describe("W3Champions client", () => {
 });
 
 const realData = paths().root;
-const files = ["Macro_loss.w3g", "Victory-1v1-oct-2026.w3g", "victory_vs_elf.w3g"];
+const files = ["replay3.w3g", "replay2.w3g", "replay4.w3g"];
 const canRun = simNotReady(realData) === null && files.every((f) => existsSync(join(FIX, f)));
 
 describe.skipIf(!canRun)("refreshing a reference group (fake warcraft3.info, real simulation)", () => {
@@ -123,7 +123,7 @@ describe.skipIf(!canRun)("refreshing a reference group (fake warcraft3.info, rea
     replay(14, ["pedrovisk#1486", "Human", "Pedrovisk"], ["гнилой#21118", "Night Elf", null]),
     replay(15, ["pedrovisk#1486", "Human", "Pedrovisk"], ["lucky392cake#2107", "Night Elf", null]),
   ];
-  const replayFor: Record<number, string> = { 10: "Macro_loss.w3g", 11: "Macro_loss.w3g", 13: "Victory-1v1-oct-2026.w3g", 14: "Victory-1v1-oct-2026.w3g", 15: "victory_vs_elf.w3g" };
+  const replayFor: Record<number, string> = { 10: "replay3.w3g", 11: "replay3.w3g", 13: "replay2.w3g", 14: "replay2.w3g", 15: "replay4.w3g" };
   const downloads: number[] = [];
   const client: W3iClient = {
     listReplays: async (page) => ({ replays: page === 1 ? list : [], lastPage: 1 }),

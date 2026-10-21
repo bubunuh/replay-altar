@@ -306,7 +306,7 @@ export function Performance({ games: all, metrics, refs, onOpen }: { games: Perf
                 ` Pros: ${groupLabel(pros!.group)}, ${describeRef(ref)}. Core and Mechanics get a verdict: green = pro level (at or above the pro median), yellow = not yet but at least as good as your opponents, red = below both; for timings with no better direction (heroes, tiers, expansions): green = like pros (their middle 50%), yellow = unusual, red = far from pros. Whole-game totals are compared per 10 minutes.`,
                 ` Pros: ${groupLabel(pros!.group)}, ${describeRef(ref)}. Essencial e Mecânica recebem um veredito: verde = nível pro (na mediana dos pros ou acima), amarelo = ainda não, mas pelo menos tão bom quanto os seus oponentes, vermelho = abaixo dos dois; para tempos sem direção melhor (heróis, tiers, expansões): verde = como os pros (os 50% do meio deles), amarelo = incomum, vermelho = longe dos pros. Totais da partida inteira são comparados a cada 10 minutos.`,
               )
-            : tr(" Pro comparison appears once reference games are downloaded (replay-altar ref refresh).", " A comparação com os pros aparece depois que as partidas de referência forem baixadas (Atualizar partidas de pros).")}
+            : tr(" This version has no pro statistics for your race, so there is no pro comparison.", " Esta versão não tem estatísticas de pros para a sua raça, então não há comparação com os pros.")}
           {" "}{tr("Hover a metric for its definition.", "Passe o mouse num número para ver a definição.")}
         </p>
         {(() => {

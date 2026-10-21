@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import {
   addAnnotation,
@@ -17,7 +17,7 @@ import {
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { activeReferenceGroups, applyOfficial, applySim, collectorState, projectRoot, readRecord, referencePaths, type RefLookup } from "@replay-altar/core";
+import { activeReferenceGroups, applyOfficial, applySim, collectorState, proDataDir, projectRoot, readRecord, referencePaths, type RefLookup } from "@replay-altar/core";
 import { CONSTANTS, gamedataDir, loadCosts, readSimOutput, simNotReady, simulateGame, summarize } from "@replay-altar/sim";
 import { buildProfile, officialForMatch, officialForOwnGame, openReference, readState, refreshGroup, w3cClient } from "@replay-altar/reference";
 import { rulesBook } from "@replay-altar/rules";
@@ -47,10 +47,12 @@ const HELP = `replay-altar — Warcraft III replay archive & stats
   replay-altar sim --rerun         simulate every analyzed game again
   replay-altar sim --resummarize   recompute economy numbers from stored simulations (after a model update)
   replay-altar sim <game>          simulate one game
+  Maintainers (the pro statistics shipped in data/reference; users never download pro games):
   replay-altar ref                 pro reference games: status
   replay-altar ref refresh [--target N] [--group id|--all]   download recent tournament games from warcraft3.info
-                              until each of your races has its target (same as "Update pro games")
+                              until each group has its target (slowly: one replay every 3 s)
   replay-altar ref profile         rebuild the reference statistics from stored games
+  replay-altar ref publish [--group id]   copy each group's profile.json and principles.json into data/reference
   replay-altar official            fetch the game's own end-of-game stats from W3Champions for W3C games
                               (yours and reference games) that don't have them yet
   replay-altar report <game|latest> the rules' report of one game: recap, findings with causes and advice, turning point
@@ -140,7 +142,7 @@ switch (cmd) {
     // Pro comparison: the profile of pros playing the race you played in that game.
     const profiles = new Map(
       c.config.reference.groups.flatMap((g) => {
-        const file = join(referencePaths(g.id).root, "profile.json");
+        const file = join(proDataDir(g.id), "profile.json");
         return existsSync(file) ? [[g.race, { label: g.label, profile: JSON.parse(readFileSync(file, "utf8")) }] as const] : [];
       }),
     );
@@ -235,7 +237,19 @@ switch (cmd) {
       : args.includes("--all") ? config.reference.groups
       : activeReferenceGroups(config, racesPlayed(openDb(paths().db)));
     const build = currentReplayBuild(openDb(paths().db));
-    if (sub === "refresh") {
+    if (sub === "publish") {
+      // After `ref refresh --all` and scripts/mine-principles.ts: what the app and installer ship.
+      for (const g of gi >= 0 ? groups : config.reference.groups) {
+        const to = proDataDir(g.id);
+        mkdirSync(to, { recursive: true });
+        for (const f of ["profile.json", "principles.json"]) {
+          const from = join(referencePaths(g.id).root, f);
+          if (existsSync(from)) copyFileSync(from, join(to, f));
+          else console.log(`${g.id}: no ${f} yet`);
+        }
+        console.log(`${g.id}: published to ${to}`);
+      }
+    } else if (sub === "refresh") {
       const ti = args.indexOf("--target");
       for (const g of groups) {
         const res = await refreshGroup(g, {
@@ -255,7 +269,7 @@ switch (cmd) {
         console.log(`${g.id}: profile from ${p.games} games`);
       }
     } else {
-      console.log(`current replay build: ${build ?? "unknown (no games yet)"}; update with \`replay-altar ref refresh\` or "Update pro games" in Settings`);
+      console.log(`current replay build: ${build ?? "unknown (no games yet)"}; update with \`replay-altar ref refresh --all\`, then \`replay-altar ref publish\``);
       for (const g of groups) {
         const ref = openReference(g.id, config);
         const st = readState(ref.paths.root);

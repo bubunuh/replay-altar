@@ -13,7 +13,7 @@ Replay Altar is a Warcraft III: Reforged replay analyzer for 1v1 players. It run
 
 ![The report of a game: result, heroes, the main numbers against the opponent, the map, and the findings with advice](docs/images/report.png)
 
-Your games stay on your computer. The only things downloaded are the tournament replays (and their maps) when you press "Update pro games", and the game's own end-of-game statistics for W3Champions games.
+Your games stay on your computer. The only thing Replay Altar fetches from the internet is the game's own end-of-game statistics for your W3Champions games. The pro statistics come with the app.
 
 > Replay Altar is a fan project. It is not affiliated with, endorsed by or connected to Blizzard Entertainment. Warcraft is a trademark of Blizzard Entertainment, Inc. The game's data and pictures (unit costs, race crests, hero portraits, the game's font) are read from your own Warcraft III installation, never modified there, and never distributed with this project; the screenshots on this page only show them as the app displays them.
 
@@ -44,7 +44,7 @@ node apps/collector/src/cli.ts setup-sim   # simulation engine and game data fro
 node apps/collector/src/cli.ts install     # background service, `replay-altar` command, desktop icon
 ```
 
-`install` sets up a systemd user service that starts at login, adds `replay-altar` and `replay-altar-desktop` to `~/.local/bin`, creates a desktop icon and imports your existing replays. Then press **Update pro games** in Settings once to download the tournament games.
+`install` sets up a systemd user service that starts at login, adds `replay-altar` and `replay-altar-desktop` to `~/.local/bin`, creates a desktop icon and imports your existing replays.
 
 The default game location is the Lutris Battle.net prefix in `~/Games/battlenet`. For another location, pass the Warcraft III folder to `node scripts/extract-gamedata.ts <folder>` and add your replay folder in Settings.
 
@@ -52,8 +52,9 @@ The default game location is the Lutris Battle.net prefix in `~/Games/battlenet`
 
 - **Matches:** every analyzed game, with its main problem. Open one for its report, charts, key numbers against pros, the build orders and a map of the fights and each player's creeping.
 - **Performance:** your win rates, recurring problems with the one to work on now, and your numbers in wins, losses and against pros.
-- **Skipped:** games kept but not counted: custom maps, games against the computer, team games, games you only observed.
-- **Settings:** your battletags, language, replay folders, notifications, and **Update pro games**.
+- **Settings:** your battletags, language, replay folders, notifications, and which pro games your numbers are compared with.
+
+Custom maps, games against the computer, team games and games you only observed are kept in the archive but not counted.
 
 Player names in these screenshots are replaced with placeholders.
 
@@ -68,10 +69,6 @@ Player names in these screenshots are replaced with placeholders.
 **Performance**
 
 ![Win rate, recurring problems and win rates by matchup, map and game length](docs/images/performance.png)
-
-**Skipped**
-
-![Games kept but not counted](docs/images/skipped.png)
 
 **Settings**
 
@@ -92,7 +89,6 @@ When Warcraft III starts, the window opens behind the game without taking focus,
 | `replay-altar export --jsonl` / `--md latest` | Your data for a script or a spreadsheet |
 | `replay-altar sim` | Simulation status; `--backfill`, `--retry-failed`, `--rerun`, `--resummarize` |
 | `replay-altar official` | Fetch W3Champions' end-of-game statistics for games that lack them |
-| `replay-altar ref` | Pro games: status; `ref refresh [--target N]` updates them, `ref profile` rebuilds the statistics |
 | `replay-altar uninstall [--purge]` | Remove the service, commands and icons; `--purge` also deletes your archive, statistics and settings |
 
 ### Where things are
@@ -110,7 +106,7 @@ When Warcraft III starts, the window opens behind the game without taking focus,
 - **From the replay:** a replay records commands, not the game's state. Build times are when an order was given (cancelled orders included), and heroes are timed by their first learned skill. Results come from leave records; each shows its confidence and can be corrected by hand.
 - **From the simulation:** workers, supply, army value, creep camps and fights come from WC3V's reconstruction of the game. Values marked ≈ are estimates: losses and trades (deaths are inferred), and the mined-income model, shown for the first 10 minutes only.
 - **Official numbers:** for W3Champions games, the game's own end-of-game statistics (gold and lumber collected, experience, units killed, upkeep lost) replace the estimates and are marked "official".
-- **Pro games:** downloaded only when you ask, from [warcraft3.info](https://warcraft3.info/replays/): 1v1 games of at least 3 minutes by players with a curated profile, on your current patch, at most 20 per player, one download every 3 seconds. Tournament map versions you don't have are downloaded too, checked against the replay's checksum and kept in Replay Altar's own folder, never in the game's.
+- **Pro games:** about 200 recent tournament games per race from [warcraft3.info](https://warcraft3.info/replays/), collected by the maintainers rather than by each copy of the app, so the site gets one slow download per game instead of one per user. They are 1v1 games of at least 3 minutes by players with a curated profile, on the current patch, at most 20 per player, downloaded one every 3 seconds and analyzed the same way as yours. Only the resulting statistics are published, in `data/reference/`, and they are updated with new versions of Replay Altar.
 - **Verdicts:** the main numbers get a colour: green at or above the pro median, yellow when at least as good as your opponent, red below both. Timings that depend on strategy (tier, heroes, expansions) are compared without a better or worse.
 - **Findings:** [docs/RULES.md](docs/RULES.md) lists every rule, where it comes from and how well it separates pro losses from pro wins. [docs/PRINCIPLES.md](docs/PRINCIPLES.md) holds the milestones mined from the pro games; [docs/DATA.md](docs/DATA.md) describes the data format.
 
@@ -139,6 +135,18 @@ The code is TypeScript run directly by Node (type stripping), in npm workspaces:
 
 `fixtures/replays/` holds real replays used by the tests. Texts are written in place as `tr("English", "Português")` pairs (`packages/core/src/i18n.ts`).
 
+### Updating the pro statistics (maintainers)
+
+From a Linux checkout with the simulation set up, not while playing:
+
+```sh
+replay-altar ref refresh --all     # download and simulate current-patch tournament games, slowly
+node scripts/mine-principles.ts    # milestones and builds mined from them
+replay-altar ref publish           # copy each race's profile.json and principles.json into data/reference
+```
+
+Then commit `data/reference/` and build a new installer. `replay-altar ref` shows the status of each race.
+
 ## Credits and sources
 
 Replay Altar stands on other people's work, all of it freely available.
@@ -153,7 +161,7 @@ Replay Altar stands on other people's work, all of it freely available.
 
 **Data**
 
-- Tournament replays and maps: [warcraft3.info](https://warcraft3.info), downloaded on request and never redistributed.
+- Tournament replays and maps: [warcraft3.info](https://warcraft3.info). Only statistics computed from them are published; the replays and maps are never redistributed.
 - End-of-game statistics: [W3Champions](https://w3champions.com).
 
 **Guides and build orders.** The findings and advice follow these guides, and `data/builds/` holds build orders transcribed from them (food counts and steps, with a link to each source):

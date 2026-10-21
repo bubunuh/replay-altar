@@ -1,5 +1,5 @@
-// Helpers for the pro reference groups. Updating them is manual ("Update pro games" in the
-// window, `replay-altar ref refresh`): the collector no longer downloads on its own.
+// Helpers for the pro reference groups. Only the maintainers update them (`replay-altar ref
+// refresh`, then `ref publish`); the app ships the resulting statistics in data/reference.
 import type { DB } from "@replay-altar/core";
 
 /** Races you played in analyzed games. */

@@ -1,5 +1,5 @@
 // Keeps a reference group stocked with current-patch tournament games from warcraft3.info.
-// Runs only when you ask ("Update pro games" in the window, or `replay-altar ref refresh`).
+// Maintainers only (`replay-altar ref refresh`); the app ships the statistics, never downloads.
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";

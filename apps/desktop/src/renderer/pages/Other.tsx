@@ -1,53 +1,9 @@
 import { useEffect, useState } from "react";
-import type { Config, GameRow, Paths } from "@replay-altar/core/ui";
+import type { Config, Paths } from "@replay-altar/core/ui";
 import { LANGUAGES, language, locale, tr, type Language } from "@replay-altar/core/i18n";
 import { setTextScale, TEXT_SCALES, textScale } from "../textSize.ts";
 import { api, type Folders, type RefGroupInfo } from "../api.ts";
-import { dateTime, groupLabel, mmss, SKIP, SOURCE } from "../format.ts";
-
-export function Skipped({ games, onOpen }: { games: GameRow[]; onOpen: (key: string) => void }) {
-  const rows = games.filter((g) => g.analyzed === 0);
-  return (
-    <div className="page">
-      <p className="muted" style={{ margin: 0 }}>
-        {tr(
-          "Archived but not counted in your stats: custom maps, games against computers, team games, and games you only observed.",
-          "Arquivadas, mas fora das suas estatísticas: mapas customizados, partidas contra o computador, partidas em equipe e partidas que você só assistiu.",
-        )}
-      </p>
-      <div className="card" style={{ padding: 0 }}>
-        {rows.length === 0 ? (
-          <div className="empty">{tr("Nothing skipped.", "Nada ignorado.")}</div>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>{tr("Played", "Jogada em")}</th>
-                <th>{tr("Why skipped", "Por que ignorada")}</th>
-                <th>{tr("Kind", "Tipo")}</th>
-                <th>{tr("Map", "Mapa")}</th>
-                <th className="num">{tr("Length", "Duração")}</th>
-                <th>{tr("Source", "Origem")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((g) => (
-                <tr key={g.game_key} className="click" onClick={() => onOpen(g.game_key)}>
-                  <td>{dateTime(g.played_at)}</td>
-                  <td>{SKIP[g.skip_reason ?? ""] ?? g.skip_reason}</td>
-                  <td className="muted">{g.category}</td>
-                  <td>{g.map_name}</td>
-                  <td className="num">{mmss(g.duration_ms)}</td>
-                  <td className="muted">{SOURCE[g.source]}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </div>
-  );
-}
+import { groupLabel } from "../format.ts";
 
 /**
  * Where replays are read from: the folders found by themselves, and the ones you added with the
@@ -111,66 +67,39 @@ export function ReplayFolders({ empty = false }: { empty?: boolean }) {
   );
 }
 
-/** "Update pro games": downloads recent tournament games and recomputes the pro comparison. */
-function ProGames({ refs, onChanged }: { refs: RefGroupInfo[]; onChanged: () => void }) {
-  const [running, setRunning] = useState(false);
-  const [log, setLog] = useState<string[]>([]);
-  const [warcraft, setWarcraft] = useState(false);
-  useEffect(() => {
-    api.refUpdateStatus().then((s) => {
-      setRunning(s.running);
-      setLog(s.log);
-    });
-    api.warcraftRunning().then(setWarcraft);
-    return api.onRefUpdate((event, value) => {
-      if (event === "progress") setLog((l) => [...l.slice(-39), String(value)]);
-      else {
-        setRunning(false);
-        onChanged();
-      }
-    });
-  }, []);
-  const start = async () => {
-    setLog([]);
-    setRunning(await api.refUpdate());
-  };
+/** The pro statistics shipped with this version: what your numbers are compared with. */
+function ProGames({ refs }: { refs: RefGroupInfo[] }) {
   return (
     <div className="card">
-      <div className="card-head">
-        <h2>{tr("Pro games", "Partidas de pros")}</h2>
-        <button className="btn" disabled={running} onClick={start}>
-          {running ? tr("Updating…", "Atualizando…") : tr("Update pro games", "Atualizar partidas de pros")}
-        </button>
-      </div>
+      <h2>{tr("Pro games", "Partidas de pros")}</h2>
       <p className="sub">
         {tr(
-          'The games your numbers are compared with. "Update pro games" downloads recent tournament replays from warcraft3.info (players with a curated profile, playing your race, on your current patch) until each race you play has its target, simulates them here, and recalculates the comparison. Games from an older patch are dropped. It takes a few minutes and uses the processor; best not while you play.',
-          'As partidas com que os seus números são comparados. "Atualizar partidas de pros" baixa replays recentes de torneios do warcraft3.info (jogadores com perfil selecionado, jogando a sua raça, no seu patch atual) até cada raça que você joga ter a sua meta, simula elas aqui e recalcula a comparação. Partidas de um patch mais antigo são descartadas. Leva alguns minutos e usa o processador; melhor não fazer enquanto você joga.',
+          "The games your numbers are compared with: recent tournament games of each race from warcraft3.info, analyzed the same way as yours. The Replay Altar maintainers collect them and ship only the statistics, updated with new versions of Replay Altar.",
+          "As partidas com que os seus números são comparados: partidas recentes de torneios de cada raça do warcraft3.info, analisadas do mesmo jeito que as suas. Os mantenedores do Replay Altar coletam essas partidas e distribuem só as estatísticas, atualizadas a cada nova versão do Replay Altar.",
         )}
       </p>
-      {warcraft && !running && <p className="sub">{tr("Warcraft III is running: the update would slow the game down.", "O Warcraft III está aberto: a atualização deixaria o jogo mais lento.")}</p>}
       <table>
         <tbody>
           {refs.map((r) => (
             <tr key={r.group.id}>
               <td>{groupLabel(r.group)}</td>
               <td className="small">
-                {r.profile ? tr(`${r.profile.games} games`, `${r.profile.games} partidas`) : tr("no games yet", "nenhuma partida ainda")} {tr("of", "de")} {r.group.target}
-                {r.profile && ` (${Object.entries(r.profile.matchups).filter(([k]) => k !== "all").map(([k, v]) => `${k} ${v.n}`).join(", ")})`}
-                {r.state?.lastRefreshAt && ` · ${tr("updated", "atualizado em")} ${new Date(r.state.lastRefreshAt).toLocaleString(locale())}`}
-                {r.group.onlyIfPlayed && !r.profile && ` · ${tr("downloaded once you play this race", "baixado quando você jogar com esta raça")}`}
+                {r.profile
+                  ? tr(`${r.profile.games} games`, `${r.profile.games} partidas`) +
+                    ` (${Object.entries(r.profile.matchups).filter(([k]) => k !== "all").map(([k, v]) => `${k} ${v.n}`).join(", ")})` +
+                    (r.profile.replayBuild ? ` · ${tr("game build", "build do jogo")} ${r.profile.replayBuild}` : "") +
+                    ` · ${tr("updated", "atualizado em")} ${new Date(r.profile.builtAt).toLocaleDateString(locale())}`
+                  : tr("not included in this version", "não incluídas nesta versão")}
               </td>
-              <td><button className="btn" onClick={() => api.openPath(r.root)}>{tr("Open", "Abrir")}</button></td>
             </tr>
           ))}
         </tbody>
       </table>
-      {log.length > 0 && <pre className="fact-sheet">{log.join("\n")}</pre>}
     </div>
   );
 }
 
-export function Settings({ refs, onRefsChanged }: { refs: RefGroupInfo[]; onRefsChanged: () => void }) {
+export function Settings({ refs }: { refs: RefGroupInfo[] }) {
   const [state, setState] = useState<{ config: Config; configPath: string; paths: Paths } | null>(null);
   const [accounts, setAccounts] = useState("");
   const [saved, setSaved] = useState(false);
@@ -245,7 +174,7 @@ export function Settings({ refs, onRefsChanged }: { refs: RefGroupInfo[]; onRefs
           <label><input type="checkbox" checked={config.notifyAfterGame} onChange={(e) => save({ notifyAfterGame: e.target.checked })} />{tr("Notify me after each analyzed game", "Me avisar depois de cada partida analisada")}</label>
         </div>
       </div>
-      <ProGames refs={refs} onChanged={onRefsChanged} />
+      <ProGames refs={refs} />
       <div className="card">
         <h2>{tr("Where things live", "Onde ficam as coisas")}</h2>
         <table>

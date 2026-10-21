@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSy
 import { homedir } from "node:os";
 import { basename, dirname, join, parse, sep } from "node:path";
 import type { Language } from "./i18n.ts";
+import { projectRoot } from "./root.ts";
 
 export type ReferenceGroup = {
   id: string;
@@ -145,7 +146,14 @@ export const paths = (root = dataDir()) => {
   };
 };
 
-/** Data folder of a reference group: same layout as yours, separate database. */
+/**
+ * The pro statistics Replay Altar ships (data/reference/<group>: profile.json, principles.json).
+ * The maintainers build them from the reference groups' games and publish them with each version
+ * (scripts/publish-pro-data.ts); the app never downloads pro games itself.
+ */
+export const proDataDir = (groupId: string) => join(projectRoot(), "data", "reference", groupId);
+
+/** Data folder of a reference group (maintainers): same layout as yours, separate database. */
 export const referencePaths = (groupId: string) => {
   const p = paths(join(dataDir(), "reference", groupId));
   return { ...p, db: join(p.root, "reference.sqlite") };

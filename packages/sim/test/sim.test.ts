@@ -9,7 +9,7 @@ import { runIncome, spendFromOrders, type Timeline } from "../src/economy.ts";
 const realData = paths().root;
 const ready = simNotReady(realData) === null;
 const costs = ready ? loadCosts(gamedataDir(realData)) : null;
-const FIXTURE = join(import.meta.dirname, "../../../fixtures/replays/Macro_loss.w3g");
+const FIXTURE = join(import.meta.dirname, "../../../fixtures/replays/replay3.w3g");
 
 const ev = (ms: number, kind: BuildEvent["kind"], code: string): BuildEvent => ({ ms, kind, code, name: code });
 
@@ -73,7 +73,7 @@ describe("income model", () => {
 });
 
 describe.skipIf(!ready || !existsSync(FIXTURE))("simulating a real replay", () => {
-  test("Macro_loss: WC3V runs and the economy is consistent", async () => {
+  test("replay3: WC3V runs and the economy is consistent", async () => {
     // A throwaway data root that borrows the extracted game data.
     const root = mkdtempSync(join(tmpdir(), "replay-altar-sim-"));
     mkdirSync(join(root, "sim/gamedata"), { recursive: true });

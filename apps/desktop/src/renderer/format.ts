@@ -14,14 +14,6 @@ export const SOURCE: Record<string, string> = {
   custom: tr("Custom game", "Partida customizada"),
 };
 
-export const SKIP: Record<string, string> = {
-  not_1v1: tr("Not a 1v1", "Não é 1v1"),
-  vs_ai: tr("Against computer", "Contra o computador"),
-  observed: tr("You observed", "Você assistiu"),
-  not_me: tr("You didn't play", "Você não jogou"),
-  custom_map: tr("Custom map", "Mapa customizado"),
-};
-
 /** "Human pros" (the settings file's label) in the window's language. */
 export const groupLabel = (g: Pick<ReferenceGroup, "label" | "race">) => tr(g.label, `Pros de ${RACE[g.race] ?? g.race}`);
 

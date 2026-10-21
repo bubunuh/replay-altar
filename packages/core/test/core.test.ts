@@ -1,4 +1,5 @@
-// Runs against the real replays in fixtures/replays (kept out of git; copy them in to run).
+// Runs against the real replays in fixtures/replays: replay1 is a W3Champions game, the others
+// Battle.net ladder games; replay2 and replay4 are wins, replay3 a loss.
 import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, utimesSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -23,6 +24,7 @@ import {
 
 const FIXTURES = join(import.meta.dirname, "../../../fixtures/replays");
 const ME = ["Pedrovisk#1486"];
+const W3C = "replay1.w3g";
 const files = existsSync(FIXTURES) ? readdirSync(FIXTURES).filter((f) => f.endsWith(".w3g")).sort() : [];
 const raws = new Map<string, RawReplay>();
 
@@ -38,16 +40,16 @@ describe.skipIf(files.length === 0)("classification of real replays", () => {
       const c = classify(raws.get(f)!, ME);
       expect(c.category, f).toBe("1v1_human");
       expect(c.analyzed, f).toBe(true);
-      expect(c.source, f).toBe(f.startsWith("w3c-") ? "w3champions" : "bnet_ladder");
-      expect(c.seats.filter((s) => s.isObserver).map((s) => s.name), f).toEqual([f.startsWith("w3c-") ? "FLO" : "Blizzard"]);
+      expect(c.source, f).toBe(f === W3C ? "w3champions" : "bnet_ladder");
+      expect(c.seats.filter((s) => s.isObserver).map((s) => s.name), f).toEqual([f === W3C ? "FLO" : "Blizzard"]);
     }
   });
 
-  test("results match what the file names say", () => {
+  test("results match the known outcomes", () => {
     const expected: Record<string, "win" | "loss"> = {
-      "Macro_loss.w3g": "loss",
-      "Victory-1v1-oct-2026.w3g": "win",
-      "victory_vs_elf.w3g": "win",
+      "replay3.w3g": "loss",
+      "replay2.w3g": "win",
+      "replay4.w3g": "win",
     };
     for (const [f, result] of Object.entries(expected)) {
       const raw = raws.get(f)!;
@@ -66,7 +68,7 @@ describe.skipIf(files.length === 0)("classification of real replays", () => {
 });
 
 describe.skipIf(files.length === 0)("classification of edited replays", () => {
-  const base = "LastReplay.w3g";
+  const base = "replay5.w3g";
 
   test("a computer opponent makes it vs_ai", () => {
     const raw = clone(base);
@@ -115,8 +117,8 @@ describe.skipIf(files.length === 0)("classification of edited replays", () => {
 });
 
 describe.skipIf(files.length === 0)("metrics", () => {
-  test("Macro_loss: Human timings come from the order stream", () => {
-    const raw = raws.get("Macro_loss.w3g")!;
+  test("replay3: Human timings come from the order stream", () => {
+    const raw = raws.get("replay3.w3g")!;
     const me = raw.output.players.find((p) => p.name === ME[0])!;
     const m = computeMetrics(raw, me.id!);
     expect(m.tier2_ms).toBe(220693); // Keep ordered at 3:40
@@ -222,19 +224,20 @@ describe.skipIf(files.length === 0)("ingest", () => {
   });
 
   test("ingesting the same file again does nothing", async () => {
-    expect((await ingestFile(ctx, join(inbox, "Macro_loss.w3g"))).status).toBe("duplicate");
+    expect((await ingestFile(ctx, join(inbox, "replay3.w3g"))).status).toBe("duplicate");
   });
 
   test("another copy of a known game becomes an alias, not a new game", async () => {
-    const copy = join(inbox, "my_rename.w3g");
-    cpSync(join(inbox, "LastReplay.w3g"), copy);
+    // The game's own LastReplay.w3g, of a game first seen as a saved copy (replay5).
+    const copy = join(inbox, "LastReplay.w3g");
+    cpSync(join(inbox, "replay5.w3g"), copy);
     utimesSync(copy, new Date(), new Date());
     const out = await ingestFile(ctx, copy);
     expect(out.status).toBe("updated");
     if (out.status !== "updated") return;
     expect(out.record.provenance.files.map((f) => f.timeSource).sort()).toEqual(["lastreplay_mtime", "saved_file_mtime"]);
     expect(out.record.game.timeSource).toBe("lastreplay_mtime"); // the game's own file wins
-    expect(out.record.userLabel).toBe("my_rename");
+    expect(out.record.userLabel).toBe("replay5");
     expect(db.prepare("SELECT COUNT(*) n FROM games").get()).toEqual({ n: files.length });
   });
 
@@ -247,7 +250,7 @@ describe.skipIf(files.length === 0)("ingest", () => {
   });
 
   test("a manual result override survives reingest", async () => {
-    const key = (db.prepare("SELECT game_key FROM games WHERE user_label = 'Macro_loss'").get() as { game_key: string }).game_key;
+    const key = (db.prepare("SELECT game_key FROM games WHERE user_label = 'replay3'").get() as { game_key: string }).game_key;
     db.prepare("INSERT INTO annotations (game_key, kind, source, body, created_at) VALUES (?, 'result_override', 'user', '{\"result\":\"win\"}', 'now')").run(key);
     await reingestAll(ctx);
     expect(db.prepare("SELECT result, result_detected FROM v_games WHERE game_key = ?").get(key)).toEqual({ result: "win", result_detected: "loss" });

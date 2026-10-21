@@ -1,7 +1,6 @@
 // Electron main process: one window, read-mostly access to the Replay Altar database.
-import { spawn, type ChildProcess } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, watch, writeFileSync } from "node:fs";
-import { homedir, tmpdir } from "node:os";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { app, BrowserWindow, dialog, ipcMain, nativeTheme, shell } from "electron";
 import { loadRefGroups, rulesBook } from "@replay-altar/rules";
@@ -23,14 +22,12 @@ import {
   collectorFiles,
   enableCollector,
   windowsLauncher,
-  isWarcraftRunning,
   language,
   listGames,
   loadConfig,
   openDb,
   paths,
   performanceData,
-  referencePaths,
   restartCollectorIfRunning,
   resolveLanguage,
   saveConfig,
@@ -173,46 +170,6 @@ if (!app.requestSingleInstanceLock()) {
 
   app.on("window-all-closed", () => app.quit());
 
-  // "Update pro games": runs `replay-altar ref refresh` (download + simulation take minutes) and
-  // streams its lines to the page.
-  let refUpdate: ChildProcess | null = null;
-  const refLog: string[] = [];
-  app.on("will-quit", () => refUpdate?.kill("SIGTERM"));
-  ipcMain.handle("ref:updateStatus", () => ({ running: refUpdate !== null, log: refLog.slice(-40) }));
-  ipcMain.handle("ref:update", (e) => {
-    if (refUpdate) return false;
-    refLog.length = 0;
-    // Linux: the launcher `install` wrote. Windows: node on PATH with this checkout's CLI (the
-    // .cmd shim would need a shell).
-    // Installed: the bundled CLI on this executable, as Node.
-    const [cli, ...cliArgs] = process.env.REPLAY_ALTAR_CLI
-      ? [process.env.REPLAY_ALTAR_CLI]
-      : isInstalled()
-        ? [process.execPath, join(projectRoot(), "collector/collector.mjs")]
-        : process.platform === "win32"
-          ? ["node", join(app.getAppPath(), "../collector/src/cli.ts")]
-          : [join(homedir(), ".local/bin/replay-altar")];
-    const env = isInstalled() ? { ...process.env, ELECTRON_RUN_AS_NODE: "1" } : process.env;
-    const child = spawn(cli, [...cliArgs, "ref", "refresh"], { stdio: ["ignore", "pipe", "pipe"], windowsHide: true, env });
-    refUpdate = child;
-    const send = (channel: string, ...args: unknown[]) => {
-      if (!e.sender.isDestroyed()) e.sender.send(channel, ...args);
-    };
-    const onData = (chunk: Buffer) => {
-      for (const line of chunk.toString().split(/\r?\n/).filter(Boolean)) {
-        refLog.push(line);
-        send("ref:progress", line);
-      }
-    };
-    child.stdout?.on("data", onData);
-    child.stderr?.on("data", onData);
-    child.on("error", (err) => onData(Buffer.from(`could not start ${cli}: ${err.message}`)));
-    child.on("close", (code) => {
-      refUpdate = null;
-      send("ref:done", code);
-    });
-    return true;
-  });
   ipcMain.handle("rules:get", (_e, key: string) => bookOf(key));
   // Every analyzed game's findings, newest first: for recurring problems and the match list.
   ipcMain.handle("findings:summary", () =>
@@ -257,7 +214,6 @@ if (!app.requestSingleInstanceLock()) {
     const file = join(projectRoot(), "vendor/wc3v/client/maps", mapDataName(mapFile), "map.jpg");
     return existsSync(file) ? `data:image/jpeg;base64,${readFileSync(file).toString("base64")}` : null;
   });
-  ipcMain.handle("warcraft:running", () => isWarcraftRunning());
   ipcMain.handle("games:list", () => listGames(db));
   ipcMain.handle("games:get", (_e, key: string) => getGame(db, p, key));
   ipcMain.handle("perf:data", () => performanceData(db));
@@ -303,14 +259,8 @@ if (!app.requestSingleInstanceLock()) {
     restartCollectorIfRunning();
     return folders();
   });
-  ipcMain.handle("ref:profiles", () =>
-    // profile.json of each configured reference group (missing until the first refresh).
-    loadRefGroups().map((g) => {
-      const root = referencePaths(g.group.id).root;
-      const state = join(root, "state.json");
-      return { ...g, state: existsSync(state) ? JSON.parse(readFileSync(state, "utf8")) : null, root };
-    }),
-  );
+  // The pro statistics shipped with this version (data/reference).
+  ipcMain.handle("ref:profiles", () => loadRefGroups());
   ipcMain.handle("shell:showFile", (_e, file: string) => shell.showItemInFolder(file));
   ipcMain.handle("shell:openPath", (_e, dir: string) => shell.openPath(dir));
 }
