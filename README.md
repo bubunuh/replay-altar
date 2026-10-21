@@ -32,7 +32,7 @@ On the first start, in the background, Replay Altar reads the data it needs from
 Replay Altar runs from a checkout of this repository. You need [Node.js](https://nodejs.org) 26 or newer, git and [podman](https://podman.io) (the game's data is read inside a container, through a throwaway overlay, so the game folder is never written to).
 
 ```sh
-git clone --recurse-submodules <this repository's URL> ~/Projects/replay-altar
+git clone --recurse-submodules https://github.com/bubunuh/replay-altar.git ~/Projects/replay-altar
 cd ~/Projects/replay-altar
 npm install
 npm run build
