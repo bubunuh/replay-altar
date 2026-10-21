@@ -1,4 +1,6 @@
-# Replay Altar
+<p align="center"><img src="apps/desktop/assets/icons/128.png" width="128" height="128" alt="Replay Altar icon"></p>
+
+<h1 align="center">Replay Altar</h1>
 
 Replay Altar is a Warcraft III: Reforged replay analyzer for 1v1 players. It runs on your own computer, keeps every game you play, and after each one tells you what decided it and what to do differently next time, compared with tournament players of your race.
 
@@ -9,9 +11,11 @@ Replay Altar is a Warcraft III: Reforged replay analyzer for 1v1 players. It run
 - **Your progress.** Win rates by matchup, map and game length; problems that keep coming back; how you play in wins against losses; any number over time.
 - **English and Brazilian Portuguese.**
 
+![The report of a game: result, heroes, the main numbers against the opponent, the map, and the findings with advice](docs/images/report.png)
+
 Your games stay on your computer. The only things downloaded are the tournament replays (and their maps) when you press "Update pro games", and the game's own end-of-game statistics for W3Champions games.
 
-> Replay Altar is a fan project. It is not affiliated with, endorsed by or connected to Blizzard Entertainment. Warcraft is a trademark of Blizzard Entertainment, Inc. The game's data and pictures (unit costs, race crests, hero portraits, the game's font) are read from your own Warcraft III installation, never modified there, and never distributed with this project.
+> Replay Altar is a fan project. It is not affiliated with, endorsed by or connected to Blizzard Entertainment. Warcraft is a trademark of Blizzard Entertainment, Inc. The game's data and pictures (unit costs, race crests, hero portraits, the game's font) are read from your own Warcraft III installation, never modified there, and never distributed with this project; the screenshots on this page only show them as the app displays them.
 
 ## Install
 
@@ -50,6 +54,28 @@ The default game location is the Lutris Battle.net prefix in `~/Games/battlenet`
 - **Performance:** your win rates, recurring problems with the one to work on now, and your numbers in wins, losses and against pros.
 - **Skipped:** games kept but not counted: custom maps, games against the computer, team games, games you only observed.
 - **Settings:** your battletags, language, replay folders, notifications, and **Update pro games**.
+
+Player names in these screenshots are replaced with placeholders.
+
+**Matches**
+
+![The list of games with result, matchup, opponent, map, length, APM, source and main problem](docs/images/matches.png)
+
+**A game over time:** army value, hero levels, resources, workers, supply and APM, against the pro median.
+
+![Charts of one game over time, both players against the pro median](docs/images/charts.png)
+
+**Performance**
+
+![Win rate, recurring problems and win rates by matchup, map and game length](docs/images/performance.png)
+
+**Skipped**
+
+![Games kept but not counted](docs/images/skipped.png)
+
+**Settings**
+
+![Settings: battletags, language, replay folders, behaviour and pro games](docs/images/settings.png)
 
 When Warcraft III starts, the window opens behind the game without taking focus, and a notification after each game opens its report. Both can be turned off in Settings.
 

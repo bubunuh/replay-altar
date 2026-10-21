@@ -106,6 +106,9 @@ if (!app.requestSingleInstanceLock()) {
         const height = await win!.webContents.executeJavaScript("document.querySelector('main').scrollHeight + 52");
         win!.setContentSize(1280, Math.min(Math.max(860, height), 6000));
         await new Promise((r) => setTimeout(r, 800));
+        // Dev/test: a script run on the page just before the capture, e.g. to hide player names.
+        const script = process.env.REPLAY_ALTAR_SHOT_JS;
+        if (script) await win!.webContents.executeJavaScript(readFileSync(script, "utf8"));
         writeFileSync(file, (await win!.webContents.capturePage()).toPNG());
         app.quit();
       }, 1500);
