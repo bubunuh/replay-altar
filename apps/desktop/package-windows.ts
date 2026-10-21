@@ -57,6 +57,8 @@ for (const e of readdirSync(wc3v, { withFileTypes: true })) {
 cpSync(join(root, "packages/sim/driver"), join(res, "packages/sim/driver"), { recursive: true });
 cpSync(casc, join(res, "scripts/casc/bin/casc-extract.exe"));
 cpSync(join(root, "data"), join(res, "data"), { recursive: true });
+// GPL-3.0: the license travels with the program.
+cpSync(join(root, "LICENSE"), join(res, "LICENSE.txt"));
 
 // Starting pro data: each group's statistics, not the games behind them.
 for (const group of ["pros", "pros-orc", "pros-undead", "pros-nightelf"]) {

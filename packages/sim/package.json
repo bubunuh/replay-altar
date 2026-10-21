@@ -1,8 +1,14 @@
 {
   "name": "@replay-altar/sim",
   "version": "0.1.0",
+  "license": "GPL-3.0-only",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts", "./mapname": "./src/mapname.ts" },
-  "dependencies": { "@replay-altar/core": "*" }
+  "exports": {
+    ".": "./src/index.ts",
+    "./mapname": "./src/mapname.ts"
+  },
+  "dependencies": {
+    "@replay-altar/core": "*"
+  }
 }

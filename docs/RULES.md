@@ -116,4 +116,5 @@ you led in army all game.
 - Liquipedia Warcraft: Experience, Creeps, Upkeep, Militia, race and hero pages, build-order pages (read through its API).
 - Warcraft3.info "How To Basic" race guides.
 - StrategyWiki, Blizzard forums (upkeep discussion).
+- Vortix (YouTube): commented games and the general-concepts video.
 - Warcraft 3 Gym guides and build orders (57 pages, all races; authors include GotQuail, Gym Coaches, AllSupGoToHeaven, Kaiser, randombadgamer, HoT), saved by hand: their site blocks automated access.
