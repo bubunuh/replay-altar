@@ -1,14 +1,15 @@
 # Builds the Windows installer on GitHub's machines, the same way as
 # `node apps/desktop/package-windows.ts` on a maintainer's Linux PC: the game-data extractor
 # cross-compiled in a container (podman), electron-builder with wine for the .exe's icon and
-# version. Run it by hand (Actions → Windows installer → Run workflow) for a test build, whose
-# files are kept with the run; pushing a version tag (v0.1.3) also puts them on a draft release,
-# published by hand after its notes are written.
+# version. Every push to dev makes a test build, whose files are kept with the run (Actions →
+# the run → Artifacts); so does running it by hand. Pushing a version tag (v0.1.3) also puts
+# them on a draft release, published by hand after its notes are written.
 name: Windows installer
 
 on:
   workflow_dispatch:
   push:
+    branches: [dev]
     tags: ["v*"]
 
 permissions:
