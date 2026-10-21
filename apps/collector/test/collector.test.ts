@@ -1,6 +1,7 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { windowsLauncher } from "@replay-altar/core";
 import { decodeDds, encodePng } from "../src/dds.ts";
+import { PoliteQueue, type Outcome } from "../src/officialqueue.ts";
 import { inflateSync } from "node:zlib";
 
 /** A 4×4 DDS of one block, header filled only where the decoder reads it. */
@@ -48,5 +49,55 @@ describe("Windows collector launcher", () => {
     const vbs = windowsLauncher(["C:\\Program Files\\nodejs\\node.exe", "C:\\src\\cli.ts", "collector"]);
     expect(vbs).toContain('.Run "cmd /c """"C:\\Program Files\\nodejs\\node.exe"" ""C:\\src\\cli.ts"" ""collector"" >> ""');
     expect(vbs).toMatch(/2>&1""", 0, False\r\n$/);
+  });
+});
+
+describe("W3Champions lookups wait their turn", () => {
+  const opts = { retryDelays: [90_000, 600_000], between: 5_000, slowDown: 3_600_000 };
+
+  test("many games at once: one lookup at a time, 5 s apart", async () => {
+    vi.useFakeTimers();
+    const started: [string, number][] = [];
+    let running = 0;
+    let most = 0;
+    const q = new PoliteQueue(async (key) => {
+      started.push([key, Date.now()]);
+      most = Math.max(most, ++running);
+      await new Promise((r) => setTimeout(r, 2_000)); // the requests of one lookup
+      running--;
+      return "done" as Outcome;
+    }, opts);
+    const t0 = Date.now();
+    for (let i = 0; i < 50; i++) q.add(`g${i}`);
+    q.add("g0"); // already waiting: not added twice
+    await vi.advanceTimersByTimeAsync(90_000 + 50 * 7_000);
+    expect(started.length).toBe(50);
+    expect(most).toBe(1);
+    expect(started[0][1] - t0).toBe(90_000);
+    for (let i = 1; i < 50; i++) expect(started[i][1] - started[i - 1][1]).toBe(7_000);
+    vi.useRealTimers();
+  });
+
+  test("a 'slow down' pauses everyone; a retry comes back later", async () => {
+    vi.useFakeTimers();
+    const calls: [string, number, number][] = [];
+    let slowDowns = 1;
+    const q = new PoliteQueue(async (key, attempt) => {
+      calls.push([key, attempt, Date.now()]);
+      if (key === "a" && slowDowns-- > 0) return "slow-down";
+      return key === "b" && attempt === 0 ? "retry" : "done";
+    }, opts);
+    const t0 = Date.now();
+    q.add("a");
+    q.add("b");
+    await vi.advanceTimersByTimeAsync(5 * 3_600_000);
+    expect(calls.map(([k, a, t]) => [k, a, t - t0])).toEqual([
+      ["a", 0, 90_000],
+      ["b", 0, 90_000 + 3_600_000], // nobody during the pause
+      ["a", 0, 90_000 + 3_600_000 + 5_000],
+      ["b", 1, 90_000 + 3_600_000 + 600_000],
+    ]);
+    expect(q.pending).toBe(0);
+    vi.useRealTimers();
   });
 });

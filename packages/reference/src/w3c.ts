@@ -3,6 +3,10 @@
 
 export const W3C_API = "https://website-backend.w3champions.com/api/";
 const USER_AGENT = "replay-altar/0.1 (personal replay analysis; slow, a few requests per minute)";
+/** At least this long between two requests from one client, whoever calls it. */
+const MIN_GAP_MS = 1500;
+/** The current season changes a few times a year: ask once per hour at most. */
+const SEASON_TTL_MS = 60 * 60_000;
 
 /** W3Champions race codes. */
 export const W3C_RACE: Record<number, "H" | "O" | "N" | "U" | "R"> = { 0: "R", 1: "H", 2: "O", 4: "N", 8: "U" };
@@ -45,6 +49,8 @@ export function w3cClient(opts: { fetch?: Fetch; sleep?: (ms: number) => Promise
   const doFetch = opts.fetch ?? (fetch as unknown as Fetch);
   const sleep = opts.sleep ?? ((ms) => new Promise((r) => setTimeout(r, ms)));
   const log = opts.log ?? (() => {});
+  let lastRequestAt = 0;
+  let season: { id: number; at: number } | null = null;
 
   /**
    * GET that respects the server: a 429 ("slow down") stops the whole run at once (the caller
@@ -52,12 +58,16 @@ export function w3cClient(opts: { fetch?: Fetch; sleep?: (ms: number) => Promise
    */
   async function get(url: string) {
     for (let attempt = 0; ; attempt++) {
+      const wait = lastRequestAt + MIN_GAP_MS - Date.now();
+      if (wait > 0) await sleep(wait);
+      lastRequestAt = Date.now();
       const res = await doFetch(url, { headers: { "User-Agent": USER_AGENT } });
       if (res.status === 429) throw new RateLimited(`W3Champions asked us to slow down (429); stopping until the next refresh`);
       if (res.status >= 500) {
         if (attempt >= 2) throw new RateLimited(`W3Champions answered ${res.status}; stopping until the next refresh`);
         log(`W3Champions answered ${res.status}; retrying in 30 s`);
         await sleep(30_000);
+        lastRequestAt = 0; // that wait was longer than the gap
         continue;
       }
       return res;
@@ -66,9 +76,11 @@ export function w3cClient(opts: { fetch?: Fetch; sleep?: (ms: number) => Promise
 
   return {
     async currentSeason() {
+      if (season && Date.now() - season.at < SEASON_TTL_MS) return season.id;
       const res = await get(`${W3C_API}ladder/seasons`);
       const seasons = (await res.json()) as { id: number }[];
-      return Math.max(...seasons.map((s) => s.id));
+      season = { id: Math.max(...seasons.map((s) => s.id)), at: Date.now() };
+      return season.id;
     },
     async listMatches(q) {
       const url = `${W3C_API}matches?offset=${q.offset}&gateway=${q.gateway}&pageSize=${q.pageSize}&gameMode=1&mapName=Overall&minMmr=${q.minMmr}${q.maxMmr ? `&maxMmr=${q.maxMmr}` : ""}&season=${q.season}`;
