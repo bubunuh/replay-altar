@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { BuildEvent, GameDetail, GameRecord, MetricDef, PlayerRecord, SimSample } from "@replay-altar/core/ui";
 import { per10Minutes } from "@replay-altar/core/metrics";
 import { heroesXpAt } from "@replay-altar/core/heroxp";
@@ -11,6 +11,7 @@ import { MapView } from "../MapView.tsx";
 import { Tip } from "../Tip.tsx";
 import { RaceIcon } from "../RaceIcon.tsx";
 import { HeroIcons } from "../HeroIcons.tsx";
+import { Share } from "../Share.tsx";
 import { ScorePanel } from "../ScorePanel.tsx";
 import { Chart, heroLevelsChart, timeLines, type Band, type HeroLine, type Tokens } from "../Chart.tsx";
 import { assess, describeRef, groupForRace, pickProfile } from "@replay-altar/reference/compare";
@@ -215,6 +216,9 @@ function BuildLine({ record, player, who, principles }: { record: GameRecord; pl
 export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; metrics: MetricDef[]; refs: RefGroupInfo[]; onBack: () => void }) {
   const [detail, setDetail] = useState<GameDetail | undefined>();
   const [hideWorkers, setHideWorkers] = useState(true);
+  const [sharing, setSharing] = useState(false);
+  const [hideNames, setHideNames] = useState(true);
+  const shareRef = useRef<HTMLDivElement>(null);
   const [kinds, setKinds] = useState(new Set(["building", "unit", "upgrade", "item"]));
   const load = useCallback(() => api.getGame(gameKey).then(setDetail), [gameKey]);
   useEffect(() => {
@@ -254,63 +258,72 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
   return (
     <div className="page">
       <div><button className="btn" onClick={onBack}>← {tr("All matches", "Todas as partidas")}</button></div>
-      <div className="card match-card">
-        <div className="match-side">{me && opp && <ScorePanel record={r} me={me} opp={opp} metrics={metrics} mp={ref?.mp ?? null} />}</div>
-        <div className="match-head">
-          <div className={`big ${row.result}`}>{row.result === "win" ? tr("Victory", "Vitória") : row.result === "loss" ? tr("Defeat", "Derrota") : tr("Result unknown", "Resultado desconhecido")}</div>
-          <div className="versus">
-            <div className="versus-side me">
-              <div className="versus-name">
-                <b>{tr("You", "Você")}</b>
-                <RaceIcon race={me?.race} />
+      <div ref={shareRef} className="share-area">
+        <div className="card match-card">
+          <div className="match-side">{me && opp && <ScorePanel record={r} me={me} opp={opp} metrics={metrics} mp={ref?.mp ?? null} />}</div>
+          <div className="match-head">
+            <div className={`big ${row.result}`}>{row.result === "win" ? tr("Victory", "Vitória") : row.result === "loss" ? tr("Defeat", "Derrota") : tr("Result unknown", "Resultado desconhecido")}</div>
+            <div className="versus">
+              <div className="versus-side me">
+                <div className="versus-name">
+                  <b>{tr("You", "Você")}</b>
+                  <RaceIcon race={me?.race} />
+                </div>
+                {me && <HeroIcons p={me} record={r} />}
               </div>
-              {me && <HeroIcons p={me} record={r} />}
-            </div>
-            <span className="muted versus-vs">vs</span>
-            <div className="versus-side opp">
-              <div className="versus-name">
-                <RaceIcon race={opp?.race} />
-                <b>{opp?.name}</b>
+              <span className="muted versus-vs">vs</span>
+              <div className="versus-side opp">
+                <div className="versus-name">
+                  <RaceIcon race={opp?.race} />
+                  <b>{sharing && hideNames ? tr("Opponent", "Oponente") : opp?.name}</b>
+                </div>
+                {opp && <HeroIcons p={opp} record={r} />}
               </div>
-              {opp && <HeroIcons p={opp} record={r} />}
             </div>
-          </div>
-          <p className="sub" data-tip={`${r.game.map.file} · ${SOURCE[r.classification.source]}`}>
-            {mmss(r.game.durationMs)} · {dateTime(r.game.playedAt)}
-            {r.userLabel ? ` · “${r.userLabel}”` : ""}
-          </p>
-          <div className="filters">
-            <label data-tip={tr("Correct the result if it was detected wrong.", "Corrija o resultado se ele foi detectado errado.")}>
-              {tr("Result", "Resultado")}
-              <select
-                value={overridden ? row.result : "detected"}
-                onChange={async (e) => {
-                  await api.overrideResult(r.gameKey, e.target.value === "detected" ? null : (e.target.value as "win" | "loss"));
-                  load();
-                }}
-              >
-                <option value="detected">{tr("Detected", "Detectado")}: {({ win: tr("win", "vitória"), loss: tr("loss", "derrota") } as Record<string, string>)[row.result_detected] ?? row.result_detected}</option>
-                <option value="win">{tr("Win (manual)", "Vitória (manual)")}</option>
-                <option value="loss">{tr("Loss (manual)", "Derrota (manual)")}</option>
-              </select>
-            </label>
-            <button className="btn" onClick={() => api.showFile(r.provenance.archivePath)} data-tip={r.provenance.archivePath}>{tr("Replay file", "Arquivo do replay")}</button>
-          </div>
-          {r.sim?.status === "ok" && me && opp && (
-            <div className="build-lines small">
-              <BuildLine record={r} player={me} who={tr("Your build", "Sua build")} principles={pros?.principles} />
-              <BuildLine record={r} player={opp} who={tr("Opponent's build", "Build do oponente")} principles={groupForRace(refs, opp.race)?.principles} />
+            <p className="sub" data-tip={`${r.game.map.file} · ${SOURCE[r.classification.source]}`}>
+              {mmss(r.game.durationMs)} · {dateTime(r.game.playedAt)}
+              {r.userLabel && !(sharing && hideNames) ? ` · “${r.userLabel}”` : ""}
+            </p>
+            <div className="filters no-share">
+              <label data-tip={tr("Correct the result if it was detected wrong.", "Corrija o resultado se ele foi detectado errado.")}>
+                {tr("Result", "Resultado")}
+                <select
+                  value={overridden ? row.result : "detected"}
+                  onChange={async (e) => {
+                    await api.overrideResult(r.gameKey, e.target.value === "detected" ? null : (e.target.value as "win" | "loss"));
+                    load();
+                  }}
+                >
+                  <option value="detected">{tr("Detected", "Detectado")}: {({ win: tr("win", "vitória"), loss: tr("loss", "derrota") } as Record<string, string>)[row.result_detected] ?? row.result_detected}</option>
+                  <option value="win">{tr("Win (manual)", "Vitória (manual)")}</option>
+                  <option value="loss">{tr("Loss (manual)", "Derrota (manual)")}</option>
+                </select>
+              </label>
+              <button className="btn" onClick={() => api.showFile(r.provenance.archivePath)} data-tip={r.provenance.archivePath}>{tr("Replay file", "Arquivo do replay")}</button>
+              {me && opp && (
+                <button className="btn" onClick={() => setSharing(!sharing)} aria-expanded={sharing}>
+                  {tr("Share", "Compartilhar")}
+                </button>
+              )}
             </div>
-          )}
+            {sharing && me && opp && <Share record={r} me={me} opp={opp} result={row.result} target={shareRef} hideNames={hideNames} setHideNames={setHideNames} />}
+            {r.sim?.status === "ok" && me && opp && (
+              <div className="build-lines small">
+                <BuildLine record={r} player={me} who={tr("Your build", "Sua build")} principles={pros?.principles} />
+                <BuildLine record={r} player={opp} who={tr("Opponent's build", "Build do oponente")} principles={groupForRace(refs, opp.race)?.principles} />
+              </div>
+            )}
+          </div>
+          <div className="match-side no-share">
+            <MapView mapFile={r.game.map.file} gameKey={r.gameKey} />
+          </div>
         </div>
-        <div className="match-side">
-          <MapView mapFile={r.game.map.file} gameKey={r.gameKey} />
-        </div>
-      </div>
 
-      {row.analyzed === 1 && me && opp && r.game.durationMs >= MIN_GAME_MS && (
-        <RulesCard key={`rules-${r.gameKey}`} gameKey={r.gameKey} />
-      )}
+        {row.analyzed === 1 && me && opp && r.game.durationMs >= MIN_GAME_MS && (
+          <RulesCard key={`rules-${r.gameKey}`} gameKey={r.gameKey} />
+        )}
+        <p className="share-credit muted small">{tr("Analyzed with Replay Altar", "Analisado com o Replay Altar")} · github.com/bubunuh/replay-altar</p>
+      </div>
 
       <GameCharts record={r} refMp={ref?.mp ?? null} refLabel="Pros" />
 

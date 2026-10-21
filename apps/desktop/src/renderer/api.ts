@@ -50,6 +50,11 @@ type W3Api = {
   /** Where the launch asked to go, if the page missed the message (once). */
   /** What the collector is busy with (null: nothing written yet). */
   progress(): Promise<Progress | null>;
+  copyText(text: string): Promise<void>;
+  /** A PNG data URL to the clipboard. */
+  copyImage(png: string): Promise<void>;
+  /** Asks where to save a PNG data URL; false when cancelled. */
+  saveImage(png: string, name: string): Promise<boolean>;
   pendingNav(): Promise<{ game: string | null; page: string | null } | null>;
   rules(key: string): Promise<RulesBook>;
   /** The map's minimap as a data URL, or null when there is none yet. */

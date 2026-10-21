@@ -2,7 +2,7 @@
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, watch, writeFileSync } from "node:fs";
 import { release as osRelease, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { app, BrowserWindow, dialog, ipcMain, nativeTheme, shell } from "electron";
+import { app, BrowserWindow, clipboard, ClipboardItem, dialog, ipcMain, nativeTheme, shell } from "electron";
 import { loadRefGroups, rulesBook } from "@replay-altar/rules";
 import { mapDataName } from "@replay-altar/sim/mapname";
 import { mapMarkers } from "./mapOverlay.ts";
@@ -289,6 +289,19 @@ if (!app.requestSingleInstanceLock()) {
     } catch {
       return null; // being rewritten
     }
+  });
+  ipcMain.handle("share:copyText", (_e, text: string) => clipboard.writeText(text));
+  ipcMain.handle("share:copyImage", (_e, png: string) =>
+    clipboard.write([new ClipboardItem({ "image/png": new Blob([Buffer.from(png.replace(/^data:image\/png;base64,/, ""), "base64")], { type: "image/png" }) })]),
+  );
+  ipcMain.handle("share:saveImage", async (_e, png: string, name: string) => {
+    const options = { defaultPath: join(app.getPath("pictures"), name), filters: [{ name: "PNG", extensions: ["png"] }] };
+    // Dev/test: save without the dialog.
+    const testFile = process.env.REPLAY_ALTAR_SAVE_TO;
+    const picked = testFile ? { canceled: false, filePath: testFile } : win ? await dialog.showSaveDialog(win, options) : await dialog.showSaveDialog(options);
+    if (picked.canceled || !picked.filePath) return false;
+    writeFileSync(picked.filePath, Buffer.from(png.replace(/^data:image\/png;base64,/, ""), "base64"));
+    return true;
   });
   ipcMain.handle("nav:pending", () => {
     const nav = pendingNav;
