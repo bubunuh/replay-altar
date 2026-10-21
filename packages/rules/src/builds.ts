@@ -182,9 +182,9 @@ export function matchBuilds(r: GameRecord, p: PlayerRecord, library: BuildEntry[
 export function deviations(m: Match, minFood = 4): string[] {
   const out: string[] = [];
   for (const { step, event } of m.steps) {
-    const label = step.code === TAVERN ? tr("tavern hero", "herói da taverna") : step.action === "tech" ? nameOf(step.code ?? "") : step.name;
-    if (!event) out.push(tr(`no ${label} (build: ${step.food} food)`, `sem ${label} (build: ${step.food} de food)`));
-    else if (Math.abs(event.food - step.food) >= minFood) out.push(tr(`${label} at ${event.food} food (build: ${step.food})`, `${label} com ${event.food} de food (build: ${step.food})`));
+    const label = step.code === TAVERN ? tr("tavern hero", "herói da taverna", "héroe de taberna", "héros de taverne") : step.action === "tech" ? nameOf(step.code ?? "") : step.name;
+    if (!event) out.push(tr(`no ${label} (build: ${step.food} food)`, `sem ${label} (build: ${step.food} de food)`, `sin ${label} (build: ${step.food} de food)`, `pas de ${label} (build : ${step.food} de food)`));
+    else if (Math.abs(event.food - step.food) >= minFood) out.push(tr(`${label} at ${event.food} food (build: ${step.food})`, `${label} com ${event.food} de food (build: ${step.food})`, `${label} con ${event.food} de food (build: ${step.food})`, `${label} à ${event.food} de food (build : ${step.food})`));
   }
   return out;
 }
@@ -201,7 +201,7 @@ export function deviationsFromPros(m: Match, pro: { steps: { step: string; proFo
     const ps = pro.steps[i];
     if (!ps || ps.proFood === null || ps.share < 0.6) return;
     if (!["tech", "expand", "hero", "build"].includes(step.action)) return;
-    const label = step.code === TAVERN ? tr("tavern hero", "herói da taverna") : step.name;
+    const label = step.code === TAVERN ? tr("tavern hero", "herói da taverna", "héroe de taberna", "héros de taverne") : step.name;
     if (!event) out.push({ label, yours: null, pros: Math.round(ps.proFood), action: step.action });
     else if (Math.abs(event.food - ps.proFood) >= minFood) out.push({ label, yours: event.food, pros: Math.round(ps.proFood), action: step.action });
   });

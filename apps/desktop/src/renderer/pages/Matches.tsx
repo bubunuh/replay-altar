@@ -7,7 +7,7 @@ import { tr } from "@replay-altar/core/i18n";
 import { ReplayFolders } from "./Other.tsx";
 
 export function Result({ result }: { result: string }) {
-  return <span className={`result ${result}`}>{result === "win" ? tr("Win", "Vitória") : result === "loss" ? tr("Loss", "Derrota") : tr("Unknown", "Desconhecido")}</span>;
+  return <span className={`result ${result}`}>{result === "win" ? tr("Win", "Vitória", "Victoria", "Victoire") : result === "loss" ? tr("Loss", "Derrota", "Derrota", "Défaite") : tr("Unknown", "Desconhecido", "Desconocido", "Inconnu")}</span>;
 }
 
 export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: string) => void }) {
@@ -45,64 +45,64 @@ export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: str
     <div className="page">
       <div className="filters">
         <label>
-          {tr("Source", "Origem")}
+          {tr("Source", "Origem", "Origen", "Origine")}
           <select value={source} onChange={(e) => setSource(e.target.value)}>
-            <option value="all">{tr("All", "Todas")}</option>
+            <option value="all">{tr("All", "Todas", "Todos", "Toutes")}</option>
             {Object.entries(SOURCE).map(([k, v]) => (
               <option key={k} value={k}>{v}</option>
             ))}
           </select>
         </label>
         <label>
-          {tr("Result", "Resultado")}
+          {tr("Result", "Resultado", "Resultado", "Résultat")}
           <select value={result} onChange={(e) => setResult(e.target.value)}>
-            <option value="all">{tr("All", "Todos")}</option>
-            <option value="win">{tr("Wins", "Vitórias")}</option>
-            <option value="loss">{tr("Losses", "Derrotas")}</option>
+            <option value="all">{tr("All", "Todos", "Todos", "Toutes")}</option>
+            <option value="win">{tr("Wins", "Vitórias", "Victorias", "Victoires")}</option>
+            <option value="loss">{tr("Losses", "Derrotas", "Derrotas", "Défaites")}</option>
           </select>
         </label>
         <label>
-          {tr("Opponent race", "Raça do oponente")}
+          {tr("Opponent race", "Raça do oponente", "Raza del rival", "Race de l'adversaire")}
           <select value={oppRace} onChange={(e) => setOppRace(e.target.value)}>
-            <option value="all">{tr("All", "Todas")}</option>
+            <option value="all">{tr("All", "Todas", "Todos", "Toutes")}</option>
             {["H", "O", "U", "N"].map((r) => (
               <option key={r} value={r}>{RACE[r]}</option>
             ))}
           </select>
         </label>
         <label>
-          {tr("Problem", "Problema")}
+          {tr("Problem", "Problema", "Problema", "Problème")}
           <select value={problem} onChange={(e) => setProblem(e.target.value)}>
-            <option value="all">{tr("All", "Todos")}</option>
+            <option value="all">{tr("All", "Todos", "Todos", "Toutes")}</option>
             {problems.map((id) => (
               <option key={id} value={id}>{problemName(id)}</option>
             ))}
           </select>
         </label>
-        <input type="text" placeholder={tr("Search opponent, map, label", "Buscar oponente, mapa, nome")} value={q} onChange={(e) => setQ(e.target.value)} />
-        <span className="muted small">{tr(`${rows.length} games`, `${rows.length} partidas`)}</span>
+        <input type="text" placeholder={tr("Search opponent, map, label", "Buscar oponente, mapa, nome", "Buscar rival, mapa, etiqueta", "Chercher adversaire, carte, étiquette")} value={q} onChange={(e) => setQ(e.target.value)} />
+        <span className="muted small">{tr(`${rows.length} games`, `${rows.length} partidas`, `${rows.length} partidas`, `${rows.length} parties`)}</span>
       </div>
       {games.length === 0 && <ReplayFolders empty />}
       <div className="card" style={{ padding: 0 }}>
         {rows.length === 0 ? (
           <div className="empty">
             {games.some((g) => g.analyzed === 1)
-              ? tr("No games match these filters.", "Nenhuma partida com esses filtros.")
-              : tr("No analyzed games yet. Play a 1v1 — it shows up here when the game ends.", "Nenhuma partida analisada ainda. Jogue um 1v1 — ele aparece aqui quando a partida acabar.")}
+              ? tr("No games match these filters.", "Nenhuma partida com esses filtros.", "Ninguna partida coincide con estos filtros.", "Aucune partie ne correspond à ces filtres.")
+              : tr("No analyzed games yet. Play a 1v1 — it shows up here when the game ends.", "Nenhuma partida analisada ainda. Jogue um 1v1 — ele aparece aqui quando a partida acabar.", "Todavía no hay partidas analizadas. Juega un 1v1: aparece aquí cuando termina la partida.", "Aucune partie analysée pour l'instant. Jouez un 1v1 : il apparaît ici à la fin de la partie.")}
           </div>
         ) : (
           <table>
             <thead>
               <tr>
-                <th>{tr("Played", "Jogada em")}</th>
-                <th>{tr("Result", "Resultado")}</th>
-                <th>{tr("Matchup", "Confronto")}</th>
-                <th>{tr("Opponent", "Oponente")}</th>
-                <th>{tr("Map", "Mapa")}</th>
-                <th className="num">{tr("Length", "Duração")}</th>
+                <th>{tr("Played", "Jogada em", "Jugada", "Jouée")}</th>
+                <th>{tr("Result", "Resultado", "Resultado", "Résultat")}</th>
+                <th>{tr("Matchup", "Confronto", "Enfrentamiento", "Matchup")}</th>
+                <th>{tr("Opponent", "Oponente", "Rival", "Adversaire")}</th>
+                <th>{tr("Map", "Mapa", "Mapa", "Carte")}</th>
+                <th className="num">{tr("Length", "Duração", "Duración", "Durée")}</th>
                 <th className="num">APM</th>
-                <th>{tr("Source", "Origem")}</th>
-                <th data-tip={tr("The report's most important finding; hover for the full sentence.", "O problema mais importante da análise; passe o mouse para ver a frase completa.")}>{tr("Main problem", "Problema principal")}</th>
+                <th>{tr("Source", "Origem", "Origen", "Origine")}</th>
+                <th data-tip={tr("The report's most important finding; hover for the full sentence.", "O problema mais importante da análise; passe o mouse para ver a frase completa.", "El hallazgo más importante del análisis; pasa el cursor para ver la frase completa.", "Le constat le plus important de l'analyse ; survolez pour la phrase complète.")}>{tr("Main problem", "Problema principal", "Problema principal", "Problème principal")}</th>
               </tr>
             </thead>
             <tbody>

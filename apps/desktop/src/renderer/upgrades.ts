@@ -53,12 +53,12 @@ export function proText(p: UpgradeStat | null): string {
 
 /** Your timing among the pro games that researched it, or a note when you skipped it. */
 export function upgradeStanding(p: UpgradeStat | null, yourTime: number | null): string {
-  if (yourTime === null) return p && p.share >= 0.5 ? tr("skipped; most pro games research it", "não fez; a maioria das partidas de pros faz essa pesquisa") : tr("skipped", "não fez");
-  if (!p || p.values.length < 3) return tr("few pro games research it", "poucas partidas de pros fazem essa pesquisa");
+  if (yourTime === null) return p && p.share >= 0.5 ? tr("skipped; most pro games research it", "não fez; a maioria das partidas de pros faz essa pesquisa", "no investigada; la mayoría de las partidas de pros la investigan", "non faite ; la plupart des parties de pros la font") : tr("skipped", "não fez", "no investigada", "non faite");
+  if (!p || p.values.length < 3) return tr("few pro games research it", "poucas partidas de pros fazem essa pesquisa", "pocas partidas de pros la investigan", "peu de parties de pros la font");
   const below = percentileOf(p.values, yourTime);
-  if (below <= 0.005) return tr("earlier than every pro who researches it", "mais cedo que todos os pros que fazem essa pesquisa");
-  if (below >= 0.995) return tr("later than every pro who researches it", "mais tarde que todos os pros que fazem essa pesquisa");
+  if (below <= 0.005) return tr("earlier than every pro who researches it", "mais cedo que todos os pros que fazem essa pesquisa", "antes que todos los pros que la investigan", "plus tôt que tous les pros qui la font");
+  if (below >= 0.995) return tr("later than every pro who researches it", "mais tarde que todos os pros que fazem essa pesquisa", "más tarde que todos los pros que la investigan", "plus tard que tous les pros qui la font");
   return below < 0.5
-    ? tr(`earlier than ${Math.round((1 - below) * 100)}% of pros who research it`, `mais cedo que ${Math.round((1 - below) * 100)}% dos pros que fazem essa pesquisa`)
-    : tr(`later than ${Math.round(below * 100)}% of pros who research it`, `mais tarde que ${Math.round(below * 100)}% dos pros que fazem essa pesquisa`);
+    ? tr(`earlier than ${Math.round((1 - below) * 100)}% of pros who research it`, `mais cedo que ${Math.round((1 - below) * 100)}% dos pros que fazem essa pesquisa`, `antes que el ${Math.round((1 - below) * 100)}% de los pros que la investigan`, `plus tôt que ${Math.round((1 - below) * 100)} % des pros qui la font`)
+    : tr(`later than ${Math.round(below * 100)}% of pros who research it`, `mais tarde que ${Math.round(below * 100)}% dos pros que fazem essa pesquisa`, `más tarde que el ${Math.round(below * 100)}% de los pros que la investigan`, `plus tard que ${Math.round(below * 100)} % des pros qui la font`);
 }

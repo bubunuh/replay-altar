@@ -48,11 +48,11 @@ export function proGap(c: Ctx, key: string): { worseThan: number; median: number
 export const num = (v: number | null | undefined) => (v === null || v === undefined ? "—" : Number.isInteger(v) ? String(v) : decimal(v));
 export const vsPros = (c: Ctx, key: string, fmt: (v: number) => string = num) => {
   const g = proGap(c, key);
-  return g ? tr(` (pros median ${fmt(g.median)}; worse than ${Math.round(g.worseThan * 100)}% of pro games)`, ` (mediana dos pros ${fmt(g.median)}; pior que ${Math.round(g.worseThan * 100)}% das partidas de pros)`) : "";
+  return g ? tr(` (pros median ${fmt(g.median)}; worse than ${Math.round(g.worseThan * 100)}% of pro games)`, ` (mediana dos pros ${fmt(g.median)}; pior que ${Math.round(g.worseThan * 100)}% das partidas de pros)`, ` (mediana de los pros ${fmt(g.median)}; peor que el ${Math.round(g.worseThan * 100)}% de las partidas de pros)`, ` (médiane des pros ${fmt(g.median)} ; moins bien que ${Math.round(g.worseThan * 100)} % des parties de pros)`) : "";
 };
 
 export const heroLevelSum = (p: PlayerRecord, t: number) => p.heroes.reduce((n, h) => n + h.levelUps.filter((x) => x <= t).length, 0);
-export const heroLevels = (p: PlayerRecord, t: number) => p.heroes.map((h) => tr(`${h.name} level ${Math.max(1, h.levelUps.filter((x) => x <= t).length)}`, `${h.name} nível ${Math.max(1, h.levelUps.filter((x) => x <= t).length)}`)).join(", ") || tr("no heroes", "nenhum herói");
+export const heroLevels = (p: PlayerRecord, t: number) => p.heroes.map((h) => tr(`${h.name} level ${Math.max(1, h.levelUps.filter((x) => x <= t).length)}`, `${h.name} nível ${Math.max(1, h.levelUps.filter((x) => x <= t).length)}`, `${h.name} nivel ${Math.max(1, h.levelUps.filter((x) => x <= t).length)}`, `${h.name} niveau ${Math.max(1, h.levelUps.filter((x) => x <= t).length)}`)).join(", ") || tr("no heroes", "nenhum herói", "sin héroes", "aucun héros");
 
 /**
  * Workers a race needs: 5 on gold per base plus a lumber crew (Grubby, beginner guide #3 and the

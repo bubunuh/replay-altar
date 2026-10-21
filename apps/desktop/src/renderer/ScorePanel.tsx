@@ -29,8 +29,8 @@ export function ScorePanel({ record, me, opp, metrics, mp }: { record: GameRecor
       <thead>
         <tr>
           <th />
-          <th className="num"><span className="key me" />{tr("You", "Você")}</th>
-          <th className="num"><span className="key opp" />{tr("Opp", "Oponente")}</th>
+          <th className="num"><span className="key me" />{tr("You", "Você", "Tú", "Vous")}</th>
+          <th className="num"><span className="key opp" />{tr("Opp", "Oponente", "Rival", "Adv.")}</th>
         </tr>
       </thead>
       <tbody>
@@ -43,6 +43,8 @@ export function ScorePanel({ record, me, opp, metrics, mp }: { record: GameRecor
           const tip = [m.description, pro.proMedian !== null ? tr(
             `Pros' median: ${metricValue(def, pro.proMedian)}${pro.per10 ? " per 10 minutes" : ""}${pro.text !== "—" ? `; this game: ${pro.text}` : ""}.`,
             `Mediana dos pros: ${metricValue(def, pro.proMedian)}${pro.per10 ? " a cada 10 minutos" : ""}${pro.text !== "—" ? `; esta partida: ${pro.text}` : ""}.`,
+            `Mediana de los pros: ${metricValue(def, pro.proMedian)}${pro.per10 ? " cada 10 minutos" : ""}${pro.text !== "—" ? `; esta partida: ${pro.text}` : ""}.`,
+            `Médiane des pros : ${metricValue(def, pro.proMedian)}${pro.per10 ? " par tranche de 10 minutes" : ""}${pro.text !== "—" ? ` ; cette partie : ${pro.text}` : ""}.`,
           ) : ""].filter(Boolean).join(" ");
           return (
             <tr key={m.key} data-tip={tip}>

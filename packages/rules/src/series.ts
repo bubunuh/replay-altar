@@ -3,7 +3,7 @@ import type { GameRecord, PlayerRecord, SimFight, SimSample } from "@replay-alta
 import { RACES, type RaceCode } from "@replay-altar/core/gamedata";
 import { HERO_XP_FOR_LEVEL } from "@replay-altar/core/heroxp";
 import { mmss } from "@replay-altar/core/time";
-import { language, tr } from "@replay-altar/core/i18n";
+import { trTable } from "@replay-altar/core/i18n";
 
 export const STEP_MS = 120_000;
 
@@ -142,18 +142,18 @@ export function productionGap(r: GameRecord, p: PlayerRecord, worker: string, un
 }
 
 /** A fight's category in words. */
-const FIGHT_PT: Record<string, string> = {
-  "pitched-battle": "batalha campal",
-  "tower-dive": "ataque sob torres",
-  "creep-fight": "luta contra creeps",
-  "base-defense": "defesa de base",
-  "expansion-fight": "luta na expansão",
-  "unknown-combat": "combate",
-  harass: "harass",
-  engagement: "confronto",
-};
-export const fightLabel = (category: string) =>
-  category === "unseen-fight" ? tr("fight (inferred from units lost)", "luta (deduzida pelas unidades perdidas)") : language() === "pt" ? (FIGHT_PT[category] ?? category.replace(/-/g, " ")) : category.replace(/-/g, " ");
+const FIGHT = trTable({
+  "pitched-battle": ["pitched battle", "batalha campal", "batalla campal", "bataille rangée"],
+  "tower-dive": ["tower dive", "ataque sob torres", "ataque bajo torres", "attaque sous les tours"],
+  "creep-fight": ["creep fight", "luta contra creeps", "combate contra creeps", "combat contre des creeps"],
+  "base-defense": ["base defense", "defesa de base", "defensa de base", "défense de base"],
+  "expansion-fight": ["expansion fight", "luta na expansão", "combate en la expansión", "combat à l'expansion"],
+  "unknown-combat": ["unknown combat", "combate", "combate", "combat"],
+  harass: ["harass", "harass", "acoso", "harcèlement"],
+  engagement: ["engagement", "confronto", "enfrentamiento", "accrochage"],
+  "unseen-fight": ["fight (inferred from units lost)", "luta (deduzida pelas unidades perdidas)", "combate (deducido por las unidades perdidas)", "combat (déduit des unités perdues)"],
+});
+export const fightLabel = (category: string) => (FIGHT as Record<string, string>)[category] ?? category.replace(/-/g, " ");
 
 /**
  * When a player started each expansion: the simulation's standing halls (one per site) when it

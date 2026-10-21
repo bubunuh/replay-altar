@@ -6,6 +6,8 @@ import { heroesXpAt, levelUpTimes } from "./heroxp.ts";
 import type { RawReplay } from "./parse.ts";
 import { language } from "./i18n.ts";
 import { METRIC_PT, tierLabelPt } from "./metrics.pt.ts";
+import { METRIC_ES, tierLabelEs } from "./metrics.es.ts";
+import { METRIC_FR, tierLabelFr } from "./metrics.fr.ts";
 
 export const METRICS_VERSION = 10;
 
@@ -200,11 +202,20 @@ const REPLAY_SPECS: MetricSpec[] = [
 export const METRICS: MetricDef[] = [...REPLAY_SPECS.map(withBetter), ...SIM_METRICS];
 
 /** The metric with its name and description in the current language. */
+const METRIC_TR = {
+  pt: { names: METRIC_PT, tier: tierLabelPt },
+  es: { names: METRIC_ES, tier: tierLabelEs },
+  fr: { names: METRIC_FR, tier: tierLabelFr },
+};
+
 export function localizeMetric(m: MetricDef): MetricDef {
-  const pt = language() === "pt" ? METRIC_PT[m.key] : undefined;
-  if (!pt) return m;
-  const raceLabels = m.raceLabels && Object.fromEntries(Object.entries(m.raceLabels).map(([r, l]) => [r, tierLabelPt(l)]));
-  return { ...m, label: pt[0], description: pt[1], raceLabels };
+  const l = language();
+  if (l === "en") return m;
+  const t = METRIC_TR[l];
+  const names = t.names[m.key];
+  if (!names) return m;
+  const raceLabels = m.raceLabels && Object.fromEntries(Object.entries(m.raceLabels).map(([r, label]) => [r, t.tier(label)]));
+  return { ...m, label: names[0], description: names[1], raceLabels };
 }
 
 export const SIM_METRIC_KEYS = new Set(SIM_METRICS.map((m) => m.key));

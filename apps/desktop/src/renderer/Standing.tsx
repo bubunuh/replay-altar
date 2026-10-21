@@ -19,7 +19,7 @@ export function ProMedian({ def, a }: { def: MetricDef; a: Assessment }) {
   return (
     <>
       {metricValue(def, a.proMedian)}
-      {a.per10 && <span className="muted small"> {tr("/10 min", "a cada 10 min")}</span>}
+      {a.per10 && <span className="muted small"> {tr("/10 min", "a cada 10 min", "/10 min", "/10 min")}</span>}
     </>
   );
 }

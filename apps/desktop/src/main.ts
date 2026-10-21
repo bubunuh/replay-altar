@@ -259,7 +259,7 @@ if (!app.requestSingleInstanceLock()) {
   };
   ipcMain.handle("folders:get", () => folders());
   ipcMain.handle("folders:add", async () => {
-    const pick = await dialog.showOpenDialog(win!, { properties: ["openDirectory"], title: tr("Your replays folder", "Sua pasta de replays") });
+    const pick = await dialog.showOpenDialog(win!, { properties: ["openDirectory"], title: tr("Your replays folder", "Sua pasta de replays", "Tu carpeta de replays", "Votre dossier de replays") });
     if (pick.canceled || !pick.filePaths[0]) return null;
     const config = loadConfig();
     const folder = folderToAdd(pick.filePaths[0]);

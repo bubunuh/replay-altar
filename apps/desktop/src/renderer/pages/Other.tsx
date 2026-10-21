@@ -24,9 +24,9 @@ export function ReplayFolders({ empty = false }: { empty?: boolean }) {
   return (
     <div className="card">
       <div className="card-head">
-        <h2>{empty ? tr("No replays found yet", "Nenhum replay encontrado ainda") : tr("Replay folders", "Pastas de replays")}</h2>
+        <h2>{empty ? tr("No replays found yet", "Nenhum replay encontrado ainda", "Todavía no se encontraron replays", "Aucun replay trouvé pour l'instant") : tr("Replay folders", "Pastas de replays", "Carpetas de replays", "Dossiers de replays")}</h2>
         <button className="btn" onClick={add}>
-          {tr("Choose folder…", "Escolher pasta…")}
+          {tr("Choose folder…", "Escolher pasta…", "Elegir carpeta…", "Choisir un dossier…")}
         </button>
       </div>
       <p className="sub">
@@ -34,10 +34,14 @@ export function ReplayFolders({ empty = false }: { empty?: boolean }) {
           ? tr(
               "Replay Altar looks for the game's replays in Documents\\Warcraft III\\BattleNet\\<account>\\Replays. If yours are somewhere else, choose the folder: the Warcraft III folder, its BattleNet or Replays folder, or any folder of replays.",
               "O Replay Altar procura os replays do jogo em Documentos\\Warcraft III\\BattleNet\\<conta>\\Replays. Se os seus estão em outro lugar, escolha a pasta: a pasta Warcraft III, a pasta BattleNet ou Replays dentro dela, ou qualquer pasta com replays.",
+              "Replay Altar busca los replays del juego en Documents\\Warcraft III\\BattleNet\\<cuenta>\\Replays. Si los tuyos están en otro sitio, elige la carpeta: la de Warcraft III, su carpeta BattleNet o Replays, o cualquier carpeta con replays.",
+              "Replay Altar cherche les replays du jeu dans Documents\\Warcraft III\\BattleNet\\<compte>\\Replays. Si les vôtres sont ailleurs, choisissez le dossier : celui de Warcraft III, son dossier BattleNet ou Replays, ou n'importe quel dossier de replays.",
             )
           : tr(
               "New replays in these folders are imported as soon as a game ends. Found automatically: the game's own Documents folder (including OneDrive). Add another if yours is elsewhere.",
               "Replays novos nestas pastas são importados assim que a partida acaba. Encontradas automaticamente: a pasta Documentos do jogo (inclusive no OneDrive). Adicione outra se a sua estiver em outro lugar.",
+              "Los replays nuevos de estas carpetas se importan en cuanto termina una partida. Encontradas automáticamente: la carpeta Documentos del propio juego (OneDrive incluido). Añade otra si los tuyos están en otro sitio.",
+              "Les nouveaux replays de ces dossiers sont importés dès la fin d'une partie. Trouvés automatiquement : le dossier Documents du jeu (OneDrive compris). Ajoutez-en un autre si les vôtres sont ailleurs.",
             )}
       </p>
       {all.length > 0 && (
@@ -46,23 +50,23 @@ export function ReplayFolders({ empty = false }: { empty?: boolean }) {
             {folders.found.map((d) => (
               <tr key={d}>
                 <td><code>{d}</code></td>
-                <td className="muted small">{tr("found automatically", "encontrada automaticamente")}</td>
-                <td><button className="btn" onClick={() => api.openPath(d)}>{tr("Open", "Abrir")}</button></td>
+                <td className="muted small">{tr("found automatically", "encontrada automaticamente", "encontrada automáticamente", "trouvé automatiquement")}</td>
+                <td><button className="btn" onClick={() => api.openPath(d)}>{tr("Open", "Abrir", "Abrir", "Ouvrir")}</button></td>
               </tr>
             ))}
             {folders.added.map((d) => (
               <tr key={d}>
                 <td><code>{d}</code></td>
-                <td className="muted small">{tr("added by you", "adicionada por você")}</td>
+                <td className="muted small">{tr("added by you", "adicionada por você", "añadida por ti", "ajouté par vous")}</td>
                 <td>
-                  <button className="btn" onClick={async () => setFolders(await api.removeFolder(d))}>{tr("Remove", "Remover")}</button>
+                  <button className="btn" onClick={async () => setFolders(await api.removeFolder(d))}>{tr("Remove", "Remover", "Quitar", "Retirer")}</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
-      {all.length === 0 && <p className="sub">{tr("No Warcraft III folder found on this computer.", "Nenhuma pasta do Warcraft III encontrada neste computador.")}</p>}
+      {all.length === 0 && <p className="sub">{tr("No Warcraft III folder found on this computer.", "Nenhuma pasta do Warcraft III encontrada neste computador.", "No se encontró ninguna carpeta de Warcraft III en este equipo.", "Aucun dossier Warcraft III trouvé sur cet ordinateur.")}</p>}
     </div>
   );
 }
@@ -71,11 +75,13 @@ export function ReplayFolders({ empty = false }: { empty?: boolean }) {
 function ProGames({ refs }: { refs: RefGroupInfo[] }) {
   return (
     <div className="card">
-      <h2>{tr("Pro games", "Partidas de pros")}</h2>
+      <h2>{tr("Pro games", "Partidas de pros", "Partidas de pros", "Parties de pros")}</h2>
       <p className="sub">
         {tr(
           "The games your numbers are compared with: recent tournament games of each race from warcraft3.info, analyzed the same way as yours. The Replay Altar maintainers collect them and ship only the statistics, updated with new versions of Replay Altar.",
           "As partidas com que os seus números são comparados: partidas recentes de torneios de cada raça do warcraft3.info, analisadas do mesmo jeito que as suas. Os mantenedores do Replay Altar coletam essas partidas e distribuem só as estatísticas, atualizadas a cada nova versão do Replay Altar.",
+          "Las partidas con las que se comparan tus números: partidas recientes de torneos de cada raza de warcraft3.info, analizadas igual que las tuyas. Los mantenedores de Replay Altar las recopilan y solo distribuyen las estadísticas, actualizadas con cada nueva versión de Replay Altar.",
+          "Les parties auxquelles vos chiffres sont comparés : des parties récentes de tournois pour chaque race, de warcraft3.info, analysées de la même façon que les vôtres. Les mainteneurs de Replay Altar les rassemblent et ne distribuent que les statistiques, mises à jour avec chaque nouvelle version de Replay Altar.",
         )}
       </p>
       <table>
@@ -85,11 +91,11 @@ function ProGames({ refs }: { refs: RefGroupInfo[] }) {
               <td>{groupLabel(r.group)}</td>
               <td className="small">
                 {r.profile
-                  ? tr(`${r.profile.games} games`, `${r.profile.games} partidas`) +
+                  ? tr(`${r.profile.games} games`, `${r.profile.games} partidas`, `${r.profile.games} partidas`, `${r.profile.games} parties`) +
                     ` (${Object.entries(r.profile.matchups).filter(([k]) => k !== "all").map(([k, v]) => `${k} ${v.n}`).join(", ")})` +
-                    (r.profile.replayBuild ? ` · ${tr("game build", "build do jogo")} ${r.profile.replayBuild}` : "") +
-                    ` · ${tr("updated", "atualizado em")} ${new Date(r.profile.builtAt).toLocaleDateString(locale())}`
-                  : tr("not included in this version", "não incluídas nesta versão")}
+                    (r.profile.replayBuild ? ` · ${tr("game build", "build do jogo", "build del juego", "build du jeu")} ${r.profile.replayBuild}` : "") +
+                    ` · ${tr("updated", "atualizado em", "actualizado", "mis à jour le")} ${new Date(r.profile.builtAt).toLocaleDateString(locale())}`
+                  : tr("not included in this version", "não incluídas nesta versão", "no incluidas en esta versión", "non incluses dans cette version")}
               </td>
             </tr>
           ))}
@@ -119,45 +125,45 @@ function Version({ update }: { update: UpdateState | null }) {
     <div className="card">
       <div className="card-head">
         <h2>Replay Altar {update.current}</h2>
-        <button className="btn" disabled={checking} onClick={check}>{checking ? tr("Checking…", "Verificando…") : tr("Check for updates", "Procurar atualizações")}</button>
+        <button className="btn" disabled={checking} onClick={check}>{checking ? tr("Checking…", "Verificando…", "Comprobando…", "Vérification…") : tr("Check for updates", "Procurar atualizações", "Buscar actualizaciones", "Rechercher des mises à jour")}</button>
       </div>
       {!latest ? (
         <p className="sub">
           {update.checkedAt
-            ? tr(`You have the latest version (checked ${new Date(update.checkedAt).toLocaleString(locale())}).`, `Você tem a versão mais recente (verificado em ${new Date(update.checkedAt).toLocaleString(locale())}).`)
+            ? tr(`You have the latest version (checked ${new Date(update.checkedAt).toLocaleString(locale())}).`, `Você tem a versão mais recente (verificado em ${new Date(update.checkedAt).toLocaleString(locale())}).`, `Tienes la última versión (comprobado el ${new Date(update.checkedAt).toLocaleString(locale())}).`, `Vous avez la dernière version (vérifié le ${new Date(update.checkedAt).toLocaleString(locale())}).`)
             : update.error
-              ? tr(`Could not check for updates: ${update.error}.`, `Não foi possível procurar atualizações: ${update.error}.`)
-              : tr("Not checked yet.", "Ainda não verificado.")}
+              ? tr(`Could not check for updates: ${update.error}.`, `Não foi possível procurar atualizações: ${update.error}.`, `No se pudieron buscar actualizaciones: ${update.error}.`, `Impossible de rechercher les mises à jour : ${update.error}.`)
+              : tr("Not checked yet.", "Ainda não verificado.", "Todavía sin comprobar.", "Pas encore vérifié.")}
         </p>
       ) : (
         <>
           <p>
             <span className="tab-alert" style={{ marginLeft: 0, marginRight: 8 }}>!</span>
-            {tr(`Replay Altar ${latest.version} is available.`, `O Replay Altar ${latest.version} está disponível.`)}{" "}
-            <span className="muted small">{tr("Updating is optional; your games and settings are kept.", "Atualizar é opcional; as suas partidas e configurações são mantidas.")}</span>
+            {tr(`Replay Altar ${latest.version} is available.`, `O Replay Altar ${latest.version} está disponível.`, `Replay Altar ${latest.version} está disponible.`, `Replay Altar ${latest.version} est disponible.`)}{" "}
+            <span className="muted small">{tr("Updating is optional; your games and settings are kept.", "Atualizar é opcional; as suas partidas e configurações são mantidas.", "Actualizar es opcional; tus partidas y tu configuración se conservan.", "La mise à jour est facultative ; vos parties et vos paramètres sont conservés.")}</span>
           </p>
           <div className="filters">
-            <button className="btn" onClick={() => setNotes(!notes)}>{tr("What's new", "O que há de novo")}</button>
-            {update.installable && update.download === "idle" && <button className="btn" onClick={() => api.downloadUpdate()}>{tr("Update", "Atualizar")}</button>}
-            {update.installable && update.download === "failed" && <button className="btn" onClick={() => api.downloadUpdate()}>{tr("Try again", "Tentar de novo")}</button>}
-            {update.download === "ready" && <button className="btn" onClick={() => api.installUpdate()}>{tr("Restart and install", "Reiniciar e instalar")}</button>}
+            <button className="btn" onClick={() => setNotes(!notes)}>{tr("What's new", "O que há de novo", "Novedades", "Nouveautés")}</button>
+            {update.installable && update.download === "idle" && <button className="btn" onClick={() => api.downloadUpdate()}>{tr("Update", "Atualizar", "Actualizar", "Mettre à jour")}</button>}
+            {update.installable && update.download === "failed" && <button className="btn" onClick={() => api.downloadUpdate()}>{tr("Try again", "Tentar de novo", "Reintentar", "Réessayer")}</button>}
+            {update.download === "ready" && <button className="btn" onClick={() => api.installUpdate()}>{tr("Restart and install", "Reiniciar e instalar", "Reiniciar e instalar", "Redémarrer et installer")}</button>}
           </div>
           {update.download === "downloading" && (
             <div style={{ marginTop: 10 }}>
               <div className="progress"><div style={{ width: `${update.percent}%` }} /></div>
-              <p className="sub">{tr(`Downloading… ${update.percent}%`, `Baixando… ${update.percent}%`)}</p>
+              <p className="sub">{tr(`Downloading… ${update.percent}%`, `Baixando… ${update.percent}%`, `Descargando… ${update.percent}%`, `Téléchargement… ${update.percent} %`)}</p>
             </div>
           )}
-          {update.download === "failed" && <p className="sub">{tr(`The download failed: ${update.error}.`, `O download falhou: ${update.error}.`)}</p>}
+          {update.download === "failed" && <p className="sub">{tr(`The download failed: ${update.error}.`, `O download falhou: ${update.error}.`, `La descarga falló: ${update.error}.`, `Le téléchargement a échoué : ${update.error}.`)}</p>}
           {!update.installable && (
             <p className="sub">
-              {tr("This copy runs from the project folder: update it with", "Esta cópia roda da pasta do projeto: atualize com")} <code>git pull</code>, <code>npm install</code> {tr("and", "e")} <code>npm run build</code>.
+              {tr("This copy runs from the project folder: update it with", "Esta cópia roda da pasta do projeto: atualize com", "Esta copia se ejecuta desde la carpeta del proyecto: actualízala con", "Cette copie s'exécute depuis le dossier du projet : mettez-la à jour avec")} <code>git pull</code>, <code>npm install</code> {tr("and", "e", "y", "et")} <code>npm run build</code>.
             </p>
           )}
           {notes && (
             <>
-              <div className="notes">{plainNotes(latest.notes) || tr("No notes for this version.", "Esta versão não tem notas.")}</div>
-              <p className="sub"><a href="#" onClick={(e) => { e.preventDefault(); api.openUrl(latest.url); }}>{tr("This release on GitHub", "Esta versão no GitHub")}</a></p>
+              <div className="notes">{plainNotes(latest.notes) || tr("No notes for this version.", "Esta versão não tem notas.", "Esta versión no tiene notas.", "Pas de notes pour cette version.")}</div>
+              <p className="sub"><a href="#" onClick={(e) => { e.preventDefault(); api.openUrl(latest.url); }}>{tr("This release on GitHub", "Esta versão no GitHub", "Esta versión en GitHub", "Cette version sur GitHub")}</a></p>
             </>
           )}
         </>
@@ -175,18 +181,20 @@ function Help({ info }: { info: AppInfo | null }) {
   };
   return (
     <div className="card">
-      <h2>{tr("Help and feedback", "Ajuda e sugestões")}</h2>
+      <h2>{tr("Help and feedback", "Ajuda e sugestões", "Ayuda y sugerencias", "Aide et suggestions")}</h2>
       <p className="sub">
         {tr(
           "Problems and ideas are collected on the project's GitHub page (a free GitHub account is needed to write there). The version and system are filled in for you.",
           "Problemas e ideias ficam na página do projeto no GitHub (é preciso uma conta gratuita do GitHub para escrever lá). A versão e o sistema já vêm preenchidos.",
+          "Los problemas y las ideas se reúnen en la página del proyecto en GitHub (hace falta una cuenta gratuita de GitHub para escribir allí). La versión y el sistema se rellenan por ti.",
+          "Les problèmes et les idées sont rassemblés sur la page GitHub du projet (il faut un compte GitHub gratuit pour y écrire). La version et le système sont remplis pour vous.",
         )}
-        {info.logDir && " " + tr("For a problem, please attach the collector's log, collector.log.", "Para um problema, anexe o registro do coletor, collector.log.")}
+        {info.logDir && " " + tr("For a problem, please attach the collector's log, collector.log.", "Para um problema, anexe o registro do coletor, collector.log.", "Si es un problema, adjunta el registro del recolector, collector.log.", "Pour un problème, joignez le journal du collecteur, collector.log.")}
       </p>
       <div className="filters">
-        <button className="btn" onClick={() => open("bug.yml")}>{tr("Report a problem", "Relatar um problema")}</button>
-        <button className="btn" onClick={() => open("idea.yml")}>{tr("Suggest an idea", "Sugerir uma ideia")}</button>
-        {info.logDir && <button className="btn" onClick={() => api.openPath(info.logDir!)}>{tr("Open the log folder", "Abrir a pasta do registro")}</button>}
+        <button className="btn" onClick={() => open("bug.yml")}>{tr("Report a problem", "Relatar um problema", "Informar de un problema", "Signaler un problème")}</button>
+        <button className="btn" onClick={() => open("idea.yml")}>{tr("Suggest an idea", "Sugerir uma ideia", "Sugerir una idea", "Proposer une idée")}</button>
+        {info.logDir && <button className="btn" onClick={() => api.openPath(info.logDir!)}>{tr("Open the log folder", "Abrir a pasta do registro", "Abrir la carpeta del registro", "Ouvrir le dossier du journal")}</button>}
       </div>
     </div>
   );
@@ -228,23 +236,23 @@ export function Settings({ refs, update }: { refs: RefGroupInfo[]; update: Updat
     <div className="page" style={{ maxWidth: 820 }}>
       <Version update={update} />
       <div className="card">
-        <h2>{tr("You", "Você")}</h2>
+        <h2>{tr("You", "Você", "Tú", "Vous")}</h2>
         <p className="sub">
-          {tr('Your battletags, comma separated. Games where none of them played are archived as "observed". Run ', 'Suas battletags, separadas por vírgula. Partidas em que nenhuma delas jogou são arquivadas como "assistidas". Rode ')}
+          {tr('Your battletags, comma separated. Games where none of them played are archived as "observed". Run ', 'Suas battletags, separadas por vírgula. Partidas em que nenhuma delas jogou são arquivadas como "assistidas". Rode ', "Tus battletags, separadas por comas. Las partidas en las que no jugó ninguna se archivan como \"observadas\". Ejecuta ", "Vos battletags, séparés par des virgules. Les parties où aucun d'eux n'a joué sont archivées comme « observées ». Lancez ")}
           <code>replay-altar reingest</code>
-          {tr(" after changing this to reclassify old games.", " depois de mudar isto para reclassificar as partidas antigas.")}
+          {tr(" after changing this to reclassify old games.", " depois de mudar isto para reclassificar as partidas antigas.", " después de cambiar esto para reclasificar las partidas antiguas.", " après avoir modifié ceci pour reclasser les anciennes parties.")}
         </p>
         <div className="filters">
           <input type="text" style={{ flex: 1 }} value={accounts} onChange={(e) => setAccounts(e.target.value)} />
-          <button className="btn" onClick={() => save({ accounts: accounts.split(",").map((a) => a.trim()).filter(Boolean) })}>{tr("Save", "Salvar")}</button>
-          {saved && <span className="muted small">{tr("Saved", "Salvo")}</span>}
+          <button className="btn" onClick={() => save({ accounts: accounts.split(",").map((a) => a.trim()).filter(Boolean) })}>{tr("Save", "Salvar", "Guardar", "Enregistrer")}</button>
+          {saved && <span className="muted small">{tr("Saved", "Salvo", "Guardado", "Enregistré")}</span>}
         </div>
       </div>
       <div className="card">
-        <h2>{tr("Display", "Exibição")}</h2>
+        <h2>{tr("Display", "Exibição", "Pantalla", "Affichage")}</h2>
         <div className="filters">
           <label>
-            {tr("Language", "Idioma")}
+            {tr("Language", "Idioma", "Idioma", "Langue")}
             <select value={language()} onChange={(e) => setLanguage(e.target.value as Language)}>
               {LANGUAGES.map(([id, name]) => (
                 <option key={id} value={id}>{name}</option>
@@ -252,7 +260,7 @@ export function Settings({ refs, update }: { refs: RefGroupInfo[]; update: Updat
             </select>
           </label>
           <label>
-            {tr("Text size", "Tamanho do texto")}
+            {tr("Text size", "Tamanho do texto", "Tamaño del texto", "Taille du texte")}
             <select value={scale} onChange={(e) => { const v = Number(e.target.value); setTextScale(v); setScale(v); }}>
               {TEXT_SCALES.map((v) => (
                 <option key={v} value={v}>{Math.round(v * 100)}%</option>
@@ -263,28 +271,28 @@ export function Settings({ refs, update }: { refs: RefGroupInfo[]; update: Updat
       </div>
       <ReplayFolders />
       <div className="card">
-        <h2>{tr("Behaviour", "Comportamento")}</h2>
-        <p className="sub">{tr("Collector", "Coletor")}: <b>{collectorStatus(status)}</b>. {tr("Changes restart it.", "Mudanças reiniciam o coletor.")}</p>
+        <h2>{tr("Behaviour", "Comportamento", "Comportamiento", "Comportement")}</h2>
+        <p className="sub">{tr("Collector", "Coletor", "Recolector", "Collecteur")}: <b>{collectorStatus(status)}</b>. {tr("Changes restart it.", "Mudanças reiniciam o coletor.", "Los cambios lo reinician.", "Les changements le redémarrent.")}</p>
         <div className="filters" style={{ flexDirection: "column", alignItems: "flex-start" }}>
-          <label><input type="checkbox" checked={config.openWindowOnGameStart} onChange={(e) => save({ openWindowOnGameStart: e.target.checked })} />{tr("Open this window (without taking focus) when Warcraft III starts", "Abrir esta janela (sem tirar o foco) quando o Warcraft III abrir")}</label>
-          <label><input type="checkbox" checked={config.notifyAfterGame} onChange={(e) => save({ notifyAfterGame: e.target.checked })} />{tr("Notify me after each analyzed game", "Me avisar depois de cada partida analisada")}</label>
-          <label><input type="checkbox" checked={config.checkUpdates !== false} onChange={(e) => save({ checkUpdates: e.target.checked })} />{tr("Check once a day whether a new version is out (asks GitHub; nothing about you is sent)", "Verificar uma vez por dia se saiu uma versão nova (pergunta ao GitHub; nada sobre você é enviado)")}</label>
+          <label><input type="checkbox" checked={config.openWindowOnGameStart} onChange={(e) => save({ openWindowOnGameStart: e.target.checked })} />{tr("Open this window (without taking focus) when Warcraft III starts", "Abrir esta janela (sem tirar o foco) quando o Warcraft III abrir", "Abrir esta ventana (sin quitar el foco) cuando se inicia Warcraft III", "Ouvrir cette fenêtre (sans prendre le focus) au lancement de Warcraft III")}</label>
+          <label><input type="checkbox" checked={config.notifyAfterGame} onChange={(e) => save({ notifyAfterGame: e.target.checked })} />{tr("Notify me after each analyzed game", "Me avisar depois de cada partida analisada", "Avisarme después de cada partida analizada", "Me notifier après chaque partie analysée")}</label>
+          <label><input type="checkbox" checked={config.checkUpdates !== false} onChange={(e) => save({ checkUpdates: e.target.checked })} />{tr("Check once a day whether a new version is out (asks GitHub; nothing about you is sent)", "Verificar uma vez por dia se saiu uma versão nova (pergunta ao GitHub; nada sobre você é enviado)", "Comprobar una vez al día si hay una versión nueva (pregunta a GitHub; no se envía nada sobre ti)", "Vérifier une fois par jour si une nouvelle version est sortie (interroge GitHub ; rien vous concernant n'est envoyé)")}</label>
         </div>
       </div>
       <ProGames refs={refs} />
       <Help info={info} />
       <div className="card">
-        <h2>{tr("Where things live", "Onde ficam as coisas")}</h2>
+        <h2>{tr("Where things live", "Onde ficam as coisas", "Dónde están las cosas", "Où se trouvent les choses")}</h2>
         <table>
           <tbody>
-            <tr><td>{tr("Archived replays", "Replays arquivados")}</td><td><code>{paths.archive}</code></td><td><button className="btn" onClick={() => api.openPath(paths.archive)}>{tr("Open", "Abrir")}</button></td></tr>
-            <tr><td>{tr("Game records (JSON)", "Registros das partidas (JSON)")}</td><td><code>{paths.games}</code></td><td><button className="btn" onClick={() => api.openPath(paths.games)}>{tr("Open", "Abrir")}</button></td></tr>
-            <tr><td>{tr("Database", "Banco de dados")}</td><td><code>{paths.db}</code></td><td /></tr>
-            <tr><td>{tr("Settings file", "Arquivo de configurações")}</td><td><code>{state.configPath}</code></td><td /></tr>
+            <tr><td>{tr("Archived replays", "Replays arquivados", "Replays archivados", "Replays archivés")}</td><td><code>{paths.archive}</code></td><td><button className="btn" onClick={() => api.openPath(paths.archive)}>{tr("Open", "Abrir", "Abrir", "Ouvrir")}</button></td></tr>
+            <tr><td>{tr("Game records (JSON)", "Registros das partidas (JSON)", "Registros de las partidas (JSON)", "Fiches des parties (JSON)")}</td><td><code>{paths.games}</code></td><td><button className="btn" onClick={() => api.openPath(paths.games)}>{tr("Open", "Abrir", "Abrir", "Ouvrir")}</button></td></tr>
+            <tr><td>{tr("Database", "Banco de dados", "Base de datos", "Base de données")}</td><td><code>{paths.db}</code></td><td /></tr>
+            <tr><td>{tr("Settings file", "Arquivo de configurações", "Archivo de configuración", "Fichier des paramètres")}</td><td><code>{state.configPath}</code></td><td /></tr>
           </tbody>
         </table>
         <p className="sub" style={{ marginTop: 12 }}>
-          {tr("Pause", "Pausar")}: <code>replay-altar suspend</code> · {tr("resume", "retomar")}: <code>replay-altar resume</code> · {tr("remove", "remover")}: <code>replay-altar uninstall</code> ({tr("add", "adicione")} <code>--purge</code> {tr("to also delete your archive and stats", "para apagar também o seu arquivo e estatísticas")}).
+          {tr("Pause", "Pausar", "Pausar", "Pause")}: <code>replay-altar suspend</code> · {tr("resume", "retomar", "reanudar", "reprendre")}: <code>replay-altar resume</code> · {tr("remove", "remover", "quitar", "désinstaller")}: <code>replay-altar uninstall</code> ({tr("add", "adicione", "añade", "ajoutez")} <code>--purge</code> {tr("to also delete your archive and stats", "para apagar também o seu arquivo e estatísticas", "para borrar también tu archivo y tus estadísticas", "pour supprimer aussi votre archive et vos statistiques")}).
         </p>
       </div>
     </div>
@@ -293,4 +301,4 @@ export function Settings({ refs, update }: { refs: RefGroupInfo[]; update: Updat
 
 /** The collector's state in words ("active" and the like come from systemd or service.ts). */
 const collectorStatus = (s: string) =>
-  ({ active: tr("active", "rodando"), inactive: tr("inactive", "parado"), "not installed": tr("not installed", "não instalado") })[s] ?? s;
+  ({ active: tr("active", "rodando", "activo", "actif"), inactive: tr("inactive", "parado", "inactivo", "inactif"), "not installed": tr("not installed", "não instalado", "no instalado", "non installé") })[s] ?? s;

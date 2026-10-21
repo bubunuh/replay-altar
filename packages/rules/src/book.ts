@@ -12,12 +12,12 @@ import type { RulesBook } from "./types.ts";
 export function rulesBook(db: DB, paths: Paths, gameKey: string): RulesBook {
   try {
     const detail = getGame(db, paths, gameKey);
-    if (!detail) throw new Error(tr(`no such game: ${gameKey}`, `partida não encontrada: ${gameKey}`));
+    if (!detail) throw new Error(tr(`no such game: ${gameKey}`, `partida não encontrada: ${gameKey}`, `no existe la partida: ${gameKey}`, `partie introuvable : ${gameKey}`));
     const record = detail.record;
     const me = record.players.find((p) => p.isMe);
     const opp = record.players.find((p) => p.playerId === record.classification.opponentId);
-    if (!me || !opp) throw new Error(tr("the report needs one of your 1v1 games", "a análise precisa de uma partida 1v1 sua"));
-    if (record.game.durationMs < MIN_GAME_MS) throw new Error(tr("the game is too short to analyze (under 3 minutes)", "a partida é curta demais para analisar (menos de 3 minutos)"));
+    if (!me || !opp) throw new Error(tr("the report needs one of your 1v1 games", "a análise precisa de uma partida 1v1 sua", "el análisis necesita una de tus partidas 1v1", "l'analyse a besoin d'une de vos parties en 1v1"));
+    if (record.game.durationMs < MIN_GAME_MS) throw new Error(tr("the game is too short to analyze (under 3 minutes)", "a partida é curta demais para analisar (menos de 3 minutos)", "la partida es demasiado corta para analizarla (menos de 3 minutos)", "la partie est trop courte pour être analysée (moins de 3 minutes)"));
     const result = detail.row.result ?? "unknown";
     const ref = factsRefFor(record);
     const found = findFindings(record, ref);

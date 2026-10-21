@@ -9,11 +9,12 @@ Replay Altar is a Warcraft III: Reforged replay analyzer for 1v1 players. It run
 - **Compared with pros.** Your numbers are set against about 200 recent tournament games per race, played on your current patch and analyzed on your computer the same way.
 - **A report per game.** Rules drawn from well-known guides (Grubby, Liquipedia, Warcraft 3 Gym, Vortix and others) point out the main problems, the facts behind them, the fight that turned the game, your strengths and the opponent's plan. Each finding comes with concrete advice.
 - **Your progress.** Win rates by matchup, map and game length; problems that keep coming back; how you play in wins against losses; any number over time.
-- **English and Brazilian Portuguese.**
+- **Share a report** as text or as a picture, for Reddit or Discord, without your opponent's battletag.
+- **English, Brazilian Portuguese, Spanish and French.**
 
 ![The report of a game: result, heroes, the main numbers against the opponent, the map, and the findings with advice](docs/images/report.png)
 
-Your games stay on your computer. The only thing Replay Altar fetches from the internet is the game's own end-of-game statistics for your W3Champions games. The pro statistics come with the app.
+Your games stay on your computer. Replay Altar fetches only two things from the internet: the game's own end-of-game statistics for your W3Champions games (a few small requests per game, one game at a time), and once a day the list of Replay Altar releases from GitHub, to tell you when a new version is out (Settings can turn this off). The pro statistics come with the app.
 
 > Replay Altar is a fan project. It is not affiliated with, endorsed by or connected to Blizzard Entertainment. Warcraft is a trademark of Blizzard Entertainment, Inc. The game's data and pictures (unit costs, race crests, hero portraits, the game's font) are read from your own Warcraft III installation, never modified there, and never distributed with this project; the screenshots on this page only show them as the app displays them.
 
@@ -52,7 +53,7 @@ The default game location is the Lutris Battle.net prefix in `~/Games/battlenet`
 
 - **Matches:** every analyzed game, with its main problem. Open one for its report, charts, key numbers against pros, the build orders and a map of the fights and each player's creeping.
 - **Performance:** your win rates, recurring problems with the one to work on now, and your numbers in wins, losses and against pros.
-- **Settings:** your battletags, language, replay folders, notifications, and which pro games your numbers are compared with.
+- **Settings:** your battletags, language, replay folders, notifications, updates (a yellow mark on Settings when a new version is out; updating is your choice), which pro games your numbers are compared with, and **Help and feedback** to report a problem or suggest an idea.
 
 Custom maps, games against the computer, team games and games you only observed are kept in the archive but not counted.
 
@@ -133,7 +134,11 @@ The code is TypeScript run directly by Node (type stripping), in npm workspaces:
 | `apps/collector` | The background collector and the `replay-altar` command |
 | `apps/desktop` | The Electron app |
 
-`fixtures/replays/` holds real replays used by the tests. Texts are written in place as `tr("English", "Português")` pairs (`packages/core/src/i18n.ts`).
+`fixtures/replays/` holds real replays used by the tests. Texts are written in place as `tr("English", "Português", "Español", "Français")` (`packages/core/src/i18n.ts`); metric names have a table per language (`packages/core/src/metrics.*.ts`).
+
+**Branches and builds.** Work goes to `dev`; `main` only gets tested work. Every push runs the tests on GitHub, and every push to `dev` also builds a test Windows installer (Actions → Windows installer → the run → Artifacts). Pushing a version tag (`v0.1.3`) builds it again and puts it on a draft release, with the `latest.yml` the app's Update button reads.
+
+**Screenshots** for this page: `node scripts/hide-names.ts /tmp/hide-names.js`, then `REPLAY_ALTAR_SHOT_JS=/tmp/hide-names.js` on a screenshot run replaces every player name with a placeholder.
 
 ### Updating the pro statistics (maintainers)
 

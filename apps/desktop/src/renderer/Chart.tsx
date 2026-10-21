@@ -94,7 +94,7 @@ export function winrateBars(rows: { label: string; wins: number; losses: number 
         trigger: "item",
         formatter: (p: unknown) => {
           const r = rows[(p as { dataIndex: number }).dataIndex];
-          return `<b>${Math.round((100 * r.wins) / Math.max(1, r.wins + r.losses))}%</b> ${tr("win rate", "de vitórias")}<br/><span style="color:${t.ink2}">${esc(r.label)} · ${r.wins}${tr("W", "V")} ${r.losses}${tr("L", "D")}</span>`;
+          return `<b>${Math.round((100 * r.wins) / Math.max(1, r.wins + r.losses))}%</b> ${tr("win rate", "de vitórias", "% de victorias", "taux de victoire")}<br/><span style="color:${t.ink2}">${esc(r.label)} · ${r.wins}${tr("W", "V", "V", "V")} ${r.losses}${tr("L", "D", "D", "D")}</span>`;
         },
       },
       series: [
@@ -138,7 +138,7 @@ export function timeLines(series: (t: Tokens) => TimeSeries[], format: (v: numbe
   return (t: Tokens): echarts.EChartsOption => {
     const b = base(t);
     const list = series(t);
-    const medianName = band ? tr(`${band.label} median`, `mediana dos ${band.label}`) : "";
+    const medianName = band ? tr(`${band.label} median`, `mediana dos ${band.label}`, `mediana de ${band.label}`, `médiane : ${band.label}`) : "";
     const bandSeries = band && band.points.length
       ? [
           // Stacked pair: an invisible lower edge, then the band height filled in neutral grey.
@@ -167,7 +167,7 @@ export function timeLines(series: (t: Tokens) => TimeSeries[], format: (v: numbe
           const med = all.find((p) => p.seriesName === medianName);
           if (band && med) {
             const pt = band.points[med.dataIndex];
-            rows.push(`<span style="display:inline-block;width:12px;height:2px;background:${t.ink2};vertical-align:middle;margin-right:6px"></span><b>${format(pt[2])}</b> <span style="color:${t.ink2}">${esc(medianName)} (${tr("middle 50%", "50% do meio")}: ${format(pt[1])}–${format(pt[3])})</span>`);
+            rows.push(`<span style="display:inline-block;width:12px;height:2px;background:${t.ink2};vertical-align:middle;margin-right:6px"></span><b>${format(pt[2])}</b> <span style="color:${t.ink2}">${esc(medianName)} (${tr("middle 50%", "50% do meio", "50% central", "50 % central")}: ${format(pt[1])}–${format(pt[3])})</span>`);
           }
           return [head, ...rows].join("<br/>");
         },
@@ -258,7 +258,7 @@ export function heroLevelsChart(heroes: HeroLine[], endMs: number) {
           symbol: HERO_SYMBOLS[(h.order - 1) % HERO_SYMBOLS.length],
           symbolSize: 7,
           lineStyle: { width: 2 },
-          tooltip: { formatter: (p: unknown) => tip([`${h.name}`, tr(`level ${(p as { value: [number, number] }).value[1]} at ${clock((p as { value: [number, number] }).value[0])}`, `nível ${(p as { value: [number, number] }).value[1]} às ${clock((p as { value: [number, number] }).value[0])}`)]) },
+          tooltip: { formatter: (p: unknown) => tip([`${h.name}`, tr(`level ${(p as { value: [number, number] }).value[1]} at ${clock((p as { value: [number, number] }).value[0])}`, `nível ${(p as { value: [number, number] }).value[1]} às ${clock((p as { value: [number, number] }).value[0])}`, `nivel ${(p as { value: [number, number] }).value[1]} a ${clock((p as { value: [number, number] }).value[0])}`, `niveau ${(p as { value: [number, number] }).value[1]} à ${clock((p as { value: [number, number] }).value[0])}`)]) },
         })),
         // Deaths and revives as separate marks so they read even where lines overlap.
         ...heroes.flatMap((h) => [
@@ -271,7 +271,7 @@ export function heroLevelsChart(heroes: HeroLine[], endMs: number) {
             color: colour(h),
             itemStyle: { borderColor: t.surface, borderWidth: 1 },
             z: 5,
-            tooltip: { formatter: (p: unknown) => tip([tr(`${h.name} died (about ${clock((p as { value: [number, number] }).value[0])})`, `${h.name} morreu (por volta de ${clock((p as { value: [number, number] }).value[0])})`)]) },
+            tooltip: { formatter: (p: unknown) => tip([tr(`${h.name} died (about ${clock((p as { value: [number, number] }).value[0])})`, `${h.name} morreu (por volta de ${clock((p as { value: [number, number] }).value[0])})`, `${h.name} murió (hacia ${clock((p as { value: [number, number] }).value[0])})`, `${h.name} est mort (vers ${clock((p as { value: [number, number] }).value[0])})`)]) },
           },
           {
             type: "scatter" as const,
@@ -282,7 +282,7 @@ export function heroLevelsChart(heroes: HeroLine[], endMs: number) {
             color: colour(h),
             itemStyle: { borderWidth: 2 },
             z: 5,
-            tooltip: { formatter: (p: unknown) => tip([tr(`${h.name} back at ${clock((p as { value: [number, number] }).value[0])}`, `${h.name} voltou às ${clock((p as { value: [number, number] }).value[0])}`)]) },
+            tooltip: { formatter: (p: unknown) => tip([tr(`${h.name} back at ${clock((p as { value: [number, number] }).value[0])}`, `${h.name} voltou às ${clock((p as { value: [number, number] }).value[0])}`, `${h.name} volvió a ${clock((p as { value: [number, number] }).value[0])}`, `${h.name} est revenu à ${clock((p as { value: [number, number] }).value[0])}`)]) },
           },
         ]),
       ],

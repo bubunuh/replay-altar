@@ -54,19 +54,19 @@ export function Share({ record, me, opp, result, target, hideNames, setHideNames
   const copyText = async () => {
     const book = await api.rules(record.gameKey).catch(() => null);
     await api.copyText(shareText(record, me, opp, result, book));
-    done(tr("Text copied", "Texto copiado"));
+    done(tr("Text copied", "Texto copiado", "Texto copiado", "Texte copié"));
   };
   const copyImage = async () => {
-    setStatus(tr("Making the picture…", "Gerando a imagem…"));
+    setStatus(tr("Making the picture…", "Gerando a imagem…", "Generando la imagen…", "Création de l'image…"));
     const png = await picture();
     if (png) await api.copyImage(png);
-    done(tr("Picture copied", "Imagem copiada"));
+    done(tr("Picture copied", "Imagem copiada", "Imagen copiada", "Image copiée"));
   };
   const saveImage = async () => {
-    setStatus(tr("Making the picture…", "Gerando a imagem…"));
+    setStatus(tr("Making the picture…", "Gerando a imagem…", "Generando la imagen…", "Création de l'image…"));
     const png = await picture();
     const saved = png ? await api.saveImage(png, `replay-altar-${record.game.playedAt.slice(0, 10)}-${me.race}v${opp.race}.png`) : false;
-    if (saved) done(tr("Picture saved", "Imagem salva"));
+    if (saved) done(tr("Picture saved", "Imagem salva", "Imagen guardada", "Image enregistrée"));
     else setStatus(null);
   };
 
@@ -74,15 +74,15 @@ export function Share({ record, me, opp, result, target, hideNames, setHideNames
     <div className="share-box">
       <label>
         <input type="checkbox" checked={hideNames} onChange={(e) => setHideNames(e.target.checked)} />
-        {tr("Hide the opponent's battletag", "Esconder a battletag do oponente")}
+        {tr("Hide the opponent's battletag", "Esconder a battletag do oponente", "Ocultar la battletag del rival", "Masquer le battletag de l'adversaire")}
       </label>
       <div className="filters">
-        <button className="btn" onClick={copyText}>{tr("Copy as text", "Copiar como texto")}</button>
-        <button className="btn" onClick={copyImage}>{tr("Copy picture", "Copiar imagem")}</button>
-        <button className="btn" onClick={saveImage}>{tr("Save picture…", "Salvar imagem…")}</button>
+        <button className="btn" onClick={copyText}>{tr("Copy as text", "Copiar como texto", "Copiar como texto", "Copier en texte")}</button>
+        <button className="btn" onClick={copyImage}>{tr("Copy picture", "Copiar imagem", "Copiar imagen", "Copier l'image")}</button>
+        <button className="btn" onClick={saveImage}>{tr("Save picture…", "Salvar imagem…", "Guardar imagen…", "Enregistrer l'image…")}</button>
         {status && <span className="muted small">{status}</span>}
       </div>
-      <p className="sub" style={{ margin: 0 }}>{tr("The text names no one; the picture shows the result card and the findings.", "O texto não cita ninguém; a imagem mostra o cartão do resultado e os problemas.")}</p>
+      <p className="sub" style={{ margin: 0 }}>{tr("The text names no one; the picture shows the result card and the findings.", "O texto não cita ninguém; a imagem mostra o cartão do resultado e os problemas.", "El texto no nombra a nadie; la imagen muestra la tarjeta del resultado y el análisis.", "Le texte ne nomme personne ; l'image montre la carte du résultat et l'analyse.")}</p>
     </div>
   );
 }

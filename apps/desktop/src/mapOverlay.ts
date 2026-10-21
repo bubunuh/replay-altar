@@ -82,8 +82,8 @@ function build(wc3vRoot: string, dir: string): MapMarker[] {
   const markers: MapMarker[] = [];
   for (const u of units) {
     const [x, y] = u.position;
-    if (u.type === "ngol") markers.push({ ...at(x, y), kind: "gold", label: tr(`Gold mine${u.gold ? ` (${u.gold} gold)` : ""}`, `Mina de ouro${u.gold ? ` (${u.gold} de ouro)` : ""}`) });
-    else if (u.type === "sloc") markers.push({ ...at(x, y), kind: "start", label: tr("Start location", "Posição inicial") });
+    if (u.type === "ngol") markers.push({ ...at(x, y), kind: "gold", label: tr(`Gold mine${u.gold ? ` (${u.gold} gold)` : ""}`, `Mina de ouro${u.gold ? ` (${u.gold} de ouro)` : ""}`, `Mina de oro${u.gold ? ` (${u.gold} de oro)` : ""}`, `Mine d'or${u.gold ? ` (${u.gold} d'or)` : ""}`) });
+    else if (u.type === "sloc") markers.push({ ...at(x, y), kind: "start", label: tr("Start location", "Posição inicial", "Posición inicial", "Position de départ") });
     else if (SHOPS[u.type]) markers.push({ ...at(x, y), kind: "shop", label: SHOPS[u.type] });
   }
 

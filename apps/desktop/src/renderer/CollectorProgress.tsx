@@ -41,22 +41,22 @@ export function CollectorProgress({ onDone }: { onDone: () => void }) {
     <div className="card collector-progress">
       {p.setup === "gamedata" && (
         <p style={{ margin: 0 }}>
-          {tr("Setting up: reading the data it needs from your Warcraft III installation (a few minutes, only once)…", "Preparando: lendo os dados de que precisa da sua instalação do Warcraft III (alguns minutos, só uma vez)…")}
+          {tr("Setting up: reading the data it needs from your Warcraft III installation (a few minutes, only once)…", "Preparando: lendo os dados de que precisa da sua instalação do Warcraft III (alguns minutos, só uma vez)…", "Preparando: leyendo los datos que necesita de tu instalación de Warcraft III (unos minutos, solo una vez)…", "Préparation : lecture des données nécessaires depuis votre installation de Warcraft III (quelques minutes, une seule fois)…")}
         </p>
       )}
       {p.import && (
         <div>
-          {tr(`Importing your replays: ${p.import.done} of ${p.import.total}`, `Importando os seus replays: ${p.import.done} de ${p.import.total}`)}
+          {tr(`Importing your replays: ${p.import.done} of ${p.import.total}`, `Importando os seus replays: ${p.import.done} de ${p.import.total}`, `Importando tus replays: ${p.import.done} de ${p.import.total}`, `Importation de vos replays : ${p.import.done} sur ${p.import.total}`)}
           {bar(p.import.done, p.import.total)}
         </div>
       )}
       {sims && (
         <div style={{ marginTop: p.import ? 10 : 0 }}>
-          {tr(`Simulating games: ${sims.done} of ${sims.total}`, `Simulando partidas: ${sims.done} de ${sims.total}`)}
-          {sims.avgMs !== null && <span className="muted small"> · {tr(`about ${minutes(sims.avgMs * left)} min left`, `cerca de ${minutes(sims.avgMs * left)} min restantes`)}</span>}
+          {tr(`Simulating games: ${sims.done} of ${sims.total}`, `Simulando partidas: ${sims.done} de ${sims.total}`, `Simulando partidas: ${sims.done} de ${sims.total}`, `Simulation des parties : ${sims.done} sur ${sims.total}`)}
+          {sims.avgMs !== null && <span className="muted small"> · {tr(`about ${minutes(sims.avgMs * left)} min left`, `cerca de ${minutes(sims.avgMs * left)} min restantes`, `quedan unos ${minutes(sims.avgMs * left)} min`, `encore environ ${minutes(sims.avgMs * left)} min`)}</span>}
           {bar(sims.done, sims.total)}
           <p className="sub" style={{ margin: "6px 0 0" }}>
-            {tr("Each report fills in when its game is simulated, newest games first. You can keep using the app.", "Cada análise se completa quando a partida é simulada, das mais recentes às mais antigas. Você pode continuar usando o app.")}
+            {tr("Each report fills in when its game is simulated, newest games first. You can keep using the app.", "Cada análise se completa quando a partida é simulada, das mais recentes às mais antigas. Você pode continuar usando o app.", "Cada análisis se completa cuando se simula su partida, de las más recientes a las más antiguas. Puedes seguir usando la app.", "Chaque analyse se complète quand sa partie est simulée, des plus récentes aux plus anciennes. Vous pouvez continuer à utiliser l'application.")}
           </p>
         </div>
       )}

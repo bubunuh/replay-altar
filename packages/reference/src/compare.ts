@@ -25,7 +25,7 @@ export function pickProfile(profile: RefProfile | null | undefined, matchup: str
 }
 
 export function describeRef(p: { key: string; mp: MatchupProfile }) {
-  return p.key === "all" ? tr(`all matchups, ${p.mp.n} games`, `todos os confrontos, ${p.mp.n} partidas`) : tr(`${p.key}, ${p.mp.n} games`, `${p.key}, ${p.mp.n} partidas`);
+  return p.key === "all" ? tr(`all matchups, ${p.mp.n} games`, `todos os confrontos, ${p.mp.n} partidas`, `todos los enfrentamientos, ${p.mp.n} partidas`, `tous les matchups, ${p.mp.n} parties`) : tr(`${p.key}, ${p.mp.n} games`, `${p.key}, ${p.mp.n} partidas`, `${p.key}, ${p.mp.n} partidas`, `${p.key}, ${p.mp.n} parties`);
 }
 
 /**
@@ -69,12 +69,12 @@ export function assess(
 
   const below = percentileOf(stat.values, x); // share of pro games with a lower value
   if (def.better === null) {
-    const [more, less] = def.unit === "ms" ? [tr("later", "mais tarde"), tr("earlier", "mais cedo")] : [tr("higher", "maior"), tr("lower", "menor")];
+    const [more, less] = def.unit === "ms" ? [tr("later", "mais tarde", "más tarde", "plus tard"), tr("earlier", "mais cedo", "antes", "plus tôt")] : [tr("higher", "maior", "más alto", "plus haut"), tr("lower", "menor", "más bajo", "plus bas")];
     const text =
-      below >= 0.995 ? tr(`${more} than every pro game`, `${more} que todas as partidas de pros`)
-      : below <= 0.005 ? tr(`${less} than every pro game`, `${less} que todas as partidas de pros`)
-      : below >= 0.5 ? tr(`${more} than ${pct(below)} of pro games`, `${more} que ${pct(below)} das partidas de pros`)
-      : tr(`${less} than ${pct(1 - below)} of pro games`, `${less} que ${pct(1 - below)} das partidas de pros`);
+      below >= 0.995 ? tr(`${more} than every pro game`, `${more} que todas as partidas de pros`, `${more} que todas las partidas de pros`, `${more} que toutes les parties de pros`)
+      : below <= 0.005 ? tr(`${less} than every pro game`, `${less} que todas as partidas de pros`, `${less} que todas las partidas de pros`, `${less} que toutes les parties de pros`)
+      : below >= 0.5 ? tr(`${more} than ${pct(below)} of pro games`, `${more} que ${pct(below)} das partidas de pros`, `${more} que el ${pct(below)} de las partidas de pros`, `${more} que ${pct(below)} des parties de pros`)
+      : tr(`${less} than ${pct(1 - below)} of pro games`, `${less} que ${pct(1 - below)} das partidas de pros`, `${less} que el ${pct(1 - below)} de las partidas de pros`, `${less} que ${pct(1 - below)} des parties de pros`);
     // No better direction (e.g. tech timing): judge how typical it is for pros instead.
     const tier: Tier = below >= 0.25 && below <= 0.75 ? "pro" : below >= 0.1 && below <= 0.9 ? "above" : "below";
     return { ...none, text, tier, typicality: true };
@@ -83,10 +83,10 @@ export function assess(
   // The words follow the label: at pro level, say how many pro games you beat; below it, how many beat you.
   const proLevel = good >= PRO_LEVEL_SHARE;
   const text =
-    good >= 0.995 ? tr("better than every pro game", "melhor que todas as partidas de pros")
-    : good <= 0.005 ? tr("worse than every pro game", "pior que todas as partidas de pros")
-    : proLevel ? tr(`better than ${pct(good)} of pro games`, `melhor que ${pct(good)} das partidas de pros`)
-    : tr(`worse than ${pct(1 - good)} of pro games`, `pior que ${pct(1 - good)} das partidas de pros`);
+    good >= 0.995 ? tr("better than every pro game", "melhor que todas as partidas de pros", "mejor que todas las partidas de pros", "mieux que toutes les parties de pros")
+    : good <= 0.005 ? tr("worse than every pro game", "pior que todas as partidas de pros", "peor que todas las partidas de pros", "moins bien que toutes les parties de pros")
+    : proLevel ? tr(`better than ${pct(good)} of pro games`, `melhor que ${pct(good)} das partidas de pros`, `mejor que el ${pct(good)} de las partidas de pros`, `mieux que ${pct(good)} des parties de pros`)
+    : tr(`worse than ${pct(1 - good)} of pro games`, `pior que ${pct(1 - good)} das partidas de pros`, `peor que el ${pct(1 - good)} de las partidas de pros`, `moins bien que ${pct(1 - good)} des parties de pros`);
 
   let tier: Tier;
   if (proLevel) tier = "pro";
@@ -97,13 +97,13 @@ export function assess(
 
 /** Labels when the tier is about typicality (no better direction). */
 export const TYPICAL_LABEL: Record<Exclude<Tier, null>, string> = trTable({
-  pro: ["Like pros", "Como os pros"],
-  above: ["Unusual", "Incomum"],
-  below: ["Far from pros", "Longe dos pros"],
+  pro: ["Like pros", "Como os pros", "Como los pros", "Comme les pros"],
+  above: ["Unusual", "Incomum", "Poco habitual", "Inhabituel"],
+  below: ["Far from pros", "Longe dos pros", "Lejos de los pros", "Loin des pros"],
 });
 
 export const TIER_LABEL: Record<Exclude<Tier, null>, string> = trTable({
-  pro: ["Pro level", "Nível pro"],
-  above: ["Above opponents", "Acima dos oponentes"],
-  below: ["Below opponents", "Abaixo dos oponentes"],
+  pro: ["Pro level", "Nível pro", "Nivel pro", "Niveau pro"],
+  above: ["Above opponents", "Acima dos oponentes", "Por encima de los rivales", "Au-dessus des adversaires"],
+  below: ["Below opponents", "Abaixo dos oponentes", "Por debajo de los rivales", "En dessous des adversaires"],
 });

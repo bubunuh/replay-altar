@@ -5,17 +5,17 @@ import { decimal, locale, tr } from "@replay-altar/core/i18n";
 export { mmss };
 export { problemName } from "@replay-altar/rules/problems";
 
-export const RACE: Record<string, string> = { H: "Human", O: "Orc", U: "Undead", N: "Night Elf", R: tr("Random", "Aleatório") };
+export const RACE: Record<string, string> = { H: "Human", O: "Orc", U: "Undead", N: "Night Elf", R: tr("Random", "Aleatório", "Aleatorio", "Aléatoire") };
 
 // The window reloads when the language changes, so these tables can be built at load time.
 export const SOURCE: Record<string, string> = {
-  bnet_ladder: tr("Battle.net ladder", "Ladder do Battle.net"),
+  bnet_ladder: tr("Battle.net ladder", "Ladder do Battle.net", "Ladder de Battle.net", "Ladder Battle.net"),
   w3champions: "W3Champions",
-  custom: tr("Custom game", "Partida customizada"),
+  custom: tr("Custom game", "Partida customizada", "Partida personalizada", "Partie personnalisée"),
 };
 
 /** "Human pros" (the settings file's label) in the window's language. */
-export const groupLabel = (g: Pick<ReferenceGroup, "label" | "race">) => tr(g.label, `Pros de ${RACE[g.race] ?? g.race}`);
+export const groupLabel = (g: Pick<ReferenceGroup, "label" | "race">) => tr(g.label, `Pros de ${RACE[g.race] ?? g.race}`, `Pros de ${RACE[g.race] ?? g.race}`, `Pros ${RACE[g.race] ?? g.race}`);
 
 export const dateTime = (iso: string) =>
   new Date(iso).toLocaleString(locale(), { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
@@ -47,14 +47,14 @@ export const mean = (xs: (number | null | undefined)[]): number | null => {
 export const shortName = (battletag: string | null) => (battletag ?? "?").replace(/#\d+$/, "");
 
 export const GROUP_LABEL: Record<string, string> = {
-  speed: tr("Speed", "Velocidade"),
-  control: tr("Control", "Controle"),
-  heroes: tr("Heroes", "Heróis"),
+  speed: tr("Speed", "Velocidade", "Velocidad", "Vitesse"),
+  control: tr("Control", "Controle", "Control", "Contrôle"),
+  heroes: tr("Heroes", "Heróis", "Héroes", "Héros"),
   macro: "Macro",
-  economy: tr("Economy (simulated)", "Economia (simulada)"),
-  supply: tr("Supply (simulated)", "Food (simulado)"),
-  army: tr("Army", "Exército"),
-  fights: tr("Fights (simulated)", "Lutas (simuladas)"),
-  scouting: tr("Scouting (simulated)", "Scout (simulado)"),
-  items: tr("Items", "Itens"),
+  economy: tr("Economy (simulated)", "Economia (simulada)", "Economía (simulada)", "Économie (simulée)"),
+  supply: tr("Supply (simulated)", "Food (simulado)", "Food (simulado)", "Food (simulée)"),
+  army: tr("Army", "Exército", "Ejército", "Armée"),
+  fights: tr("Fights (simulated)", "Lutas (simuladas)", "Combates (simulados)", "Combats (simulés)"),
+  scouting: tr("Scouting (simulated)", "Scout (simulado)", "Exploración (simulada)", "Éclairage (simulé)"),
+  items: tr("Items", "Itens", "Objetos", "Objets"),
 };

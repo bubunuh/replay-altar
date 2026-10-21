@@ -289,19 +289,24 @@ describe("replay folders", () => {
 });
 
 describe("languages", () => {
-  test("every metric has a Portuguese name and description", async () => {
+  test("every metric has a name and description in every language", async () => {
     const { METRICS } = await import("../src/metrics.ts");
     const { METRIC_PT } = await import("../src/metrics.pt.ts");
-    expect(METRICS.map((m) => m.key).filter((k) => !METRIC_PT[k])).toEqual([]);
+    const { METRIC_ES } = await import("../src/metrics.es.ts");
+    const { METRIC_FR } = await import("../src/metrics.fr.ts");
+    for (const table of [METRIC_PT, METRIC_ES, METRIC_FR]) expect(METRICS.map((m) => m.key).filter((k) => !table[k])).toEqual([]);
   });
 
   test("tables follow the language when read; the system locale picks the default", async () => {
-    const { resolveLanguage, setLanguage, trTable } = await import("../src/i18n.ts");
-    const t = trTable({ win: ["Win", "Vitória"] });
+    const { resolveLanguage, setLanguage, trTable, decimal } = await import("../src/i18n.ts");
+    const t = trTable({ win: ["Win", "Vitória", "Victoria", "Victoire"] });
     setLanguage("pt");
     expect(t.win).toBe("Vitória");
+    setLanguage("fr");
+    expect([t.win, decimal(2.5)]).toEqual(["Victoire", "2,5"]);
     setLanguage("en");
-    expect(t.win).toBe("Win");
-    expect([resolveLanguage(undefined, "pt-BR"), resolveLanguage(undefined, "en-US"), resolveLanguage("en", "pt-BR")]).toEqual(["pt", "en", "en"]);
+    expect([t.win, decimal(2.5)]).toEqual(["Win", "2.5"]);
+    expect(["pt-BR", "es-MX", "es-ES", "fr-CA", "en-US", "de-DE"].map((l) => resolveLanguage(undefined, l))).toEqual(["pt", "es", "es", "fr", "en", "en"]);
+    expect(resolveLanguage("en", "pt-BR")).toBe("en");
   });
 });

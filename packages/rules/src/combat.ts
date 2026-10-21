@@ -22,10 +22,10 @@ export const ROSTER: Record<RaceCode, string[]> = {
 };
 
 export const ARMOR_NAME: Record<string, string> = trTable({
-  small: ["light", "leve"], medium: ["medium", "média"], large: ["heavy", "pesada"], fort: ["fortified", "fortificada"], hero: ["hero", "de herói"], none: ["unarmored", "sem armadura"], divine: ["divine", "divina"], normal: ["normal", "normal"],
+  small: ["light", "leve", "ligera", "légère"], medium: ["medium", "média", "media", "moyenne"], large: ["heavy", "pesada", "pesada", "lourde"], fort: ["fortified", "fortificada", "fortificada", "fortifiée"], hero: ["hero", "de herói", "de héroe", "de héros"], none: ["unarmored", "sem armadura", "sin armadura", "sans armure"], divine: ["divine", "divina", "divina", "divine"], normal: ["normal", "normal", "normal", "normale"],
 });
 export const ATTACK_NAME: Record<string, string> = trTable({
-  normal: ["normal", "normal"], pierce: ["piercing", "perfurante"], siege: ["siege", "de cerco"], magic: ["magic", "mágico"], chaos: ["chaos", "caos"], hero: ["hero", "de herói"], spells: ["spell", "mágico (feitiço)"],
+  normal: ["normal", "normal", "normal", "normale"], pierce: ["piercing", "perfurante", "perforante", "perforante"], siege: ["siege", "de cerco", "de asedio", "de siège"], magic: ["magic", "mágico", "mágico", "magique"], chaos: ["chaos", "caos", "caos", "chaos"], hero: ["hero", "de herói", "de héroe", "de héros"], spells: ["spell", "mágico (feitiço)", "mágico (hechizo)", "magique (sort)"],
 });
 
 /** Research that brings air units down for a ground unit to hit: Web (Crypt Fiend), Ensnare (Raider). */
@@ -93,7 +93,7 @@ export const describeMix = (mix: MixEntry[], what: "attack" | "armor", n = 3) =>
     .slice(0, n)
     .map((e) => {
       const attacks = e.unit.attacks.map((a) => ATTACK_NAME[a.type] ?? a.type).filter((x, i, all) => all.indexOf(x) === i).join("/");
-      const armor = e.unit.armor === "none" ? ARMOR_NAME.none : tr(`${ARMOR_NAME[e.unit.armor] ?? e.unit.armor} armor`, `armadura ${ARMOR_NAME[e.unit.armor] ?? e.unit.armor}`);
-      return `${e.name} ×${e.count} (${what === "armor" ? `${armor}${e.unit.air ? tr(", air", ", aérea") : ""}` : tr(`${attacks} attack`, `ataque ${attacks}`)})`;
+      const armor = e.unit.armor === "none" ? ARMOR_NAME.none : tr(`${ARMOR_NAME[e.unit.armor] ?? e.unit.armor} armor`, `armadura ${ARMOR_NAME[e.unit.armor] ?? e.unit.armor}`, `armadura ${ARMOR_NAME[e.unit.armor] ?? e.unit.armor}`, `armure ${ARMOR_NAME[e.unit.armor] ?? e.unit.armor}`);
+      return `${e.name} ×${e.count} (${what === "armor" ? `${armor}${e.unit.air ? tr(", air", ", aérea", ", aéreo", ", aérien") : ""}` : tr(`${attacks} attack`, `ataque ${attacks}`, `ataque ${attacks}`, `attaque ${attacks}`)})`;
     })
     .join(", ");

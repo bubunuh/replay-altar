@@ -13,10 +13,10 @@ const log = (msg: string) => console.log(`[replay-altar] ${msg}`);
 function describe(r: GameRecord) {
   const me = r.players.find((p) => p.isMe);
   const opp = r.players.find((p) => p.playerId === r.classification.opponentId);
-  const result = r.result.me === "win" ? tr("Win", "Vitória") : r.result.me === "loss" ? tr("Loss", "Derrota") : tr("Game", "Partida");
+  const result = r.result.me === "win" ? tr("Win", "Vitória", "Victoria", "Victoire") : r.result.me === "loss" ? tr("Loss", "Derrota", "Derrota", "Défaite") : tr("Game", "Partida", "Partida", "Partie");
   const map = r.game.map.file.replace(/^\(\d+\)|\.w3x$/g, "").replace(/_/g, " ");
   return {
-    title: `${result} ${tr("vs", "contra")} ${opp?.name.replace(/#\d+$/, "") ?? "?"}`,
+    title: `${result} ${tr("vs", "contra", "contra", "contre")} ${opp?.name.replace(/#\d+$/, "") ?? "?"}`,
     body: `${me?.race ?? "?"}v${opp?.race ?? "?"} · ${map} · ${mmss(r.game.durationMs)}`,
   };
 }
@@ -51,7 +51,7 @@ export async function runCollector() {
       const fresh = Date.now() - Date.parse(r.game.endedAt) < 10 * 60_000;
       if (origin === "event" && out.status === "new" && fresh && r.classification.analyzed && config.notifyAfterGame) {
         const { title, body } = describe(r);
-        const clicked = await notify(title, body, { id: "open", label: tr("Open report", "Abrir análise") });
+        const clicked = await notify(title, body, { id: "open", label: tr("Open report", "Abrir análise", "Abrir análisis", "Ouvrir l'analyse") });
         if (clicked === "open") openDesktop([`--game=${r.gameKey}`]);
       }
     },

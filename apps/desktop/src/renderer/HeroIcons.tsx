@@ -9,12 +9,12 @@ let loaded: Promise<Record<string, string>> | null = null;
 
 /** Name and level, skill order with times, and deaths (from the simulation) for a portrait's tooltip. */
 function heroTip(h: PlayerRecord["heroes"][number], deaths: { diedAt: number; revivedAt: number | null }[]) {
-  const lines = [tr(`${h.name}, level ${h.level}`, `${h.name}, nível ${h.level}`)];
-  if (h.skills.length) lines.push(`${tr("Skills", "Habilidades")}: ${h.skills.map((s) => `${s.name} ${mmss(s.ms)}`).join(" · ")}`);
+  const lines = [tr(`${h.name}, level ${h.level}`, `${h.name}, nível ${h.level}`, `${h.name}, nivel ${h.level}`, `${h.name}, niveau ${h.level}`)];
+  if (h.skills.length) lines.push(`${tr("Skills", "Habilidades", "Habilidades", "Compétences")}: ${h.skills.map((s) => `${s.name} ${mmss(s.ms)}`).join(" · ")}`);
   lines.push(
     deaths.length
-      ? `${tr("Died", "Morreu")}: ${deaths.map((d) => `≈${mmss(d.diedAt)}${d.revivedAt !== null ? tr(` (back ${mmss(d.revivedAt)})`, ` (voltou ${mmss(d.revivedAt)})`) : ""}`).join(", ")}`
-      : tr("Never died", "Nunca morreu"),
+      ? `${tr("Died", "Morreu", "Murió", "Mort")}: ${deaths.map((d) => `≈${mmss(d.diedAt)}${d.revivedAt !== null ? tr(` (back ${mmss(d.revivedAt)})`, ` (voltou ${mmss(d.revivedAt)})`, ` (volvió a ${mmss(d.revivedAt)})`, ` (revenu à ${mmss(d.revivedAt)})`) : ""}`).join(", ")}`
+      : tr("Never died", "Nunca morreu", "Nunca murió", "Jamais mort"),
   );
   return lines.join("\n");
 }

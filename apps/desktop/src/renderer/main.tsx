@@ -24,9 +24,9 @@ api.uiFont().then((url) => {
 
 type Page = "matches" | "performance" | "settings";
 const TABS: [Page, string][] = [
-  ["matches", tr("Matches", "Partidas")],
-  ["performance", tr("Performance", "Desempenho")],
-  ["settings", tr("Settings", "Configurações")],
+  ["matches", tr("Matches", "Partidas", "Partidas", "Parties")],
+  ["performance", tr("Performance", "Desempenho", "Rendimiento", "Performances")],
+  ["settings", tr("Settings", "Configurações", "Configuración", "Paramètres")],
 ];
 
 function App() {
@@ -89,14 +89,14 @@ function App() {
             >
               {label}
               {id === "settings" && update?.latest && (
-                <span className="tab-alert" title={tr(`Replay Altar ${update.latest.version} is available`, `O Replay Altar ${update.latest.version} está disponível`)}>!</span>
+                <span className="tab-alert" title={tr(`Replay Altar ${update.latest.version} is available`, `O Replay Altar ${update.latest.version} está disponível`, `Replay Altar ${update.latest.version} está disponible`, `Replay Altar ${update.latest.version} est disponible`)}>!</span>
               )}
             </button>
           ))}
         </nav>
         <span className="status">
-          {tr(`${analyzed} games analyzed`, `${analyzed} partidas analisadas`)}
-          {simulating ? tr(` · ${simulating} waiting for simulation`, ` · ${simulating} aguardando simulação`) : ""}
+          {tr(`${analyzed} games analyzed`, `${analyzed} partidas analisadas`, `${analyzed} partidas analizadas`, `${analyzed} parties analysées`)}
+          {simulating ? tr(` · ${simulating} waiting for simulation`, ` · ${simulating} aguardando simulação`, ` · ${simulating} esperando la simulación`, ` · ${simulating} en attente de simulation`) : ""}
         </span>
       </header>
       <main>
