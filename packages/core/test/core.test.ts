@@ -209,7 +209,10 @@ describe.skipIf(files.length === 0)("ingest", () => {
   };
   const config: Config = { ...DEFAULT_CONFIG, accounts: ME, warcraftDocuments: [], openWindowOnGameStart: false, notifyAfterGame: false };
   const inbox = join(root, "inbox");
-  cpSync(FIXTURES, inbox, { recursive: true, preserveTimestamps: true });
+  cpSync(FIXTURES, inbox, { recursive: true });
+  // A saved replay's game time comes from its file's date, which a fresh checkout sets to now.
+  const saved = new Date("2026-10-15T12:00:00Z");
+  for (const f of files) utimesSync(join(inbox, f), saved, saved);
   const db = openDb(paths.db);
   const ctx = { db, config, paths };
   const dump = () =>

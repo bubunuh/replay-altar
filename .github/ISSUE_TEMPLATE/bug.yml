@@ -1,0 +1,41 @@
+name: Report a problem
+description: Something doesn't work, or a report says something wrong about your game.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. Settings → Help and feedback → "Report a problem" fills in the version and system for you.
+        You can write in English, Portuguese, Spanish or French.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead. Screenshots help.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Replay Altar version
+      placeholder: "0.1.2"
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: System
+      placeholder: "Windows 11"
+  - type: textarea
+    id: log
+    attributes:
+      label: Collector log
+      description: |
+        Windows: Settings → Help and feedback → "Open the log folder", then drag `collector.log` here.
+        Linux: `journalctl --user -u replay-altar-collector --since today`.
+        The log has your battletag and replay folder paths; remove them if you prefer.
+  - type: textarea
+    id: replay
+    attributes:
+      label: The replay (optional)
+      description: If a report is wrong about a game, attaching its replay (Match page → "Replay file") lets us check. Zip it first; GitHub doesn't accept .w3g files directly.

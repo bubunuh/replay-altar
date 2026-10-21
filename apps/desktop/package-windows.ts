@@ -45,12 +45,19 @@ await esbuild.build({
 });
 
 // WC3V (GPL-3.0): what the simulation reads at run time, without its site, docs and tests, and
-// without unit tables extracted from this PC's game.
+// as published: never the unit tables or map data this PC made from its own game and maps (each
+// install makes them from its own, the first time a game on that map is simulated). The same
+// on this PC and on GitHub's build machines.
 const wc3v = join(root, "vendor/wc3v");
-const SKIP = new Set(["marketing", "docs", "tests", "debug", "desktop", "replays", ".git", ".github"]);
+const SKIP = new Set(["marketing", "docs", "tests", "debug", "desktop", "replays", "mapdata", ".git", ".github"]);
+const LOCAL = [join("helpers", "UnitBalance.json"), join("client", "maps")];
 for (const e of readdirSync(wc3v, { withFileTypes: true })) {
   if (SKIP.has(e.name) || (e.isFile() && /\.(png|gif|webm|ya?ml)$/.test(e.name))) continue;
-  cpSync(join(wc3v, e.name), join(res, "vendor/wc3v", e.name), { recursive: true, filter: (src) => !src.endsWith(join("helpers", "UnitBalance.json")) });
+  cpSync(join(wc3v, e.name), join(res, "vendor/wc3v", e.name), { recursive: true, filter: (src) => !LOCAL.some((l) => src.endsWith(l)) });
+}
+// Files the map extraction adds this PC's maps to: shipped as they are in WC3V's repository.
+for (const f of ["client/js/gameData.js", "client/js/gameData.json", "helpers/mapConfiguration.json"]) {
+  writeFileSync(join(res, "vendor/wc3v", f), execFileSync("git", ["-C", wc3v, "show", `HEAD:${f}`], { maxBuffer: 64 * 1024 * 1024 }));
 }
 cpSync(join(root, "packages/sim/driver"), join(res, "packages/sim/driver"), { recursive: true });
 cpSync(casc, join(res, "scripts/casc/bin/casc-extract.exe"));

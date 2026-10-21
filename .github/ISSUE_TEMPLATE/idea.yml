@@ -1,0 +1,22 @@
+name: Suggest an idea
+description: Something Replay Altar could do, or do better.
+labels: [idea]
+body:
+  - type: markdown
+    attributes:
+      value: You can write in English, Portuguese, Spanish or French.
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea
+      description: What you would like, and how it would help you improve.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Replay Altar version
+  - type: input
+    id: system
+    attributes:
+      label: System
