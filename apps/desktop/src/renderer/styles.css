@@ -73,6 +73,11 @@ a { color: var(--accent); }
 .tab { background: none; border: 0; padding: 8px 12px; border-radius: 8px; color: var(--ink-2); cursor: pointer; }
 .tab:hover { background: var(--surface-2); }
 .tab[aria-current="page"] { color: var(--ink); background: var(--surface-2); font-weight: 600; }
+/* A new version is out: a small yellow mark on the Settings tab. */
+.tab-alert { display: inline-grid; place-items: center; width: 16px; height: 16px; margin-left: 6px; border-radius: 50%; background: var(--warning); color: #1a1a19; font-size: 11px; font-weight: 700; line-height: 1; vertical-align: 1px; }
+.notes { white-space: pre-wrap; font-size: 0.9em; color: var(--ink-2); background: var(--surface-2); border-radius: 8px; padding: 10px 12px; max-height: 320px; overflow: auto; }
+.progress { height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
+.progress > div { height: 100%; background: var(--accent); transition: width 0.4s; }
 .topbar .status { margin-left: auto; color: var(--muted); font-size: calc(12.5px * var(--text-scale)); }
 main { overflow: auto; padding: 20px; }
 .page { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }

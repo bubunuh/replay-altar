@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { Config, Paths } from "@replay-altar/core/ui";
 import { LANGUAGES, language, locale, tr, type Language } from "@replay-altar/core/i18n";
 import { setTextScale, TEXT_SCALES, textScale } from "../textSize.ts";
-import { api, type Folders, type RefGroupInfo } from "../api.ts";
+import { api, type AppInfo, type Folders, type RefGroupInfo, type UpdateState } from "../api.ts";
 import { groupLabel } from "../format.ts";
 
 /**
@@ -99,13 +99,108 @@ function ProGames({ refs }: { refs: RefGroupInfo[] }) {
   );
 }
 
-export function Settings({ refs }: { refs: RefGroupInfo[] }) {
+const ISSUES = "https://github.com/bubunuh/replay-altar/issues/new";
+
+/** Release notes as plain text: GitHub's Markdown without its marks (never rendered as HTML). */
+const plainNotes = (md: string) => md.replace(/\r/g, "").replace(/\*\*|`/g, "").replace(/^#+\s*/gm, "").trim();
+
+/** This version, and the newer one when there is one: what's new, and the Update button. */
+function Version({ update }: { update: UpdateState | null }) {
+  const [notes, setNotes] = useState(false);
+  const [checking, setChecking] = useState(false);
+  if (!update) return null;
+  const latest = update.latest;
+  const check = async () => {
+    setChecking(true);
+    await api.checkUpdate();
+    setChecking(false);
+  };
+  return (
+    <div className="card">
+      <div className="card-head">
+        <h2>Replay Altar {update.current}</h2>
+        <button className="btn" disabled={checking} onClick={check}>{checking ? tr("Checking…", "Verificando…") : tr("Check for updates", "Procurar atualizações")}</button>
+      </div>
+      {!latest ? (
+        <p className="sub">
+          {update.checkedAt
+            ? tr(`You have the latest version (checked ${new Date(update.checkedAt).toLocaleString(locale())}).`, `Você tem a versão mais recente (verificado em ${new Date(update.checkedAt).toLocaleString(locale())}).`)
+            : update.error
+              ? tr(`Could not check for updates: ${update.error}.`, `Não foi possível procurar atualizações: ${update.error}.`)
+              : tr("Not checked yet.", "Ainda não verificado.")}
+        </p>
+      ) : (
+        <>
+          <p>
+            <span className="tab-alert" style={{ marginLeft: 0, marginRight: 8 }}>!</span>
+            {tr(`Replay Altar ${latest.version} is available.`, `O Replay Altar ${latest.version} está disponível.`)}{" "}
+            <span className="muted small">{tr("Updating is optional; your games and settings are kept.", "Atualizar é opcional; as suas partidas e configurações são mantidas.")}</span>
+          </p>
+          <div className="filters">
+            <button className="btn" onClick={() => setNotes(!notes)}>{tr("What's new", "O que há de novo")}</button>
+            {update.installable && update.download === "idle" && <button className="btn" onClick={() => api.downloadUpdate()}>{tr("Update", "Atualizar")}</button>}
+            {update.installable && update.download === "failed" && <button className="btn" onClick={() => api.downloadUpdate()}>{tr("Try again", "Tentar de novo")}</button>}
+            {update.download === "ready" && <button className="btn" onClick={() => api.installUpdate()}>{tr("Restart and install", "Reiniciar e instalar")}</button>}
+          </div>
+          {update.download === "downloading" && (
+            <div style={{ marginTop: 10 }}>
+              <div className="progress"><div style={{ width: `${update.percent}%` }} /></div>
+              <p className="sub">{tr(`Downloading… ${update.percent}%`, `Baixando… ${update.percent}%`)}</p>
+            </div>
+          )}
+          {update.download === "failed" && <p className="sub">{tr(`The download failed: ${update.error}.`, `O download falhou: ${update.error}.`)}</p>}
+          {!update.installable && (
+            <p className="sub">
+              {tr("This copy runs from the project folder: update it with", "Esta cópia roda da pasta do projeto: atualize com")} <code>git pull</code>, <code>npm install</code> {tr("and", "e")} <code>npm run build</code>.
+            </p>
+          )}
+          {notes && (
+            <>
+              <div className="notes">{plainNotes(latest.notes) || tr("No notes for this version.", "Esta versão não tem notas.")}</div>
+              <p className="sub"><a href="#" onClick={(e) => { e.preventDefault(); api.openUrl(latest.url); }}>{tr("This release on GitHub", "Esta versão no GitHub")}</a></p>
+            </>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+/** Problems and ideas go to the project's GitHub issues, with the version and system filled in. */
+function Help({ info }: { info: AppInfo | null }) {
+  if (!info) return null;
+  const open = (template: string) => {
+    const q = new URLSearchParams({ template, version: info.version, system: info.system });
+    api.openUrl(`${ISSUES}?${q}`);
+  };
+  return (
+    <div className="card">
+      <h2>{tr("Help and feedback", "Ajuda e sugestões")}</h2>
+      <p className="sub">
+        {tr(
+          "Problems and ideas are collected on the project's GitHub page (a free GitHub account is needed to write there). The version and system are filled in for you.",
+          "Problemas e ideias ficam na página do projeto no GitHub (é preciso uma conta gratuita do GitHub para escrever lá). A versão e o sistema já vêm preenchidos.",
+        )}
+        {info.logDir && " " + tr("For a problem, please attach the collector's log, collector.log.", "Para um problema, anexe o registro do coletor, collector.log.")}
+      </p>
+      <div className="filters">
+        <button className="btn" onClick={() => open("bug.yml")}>{tr("Report a problem", "Relatar um problema")}</button>
+        <button className="btn" onClick={() => open("idea.yml")}>{tr("Suggest an idea", "Sugerir uma ideia")}</button>
+        {info.logDir && <button className="btn" onClick={() => api.openPath(info.logDir!)}>{tr("Open the log folder", "Abrir a pasta do registro")}</button>}
+      </div>
+    </div>
+  );
+}
+
+export function Settings({ refs, update }: { refs: RefGroupInfo[]; update: UpdateState | null }) {
   const [state, setState] = useState<{ config: Config; configPath: string; paths: Paths } | null>(null);
   const [accounts, setAccounts] = useState("");
   const [saved, setSaved] = useState(false);
   const [status, setStatus] = useState("…");
   const [scale, setScale] = useState(textScale);
+  const [info, setInfo] = useState<AppInfo | null>(null);
   useEffect(() => {
+    api.appInfo().then(setInfo);
     api.getConfig().then((s) => {
       setState(s);
       setAccounts(s.config.accounts.join(", "));
@@ -131,6 +226,7 @@ export function Settings({ refs }: { refs: RefGroupInfo[] }) {
 
   return (
     <div className="page" style={{ maxWidth: 820 }}>
+      <Version update={update} />
       <div className="card">
         <h2>{tr("You", "Você")}</h2>
         <p className="sub">
@@ -172,9 +268,11 @@ export function Settings({ refs }: { refs: RefGroupInfo[] }) {
         <div className="filters" style={{ flexDirection: "column", alignItems: "flex-start" }}>
           <label><input type="checkbox" checked={config.openWindowOnGameStart} onChange={(e) => save({ openWindowOnGameStart: e.target.checked })} />{tr("Open this window (without taking focus) when Warcraft III starts", "Abrir esta janela (sem tirar o foco) quando o Warcraft III abrir")}</label>
           <label><input type="checkbox" checked={config.notifyAfterGame} onChange={(e) => save({ notifyAfterGame: e.target.checked })} />{tr("Notify me after each analyzed game", "Me avisar depois de cada partida analisada")}</label>
+          <label><input type="checkbox" checked={config.checkUpdates !== false} onChange={(e) => save({ checkUpdates: e.target.checked })} />{tr("Check once a day whether a new version is out (asks GitHub; nothing about you is sent)", "Verificar uma vez por dia se saiu uma versão nova (pergunta ao GitHub; nada sobre você é enviado)")}</label>
         </div>
       </div>
       <ProGames refs={refs} />
+      <Help info={info} />
       <div className="card">
         <h2>{tr("Where things live", "Onde ficam as coisas")}</h2>
         <table>

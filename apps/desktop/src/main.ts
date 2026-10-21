@@ -1,12 +1,13 @@
 // Electron main process: one window, read-mostly access to the Replay Altar database.
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, watch, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { release as osRelease, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { app, BrowserWindow, dialog, ipcMain, nativeTheme, shell } from "electron";
 import { loadRefGroups, rulesBook } from "@replay-altar/rules";
 import { mapDataName } from "@replay-altar/sim/mapname";
 import { mapMarkers } from "./mapOverlay.ts";
 import { mapActivity } from "./mapActivity.ts";
+import { updater } from "./updates.ts";
 import type { RulesBook } from "@replay-altar/rules/types";
 import {
   addAnnotation,
@@ -87,8 +88,12 @@ if (!app.requestSingleInstanceLock()) {
     return books.get(key)!;
   };
 
+  // Where a launch asked to go, until the page has asked for it: the page may still be starting
+  // when the message is sent, and would miss it.
+  let pendingNav: { game: string | null; page: string | null } | null = null;
   const show = (launch: Launch) => {
     if (!win) return;
+    if (launch.game || launch.page) pendingNav = { game: launch.game, page: launch.page };
     if (launch.game) win.webContents.send("nav:game", launch.game);
     if (launch.page) win.webContents.send("nav:page", launch.page);
     if (launch.screenshot) {
@@ -123,10 +128,21 @@ if (!app.requestSingleInstanceLock()) {
 
   app.on("second-instance", (_e, argv) => show({ ...parseArgs(argv), screenshot: null }));
 
+  let updates: ReturnType<typeof updater> | null = null;
+
   app.whenReady().then(() => {
     applyLanguage();
     const launch = parseArgs(process.argv);
     if (!launch.screenshot) ensureWindowsCollector();
+    // Screenshot runs stay offline unless pointed at a test list of releases.
+    if (!launch.screenshot || process.env.REPLAY_ALTAR_RELEASES_URL) {
+      updates = updater({
+        installable: process.platform === "win32" && isInstalled(),
+        enabled: () => loadConfig().checkUpdates !== false,
+        onChange: (s) => win?.webContents.send("update:state", s),
+        log: (m) => console.log(m),
+      });
+    }
     const theme = arg(process.argv, "theme"); // dev/test: force light or dark
     if (theme === "light" || theme === "dark") nativeTheme.themeSource = theme;
     win = new BrowserWindow({
@@ -263,4 +279,21 @@ if (!app.requestSingleInstanceLock()) {
   ipcMain.handle("ref:profiles", () => loadRefGroups());
   ipcMain.handle("shell:showFile", (_e, file: string) => shell.showItemInFolder(file));
   ipcMain.handle("shell:openPath", (_e, dir: string) => shell.openPath(dir));
+  ipcMain.handle("shell:openUrl", (_e, url: string) => {
+    if (/^https:\/\/github\.com\/bubunuh\/replay-altar\b/.test(url)) return shell.openExternal(url);
+  });
+  ipcMain.handle("nav:pending", () => {
+    const nav = pendingNav;
+    pendingNav = null;
+    return nav;
+  });
+  ipcMain.handle("app:info", () => ({
+    version: app.getVersion(),
+    system: `${process.platform === "win32" ? "Windows" : process.platform === "darwin" ? "macOS" : "Linux"} ${osRelease()} (${process.arch})${isInstalled() ? "" : ", from a checkout"}`,
+    logDir: process.platform === "win32" && isInstalled() ? dirname(collectorFiles().log) : null,
+  }));
+  ipcMain.handle("update:get", () => updates?.state() ?? null);
+  ipcMain.handle("update:check", () => updates?.check(true) ?? null);
+  ipcMain.handle("update:download", () => updates?.download());
+  ipcMain.handle("update:install", () => updates?.install());
 }

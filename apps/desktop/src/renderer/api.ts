@@ -4,6 +4,12 @@ import type { RulesBook } from "@replay-altar/rules/types";
 import type { Principles } from "@replay-altar/rules/principles";
 import type { MapMarker } from "../mapOverlay.ts";
 import type { MapActivity } from "../mapActivity.ts";
+import type { UpdateState } from "../updates.ts";
+
+export type { UpdateState };
+
+/** For bug reports: this version, the system, and where the collector's log is (Windows). */
+export type AppInfo = { version: string; system: string; logDir: string | null };
 
 export type GameFindings = { key: string; playedAt: string; result: string; findings: { id: string; headline: string; severity: number; advice: string | null }[] };
 
@@ -32,6 +38,17 @@ type W3Api = {
   referenceProfiles(): Promise<RefGroupInfo[]>;
   showFile(file: string): Promise<void>;
   openPath(dir: string): Promise<void>;
+  /** Opens a page of the project on GitHub in the browser (other addresses are ignored). */
+  openUrl(url: string): Promise<void>;
+  /** Null in screenshot runs. */
+  updateState(): Promise<UpdateState | null>;
+  checkUpdate(): Promise<UpdateState | null>;
+  downloadUpdate(): Promise<void>;
+  installUpdate(): Promise<void>;
+  onUpdateState(fn: (s: UpdateState) => void): void;
+  appInfo(): Promise<AppInfo>;
+  /** Where the launch asked to go, if the page missed the message (once). */
+  pendingNav(): Promise<{ game: string | null; page: string | null } | null>;
   rules(key: string): Promise<RulesBook>;
   /** The map's minimap as a data URL, or null when there is none yet. */
   mapImage(mapFile: string): Promise<string | null>;

@@ -1,7 +1,7 @@
 import { StrictMode, useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import type { GameRow, MetricDef, PerfGame } from "@replay-altar/core/ui";
-import { api, type RefGroupInfo } from "./api.ts";
+import { api, type RefGroupInfo, type UpdateState } from "./api.ts";
 import { Match } from "./pages/Match.tsx";
 import { Matches } from "./pages/Matches.tsx";
 import { Settings } from "./pages/Other.tsx";
@@ -35,6 +35,7 @@ function App() {
   const [perf, setPerf] = useState<{ games: PerfGame[]; metrics: MetricDef[] }>({ games: [], metrics: [] });
   const [version, setVersion] = useState(0); // bumps when the collector adds a game
   const [refs, setRefs] = useState<RefGroupInfo[]>([]);
+  const [update, setUpdate] = useState<UpdateState | null>(null);
 
   const load = useCallback(() => {
     api.listGames().then(setGames);
@@ -50,9 +51,15 @@ function App() {
       load();
       setGame(key);
     });
+    api.updateState().then(setUpdate);
+    api.onUpdateState(setUpdate);
     api.onNavPage((p) => {
       setGame(null);
       setPage(p as Page);
+    });
+    api.pendingNav().then((nav) => {
+      if (nav?.page) setPage(nav.page as Page);
+      if (nav?.game) setGame(nav.game);
     });
   }, [load]);
 
@@ -80,6 +87,9 @@ function App() {
               }}
             >
               {label}
+              {id === "settings" && update?.latest && (
+                <span className="tab-alert" title={tr(`Replay Altar ${update.latest.version} is available`, `O Replay Altar ${update.latest.version} está disponível`)}>!</span>
+              )}
             </button>
           ))}
         </nav>
@@ -96,7 +106,7 @@ function App() {
         ) : page === "performance" ? (
           <Performance games={perf.games} metrics={perf.metrics} refs={refs} onOpen={open} />
         ) : (
-          <Settings refs={refs} />
+          <Settings refs={refs} update={update} />
         )}
       </main>
     </div>

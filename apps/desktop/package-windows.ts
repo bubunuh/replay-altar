@@ -5,8 +5,7 @@
 // The installed app is self-contained: the window (out/), the collector bundled into one file
 // that runs on the app's own executable as Node (resources/collector/collector.mjs), the WC3V
 // simulation engine with its map library, the Windows game-data extractor
-// (scripts/casc/build-windows.sh) and the pro data from this PC's last update as a starting
-// point. Game data (unit tables, crests, portraits, font) is extracted on the tester's PC from
+// (scripts/casc/build-windows.sh) and the shipped pro statistics (data/reference). Game data (unit tables, crests, portraits, font) is extracted on the tester's PC from
 // their own install, never shipped.
 import { execFileSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -62,7 +61,11 @@ cpSync(join(root, "LICENSE"), join(res, "LICENSE.txt"));
 await build({
   projectDir: app,
   targets: Platform.WINDOWS.createTarget("nsis", Arch.x64),
+  // Uploading is done by hand or by the release workflow; this only writes latest.yml (the
+  // release's checksum, read by the Update button) and the app's app-update.yml.
+  publish: "never",
   config: {
+    publish: [{ provider: "github", owner: "bubunuh", repo: "replay-altar" }],
     appId: "app.replayaltar",
     productName: "Replay Altar",
     executableName: "ReplayAltar",

@@ -34,7 +34,9 @@ export type Config = {
   openWindowOnGameStart: boolean;
   /** Desktop notification after each analyzed game. */
   notifyAfterGame: boolean;
-  /** Pro games (warcraft3.info tournament replays) to compare against; updated on request. */
+  /** Ask GitHub once a day whether a newer Replay Altar was released (unset: yes). */
+  checkUpdates?: boolean;
+  /** Pro games (warcraft3.info tournament replays) the shipped statistics come from (maintainers). */
   reference: { groups: ReferenceGroup[] };
 };
 
