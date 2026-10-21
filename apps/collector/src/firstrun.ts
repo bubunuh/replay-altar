@@ -40,11 +40,12 @@ export async function detectAccounts(dirs: string[], log: (msg: string) => void)
 }
 
 /** Extracts the game data the simulation needs when it is missing and the game is installed. */
-export function ensureGameData(log: (msg: string) => void) {
+export function ensureGameData(log: (msg: string) => void, onStart: () => void = () => {}) {
   const problem = simNotReady(dataDir());
   if (!problem || !/game data/.test(problem)) return;
   const wc3 = defaultWarcraftDir();
   if (!existsSync(join(wc3, ".build.info"))) return log(`game data: no Warcraft III install found at ${wc3}`);
+  onStart();
   try {
     extractGameData(wc3);
   } catch (e) {
@@ -52,8 +53,9 @@ export function ensureGameData(log: (msg: string) => void) {
   }
 }
 
-export async function firstRun(config: Config, dirs: string[], log: (msg: string) => void): Promise<Config> {
-  ensureGameData(log);
+/** `onSetup`: a slow step is starting (for the window's progress bar). */
+export async function firstRun(config: Config, dirs: string[], log: (msg: string) => void, onSetup: (step: "gamedata") => void = () => {}): Promise<Config> {
+  ensureGameData(log, () => onSetup("gamedata"));
   if (config.accounts.length || !dirs.length) return config;
   const accounts = await detectAccounts(dirs, log);
   if (!accounts.length) return config;

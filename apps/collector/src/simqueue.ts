@@ -5,6 +5,9 @@ import { simulateGame } from "@replay-altar/sim";
 export class SimQueue {
   private queue: string[] = [];
   private running = false;
+  /** Since the queue was last empty: games simulated and their total time. */
+  private done = 0;
+  private totalMs = 0;
   private ctx: IngestContext;
   private log: (msg: string) => void;
 
@@ -29,6 +32,13 @@ export class SimQueue {
     return this.queue.length + (this.running ? 1 : 0);
   }
 
+  /** For the progress bar: null when idle. */
+  get progress() {
+    const pending = this.pending;
+    if (!pending) return null;
+    return { done: this.done, total: this.done + pending, avgMs: this.done ? Math.round(this.totalMs / this.done) : null };
+  }
+
   private async drain() {
     if (this.running) return;
     this.running = true;
@@ -38,10 +48,14 @@ export class SimQueue {
         if (!record) continue;
         const sim = await simulateGame(record, { dataRoot: this.ctx.paths.root, warcraftDocuments: warcraftFolders(this.ctx.config) });
         applySim(this.ctx, key, sim);
+        this.done++;
+        if (sim.status === "ok") this.totalMs += sim.runMs;
         this.log(sim.status === "ok" ? `simulated ${key.slice(0, 8)} in ${(sim.runMs / 1000).toFixed(1)}s` : `simulation failed for ${key.slice(0, 8)}: ${sim.reason}`);
       }
     } finally {
       this.running = false;
+      this.done = 0;
+      this.totalMs = 0;
     }
   }
 }

@@ -155,6 +155,18 @@ export const paths = (root = dataDir()) => {
  */
 export const proDataDir = (groupId: string) => join(projectRoot(), "data", "reference", groupId);
 
+/**
+ * The collector's progress.json: what it is busy with (apps/collector/src/progress.ts). `setup`:
+ * a first-start step that takes a while; `import`: the replays found at start, `done` of
+ * `total`; `sims`: games simulated since the queue was last empty, with the average time.
+ */
+export type Progress = {
+  at: string;
+  setup: "gamedata" | null;
+  import: { done: number; total: number } | null;
+  sims: { done: number; total: number; avgMs: number | null } | null;
+};
+
 /** Data folder of a reference group (maintainers): same layout as yours, separate database. */
 export const referencePaths = (groupId: string) => {
   const p = paths(join(dataDir(), "reference", groupId));

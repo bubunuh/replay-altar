@@ -24,6 +24,7 @@ const api = {
   installUpdate: () => ipcRenderer.invoke("update:install"),
   appInfo: () => ipcRenderer.invoke("app:info"),
   pendingNav: () => ipcRenderer.invoke("nav:pending"),
+  progress: () => ipcRenderer.invoke("progress:get"),
   onUpdateState: (fn: (s: unknown) => void) => ipcRenderer.on("update:state", (_e, s) => fn(s)),
   rules: (key: string) => ipcRenderer.invoke("rules:get", key),
   mapImage: (mapFile: string) => ipcRenderer.invoke("map:image", mapFile),

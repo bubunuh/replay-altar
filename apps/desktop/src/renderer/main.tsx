@@ -7,6 +7,7 @@ import { Matches } from "./pages/Matches.tsx";
 import { Settings } from "./pages/Other.tsx";
 import { Performance } from "./pages/Performance.tsx";
 import { TipLayer } from "./Tip.tsx";
+import { CollectorProgress } from "./CollectorProgress.tsx";
 import { applyTextScale } from "./textSize.ts";
 import { tr } from "@replay-altar/core/i18n";
 import "./styles.css";
@@ -99,6 +100,7 @@ function App() {
         </span>
       </header>
       <main>
+        <CollectorProgress onDone={load} />
         {game ? (
           <Match key={`${game}:${version}`} gameKey={game} metrics={perf.metrics} refs={refs} onBack={() => setGame(null)} />
         ) : page === "matches" ? (

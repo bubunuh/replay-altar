@@ -41,6 +41,11 @@ export class ReplayWatcher {
     this.rescanTimer = setInterval(() => this.scanAll(), RESCAN_MS);
   }
 
+  /** Files waiting to settle or being ingested. */
+  get pendingCount() {
+    return this.pending.size;
+  }
+
   stop() {
     for (const w of this.watchers) w.close();
     clearInterval(this.rescanTimer);

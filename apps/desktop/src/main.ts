@@ -174,14 +174,14 @@ if (!app.requestSingleInstanceLock()) {
 
     // The collector appends to events.jsonl after every ingest; tell the UI to refresh.
     let timer: NodeJS.Timeout | undefined;
-    if (existsSync(p.root)) {
-      watch(p.root, (_ev, name) => {
-        if (name !== "events.jsonl") return;
-        books.clear();
-        clearTimeout(timer);
-        timer = setTimeout(() => win?.webContents.send("data:changed"), 500);
-      });
-    }
+    // On a first start the collector may not have made the folder yet.
+    mkdirSync(p.root, { recursive: true });
+    watch(p.root, (_ev, name) => {
+      if (name !== "events.jsonl") return;
+      books.clear();
+      clearTimeout(timer);
+      timer = setTimeout(() => win?.webContents.send("data:changed"), 500);
+    });
   });
 
   app.on("window-all-closed", () => app.quit());
@@ -281,6 +281,14 @@ if (!app.requestSingleInstanceLock()) {
   ipcMain.handle("shell:openPath", (_e, dir: string) => shell.openPath(dir));
   ipcMain.handle("shell:openUrl", (_e, url: string) => {
     if (/^https:\/\/github\.com\/bubunuh\/replay-altar\b/.test(url)) return shell.openExternal(url);
+  });
+  ipcMain.handle("progress:get", () => {
+    const file = join(p.root, "progress.json");
+    try {
+      return existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : null;
+    } catch {
+      return null; // being rewritten
+    }
   });
   ipcMain.handle("nav:pending", () => {
     const nav = pendingNav;

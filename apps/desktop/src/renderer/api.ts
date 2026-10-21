@@ -1,4 +1,4 @@
-import type { Config, GameDetail, GameRow, MetricDef, Paths, PerfGame, ReferenceGroup } from "@replay-altar/core/ui";
+import type { Config, GameDetail, GameRow, MetricDef, Paths, PerfGame, Progress, ReferenceGroup } from "@replay-altar/core/ui";
 import type { RefProfile } from "@replay-altar/reference/types";
 import type { RulesBook } from "@replay-altar/rules/types";
 import type { Principles } from "@replay-altar/rules/principles";
@@ -48,6 +48,8 @@ type W3Api = {
   onUpdateState(fn: (s: UpdateState) => void): void;
   appInfo(): Promise<AppInfo>;
   /** Where the launch asked to go, if the page missed the message (once). */
+  /** What the collector is busy with (null: nothing written yet). */
+  progress(): Promise<Progress | null>;
   pendingNav(): Promise<{ game: string | null; page: string | null } | null>;
   rules(key: string): Promise<RulesBook>;
   /** The map's minimap as a data URL, or null when there is none yet. */

@@ -1,10 +1,12 @@
 // The always-on service: archive + analyze new replays, react to Warcraft III starting.
+import { mkdirSync } from "node:fs";
 import { ingestFile, loadConfig, markCollectorRunning, mmss, openDb, paths, replayDirs, resolveLanguage, setLanguage, tr, warcraftFolders, type GameRecord } from "@replay-altar/core";
 import { OfficialQueue } from "./officialqueue.ts";
 import { SimQueue } from "./simqueue.ts";
 import { notify, openDesktop, watchWarcraft } from "./system.ts";
 import { ReplayWatcher } from "./watcher.ts";
 import { firstRun } from "./firstrun.ts";
+import { progressWriter } from "./progress.ts";
 
 const log = (msg: string) => console.log(`[replay-altar] ${msg}`);
 
@@ -22,7 +24,9 @@ function describe(r: GameRecord) {
 export async function runCollector() {
   const p = paths();
   const found = replayDirs(loadConfig());
-  const config = await firstRun(loadConfig(), found, log);
+  mkdirSync(p.root, { recursive: true });
+  const writeProgress = progressWriter(p.root);
+  const config = await firstRun(loadConfig(), found, log, (setup) => writeProgress({ setup, import: null, sims: null }));
   setLanguage(resolveLanguage(config.language));
   const db = openDb(p.db);
   markCollectorRunning();
@@ -57,6 +61,15 @@ export async function runCollector() {
   watcher.scanAll(); // backfill + anything played while we were down
   sims.backfill();
 
+  // Progress for the window: the replays found at start (later rescans find known files and
+  // would only flash a bar), then the simulations.
+  const importTotal = watcher.pendingCount;
+  let importing = importTotal > 0;
+  const progress = setInterval(() => {
+    if (importing && watcher.pendingCount === 0) importing = false;
+    writeProgress({ setup: null, import: importing ? { done: importTotal - watcher.pendingCount, total: importTotal } : null, sims: sims.progress });
+  }, 1000);
+
   const wc3 = watchWarcraft(
     () => {
       log("Warcraft III started");
@@ -69,6 +82,8 @@ export async function runCollector() {
     log("stopping");
     watcher.stop();
     clearInterval(wc3);
+    clearInterval(progress);
+    writeProgress({ setup: null, import: null, sims: null });
     db.close();
     process.exit(0);
   };
