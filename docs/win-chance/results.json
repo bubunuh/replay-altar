@@ -1,0 +1,868 @@
+{
+ "generatedAt": "2026-10-22T22:22:35.378Z",
+ "commit": "21a3a82",
+ "calibration": {
+  "games": 513,
+  "moments": 36504
+ },
+ "validation": {
+  "downloaded": 3370,
+  "simulationFailed": 337,
+  "simulated": 3033,
+  "scored": 2998,
+  "moments": 209768
+ },
+ "features": [
+  "army value",
+  "army value ratio (log)",
+  "workers",
+  "hero experience",
+  "bases",
+  "tier",
+  "resources spent",
+  "resources lost",
+  "food used",
+  "highest hero level",
+  "heroes alive",
+  "hero deaths",
+  "upgrades",
+  "attack and armor upgrades",
+  "items bought",
+  "creep camps (levels)"
+ ],
+ "models": [
+  {
+   "label": "6 differences, straight-line time weights",
+   "keep": [
+    "workers",
+    "hero experience",
+    "bases",
+    "tier",
+    "resources lost",
+    "food used"
+   ],
+   "basis": "linear",
+   "matchup": false,
+   "lambda": 0.01,
+   "cv": 0.6177016687154874,
+   "validation": 0.6574974749739071,
+   "brier": 0.23025663028386556,
+   "best": false
+  },
+  {
+   "label": "7 differences, straight-line time weights",
+   "keep": [
+    "army value ratio (log)",
+    "workers",
+    "hero experience",
+    "bases",
+    "resources lost",
+    "heroes alive",
+    "upgrades"
+   ],
+   "basis": "linear",
+   "matchup": false,
+   "lambda": 0.01,
+   "cv": 0.610346903893692,
+   "validation": 0.6476607503242869,
+   "brier": 0.22684870866106482,
+   "best": false
+  },
+  {
+   "label": "7 differences, curved time weights",
+   "keep": [
+    "army value ratio (log)",
+    "workers",
+    "hero experience",
+    "bases",
+    "resources lost",
+    "heroes alive",
+    "upgrades"
+   ],
+   "basis": "curve",
+   "matchup": false,
+   "lambda": 0.01,
+   "cv": 0.6112811515337642,
+   "validation": 0.645982607003293,
+   "brier": 0.22625802465207043,
+   "best": false
+  },
+  {
+   "label": "7 differences, curved time weights",
+   "keep": [
+    "army value ratio (log)",
+    "workers",
+    "hero experience",
+    "bases",
+    "resources lost",
+    "heroes alive",
+    "upgrades"
+   ],
+   "basis": "curve",
+   "matchup": false,
+   "lambda": 0.1,
+   "cv": 0.6097123141436651,
+   "validation": 0.6446136062284737,
+   "brier": 0.22590484450576348,
+   "best": false
+  },
+  {
+   "label": "7 differences, curved time weights",
+   "keep": [
+    "army value ratio (log)",
+    "workers",
+    "hero experience",
+    "bases",
+    "resources lost",
+    "heroes alive",
+    "upgrades"
+   ],
+   "basis": "curve",
+   "matchup": false,
+   "lambda": 0.5,
+   "cv": 0.6091210590343534,
+   "validation": 0.6422311974751371,
+   "brier": 0.2254056063977083,
+   "best": true
+  },
+  {
+   "label": "7 differences, curved time weights, matchup edges",
+   "keep": [
+    "army value ratio (log)",
+    "workers",
+    "hero experience",
+    "bases",
+    "resources lost",
+    "heroes alive",
+    "upgrades"
+   ],
+   "basis": "curve",
+   "matchup": true,
+   "lambda": 0.5,
+   "cv": 0.6114137664743554,
+   "validation": 0.6467351448269877,
+   "brier": 0.2273050684097818,
+   "best": false
+  }
+ ],
+ "trees": {
+  "trees": 300,
+  "depth": 2,
+  "cv": 0.6167645043662262,
+  "validation": 0.6457898050685847,
+  "brier": 0.22758674626118214
+ },
+ "bootstrap": {
+  "bestMinusFirst": {
+   "diff": -0.015266277498769965,
+   "lo": -0.019837130306460796,
+   "hi": -0.010274485539551473
+  },
+  "treesMinusBest": {
+   "diff": 0.003558607593447616,
+   "lo": 0.00033552526035173847,
+   "hi": 0.006895634965563389
+  }
+ },
+ "slope": {
+  "cv": 1.0313995898223343,
+  "validation": 0.8236463857777331
+ },
+ "favourite": [
+  {
+   "minute": 3,
+   "n": 2998,
+   "acc": 0.5036691127418279,
+   "sure": 0
+  },
+  {
+   "minute": 5,
+   "n": 2958,
+   "acc": 0.5686274509803921,
+   "sure": 0.015889114266396213
+  },
+  {
+   "minute": 7,
+   "n": 2835,
+   "acc": 0.5798941798941799,
+   "sure": 0.05114638447971781
+  },
+  {
+   "minute": 10,
+   "n": 2555,
+   "acc": 0.6258317025440313,
+   "sure": 0.11702544031311155
+  },
+  {
+   "minute": 12,
+   "n": 2242,
+   "acc": 0.6668153434433541,
+   "sure": 0.17127564674397858
+  },
+  {
+   "minute": 15,
+   "n": 1718,
+   "acc": 0.6635622817229336,
+   "sure": 0.23864959254947612
+  },
+  {
+   "minute": 20,
+   "n": 1111,
+   "acc": 0.6876687668766877,
+   "sure": 0.2907290729072907
+  },
+  {
+   "minute": 25,
+   "n": 772,
+   "acc": 0.7072538860103627,
+   "sure": 0.37305699481865284
+  }
+ ],
+ "calibrationBins": {
+  "cv": [
+   {
+    "from": 0,
+    "to": 0.1,
+    "moments": 1256,
+    "said": 0.060036731263865446,
+    "won": 0.07175564777970153
+   },
+   {
+    "from": 0.1,
+    "to": 0.2,
+    "moments": 1963,
+    "said": 0.15368077501550004,
+    "won": 0.16299071074552726
+   },
+   {
+    "from": 0.2,
+    "to": 0.3,
+    "moments": 2860,
+    "said": 0.25305812234264524,
+    "won": 0.24936431722148567
+   },
+   {
+    "from": 0.3,
+    "to": 0.4,
+    "moments": 4860,
+    "said": 0.35610859692894103,
+    "won": 0.3288403891755682
+   },
+   {
+    "from": 0.4,
+    "to": 0.5,
+    "moments": 7124,
+    "said": 0.45388118402813393,
+    "won": 0.43819549227405197
+   },
+   {
+    "from": 0.5,
+    "to": 0.6,
+    "moments": 7502,
+    "said": 0.543647318060881,
+    "won": 0.5584924168035184
+   },
+   {
+    "from": 0.6,
+    "to": 0.7,
+    "moments": 4860,
+    "said": 0.6438914030710454,
+    "won": 0.6711596108244252
+   },
+   {
+    "from": 0.7,
+    "to": 0.8,
+    "moments": 2860,
+    "said": 0.7469418776573454,
+    "won": 0.7506356827785097
+   },
+   {
+    "from": 0.8,
+    "to": 0.9,
+    "moments": 1963,
+    "said": 0.8463192249844894,
+    "won": 0.8370092892544703
+   },
+   {
+    "from": 0.9,
+    "to": 1,
+    "moments": 1256,
+    "said": 0.9399632687361381,
+    "won": 0.9282443522202989
+   }
+  ],
+  "validation": [
+   {
+    "from": 0,
+    "to": 0.1,
+    "moments": 4751,
+    "said": 0.06043276287439962,
+    "won": 0.12390938456288633
+   },
+   {
+    "from": 0.1,
+    "to": 0.2,
+    "moments": 10451,
+    "said": 0.15520480992146407,
+    "won": 0.19179028387565084
+   },
+   {
+    "from": 0.2,
+    "to": 0.3,
+    "moments": 16343,
+    "said": 0.2544946572005123,
+    "won": 0.2690898544608583
+   },
+   {
+    "from": 0.3,
+    "to": 0.4,
+    "moments": 28197,
+    "said": 0.3558431710122704,
+    "won": 0.38341994548151714
+   },
+   {
+    "from": 0.4,
+    "to": 0.5,
+    "moments": 43320,
+    "said": 0.4556113558416519,
+    "won": 0.4669627219301562
+   },
+   {
+    "from": 0.5,
+    "to": 0.6,
+    "moments": 46964,
+    "said": 0.5400647080673863,
+    "won": 0.5298190883345545
+   },
+   {
+    "from": 0.6,
+    "to": 0.7,
+    "moments": 28197,
+    "said": 0.6441568289878552,
+    "won": 0.6165800545185897
+   },
+   {
+    "from": 0.7,
+    "to": 0.8,
+    "moments": 16343,
+    "said": 0.7455053427995184,
+    "won": 0.7309101455391728
+   },
+   {
+    "from": 0.8,
+    "to": 0.9,
+    "moments": 10451,
+    "said": 0.8447951900785167,
+    "won": 0.8082097161243464
+   },
+   {
+    "from": 0.9,
+    "to": 1,
+    "moments": 4751,
+    "said": 0.9395672371255943,
+    "won": 0.8760906154371119
+   }
+  ]
+ },
+ "byYear": [
+  {
+   "key": "2022",
+   "games": 600,
+   "best": 0.6212228555656296,
+   "first": 0.6315597465228852,
+   "favouriteAt10": {
+    "n": 499,
+    "acc": 0.6452905811623246,
+    "sure": 0.13827655310621242
+   }
+  },
+  {
+   "key": "2023",
+   "games": 599,
+   "best": 0.6444168294048218,
+   "first": 0.657496579106536,
+   "favouriteAt10": {
+    "n": 496,
+    "acc": 0.6471774193548387,
+    "sure": 0.15524193548387097
+   }
+  },
+  {
+   "key": "2024",
+   "games": 599,
+   "best": 0.6647644956142879,
+   "first": 0.6871279521471418,
+   "favouriteAt10": {
+    "n": 534,
+    "acc": 0.5917602996254682,
+    "sure": 0.08614232209737828
+   }
+  },
+  {
+   "key": "2025",
+   "games": 600,
+   "best": 0.6470068572462511,
+   "first": 0.6569046687489182,
+   "favouriteAt10": {
+    "n": 510,
+    "acc": 0.6196078431372549,
+    "sure": 0.12156862745098039
+   }
+  },
+  {
+   "key": "2026",
+   "games": 600,
+   "best": 0.6337861477636115,
+   "first": 0.6544478109818858,
+   "favouriteAt10": {
+    "n": 516,
+    "acc": 0.627906976744186,
+    "sure": 0.0872093023255814
+   }
+  }
+ ],
+ "byMatchup": [
+  {
+   "key": "HvH",
+   "games": 292,
+   "best": 0.6298864932790726,
+   "first": 0.6517310830250349,
+   "favouriteAt10": {
+    "n": 250,
+    "acc": 0.632,
+    "sure": 0.152
+   }
+  },
+  {
+   "key": "HvO",
+   "games": 309,
+   "best": 0.6149158827927677,
+   "first": 0.636757223526905,
+   "favouriteAt10": {
+    "n": 275,
+    "acc": 0.7090909090909091,
+    "sure": 0.13090909090909092
+   }
+  },
+  {
+   "key": "HvU",
+   "games": 302,
+   "best": 0.652040992917196,
+   "first": 0.6673276072112834,
+   "favouriteAt10": {
+    "n": 265,
+    "acc": 0.5622641509433962,
+    "sure": 0.11320754716981132
+   }
+  },
+  {
+   "key": "HvN",
+   "games": 302,
+   "best": 0.648696902904188,
+   "first": 0.68183529445163,
+   "favouriteAt10": {
+    "n": 257,
+    "acc": 0.642023346303502,
+    "sure": 0.11284046692607004
+   }
+  },
+  {
+   "key": "OvO",
+   "games": 282,
+   "best": 0.6524874414462251,
+   "first": 0.6657204333673015,
+   "favouriteAt10": {
+    "n": 205,
+    "acc": 0.6731707317073171,
+    "sure": 0.0975609756097561
+   }
+  },
+  {
+   "key": "OvU",
+   "games": 309,
+   "best": 0.6795939679132528,
+   "first": 0.684257750087239,
+   "favouriteAt10": {
+    "n": 281,
+    "acc": 0.5729537366548043,
+    "sure": 0.1103202846975089
+   }
+  },
+  {
+   "key": "OvN",
+   "games": 310,
+   "best": 0.6196263337030564,
+   "first": 0.6326148963204399,
+   "favouriteAt10": {
+    "n": 276,
+    "acc": 0.6557971014492754,
+    "sure": 0.11231884057971014
+   }
+  },
+  {
+   "key": "UvU",
+   "games": 276,
+   "best": 0.6623935164105593,
+   "first": 0.6663482526252332,
+   "favouriteAt10": {
+    "n": 216,
+    "acc": 0.6064814814814815,
+    "sure": 0.06018518518518518
+   }
+  },
+  {
+   "key": "NvU",
+   "games": 301,
+   "best": 0.6352168230953626,
+   "first": 0.6480059029586607,
+   "favouriteAt10": {
+    "n": 269,
+    "acc": 0.5799256505576208,
+    "sure": 0.17843866171003717
+   }
+  },
+  {
+   "key": "NvN",
+   "games": 315,
+   "best": 0.6303155218125971,
+   "first": 0.6426204952272514,
+   "favouriteAt10": {
+    "n": 261,
+    "acc": 0.632183908045977,
+    "sure": 0.08812260536398467
+   }
+  }
+ ],
+ "weights": [
+  {
+   "feature": "army value ratio (log)",
+   "sd": 0.5357838718588835,
+   "atKnots": [
+    {
+     "minute": 1,
+     "weight": -0.3555923122140303
+    },
+    {
+     "minute": 5,
+     "weight": 0.480245938615821
+    },
+    {
+     "minute": 10,
+     "weight": 0.45341905486356443
+    },
+    {
+     "minute": 15,
+     "weight": 0.49927550514099783
+    },
+    {
+     "minute": 22,
+     "weight": 0.10863071004940174
+    },
+    {
+     "minute": 30,
+     "weight": 0.4831749544272032
+    }
+   ],
+   "effect": [
+    {
+     "minute": 5,
+     "points": 0.06397443080253773
+    },
+    {
+     "minute": 10,
+     "points": 0.06043671221696567
+    },
+    {
+     "minute": 15,
+     "points": 0.06647998015294854
+    }
+   ]
+  },
+  {
+   "feature": "workers",
+   "sd": 0.7468521859082433,
+   "atKnots": [
+    {
+     "minute": 1,
+     "weight": 0.9106556378148791
+    },
+    {
+     "minute": 5,
+     "weight": 0.8438908769509896
+    },
+    {
+     "minute": 10,
+     "weight": 0.6279089035569086
+    },
+    {
+     "minute": 15,
+     "weight": 0.77808159289645
+    },
+    {
+     "minute": 22,
+     "weight": 0.2833157279733528
+    },
+    {
+     "minute": 30,
+     "weight": -0.14050317097391923
+    }
+   ],
+   "effect": [
+    {
+     "minute": 5,
+     "points": 0.15254880996139897
+    },
+    {
+     "minute": 10,
+     "points": 0.11513642157663928
+    },
+    {
+     "minute": 15,
+     "points": 0.14132322320873936
+    }
+   ]
+  },
+  {
+   "feature": "hero experience",
+   "sd": 0.6300135317485807,
+   "atKnots": [
+    {
+     "minute": 1,
+     "weight": -0.11779991740125374
+    },
+    {
+     "minute": 5,
+     "weight": 0.9398944624797623
+    },
+    {
+     "minute": 10,
+     "weight": 1.2346300870371907
+    },
+    {
+     "minute": 15,
+     "weight": 1.1752782498827485
+    },
+    {
+     "minute": 22,
+     "weight": 1.2139343177165256
+    },
+    {
+     "minute": 30,
+     "weight": 0.9003294933522876
+    }
+   ],
+   "effect": [
+    {
+     "minute": 5,
+     "points": 0.14385743880073676
+    },
+    {
+     "minute": 10,
+     "points": 0.18521303070092998
+    },
+    {
+     "minute": 15,
+     "points": 0.177092327213633
+    }
+   ]
+  },
+  {
+   "feature": "bases",
+   "sd": 0.677630102147478,
+   "atKnots": [
+    {
+     "minute": 1,
+     "weight": 0.27008101670321044
+    },
+    {
+     "minute": 5,
+     "weight": 0.2114989439180269
+    },
+    {
+     "minute": 10,
+     "weight": 0.5127570342474855
+    },
+    {
+     "minute": 15,
+     "weight": 0.431433533820642
+    },
+    {
+     "minute": 22,
+     "weight": 0.5610002668606174
+    },
+    {
+     "minute": 30,
+     "weight": 0.2843530327415761
+    }
+   ],
+   "effect": [
+    {
+     "minute": 5,
+     "points": 0.03576831007746373
+    },
+    {
+     "minute": 10,
+     "points": 0.0860014036435176
+    },
+    {
+     "minute": 15,
+     "points": 0.07257192927687328
+    }
+   ]
+  },
+  {
+   "feature": "resources lost",
+   "sd": 1.091465645403144,
+   "atKnots": [
+    {
+     "minute": 1,
+     "weight": -0.1709571224088613
+    },
+    {
+     "minute": 5,
+     "weight": -1.3859971430750437
+    },
+    {
+     "minute": 10,
+     "weight": -0.567197859223951
+    },
+    {
+     "minute": 15,
+     "weight": -0.2510048641065133
+    },
+    {
+     "minute": 22,
+     "weight": -0.11531541603078518
+    },
+    {
+     "minute": 30,
+     "weight": -0.13828775091113324
+    }
+   ],
+   "effect": [
+    {
+     "minute": 5,
+     "points": -0.3194711014641296
+    },
+    {
+     "minute": 10,
+     "points": -0.15000859241768594
+    },
+    {
+     "minute": 15,
+     "points": -0.06806560143609497
+    }
+   ]
+  },
+  {
+   "feature": "heroes alive",
+   "sd": 0.6204827993020221,
+   "atKnots": [
+    {
+     "minute": 1,
+     "weight": -0.49410967348525936
+    },
+    {
+     "minute": 5,
+     "weight": 0.2534628157778626
+    },
+    {
+     "minute": 10,
+     "weight": 0.36493614517951023
+    },
+    {
+     "minute": 15,
+     "weight": 0.5071653905601017
+    },
+    {
+     "minute": 22,
+     "weight": 0.3394916703968186
+    },
+    {
+     "minute": 30,
+     "weight": 0.10899882292507997
+    }
+   ],
+   "effect": [
+    {
+     "minute": 5,
+     "points": 0.039236490916880196
+    },
+    {
+     "minute": 10,
+     "points": 0.05636850476406785
+    },
+    {
+     "minute": 15,
+     "points": 0.07802898832035066
+    }
+   ]
+  },
+  {
+   "feature": "upgrades",
+   "sd": 2.3610405295557064,
+   "atKnots": [
+    {
+     "minute": 1,
+     "weight": -0.06479085057147095
+    },
+    {
+     "minute": 5,
+     "weight": -0.08395291801209062
+    },
+    {
+     "minute": 10,
+     "weight": 0.134802465649919
+    },
+    {
+     "minute": 15,
+     "weight": 0.1712177680193861
+    },
+    {
+     "minute": 22,
+     "weight": 0.141408903881386
+    },
+    {
+     "minute": 30,
+     "weight": 0.29420103809164416
+    }
+   ],
+   "effect": [
+    {
+     "minute": 5,
+     "points": -0.04939244851303398
+    },
+    {
+     "minute": 10,
+     "points": 0.07890357592007047
+    },
+    {
+     "minute": 15,
+     "points": 0.09970884029325366
+    }
+   ]
+  }
+ ],
+ "sensitivity": [
+  {
+   "name": "as fitted",
+   "cv": 0.6091210590343534,
+   "validation": 0.6422311974751371
+  },
+  {
+   "name": "without the army value",
+   "cv": 0.6117159853713356,
+   "validation": 0.6484566815236494
+  },
+  {
+   "name": "army value with extra noise (sd 500 per player)",
+   "cv": 0.6114162488582787,
+   "validation": 0.6460793838325471
+  },
+  {
+   "name": "army value with extra noise (sd 1000 per player)",
+   "cv": 0.611648855843123,
+   "validation": 0.6475363833395026
+  }
+ ]
+}
