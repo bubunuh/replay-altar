@@ -53,7 +53,8 @@ const HELP = `replay-altar — Warcraft III replay archive & stats
   replay-altar ref                 pro reference games: status
   replay-altar ref refresh [--target N] [--group id|--all]   download recent tournament games from warcraft3.info
                               until each group has its target (slowly: one replay every 3 s)
-  replay-altar ref profile         rebuild the reference statistics from stored games
+  replay-altar ref resim [--group id|--all]   simulate the groups' failed games again (after a simulation fix)
+  replay-altar ref profile [--build N]   rebuild the reference statistics from stored games of game build N
   replay-altar ref publish [--group id]   copy each group's profile.json and principles.json into data/reference
   replay-altar official            fetch the game's own end-of-game stats from W3Champions for W3C games
                               (yours and reference games) that don't have them yet
@@ -318,10 +319,29 @@ switch (cmd) {
         if (res.stopReason) console.log(`${g.id}: stopped early: ${res.stopReason}`);
         console.log(`${g.id}: +${res.downloaded} downloaded, ${res.skipped} skipped, ${res.pruned} pruned (old patch); ${res.kept} games, ${Object.keys(res.profile.matchups).filter((k) => k !== "all").map((k) => `${k} ${res.profile.matchups[k].n}`).join(", ")}`);
       }
-    } else if (sub === "profile") {
+    } else if (sub === "resim") {
+      // After a simulation fix: the groups' failed games again (the replays are archived).
       for (const g of groups) {
         const ref = openReference(g.id, config);
-        const p = buildProfile(ref.db, ref.paths, g, build);
+        const keys = (ref.db.prepare("SELECT game_key FROM games WHERE sim_status = 'failed'").all() as { game_key: string }[]).map((r) => r.game_key);
+        let fixed = 0;
+        for (const key of keys) {
+          const record = readRecord(ref.paths, key);
+          if (!record) continue;
+          const sim = await simulateGame(record, { dataRoot: ref.paths.root, gamedataRoot: paths().root, mapFolders: [...mapFolders(config), paths().maps], fromGame: builtinMap });
+          applySim(ref, key, sim);
+          if (sim.status === "ok") fixed++;
+          else console.log(`${g.id} ${key.slice(0, 8)}: ${sim.reason}`);
+        }
+        console.log(`${g.id}: ${fixed} of ${keys.length} failed games simulate now`);
+      }
+    } else if (sub === "profile") {
+      // --build: the game build the pro games are from (default: your latest game's).
+      const bi = args.indexOf("--build");
+      const profileBuild = bi >= 0 ? Number(args[bi + 1]) : build;
+      for (const g of groups) {
+        const ref = openReference(g.id, config);
+        const p = buildProfile(ref.db, ref.paths, g, profileBuild);
         console.log(`${g.id}: profile from ${p.games} games`);
       }
     } else {
