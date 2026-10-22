@@ -88,6 +88,57 @@ def army_food_series(units, deaths, htype, snaps, end):
     return max((wc3v_at(t) for t in grid), default=0), max((new_at(t) for t in grid), default=0)
 
 
+def group_deaths(acts, buildings, heroes_types):
+    """Deaths from hotkey groups: a group only changes when the player assigns it (the replay lists it) or
+    when a member dies (the game drops it silently). We follow what the selection must contain (a recalled
+    group, then the player's adds and removals); when the player next switches selection, the replay lists
+    what really was selected, and members missing from that list died since they were last listed."""
+    htype = {}
+    for a in acts:
+        if a["id"] == 25 and a.get("objectId1") is not None:
+            htype.setdefault((a["objectId1"], a["objectId2"]), a["itemId"])
+    groups = {}
+    sel = set()
+    last_seen = {}
+    deaths = {}
+    snaps = []
+    for i, a in enumerate(acts):
+        t = a["t"]
+        units = frozenset(map(tuple, a.get("units", [])))
+        nxt = acts[i + 1] if i + 1 < len(acts) else None
+        if a["id"] == 23:  # assign: the listed units are the group, and alive
+            groups[a.get("groupNumber")] = set(units)
+            for h in units:
+                last_seen[h] = t
+            snaps.append((t, units))
+        elif a["id"] == 24:  # recall: the selection becomes what is left of the group
+            sel = set(groups.get(a.get("groupNumber"), set()))
+        elif a["id"] == 22 and a.get("selectMode") == 2:
+            full = nxt is not None and nxt["id"] == 22 and nxt.get("selectMode") == 1 and nxt["t"] == t
+            if full:
+                # The game listed the whole selection: whatever we expected and it lacks is dead.
+                for h in sel - units:
+                    ty = htype.get(h)
+                    if ty and (ty in buildings or ty[0].isupper()):
+                        continue
+                    if h not in deaths:
+                        deaths[h] = (last_seen.get(h, t), t)
+                        for g in groups.values():
+                            g.discard(h)
+                for h in units:
+                    last_seen[h] = t
+                    deaths.pop(h, None)  # seen alive after all
+                snaps.append((t, units))
+                sel = set()
+            else:
+                sel -= units
+        elif a["id"] == 22 and a.get("selectMode") == 1:
+            sel |= units
+            for h in units:
+                last_seen[h] = t
+    return deaths, htype, snaps
+
+
 def selection_deaths(acts, buildings, heroes_types):
     """Handles that stop appearing in later lists of the group they were last in: {handle: (last seen, gone by)}."""
     snaps = snapshots(acts)
