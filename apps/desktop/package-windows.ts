@@ -2,70 +2,18 @@
 //
 //   node apps/desktop/package-windows.ts
 //
-// The installed app is self-contained: the window (out/), the collector bundled into one file
-// that runs on the app's own executable as Node (resources/collector/collector.mjs), the WC3V
-// simulation engine with its map library, the Windows game-data extractor
-// (scripts/casc/build-windows.sh) and the shipped pro statistics (data/reference). Game data (unit tables, crests, portraits, font) is extracted on the tester's PC from
-// their own install, never shipped.
+// The installed app is self-contained (stage.ts), with the Windows game-data extractor
+// (scripts/casc/build-windows.sh).
 import { execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
-import * as esbuild from "esbuild";
 import { Arch, build, Platform } from "electron-builder";
-
-const desktop = import.meta.dirname;
-const root = join(desktop, "../..");
-const stage = join(root, "dist/stage");
-const res = join(stage, "resources");
-const version = JSON.parse(readFileSync(join(desktop, "package.json"), "utf8")).version as string;
+import { app, desktop, res, root, stageApp } from "./stage.ts";
 
 const casc = join(root, "scripts/casc/bin/casc-extract.exe");
 if (!existsSync(casc)) execFileSync(join(root, "scripts/casc/build-windows.sh"), { stdio: "inherit" });
 
-rmSync(stage, { recursive: true, force: true });
-// Replay Altar's fixes to WC3V (patches/wc3v), so this build simulates like every other copy.
-execFileSync(process.execPath, [join(root, "scripts/patch-wc3v.ts")], { stdio: "inherit" });
-execFileSync(process.execPath, [join(desktop, "build.ts")], { stdio: "inherit" });
-
-// The app: built window and its assets, with a package.json of its own (nothing to install).
-const app = join(stage, "app");
-cpSync(join(desktop, "out"), join(app, "out"), { recursive: true });
-cpSync(join(desktop, "assets"), join(app, "assets"), { recursive: true });
-writeFileSync(join(app, "package.json"), JSON.stringify({ name: "replay-altar", productName: "Replay Altar", version, description: "Warcraft III replay coach", author: "Replay Altar", main: "out/main.cjs" }, null, 2));
-
-// The collector as one ES module; CommonJS dependencies get a require of their own.
-await esbuild.build({
-  entryPoints: [join(root, "apps/collector/src/cli.ts")],
-  outfile: join(res, "collector/collector.mjs"),
-  bundle: true,
-  platform: "node",
-  format: "esm",
-  target: "node24",
-  banner: { js: 'import { createRequire as __cr } from "node:module"; const require = __cr(import.meta.url);' },
-  define: { "process.env.REPLAY_ALTAR_W3GJS_VERSION": JSON.stringify(JSON.parse(readFileSync(join(root, "node_modules/w3gjs/package.json"), "utf8")).version) },
-  logLevel: "warning",
-});
-
-// WC3V (GPL-3.0): what the simulation reads at run time, without its site, docs and tests, and
-// as published: never the unit tables or map data this PC made from its own game and maps (each
-// install makes them from its own, the first time a game on that map is simulated). The same
-// on this PC and on GitHub's build machines.
-const wc3v = join(root, "vendor/wc3v");
-const SKIP = new Set(["marketing", "docs", "tests", "debug", "desktop", "replays", "mapdata", ".git", ".github"]);
-const LOCAL = [join("helpers", "UnitBalance.json"), join("client", "maps")];
-for (const e of readdirSync(wc3v, { withFileTypes: true })) {
-  if (SKIP.has(e.name) || (e.isFile() && /\.(png|gif|webm|ya?ml)$/.test(e.name))) continue;
-  cpSync(join(wc3v, e.name), join(res, "vendor/wc3v", e.name), { recursive: true, filter: (src) => !LOCAL.some((l) => src.endsWith(l)) });
-}
-// Files the map extraction adds this PC's maps to: shipped as they are in WC3V's repository.
-for (const f of ["client/js/gameData.js", "client/js/gameData.json", "helpers/mapConfiguration.json"]) {
-  writeFileSync(join(res, "vendor/wc3v", f), execFileSync("git", ["-C", wc3v, "show", `HEAD:${f}`], { maxBuffer: 64 * 1024 * 1024 }));
-}
-cpSync(join(root, "packages/sim/driver"), join(res, "packages/sim/driver"), { recursive: true });
-cpSync(casc, join(res, "scripts/casc/bin/casc-extract.exe"));
-cpSync(join(root, "data"), join(res, "data"), { recursive: true });
-// GPL-3.0: the license travels with the program.
-cpSync(join(root, "LICENSE"), join(res, "LICENSE.txt"));
+await stageApp(casc);
 
 await build({
   projectDir: app,

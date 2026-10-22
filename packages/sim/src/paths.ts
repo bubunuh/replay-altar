@@ -12,7 +12,8 @@ export const simOutputPath = (dataRoot: string, gameKey: string) => join(dataRoo
 
 export function wc3vCommit(): string {
   try {
-    return execFileSync("git", ["-C", WC3V_DIR, "rev-parse", "--short=12", "HEAD"], { encoding: "utf8" }).trim();
+    // An installed copy has no git checkout: quietly "unknown".
+    return execFileSync("git", ["-C", WC3V_DIR, "rev-parse", "--short=12", "HEAD"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
   } catch {
     return "unknown";
   }

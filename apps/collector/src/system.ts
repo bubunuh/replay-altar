@@ -24,6 +24,8 @@ export function watchWarcraft(onStart: () => void, onStop: () => void) {
 /** The desktop app as a program and its leading arguments (REPLAY_ALTAR_DESKTOP overrides the program). */
 export function desktopCommand(): { exe: string; args: string[] } {
   if (process.env.REPLAY_ALTAR_DESKTOP) return { exe: process.env.REPLAY_ALTAR_DESKTOP, args: [] };
+  // AppImage: the file itself (the executable inside it only exists while something runs it).
+  if (process.env.APPIMAGE) return { exe: process.env.APPIMAGE, args: [] };
   // Installed: the collector runs on the app's own executable (as Node), which is the app.
   if (isInstalled()) return { exe: process.execPath, args: [] };
   return windows ? windowsDesktop() : { exe: join(homedir(), ".local/bin/replay-altar-desktop"), args: [] };

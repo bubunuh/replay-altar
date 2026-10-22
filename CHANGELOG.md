@@ -14,9 +14,8 @@ statistics (`data/`).
 - **Some replays that could not be imported now can** (a hero the replay reader reports without a type).
 - **Chance to win** on each game's page: how often a pro in your position went on to win, moment by moment, with the three moments that swung it most, what moved them (losses, hero experience, workers, army, expansions, heroes alive, upgrades) and what happened then. Learned from 513 pro games and checked on 2,998 tournament games from 2022 to 2026 it never saw; the method is in [docs/win-chance/report.pdf](docs/win-chance/report.pdf).
 - **A note on the game's charts** that army value, losses and fight results are estimates, with how far off they typically are and how that was measured.
-
-**To do for this version:**
-- **Linux AppImage**, alongside the Windows installer.
+- **Linux AppImage**, alongside the Windows installer: one file, no Node, git or podman needed. On first start it sets up the background collector (a systemd user service), the `replay-altar` command and a menu entry, reads the game data with a built-in read-only extractor, and updates itself in place like the Windows version.
+- **Linux: Battle.net is found in more places:** Lutris folders under `~/Games`, `~/.wine`, Steam's Proton prefixes and Bottles, for both the replays and the game data.
 
 ## Later
 

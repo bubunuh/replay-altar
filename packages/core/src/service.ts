@@ -113,6 +113,28 @@ export function restartCollectorIfRunning() {
   startOnWindows();
 }
 
+/** systemd's quoting for one ExecStart word ($ and % are expanded by systemd unless doubled). */
+export const systemdWord = (s: string) => `"${s.replaceAll("\\", "\\\\").replaceAll('"', '\\"').replaceAll("$", "$$$$").replaceAll("%", "%%")}"`;
+
+/** The Linux collector's systemd user unit, running `command` (program and arguments). */
+export function linuxUnit(command: string[]): string {
+  return [
+    "[Unit]",
+    "Description=Replay Altar replay collector (archives and analyzes Warcraft III replays)",
+    "After=graphical-session.target",
+    "",
+    "[Service]",
+    `ExecStart=${command.map(systemdWord).join(" ")}`,
+    "Restart=on-failure",
+    "RestartSec=10",
+    "Nice=10",
+    "",
+    "[Install]",
+    "WantedBy=default.target",
+    "",
+  ].join("\n");
+}
+
 /**
  * The hidden launcher Windows runs at login: `command` (program and arguments) with no console
  * window, its output appended to the log, with `env` set first (an installed copy runs the
