@@ -448,6 +448,15 @@ if (!app.requestSingleInstanceLock()) {
   });
   // The pro statistics shipped with this version (data/reference).
   ipcMain.handle("ref:profiles", () => loadRefGroups());
+  // The win-chance model shipped in data/ (scripts/win-chance.ts); null when missing.
+  let winModel: unknown;
+  ipcMain.handle("winchance:model", () => {
+    if (winModel === undefined) {
+      const file = join(projectRoot(), "data", "winchance.json");
+      winModel = existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : null;
+    }
+    return winModel;
+  });
   ipcMain.handle("shell:showFile", (_e, file: string) => shell.showItemInFolder(file));
   ipcMain.handle("shell:openPath", (_e, dir: string) => shell.openPath(dir));
   ipcMain.handle("shell:openUrl", (_e, url: string) => {

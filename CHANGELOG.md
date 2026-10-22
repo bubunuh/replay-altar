@@ -12,10 +12,10 @@ statistics (`data/`).
 - **Undead:** an Obsidian Statue is no longer valued as a Destroyer before it transforms.
 - **More games simulate to the end:** two fixes to WC3V (reviving a hero that used a Town Portal; training from a building WC3V hadn't seen being built). On the pro games, 16 of 518 were cut short before. The pro comparison now uses 513 games.
 - **Some replays that could not be imported now can** (a hero the replay reader reports without a type).
+- **Chance to win** on each game's page: how often a pro in your position went on to win, moment by moment, with the three moments that swung it most, what moved them (losses, hero experience, workers, army, expansions, heroes alive, upgrades) and what happened then. Learned from 513 pro games and checked on 2,998 tournament games from 2022 to 2026 it never saw; the method is in [docs/win-chance/report.pdf](docs/win-chance/report.pdf).
+- **A note on the game's charts** that army value, losses and fight results are estimates, with how far off they typically are and how that was measured.
 
 **To do for this version:**
-- **Win-chance curve** in the report: your chance to win over the game, and the moments that swung it. The model is being tested on 3,000 tournament games from 2022 to today.
-- **A note in the app** that army value, losses and fight results are estimates, with how they are measured.
 - **Linux AppImage**, alongside the Windows installer.
 
 ## Later

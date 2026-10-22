@@ -19,6 +19,8 @@ import { Chart, heroLevelsChart, timeLines, type Band, type HeroLine, type Token
 import { assess, describeRef, groupForRace, pickProfile } from "@replay-altar/reference/compare";
 import { ProMedian, Standing } from "../Standing.tsx";
 import { groupDetails, SECTION_INFO, splitMetrics } from "../sections.ts";
+import { WinChance } from "../WinChance.tsx";
+import { EstimatesNote } from "../Estimates.tsx";
 import { proText, researchTimes, upgradeRows, upgradeStanding } from "../upgrades.ts";
 import type { RaceCode } from "@replay-altar/core/gamedata";
 import type { CurvePoint, MatchupProfile } from "@replay-altar/reference/types";
@@ -165,6 +167,7 @@ function GameCharts({ record, refMp, refLabel }: { record: GameRecord; refMp: Ma
         />
       </h2>
       {note && <p className="sub">{note}</p>}
+      {ok && <EstimatesNote />}
       {ok && (
         <>
           <h3 className="chart-title" data-tip={tr("Gold and lumber in living army units, heroes excluded; estimated by the simulation.", "Ouro e madeira nas unidades de exército vivas, sem heróis; estimado pela simulação.", "Oro y madera en unidades de ejército vivas, sin contar los héroes; estimado por la simulación.", "Or et bois dans les unités d'armée vivantes, héros exclus ; estimé par la simulation.")}>≈ {tr("Army value", "Valor do exército", "Valor del ejército", "Valeur de l'armée")}</h3>
@@ -392,6 +395,8 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
           />
         )}
       </div>
+
+      {me && opp && r.sim?.status === "ok" && r.game.durationMs >= MIN_GAME_MS && <WinChance key={`win-${r.gameKey}`} record={r} me={me} opp={opp} />}
 
       <GameCharts record={r} refMp={ref?.mp ?? null} refLabel="Pros" />
 

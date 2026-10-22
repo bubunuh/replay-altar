@@ -11,148 +11,27 @@
 // weighted by functions of the game time so a lead can matter more or less as the game goes on.
 // No intercept and only differences, so the two players' chances always add up to 100%. Each game
 // weighs the same, whatever its length.
+import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { listGames, openDb, paths, readRecord, referencePaths, researchLevels, type GameRecord, type PlayerRecord, type SimSample } from "@replay-altar/core";
-import { HERO_XP_FOR_LEVEL } from "@replay-altar/core/heroxp";
 import { mmss } from "@replay-altar/core/time";
 import { gamedataDir, loadCosts } from "@replay-altar/sim";
-
-const CALIBRATION = ["pros", "pros-orc", "pros-undead", "pros-nightelf"];
-const VALIDATION = "validation";
-const STEP_MS = 30_000;
-const START_MS = 60_000;
-const FOLDS = 4;
-
-type SimOk = Extract<NonNullable<GameRecord["sim"]>, { status: "ok" }>;
-type Side = {
-  p: PlayerRecord;
-  race: string;
-  series: SimSample[];
-  bases: { at: number; lostAt: number | null }[];
-  t2: number | null;
-  t3: number | null;
-  levels: number[][];
-  deaths: { diedAt: number; revivedAt: number | null }[];
-  upgrades: number[];
-  weaponArmor: number[];
-  items: number[];
-  camps: { at: number; level: number }[];
-};
-
-// Attack and armor research of every race (the build orders' names).
-const WEAPON_ARMOR = /^(Swords|Gunpowder|Plating|Armor|Leather Armor|Studded Leather Armor|Melee Weapons|Ranged Weapons|Unit Armor|Strength of the Moon|Moon Armor|Reinforced Hides|Strength of the Wild|Unholy Strength|Unholy Armor|Creature Attack|Creature Carapace)/;
+import { basis, diffs, FEATURES, sideOf, sigmoid, START_MS, STEP_MS, weightAt, winCurve, type ResearchTimes, type Side, type SwingEvent, type WinModel } from "@replay-altar/rules/winchance";
+import { fightLabel } from "@replay-altar/rules/series";
 
 const costs = loadCosts(gamedataDir(paths().root));
-// Research counts when it would finish (the order time plus its research time), not when it is
-// ordered; repeated clicks on the same research are one. Cancelled research can't be told apart.
-const researchDone = (p: PlayerRecord, test: (name: string) => boolean = () => true) => {
-  const names = new Map(p.build.filter((b) => b.kind === "upgrade").map((b) => [b.code, b.name]));
-  return researchLevels(p.build)
-    .filter((r) => test(names.get(r.code) ?? ""))
-    .map((r) => {
-      const u = costs.upgrades[r.code];
-      return r.ms + (u ? (u.timeBase + u.timeMod * (r.level - 1)) * 1000 : 0);
-    })
-    .sort((a, b) => a - b);
-};
+const RESEARCH: ResearchTimes = Object.fromEntries(Object.entries(costs.upgrades).map(([code, u]) => [code, [u.timeBase, u.timeMod]]));
+const CALIBRATION = ["pros", "pros-orc", "pros-undead", "pros-nightelf"];
+const VALIDATION = "validation";
+const FOLDS = 4;
 
-const sideOf = (r: GameRecord, p: PlayerRecord): Side | null => {
-  const sp = (r.sim as SimOk).players.find((x) => x.playerId === p.playerId);
-  if (!sp || !sp.series.length) return null;
-  const at = (kind: string, test: (name: string) => boolean = () => true) => p.build.filter((b) => b.kind === kind && test(b.name)).map((b) => b.ms).sort((a, b) => a - b);
-  return {
-    p,
-    race: p.race,
-    series: sp.series,
-    bases: sp.bases ?? [],
-    t2: sp.metrics.tier2_done_ms ?? null,
-    t3: sp.metrics.tier3_done_ms ?? null,
-    levels: p.heroes.map((h) => h.levelUps ?? []),
-    deaths: (sp.heroes ?? []).flatMap((h) => h.deaths),
-    upgrades: researchDone(p),
-    weaponArmor: researchDone(p, (n) => WEAPON_ARMOR.test(n)),
-    items: at("item"),
-    camps: sp.camps ?? [],
-  };
-};
 
-const at = (series: SimSample[], t: number) => {
-  let best = series[0];
-  for (const s of series) if (s.t <= t) best = s;
-  return best;
-};
-const countTo = (times: number[], t: number) => {
-  let n = 0;
-  for (const x of times) if (x <= t) n++;
-  return n;
-};
-
-export const FEATURES = [
-  "army value", "army value ratio (log)", "workers", "hero experience", "bases", "tier", "resources spent", "resources lost", "food used",
-  "highest hero level", "heroes alive", "hero deaths", "upgrades", "attack and armor upgrades", "items bought", "creep camps (levels)",
-];
+/** The first model's differences: the original nine. */
 const ORIGINAL = [0, 1, 2, 3, 4, 5, 6, 7, 8];
-
-/**
- * Hero experience known at time t: the XP of the levels reached so far. (heroesXpAt, used for the
- * charts, fills in between level-ups with the next one's time, which would let the model see a
- * level-up, and so a won fight, coming.)
- */
-const xpSoFar = (s: Side, t: number) => s.levels.reduce((sum, l) => sum + HERO_XP_FOR_LEVEL[Math.min(10, countTo(l, t))], 0);
-
-/** The differences A − B at time t, scaled to similar sizes. */
-function diffs(a: Side, b: Side, t: number): number[] {
-  const sa = at(a.series, t), sb = at(b.series, t);
-  const bases = (s: Side) => s.bases.filter((x) => x.at <= t && (x.lostAt === null || x.lostAt > t)).length;
-  const tier = (s: Side) => (s.t2 !== null && s.t2 <= t ? 1 : 0) + (s.t3 !== null && s.t3 <= t ? 1 : 0);
-  const army = (s: SimSample) => s.armyValue ?? 0;
-  const topLevel = (s: Side) => Math.max(0, ...s.levels.map((l) => countTo(l, t)));
-  const dead = (s: Side) => s.deaths.filter((d) => d.diedAt <= t && (d.revivedAt === null || d.revivedAt > t)).length;
-  const alive = (s: Side) => s.levels.filter((l) => l.length && l[0] <= t).length - dead(s);
-  const camps = (s: Side) => s.camps.filter((c) => c.at <= t).reduce((n, c) => n + c.level, 0);
-  return [
-    (army(sa) - army(sb)) / 1000,
-    Math.log((army(sa) + 200) / (army(sb) + 200)),
-    (sa.workers - sb.workers) / 10,
-    (xpSoFar(a, t) - xpSoFar(b, t)) / 1000,
-    bases(a) - bases(b),
-    tier(a) - tier(b),
-    (sa.goldSpent + sa.lumberSpent - sb.goldSpent - sb.lumberSpent) / 1000,
-    (sa.goldLost + sa.lumberLost - sb.goldLost - sb.lumberLost) / 1000,
-    (sa.foodUsed - sb.foodUsed) / 10,
-    topLevel(a) - topLevel(b),
-    alive(a) - alive(b),
-    a.deaths.filter((d) => d.diedAt <= t).length - b.deaths.filter((d) => d.diedAt <= t).length,
-    countTo(a.upgrades, t) - countTo(b.upgrades, t),
-    countTo(a.weaponArmor, t) - countTo(b.weaponArmor, t),
-    (countTo(a.items, t) - countTo(b.items, t)) / 5,
-    (camps(a) - camps(b)) / 20,
-  ];
-}
-
-// ---- How a lead's weight follows the game time ------------------------------------------------
-/** linear: weight = a + b·t (the first model). curve: a weight per knot, straight lines between. */
-type Basis = "linear" | "curve";
-const KNOTS_MIN = [1, 5, 10, 15, 22, 30];
-function basis(kind: Basis, t: number): number[] {
-  if (kind === "linear") return [1, t / 600_000];
-  const m = t / 60_000;
-  const out = KNOTS_MIN.map(() => 0);
-  if (m <= KNOTS_MIN[0]) out[0] = 1;
-  else if (m >= KNOTS_MIN.at(-1)!) out[out.length - 1] = 1;
-  else {
-    const i = KNOTS_MIN.findIndex((k) => k > m) - 1;
-    const f = (m - KNOTS_MIN[i]) / (KNOTS_MIN[i + 1] - KNOTS_MIN[i]);
-    out[i] = 1 - f;
-    out[i + 1] = f;
-  }
-  return out;
-}
-
 const MATCHUPS = ["HvO", "HvU", "HvN", "OvU", "OvN", "UvN"];
 /** The model's view of one moment: which differences, which time curve, and race edges per matchup. */
-type Spec = { keep: number[]; basis: Basis; matchup: boolean; lambda: number };
+type Spec = { keep: number[]; basis: WinModel["basis"]; matchup: boolean; lambda: number };
 const label = (s: Spec) => `${s.keep.length} differences, ${s.basis === "linear" ? "straight-line" : "curved"} time weights${s.matchup ? ", matchup edges" : ""}`;
 
 type Moment = { game: string; d: number[]; t: number; y: number; w: number; races: [string, string] };
@@ -163,7 +42,7 @@ function momentsOf(g: Game): Moment[] {
   if (r.sim?.status !== "ok" || r.players.length !== 2) return [];
   const [p, q] = r.players;
   if (!["win", "loss"].includes(p.result ?? "")) return [];
-  const a = sideOf(r, p), b = sideOf(r, q);
+  const a = sideOf(r, p, RESEARCH), b = sideOf(r, q, RESEARCH);
   if (!a || !b) return [];
   const end = r.game.durationMs;
   const times: number[] = [];
@@ -191,7 +70,6 @@ function design(m: Moment, s: Spec): number[] {
   return x;
 }
 
-const sigmoid = (z: number) => 1 / (1 + Math.exp(-z));
 const dot = (a: number[], b: number[]) => a.reduce((s, v, i) => s + v * b[i], 0);
 
 /** Logistic regression by Newton's method, with a ridge penalty. */
@@ -464,7 +342,7 @@ const lines: string[] = [];
 const out = (s = "") => lines.push(s);
 out("# Win chance from pro games (research)");
 out();
-out(`Generated by \`node scripts/win-chance.ts\`. Not shown in the app yet.`);
+out(`Generated by \`node scripts/win-chance.ts\`, which also writes the best model to \`data/winchance.json\` for the app. The method in full: [the technical report](win-chance/report.pdf).`);
 out();
 out(`**The data.** Fitted on the **calibration set**: ${calUsed.size} curated pro games of the current patch with a full simulation and a known winner. Scored on the **validation set**: ${valUsed.size} tournament games from warcraft3.info, 2022 to today, spread over the years and matchups (\`scripts/download-validation.ts\`), never used for fitting or for choosing the model.`);
 out();
@@ -537,15 +415,12 @@ const sd = FEATURES.map((_, i) => {
   const mean = v.reduce((s, x) => s + x, 0) / v.length;
   return Math.sqrt(v.reduce((s, x) => s + (x - mean) ** 2, 0) / v.length);
 });
-const weightAt = (model: Model, k: number, t: number) => {
-  const bs = basis(model.spec.basis, t);
-  return bs.reduce((s, b, j) => s + b * model.w[k * bs.length + j], 0);
-};
+const weightOf = (model: Model, k: number, t: number) => weightAt({ basis: model.spec.basis, weights: model.w }, k, t);
 out("| A lead of one typical step in… | at 5:00 | at 10:00 | at 15:00 |");
 out("|---|---|---|---|");
 finalBest.spec.keep.forEach((f, k) => {
   const eff = (t: number) => {
-    const e = sigmoid(sd[f] * weightAt(finalBest.model, k, t)) - 0.5;
+    const e = sigmoid(sd[f] * weightOf(finalBest.model, k, t)) - 0.5;
     return `${e >= 0 ? "+" : ""}${Math.round(e * 100)} pts`;
   };
   out(`| ${FEATURES[f]} | ${eff(300_000)} | ${eff(600_000)} | ${eff(900_000)} |`);
@@ -560,9 +435,27 @@ if (finalBest.spec.matchup) {
 
 writeFileSync(join(import.meta.dirname, "../docs/WIN-CHANCE.md"), lines.join("\n") + "\n");
 
-// ---- Your games: the curve and the moments that swung it -------------------------------------
+// ---- The model the app uses: data/winchance.json ----------------------------------------------
+if (finalBest.spec.matchup) throw new Error("the app's model has no matchup edges (packages/rules/src/winchance.ts)");
+const exported: WinModel = {
+  keep: finalBest.spec.keep,
+  basis: finalBest.spec.basis,
+  weights: finalBest.model.w.map((w) => Number(w.toPrecision(6))),
+  research: RESEARCH,
+  about: {
+    games: calUsed.size,
+    patch: "3.0",
+    fittedAt: new Date().toISOString().slice(0, 10),
+    commit: execFileSync("git", ["rev-parse", "--short", "HEAD"], { cwd: import.meta.dirname, encoding: "utf8" }).trim(),
+    cvLogLoss: Number(best.loss.toFixed(4)),
+    validationGames: valUsed.size,
+    validationLogLoss: valMoments.length ? Number(lossOf(valBest).toFixed(4)) : NaN,
+  },
+};
+writeFileSync(join(import.meta.dirname, "../data/winchance.json"), JSON.stringify(exported) + "\n");
+
+// ---- Your games: the curve and the moments that swung it (as the app shows them) -------------
 lines.length = 0;
-const model = finalBest.model;
 const p = paths();
 const db = openDb(p.db);
 const mine = listGames(db).filter((g) => g.analyzed === 1 && g.sim_status === "ok");
@@ -576,63 +469,32 @@ for (const row of mine) {
   if (!r || r.sim?.status !== "ok") continue;
   const me = r.players.find((x) => x.isMe), opp = r.players.find((x) => x.playerId === r.classification.opponentId);
   if (!me || !opp) continue;
-  const a = sideOf(r, me), b = sideOf(r, opp);
-  if (!a || !b) continue;
-  const end = r.game.durationMs;
-  const momentAt = (t: number): Moment => ({ game: r.gameKey, d: diffs(a, b, t), t, y: 0, w: 0, races: [a.race, b.race] });
-  const curve: { t: number; p: number }[] = [];
-  for (let t = START_MS; t < end; t += STEP_MS) curve.push({ t, p: predict(model, momentAt(t)) });
-  if (!curve.length) continue;
+  const curve = winCurve(r, exported, me, opp);
+  if (!curve) continue;
   // Judged at 2/3 of the game: the end itself gives the answer away.
-  const mid = curve[Math.floor(curve.length * 0.66)];
+  const mid = curve.points[Math.floor(curve.points.length * 0.66)];
   counted++;
   if ((mid.p > 0.5) === (row.result === "win")) right++;
-  // The biggest swings over one minute, with what happened then.
-  const swings = curve
-    .map((c, i) => ({ t: c.t, from: curve[Math.max(0, i - 2)].p, to: c.p }))
-    .map((s) => ({ ...s, d: s.to - s.from }))
-    .sort((x, y) => Math.abs(y.d) - Math.abs(x.d));
-  const picked: typeof swings = [];
-  for (const s of swings) if (picked.length < 3 && picked.every((x) => Math.abs(x.t - s.t) > 90_000)) picked.push(s);
-  const what = (t0: number, t1: number) => {
-    const ev: string[] = [];
-    for (const f of (r.sim as SimOk).fights ?? []) {
-      if (f.category === "creep-fight" || f.end < t0 || f.start > t1) continue;
-      const lm = f.losses?.[String(me.playerId)]?.value ?? 0, lo = f.losses?.[String(opp.playerId)]?.value ?? 0;
-      if (lm + lo >= 150) ev.push(`${f.category.replace(/-/g, " ")} at ${mmss(f.start)} (you lost ${lm}, they lost ${lo})`);
-    }
-    for (const d of a.deaths) if (d.diedAt >= t0 && d.diedAt <= t1) ev.push(`your hero died at ≈${mmss(d.diedAt)}`);
-    for (const d of b.deaths) if (d.diedAt >= t0 && d.diedAt <= t1) ev.push(`their hero died at ≈${mmss(d.diedAt)}`);
-    for (const x of a.bases) if (x.lostAt !== null && x.lostAt >= t0 && x.lostAt <= t1) ev.push(`your expansion fell at ${mmss(x.lostAt)}`);
-    for (const x of b.bases) if (x.lostAt !== null && x.lostAt >= t0 && x.lostAt <= t1) ev.push(`their expansion fell at ${mmss(x.lostAt)}`);
-    for (const [s, who] of [[a, "your"], [b, "their"]] as const) {
-      if (s.t2 !== null && s.t2 >= t0 && s.t2 <= t1) ev.push(`${who} tier 2 finished`);
-      if (s.t3 !== null && s.t3 >= t0 && s.t3 <= t1) ev.push(`${who} tier 3 finished`);
-    }
-    return ev.join("; ");
-  };
-  // Which differences moved the chance: each one's share of the change in the model's score.
-  const drivers = (t0: number, t1: number, up: boolean) => {
-    const d0 = diffs(a, b, t0), d1 = diffs(a, b, t1);
-    return model.spec.keep
-      .map((f, k) => ({ name: FEATURES[f], c: weightAt(model, k, t1) * d1[f] - weightAt(model, k, t0) * d0[f] }))
-      .filter((x) => (up ? x.c > 0.05 : x.c < -0.05))
-      .sort((x, y) => Math.abs(y.c) - Math.abs(x.c))
-      .slice(0, 2)
-      .map((x) => `${x.name} (${x.c > 0 ? "in your favour" : "in theirs"})`)
-      .join(", ");
-  };
+  const whose = (who: "me" | "opp") => (who === "me" ? "your" : "their");
+  const event = (e: SwingEvent) =>
+    e.kind === "fight"
+      ? `${fightLabel(e.category)} at ${mmss(e.at)} (you lost ${e.myLoss}, they lost ${e.oppLoss})`
+      : e.kind === "heroDied"
+        ? `${whose(e.who)} hero died at ≈${mmss(e.at)}`
+        : e.kind === "expansionLost"
+          ? `${whose(e.who)} expansion fell at ${mmss(e.at)}`
+          : `${whose(e.who)} tier ${e.tier} finished`;
   if (examples.length < 8)
     examples.push(
-      `**${row.result === "win" ? "Win" : "Loss"} ${row.matchup ?? ""} on ${row.map_name}, ${mmss(end)}.** Your chance: ${curve
+      `**${row.result === "win" ? "Win" : "Loss"} ${row.matchup ?? ""} on ${row.map_name}, ${mmss(r.game.durationMs)}.** Your chance: ${curve.points
         .filter((_, i) => i % 4 === 0)
         .map((c) => `${mmss(c.t)} ${pct(c.p)}`)
         .join(" · ")}\n\n` +
-        picked
+        curve.swings
           .map((s) => {
-            const events = what(s.t - 90_000, s.t);
-            const moved = drivers(s.t - 60_000, s.t, s.d > 0);
-            return `- ${mmss(s.t - 60_000)}–${mmss(s.t)}: ${pct(s.from)} → ${pct(s.to)}. Moved by: ${moved || "many small changes"}.${events ? ` Then: ${events}.` : ""}`;
+            const moved = s.drivers.map((d) => `${FEATURES[d.feature]} (${d.favours === "me" ? "in your favour" : "in theirs"})`).join(", ");
+            const events = s.events.map(event).join("; ");
+            return `- ${mmss(s.from)}–${mmss(s.to)}: ${pct(s.pFrom)} → ${pct(s.pTo)}. Moved by: ${moved || "many small changes"}.${events ? ` Then: ${events}.` : ""}`;
           })
           .join("\n"),
     );

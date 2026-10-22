@@ -258,3 +258,9 @@ tr.tier-row-below td:first-child { box-shadow: inset 3px 0 0 var(--critical); }
 .trend { font-size: calc(12.5px * var(--text-scale)); font-weight: 600; white-space: nowrap; }
 .trend.better { color: var(--good-text); }
 .trend.worse { color: var(--critical-text); }
+
+/* Chance to win: the swings under the chart. */
+.win-chance .swings { margin: 10px 0 0; padding: 0; list-style: none; font-size: calc(13px * var(--text-scale)); }
+.win-chance .swings li { margin: 0 0 6px; line-height: 1.45; }
+.win-chance .swing-head { white-space: nowrap; }
+button.linklike { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; font: inherit; text-decoration: underline; text-underline-offset: 2px; }

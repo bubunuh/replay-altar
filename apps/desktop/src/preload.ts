@@ -23,6 +23,7 @@ const api = {
   analyzerList: () => ipcRenderer.invoke("analyzer:list"),
   analyzerRemove: (id: string) => ipcRenderer.invoke("analyzer:remove", id),
   referenceProfiles: () => ipcRenderer.invoke("ref:profiles"),
+  winModel: () => ipcRenderer.invoke("winchance:model"),
   showFile: (file: string) => ipcRenderer.invoke("shell:showFile", file),
   openPath: (dir: string) => ipcRenderer.invoke("shell:openPath", dir),
   openUrl: (url: string) => ipcRenderer.invoke("shell:openUrl", url),

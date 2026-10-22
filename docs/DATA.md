@@ -59,7 +59,7 @@ Each metric's `source` says how much to trust it:
 - **Repeated building orders:** re-issuing a build order re-places the same building, so the same building ordered again within 5 s counts once (build lists and building metrics; checked against the buildings the simulation placed). Training clicks are not merged: each one queues a unit.
 - **Level-ups:** each level gives one skill point, so skill-pick times are the level-up times. Retraining re-picks don't count. The replay also keeps clicks the game refused (e.g. clicking a skill 12 times), so a pick only counts if the hero could learn that rank: ranks 1/2/3 at hero level 1/3/5, ultimates once at level 6. Against official XP on 58 player-games: correlation 0.95, median error 121 XP.
 - **XP per level:** game data, 200/500/900/1,400/2,000/… up to 5,400 for level 10.
-- **XP at time t:** linear between level-ups, and exact at each one. After the last level-up it grows to half the next level by the end of the game.
+- **XP at time t (charts, metrics):** linear between level-ups, and exact at each one. After the last level-up it grows to half the next level by the end of the game. This looks ahead (to the next level-up and the end of the game), so the win-chance model uses only the XP of the levels reached so far.
 - **Validation:** against W3Champions' official XP on 56 pro player-games, correlation 0.96, median ratio 1.01, mean error about 230 XP.
 - **Official override:** W3Champions games use the official total instead (`metricSources`).
 
@@ -74,6 +74,18 @@ Each metric's `source` says how much to trust it:
   - **Revives:** the revive order plus the game's revive time, `min(150 s, build × level × 0.6, build × 2)`. This was checked against a hero's path: it moved again within 1 s of the formula.
   - **Never revived:** a hero WC3V marks `lost` at the end counts as dead from then on.
 - **Units killed:** the game's count includes creeps. Without official stats it's estimated as (enemy units the simulation saw die + creeps in camps your side cleared) × `unitsKilledFactor`, fitted to official numbers (1.48, correlation 0.90).
+
+## How accurate the estimates are
+
+A replay records the players' commands, never the game's state: no unit dies in it. Army value, losses, trades and fight results are reconstructed by simulating the game (WC3V) and corrected with the selection lists the replay does record (Losses, below), so they are estimates.
+
+Measured against Warcraft III's own unit counts, read from the game's observer data while it played each replay (`scripts/observer/`), on 50 player-games (32 from pro tournaments, 18 from ladder games), from minute 3 on:
+
+- **Army value:** typically off by about 370 on an average army of about 1,220 (about 30%), and about 100 too high on average. Averaged per player-game over whole games: 183 (257 before the selection-list correction; `army-value-error.png`).
+- **Who has the bigger army:** the estimated difference between the two players correlates 0.70 with the real one, so the direction is usually right and the size is rough.
+- **Why it is off:** a death only shows in the selection lists once the player selects that group again, so its time is known within a window; units the simulation never tied to their orders get their deaths only from the lists; Undead ghouls are left to the simulation alone (they leave the army to gather lumber, which looks like dying).
+
+The win-chance curve (`docs/win-chance/`) uses the army value as one input among seven; perfecting it would change the curve little (the report has the test).
 
 ## Official end-of-game stats (`record.official`)
 
