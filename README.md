@@ -9,6 +9,7 @@ Replay Altar is a Warcraft III: Reforged replay analyzer for 1v1 players. It run
 - **Every replay kept, automatically.** A small background program saves each replay the moment a game ends, before the game overwrites `LastReplay.w3g`. Battle.net ladder, W3Champions and custom melee games are all picked up, with nothing to upload or click.
 - **The game reconstructed.** Each 1v1 is simulated from its replay with the [WC3V](https://github.com/jblanchette/wc3v) engine: workers, army value, supply, creep camps, hero levels and fights over time.
 - **A coach's report after every game.** Rules drawn from well-known guides (Grubby, Liquipedia, Warcraft 3 Gym, Vortix and others) name the problems that cost you the game, show the facts behind each one, explain why it happened and say what to do next time. The report also points out the fight that turned the game (with the moment to rewatch), your strengths and the opponent's plan.
+- **Your chance to win, moment by moment.** <kbd>upcoming</kbd> A curve of how often a pro player in your position went on to win, at every moment of the game, with the three moments that swung it most and what moved them. [More below](#the-win-chance-curve).
 - **One thing to work on.** Each report ends with the single most useful habit for your next game. Across your recent games, the Performance page picks the problem that keeps coming back and shows whether it is getting better.
 - **Every number in context.** Your numbers are placed among about 200 recent tournament games of your race and matchup, on the current patch ("better than 86% of pro games"), with a green, yellow or red verdict: at pro level, at least as good as your opponent, or behind both.
 - **Knows your build.** It recognises the build order each player went for, from guide builds and builds mined from pro games, and shows where your timings drifted from the pros who play it.
@@ -16,12 +17,27 @@ Replay Altar is a Warcraft III: Reforged replay analyzer for 1v1 players. It run
 - **Any replay, not only yours.** The Analyzer tab analyzes a 1v1 replay you found, such as a pro game, from the side of the player you choose, without counting it in your stats.
 - **Share a report** as text or as a PDF of the whole report, for Reddit or Discord, without your opponent's battletag.
 - **Private and local.** Everything runs on your computer, with no account. In English, Brazilian Portuguese, Spanish and French.
+- **Windows and Linux.** A Windows installer, and for Linux a single AppImage file <kbd>upcoming</kbd>.
 
 ![The report of a won game: result, heroes, the main numbers against the opponent, the map, and the findings with advice](docs/images/report.png)
 
 Your games stay on your computer. Replay Altar fetches only two things from the internet, and Settings can turn off either: the game's own end-of-game statistics for your W3Champions games (a few small requests per game, one game at a time; they carry both battletags), and once a day the list of Replay Altar releases from GitHub, to tell you when a new version is out. The pro statistics come with the app, and no maps are shipped: each game's map is read from your own copy. See the [privacy policy](PRIVACY.md).
 
 > Replay Altar is a fan project. It is not affiliated with, endorsed by or connected to Blizzard Entertainment. Warcraft is a trademark of Blizzard Entertainment, Inc. The game's data and pictures (unit costs, race crests, hero portraits, the game's font) are read from your own Warcraft III installation, never modified there, and never distributed with this project; the screenshots on this page only show them as the app displays them.
+
+## The win-chance curve
+
+<kbd>upcoming</kbd> in the next version.
+
+![The chance-to-win chart of one game: the curve over time with three swings marked, and under it what moved each swing and what happened then](docs/images/win-chance.png)
+
+Each game's page shows a curve of your **chance to win**, from the first minute to the last. At every moment, Replay Altar compares your position with your opponent's: army, workers, hero experience, heroes alive, expansions, units lost and upgrades. The curve then answers one question: **how often did professional players in that same position go on to win?** It learned the answer from 513 recent pro games.
+
+Read it as a measure of how good your position was, not as a prediction of your game. Pros rarely throw a lead away, so the curve is more sure of itself than games between less experienced players turn out. That is on purpose: when the curve drops from 60% to 20% in a minute, that is a moment where a pro would have lost ground, and worth rewatching. The three biggest swings are marked on the chart, with the differences that moved them (for example "losses: you lost more", "hero experience: in their favour") and what happened around then (a fight and what each side lost, a hero dying, an expansion falling, a tier finishing).
+
+How well does it work? It was tested on 2,998 tournament games from 2022 to 2026 that it never saw while learning. At 10 minutes, the side it favours goes on to win 63% of those games; at 20 minutes, 69%. On pro games it had not seen, its percentages match how often pros really won: when it says 70%, that side wins about 70% of the time. Army value and losses are reconstructed from the replay, so they are estimates (typically off by about 30%); the curve uses them as one input among seven, and the test in the report shows their errors change it little.
+
+**How it was made:** the [technical report (PDF)](docs/win-chance/report.pdf) describes the data, the model, how it was chosen and tested, its limits, and how to reproduce every number. The code, the fitted model and the list of games are all in this repository.
 
 ## Install
 
@@ -39,7 +55,16 @@ On the first start, in the background, Replay Altar reads the data it needs from
 
 ### Linux (Battle.net under Wine or Lutris)
 
-Replay Altar runs from a checkout of this repository. You need [Node.js](https://nodejs.org) 26 or newer, git and [podman](https://podman.io) (the game's data is read inside a container, through a throwaway overlay, so the game folder is never written to).
+**AppImage** <kbd>upcoming</kbd>
+
+1. Download `ReplayAltar-<version>.AppImage` from the [Releases](../../releases) page.
+2. Make it executable (`chmod +x ReplayAltar-*.AppImage`, or Properties → Permissions in your file manager) and run it.
+
+On its first start it sets up what the checkout's `install` sets up: the background collector as a systemd user service, the `replay-altar` command and a menu entry. It finds Battle.net in Lutris (`~/Games/…`), plain Wine (`~/.wine`), Steam's Proton prefixes and Bottles, and reads the game's data with a built-in read-only extractor (no podman needed). Keep the AppImage where you put it: the service runs it from there, and Settings → Updates replaces it in place. On distributions that block Electron's sandbox (Ubuntu 24.04 and later), it may need `--no-sandbox`.
+
+**From a checkout**
+
+Replay Altar can also run from a checkout of this repository. You need [Node.js](https://nodejs.org) 26 or newer, git and [podman](https://podman.io) (the game's data is read inside a container, through a throwaway overlay, so the game folder is never written to).
 
 ```sh
 git clone --recurse-submodules https://github.com/bubunuh/replay-altar.git ~/Projects/replay-altar
@@ -73,7 +98,7 @@ Player names in these screenshots are replaced with placeholders.
 
 ![The list of games with result, matchup, opponent, map, length, APM, source and main problem](docs/images/matches.png)
 
-**A game over time:** army value, hero levels, resources, workers, supply and APM, against the pro median.
+**A game over time:** army value, hero levels, resources, workers, supply and APM, against the pro median, with a note on which numbers are estimates and how far off they typically are <kbd>upcoming</kbd>.
 
 ![Charts of one game over time, both players against the pro median](docs/images/charts.png)
 
@@ -136,6 +161,7 @@ npm run typecheck
 npm run build          # the desktop app (apps/desktop/out)
 npm start -w @replay-altar/desktop
 node apps/desktop/package-windows.ts   # Windows installer (built on Linux; needs wine on PATH)
+node apps/desktop/package-linux.ts     # Linux AppImage (upcoming)
 ```
 
 The code is TypeScript run directly by Node (type stripping), in npm workspaces:
@@ -151,7 +177,7 @@ The code is TypeScript run directly by Node (type stripping), in npm workspaces:
 
 `fixtures/replays/` holds real replays used by the tests. Texts are written in place as `tr("English", "Português", "Español", "Français")` (`packages/core/src/i18n.ts`); metric names have a table per language (`packages/core/src/metrics.*.ts`).
 
-**Branches and builds.** Work goes to `dev`; `main` only gets tested work. Every push runs the tests on GitHub, and every push to `dev` also builds a test Windows installer (Actions → Windows installer → the run → Artifacts). Pushing a version tag (`v0.1.3`) builds it again and puts it on a draft release, with the `latest.yml` the app's Update button reads.
+**Branches and builds.** Work goes to `dev`; `main` only gets tested work. Every push runs the tests on GitHub, and every push to `dev` also builds a test Windows installer, and from 0.2.0 a test AppImage (Actions → the run → Artifacts). Pushing a version tag (`v0.1.3`) builds them again and puts them on a draft release, with the `latest.yml` (and `latest-linux.yml`) the app's Update button reads.
 
 **WC3V fixes.** `patches/wc3v/` holds fixes to WC3V that Replay Altar applies on top of the submodule (`node scripts/patch-wc3v.ts`, run by `setup-sim` and the Windows build); each is meant to go upstream. The first lets WC3V read past a recycled unit handle, which used to cut about 5% of games short (proposed upstream as [jblanchette/wc3v#19](https://github.com/jblanchette/wc3v/pull/19)). The second and third stop two errors that ended the simulation part way: reviving a hero that had used a Town Portal, and training from a building WC3V first met as a plain unit (an Ancient of War built while not selected), proposed as [#20](https://github.com/jblanchette/wc3v/pull/20) and [#21](https://github.com/jblanchette/wc3v/pull/21). Together they recovered 16 of the 518 pro games.
 
@@ -171,9 +197,9 @@ Then commit `data/reference/` and build a new installer. `replay-altar ref` show
 
 ## Code signing policy
 
-Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org) (applied for; until it is granted, the installers are unsigned).
+Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org) (applied for and turned down for now, because the project is too new; we will apply again. Until then the installers are unsigned).
 
-- **What is signed:** only the Windows installer `ReplayAltar-Setup-<version>.exe` and the program in it, built by GitHub Actions ([`windows-installer.yml`](.github/workflows/windows-installer.yml)) from a version tag of this repository. Nothing built elsewhere is signed.
+- **What is signed:** only the Windows installer `ReplayAltar-Setup-<version>.exe` and the program in it, built by GitHub Actions ([workflows](.github/workflows)) from a version tag of this repository. Nothing built elsewhere is signed.
 - **Third-party components** in the installer are signed by their makers or not at all: Electron, and CascLib (MIT) inside `casc-extract.exe`, which the same workflow builds from a fixed version of its source code.
 - **Team and roles:** [bubunuh](https://github.com/bubunuh) is the only author (commits to the repository), reviewer (reviews contributions from others) and approver (approves each signing request). Everyone with write access uses two-factor authentication on GitHub and SignPath.
 - **Privacy:** see the [privacy policy](PRIVACY.md). Replay Altar sends nothing to other computers except the two requests it describes, both of which can be turned off in Settings.
