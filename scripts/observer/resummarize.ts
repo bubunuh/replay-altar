@@ -2,6 +2,7 @@
 // summary code, so scripts/observer/batch-compare.py measures it ("today" column).
 //
 //   node scripts/observer/resummarize.ts <batch folder>...
+//   node scripts/observer/resummarize.ts --group validation
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { applySim, loadConfig, openDb, paths, readRecord, referencePaths } from "@replay-altar/core";
@@ -21,7 +22,29 @@ const contextFor = (key: string) => {
   return null;
 };
 let n = 0;
-for (const batch of process.argv.slice(2)) {
+// --group <id>: every simulated game of a reference group instead (retries while another process writes).
+const gi = process.argv.indexOf("--group");
+if (gi >= 0) {
+  const ref = openReference(process.argv[gi + 1], config);
+  for (const { game_key } of ref.db.prepare("SELECT game_key FROM games WHERE sim_status = 'ok'").all() as { game_key: string }[]) {
+    const record = readRecord(ref.paths, game_key);
+    if (record?.sim?.status !== "ok") continue;
+    const { ranAt, runMs, outputPath } = record.sim;
+    if (!existsSync(outputPath)) continue;
+    const sim = summarize(record, readSimOutput(outputPath), costs, CONSTANTS, { ranAt, runMs, outputPath }, await selectionsOf(record.provenance.archivePath));
+    for (let tries = 0; ; tries++) {
+      try {
+        applySim(ref, game_key, sim);
+        break;
+      } catch (e) {
+        if (tries >= 20 || !/locked|busy/i.test((e as Error).message)) throw e;
+        await new Promise((r) => setTimeout(r, 500));
+      }
+    }
+    if (++n % 200 === 0) console.log(n);
+  }
+}
+for (const batch of process.argv.slice(2).filter((a, i, all) => a !== "--group" && all[i - 1] !== "--group")) {
   for (const { key } of JSON.parse(readFileSync(join(batch, "manifest.json"), "utf8")) as { key: string }[]) {
     const ctx = contextFor(key);
     const record = ctx && readRecord(ctx.paths, key);

@@ -13,9 +13,10 @@
 // weighs the same, whatever its length.
 import { existsSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { listGames, openDb, paths, readRecord, referencePaths, type GameRecord, type PlayerRecord, type SimSample } from "@replay-altar/core";
+import { listGames, openDb, paths, readRecord, referencePaths, researchLevels, type GameRecord, type PlayerRecord, type SimSample } from "@replay-altar/core";
 import { heroesXpAt } from "@replay-altar/core/heroxp";
 import { mmss } from "@replay-altar/core/time";
+import { gamedataDir, loadCosts } from "@replay-altar/sim";
 
 const CALIBRATION = ["pros", "pros-orc", "pros-undead", "pros-nightelf"];
 const VALIDATION = "validation";
@@ -42,6 +43,20 @@ type Side = {
 // Attack and armor research of every race (the build orders' names).
 const WEAPON_ARMOR = /^(Swords|Gunpowder|Plating|Armor|Leather Armor|Studded Leather Armor|Melee Weapons|Ranged Weapons|Unit Armor|Strength of the Moon|Moon Armor|Reinforced Hides|Strength of the Wild|Unholy Strength|Unholy Armor|Creature Attack|Creature Carapace)/;
 
+const costs = loadCosts(gamedataDir(paths().root));
+// Research counts when it would finish (the order time plus its research time), not when it is
+// ordered; repeated clicks on the same research are one. Cancelled research can't be told apart.
+const researchDone = (p: PlayerRecord, test: (name: string) => boolean = () => true) => {
+  const names = new Map(p.build.filter((b) => b.kind === "upgrade").map((b) => [b.code, b.name]));
+  return researchLevels(p.build)
+    .filter((r) => test(names.get(r.code) ?? ""))
+    .map((r) => {
+      const u = costs.upgrades[r.code];
+      return r.ms + (u ? (u.timeBase + u.timeMod * (r.level - 1)) * 1000 : 0);
+    })
+    .sort((a, b) => a - b);
+};
+
 const sideOf = (r: GameRecord, p: PlayerRecord): Side | null => {
   const sp = (r.sim as SimOk).players.find((x) => x.playerId === p.playerId);
   if (!sp || !sp.series.length) return null;
@@ -55,8 +70,8 @@ const sideOf = (r: GameRecord, p: PlayerRecord): Side | null => {
     t3: sp.metrics.tier3_done_ms ?? null,
     levels: p.heroes.map((h) => h.levelUps ?? []),
     deaths: (sp.heroes ?? []).flatMap((h) => h.deaths),
-    upgrades: at("upgrade"),
-    weaponArmor: at("upgrade", (n) => WEAPON_ARMOR.test(n)),
+    upgrades: researchDone(p),
+    weaponArmor: researchDone(p, (n) => WEAPON_ARMOR.test(n)),
     items: at("item"),
     camps: sp.camps ?? [],
   };
@@ -320,8 +335,14 @@ if (existsSync(valDb)) {
 }
 const validation = valMeta.size ? loadGames([VALIDATION], valMeta) : [];
 
-const calMoments = calibration.flatMap(momentsOf);
-const valMoments = validation.flatMap(momentsOf);
+// A game with an unreadable number anywhere (a broken simulation) is left out whole.
+const finiteGames = (ms: Moment[]) => {
+  const bad = new Set(ms.filter((m) => m.d.some((v) => !Number.isFinite(v))).map((m) => m.game));
+  if (bad.size) console.error(`left out ${bad.size} games with unreadable numbers`);
+  return ms.filter((m) => !bad.has(m.game));
+};
+const calMoments = finiteGames(calibration.flatMap(momentsOf));
+const valMoments = finiteGames(validation.flatMap(momentsOf));
 const calUsed = new Set(calMoments.map((m) => m.game));
 const valUsed = new Set(valMoments.map((m) => m.game));
 const gameOf = new Map([...calibration, ...validation].map((g) => [g.key, g]));

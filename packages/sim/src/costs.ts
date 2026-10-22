@@ -10,8 +10,8 @@ export type CostTables = {
   manifestSha256: string;
   units: Record<string, Cost>;
   items: Record<string, { gold: number; lumber: number }>;
-  /** Research: level n costs base + mod * (n - 1). */
-  upgrades: Record<string, { goldBase: number; goldMod: number; lumberBase: number; lumberMod: number }>;
+  /** Research: level n costs base + mod * (n - 1), and takes timeBase + timeMod * (n - 1) seconds. */
+  upgrades: Record<string, { goldBase: number; goldMod: number; lumberBase: number; lumberMod: number; timeBase: number; timeMod: number }>;
 };
 
 export function loadCosts(gamedataDir: string): CostTables {
@@ -42,6 +42,8 @@ export function loadCosts(gamedataDir: string): CostTables {
       goldMod: Number(row.goldmod) || 0,
       lumberBase: Number(row.lumberbase) || 0,
       lumberMod: Number(row.lumbermod) || 0,
+      timeBase: Number(row.timebase) || 0,
+      timeMod: Number(row.timemod) || 0,
     };
   }
   const manifest = readFileSync(join(gamedataDir, "manifest.json"), "utf8");
