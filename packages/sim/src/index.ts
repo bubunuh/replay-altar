@@ -14,7 +14,7 @@ import { DRIVER, gamedataDir, simNotReady, simOutputPath, wc3vCommit } from "./p
 export { buildTimelines, runIncome, economyMetrics, loadCosts, simNotReady, simOutputPath, gamedataDir, ESTIMATE_HORIZON_MS };
 export type { EconomyConstants, WOutput, CostTables };
 export type { Timeline } from "./economy.ts";
-export { mapDataName, ensureMapData } from "./maps.ts";
+export { mapDataName, ensureMapData, mapCacheDir, mapClientDir, syncMapCache } from "./maps.ts";
 export { armyAt, heroTimelines, unitsKilledEstimate } from "./army.ts";
 
 export const CONSTANTS = constantsJson as unknown as EconomyConstants;
@@ -197,19 +197,17 @@ function fightsOf(o: WOutput): SimFight[] {
 
 /**
  * Simulate one archived game. Never throws: failures come back as status "failed".
- * dataRoot is where the output goes; gamedataRoot (default dataRoot) holds sim/gamedata/current,
- * so reference corpora can share the user's extracted game data.
+ * dataRoot is where the output goes; gamedataRoot (default dataRoot) holds sim/gamedata/current
+ * and the extracted maps (sim/maps), so reference corpora share the user's. mapFolders: where the
+ * map files are (mapFolders in core's config).
  */
-export async function simulateGame(
-  record: GameRecord,
-  opts: { dataRoot: string; warcraftDocuments: string[]; gamedataRoot?: string; extraMapDirs?: string[] },
-): Promise<SimSummary> {
+export async function simulateGame(record: GameRecord, opts: { dataRoot: string; mapFolders: string[]; gamedataRoot?: string }): Promise<SimSummary> {
   const ranAt = new Date().toISOString();
   const engine = { name: "wc3v" as const, commit: wc3vCommit() };
   const gamedataRoot = opts.gamedataRoot ?? opts.dataRoot;
   const notReady = simNotReady(gamedataRoot);
   if (notReady) return { status: "failed", engine, ranAt, reason: notReady };
-  const mapProblem = ensureMapData(record.game.map.file, opts.warcraftDocuments, opts.extraMapDirs);
+  const mapProblem = ensureMapData(record.game.map.file, opts.mapFolders, gamedataRoot);
   if (mapProblem) return { status: "failed", engine, ranAt, reason: mapProblem };
   const out = simOutputPath(opts.dataRoot, record.gameKey);
   const res = await runDriver(record.provenance.archivePath, out);

@@ -16,6 +16,9 @@ export type GameFindings = { key: string; playedAt: string; result: string; find
 /** Replay folders: found by themselves, added by you, and how many folders that can hold replays exist. */
 export type Folders = { found: string[]; added: string[]; replayDirs: number };
 
+/** Map folders: found by themselves, added by you; maps in them, and maps extracted so far. */
+export type MapFolders = { found: string[]; added: string[]; maps: number; saved: number; savedDir: string };
+
 export type RefGroupInfo = {
   group: ReferenceGroup;
   profile: RefProfile | null;
@@ -35,6 +38,12 @@ type W3Api = {
   /** Opens a folder picker; null when cancelled. */
   addFolder(): Promise<Folders | null>;
   removeFolder(folder: string): Promise<Folders>;
+  mapFolders(): Promise<MapFolders>;
+  /** Opens a folder picker; null when cancelled. */
+  addMapFolder(): Promise<MapFolders | null>;
+  removeMapFolder(folder: string): Promise<MapFolders>;
+  /** Simulates a game again (extracting its map again when needed); the result once it's done. */
+  resimulate(key: string): Promise<{ ok: boolean; message: string }>;
   referenceProfiles(): Promise<RefGroupInfo[]>;
   showFile(file: string): Promise<void>;
   openPath(dir: string): Promise<void>;

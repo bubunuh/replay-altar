@@ -7,7 +7,6 @@ import { gunzipSync } from "node:zlib";
 import type { GameRecord } from "@replay-altar/core/ui";
 import { fightLabel, fightLosses } from "@replay-altar/rules/series";
 import { projectionFor } from "./mapOverlay.ts";
-import { mapDataName } from "@replay-altar/sim/mapname";
 
 export type MapFight = { x: number; y: number; start: number; end: number; label: string; you: number; them: number };
 export type MapCamp = { x: number; y: number; at: number; level: number; by: "me" | "opp"; order: number };
@@ -17,9 +16,10 @@ type Battle = { startTime: number; category: string; campUuid?: string | null; s
 type Unit = { isUnit?: boolean; lastPosition?: { x: number; y: number }; lostState?: { state: string; since: number } };
 type Group = { bounds?: { minX: number; minY: number; maxX: number; maxY: number }; totalLevel?: number; claimOwnerId?: number | null; clearedTime?: number | null };
 
-export function mapActivity(wc3vRoot: string, r: GameRecord): MapActivity | null {
+/** `mapDir`: the map's extracted data (see mapOverlay.ts). */
+export function mapActivity(mapDir: string | null, r: GameRecord): MapActivity | null {
   if (r.sim?.status !== "ok" || !r.sim.outputPath || !existsSync(r.sim.outputPath)) return null;
-  const at = projectionFor(wc3vRoot, mapDataName(r.game.map.file));
+  const at = projectionFor(mapDir);
   const me = r.players.find((p) => p.isMe);
   const opp = r.players.find((p) => p.playerId === r.classification.opponentId);
   if (!at || !me || !opp) return null;

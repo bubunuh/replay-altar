@@ -12,7 +12,7 @@ import {
   paths,
   reingestAll,
   replayDirs,
-  warcraftFolders,
+  mapFolders,
 } from "@replay-altar/core";
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
@@ -221,7 +221,7 @@ switch (cmd) {
     for (const key of keys) {
       const record = readRecord(c.paths, key);
       if (!record) continue;
-      const sim = await simulateGame(record, { dataRoot: c.paths.root, warcraftDocuments: warcraftFolders(c.config) });
+      const sim = await simulateGame(record, { dataRoot: c.paths.root, mapFolders: mapFolders(c.config) });
       applySim(c, key, sim);
       console.log(`[${++i}/${keys.length}] ${key.slice(0, 8)} ${sim.status === "ok" ? `ok in ${(sim.runMs / 1000).toFixed(1)}s${sim.warnings.length ? ` (${sim.warnings.join("; ")})` : ""}` : `failed: ${sim.reason}`}`);
     }

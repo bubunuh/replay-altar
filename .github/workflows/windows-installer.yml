@@ -60,5 +60,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$GITHUB_REF_NAME" --draft --prerelease --title "Replay Altar ${GITHUB_REF_NAME#v}" \
-            --notes "Built by GitHub Actions from $GITHUB_SHA. Notes to be written." \
+            --notes "Built by GitHub Actions from $GITHUB_SHA. Notes to be written. Code signing policy: https://github.com/bubunuh/replay-altar#code-signing-policy" \
             dist/ReplayAltar-Setup-*.exe dist/ReplayAltar-Setup-*.exe.blockmap dist/latest.yml dist/SHA256SUMS.txt

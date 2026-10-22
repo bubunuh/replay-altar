@@ -1,7 +1,8 @@
 // What the game's minimap shows on top of the terrain: gold mines, shops and taverns, start
-// locations and creep camps (coloured by total creep level, as in game). Read from WC3V's map
-// library (vendor/wc3v/client/maps/<map>/: unit.json, neutralBuildings.json, wpm.json for the
-// extent) and its unit table for creep levels; positions are scaled to 0-1 over map.jpg.
+// locations and creep camps (coloured by total creep level, as in game). Read from a map's
+// extracted data (WC3V's client/maps/<map>/, or its copy in the data folder: unit.json,
+// neutralBuildings.json, wpm.json for the extent) and WC3V's unit table for creep levels;
+// positions are scaled to 0-1 over map.jpg.
 // Checked by eye on a few maps (markers on land, mines at bases); not an exact projection.
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -32,30 +33,32 @@ let levels: Record<string, { level?: number }> | null = null;
 
 const readGz = (file: string) => JSON.parse(gunzipSync(readFileSync(file)).toString("utf8"));
 
-export function mapMarkers(wc3vRoot: string, folder: string): MapMarker[] | null {
-  if (cache.has(folder)) return cache.get(folder)!;
-  const dir = join(wc3vRoot, "client/maps", folder);
+/** `dir`: the map's extracted data (null when it has none yet; not remembered, it may come later). */
+export function mapMarkers(wc3vRoot: string, dir: string | null): MapMarker[] | null {
+  if (!dir) return null;
+  if (cache.has(dir)) return cache.get(dir)!;
   let out: MapMarker[] | null = null;
   try {
     if (existsSync(join(dir, "unit.json.gz")) && existsSync(join(dir, "wpm.json.gz"))) out = build(wc3vRoot, dir);
   } catch {
     out = null;
   }
-  cache.set(folder, out);
+  if (out) cache.set(dir, out);
   return out;
 }
 
-/** World coordinates to 0-1 over the map's map.jpg; null when the map isn't in the library. */
-export function projectionFor(wc3vRoot: string, folder: string) {
-  if (projections.has(folder)) return projections.get(folder)!;
-  const file = join(wc3vRoot, "client/maps", folder, "wpm.json.gz");
+/** World coordinates to 0-1 over the map's map.jpg; null when the map has no extracted data. */
+export function projectionFor(dir: string | null) {
+  if (!dir) return null;
+  if (projections.has(dir)) return projections.get(dir)!;
+  const file = join(dir, "wpm.json.gz");
   let at: ((x: number, y: number) => { x: number; y: number }) | null = null;
   try {
     if (existsSync(file)) at = projection(readGz(file).grid);
   } catch {
     at = null;
   }
-  projections.set(folder, at);
+  if (at) projections.set(dir, at);
   return at;
 }
 

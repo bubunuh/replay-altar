@@ -3,7 +3,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { applySim, ingestFile, parseReplay, readRecord, warcraftFolders, type Config, type GameRecord, type ReferenceGroup } from "@replay-altar/core";
+import { applySim, ingestFile, parseReplay, mapFolders, readRecord, type Config, type GameRecord, type ReferenceGroup } from "@replay-altar/core";
 import { simulateGame } from "@replay-altar/sim";
 import { buildProfile, type RefProfile } from "./profile.ts";
 import { openReference } from "./store.ts";
@@ -63,7 +63,7 @@ export function mapFetchingSimulator(o: { dataRoot: string; config: Config; game
   const mapsDir = join(o.gamedataRoot, "maps");
   let mapIndex: Map<string, W3iMapFile> | null = null;
   return async (record: GameRecord) => {
-    const run = () => simulateGame(record, { dataRoot: o.dataRoot, warcraftDocuments: warcraftFolders(o.config), gamedataRoot: o.gamedataRoot, extraMapDirs: [mapsDir] });
+    const run = () => simulateGame(record, { dataRoot: o.dataRoot, mapFolders: [...mapFolders(o.config), mapsDir], gamedataRoot: o.gamedataRoot });
     const sim = await run();
     if (sim.status === "ok" || !sim.reason.includes("not found")) return sim; // only a missing map is fetchable
     const sha1 = record.game.map.checksumSha1.toLowerCase();

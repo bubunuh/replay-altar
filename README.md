@@ -14,7 +14,7 @@ Replay Altar is a Warcraft III: Reforged replay analyzer for 1v1 players. It run
 
 ![The report of a game: result, heroes, the main numbers against the opponent, the map, and the findings with advice](docs/images/report.png)
 
-Your games stay on your computer. Replay Altar fetches only two things from the internet: the game's own end-of-game statistics for your W3Champions games (a few small requests per game, one game at a time), and once a day the list of Replay Altar releases from GitHub, to tell you when a new version is out (Settings can turn this off). The pro statistics come with the app.
+Your games stay on your computer. Replay Altar fetches only two things from the internet, and Settings can turn off either: the game's own end-of-game statistics for your W3Champions games (a few small requests per game, one game at a time; they carry both battletags), and once a day the list of Replay Altar releases from GitHub, to tell you when a new version is out. The pro statistics come with the app, and no maps are shipped: each game's map is read from your own copy. See the [privacy policy](PRIVACY.md).
 
 > Replay Altar is a fan project. It is not affiliated with, endorsed by or connected to Blizzard Entertainment. Warcraft is a trademark of Blizzard Entertainment, Inc. The game's data and pictures (unit costs, race crests, hero portraits, the game's font) are read from your own Warcraft III installation, never modified there, and never distributed with this project; the screenshots on this page only show them as the app displays them.
 
@@ -24,7 +24,7 @@ Your games stay on your computer. Replay Altar fetches only two things from the 
 
 1. Download `ReplayAltar-Setup-<version>.exe` from the [Releases](../../releases) page.
 2. Run it. Windows will probably warn that it protected your PC, because the installer isn't digitally signed yet: click **More info**, then **Run anyway**.
-3. The installer needs no administrator rights and asks nothing. It installs for your user, adds a Start menu and desktop shortcut, and opens the app.
+3. The installer first shows what Replay Altar does on your computer (privacy, starting at login); click **I Agree**. It needs no administrator rights, installs for your user, adds a Start menu and desktop shortcut, and opens the app.
 
 On the first start, in the background, Replay Altar reads the data it needs from your Warcraft III installation, finds your battletag from your replays and imports the replays you already have. The list of games fills in by itself after a few minutes. From then on it starts with Windows and picks up each game as it ends.
 
@@ -53,7 +53,7 @@ The default game location is the Lutris Battle.net prefix in `~/Games/battlenet`
 
 - **Matches:** every analyzed game, with its main problem. Open one for its report, charts, key numbers against pros, the build orders and a map of the fights and each player's creeping.
 - **Performance:** your win rates, recurring problems with the one to work on now, and your numbers in wins, losses and against pros.
-- **Settings:** your battletags, language, replay folders, notifications, updates (a yellow mark on Settings when a new version is out; updating is your choice), which pro games your numbers are compared with, and **Help and feedback** to report a problem or suggest an idea.
+- **Settings:** your battletags, language, replay folders, map folders, notifications, updates (a yellow mark on Settings when a new version is out; updating is your choice), which pro games your numbers are compared with, and **Help and feedback** to report a problem or suggest an idea.
 
 Custom maps, games against the computer, team games and games you only observed are kept in the archive but not counted.
 
@@ -106,6 +106,7 @@ When Warcraft III starts, the window opens behind the game without taking focus,
 
 - **From the replay:** a replay records commands, not the game's state. Build times are when an order was given (cancelled orders included), and heroes are timed by their first learned skill. Results come from leave records; each shows its confidence and can be corrected by hand.
 - **From the simulation:** workers, supply, army value, creep camps and fights come from WC3V's reconstruction of the game. Values marked ≈ are estimates: losses and trades (deaths are inferred), and the mined-income model, shown for the first 10 minutes only.
+- **Maps:** the simulation needs each game's map. Replay Altar ships none: the first time a game on a map is simulated, it reads the map from your own copy (the game keeps Battle.net ladder maps in `Documents\Warcraft III\Maps\Download` and W3Champions maps in `Maps\W3Champions`; Settings → Map folders adds others) and keeps what the simulation needs in its data folder, so updates don't lose it. **Simulate again** on a match runs a game's simulation again, for example after adding a map folder.
 - **Official numbers:** for W3Champions games, the game's own end-of-game statistics (gold and lumber collected, experience, units killed, upkeep lost) replace the estimates and are marked "official".
 - **Pro games:** about 200 recent tournament games per race from [warcraft3.info](https://warcraft3.info/replays/), collected by the maintainers rather than by each copy of the app, so the site gets one slow download per game instead of one per user. They are 1v1 games of at least 3 minutes by players with a curated profile, on the current patch, at most 20 per player, downloaded one every 3 seconds and analyzed the same way as yours. Only the resulting statistics are published, in `data/reference/`, and they are updated with new versions of Replay Altar.
 - **Verdicts:** the main numbers get a colour: green at or above the pro median, yellow when at least as good as your opponent, red below both. Timings that depend on strategy (tier, heroes, expansions) are compared without a better or worse.
@@ -151,6 +152,15 @@ replay-altar ref publish           # copy each race's profile.json and principle
 ```
 
 Then commit `data/reference/` and build a new installer. `replay-altar ref` shows the status of each race.
+
+## Code signing policy
+
+Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org) (applied for; until it is granted, the installers are unsigned).
+
+- **What is signed:** only the Windows installer `ReplayAltar-Setup-<version>.exe` and the program in it, built by GitHub Actions ([`windows-installer.yml`](.github/workflows/windows-installer.yml)) from a version tag of this repository. Nothing built elsewhere is signed.
+- **Third-party components** in the installer are signed by their makers or not at all: Electron, and CascLib (MIT) inside `casc-extract.exe`, which the same workflow builds from a fixed version of its source code.
+- **Team and roles:** [bubunuh](https://github.com/bubunuh) is the only author (commits to the repository), reviewer (reviews contributions from others) and approver (approves each signing request). Everyone with write access uses two-factor authentication on GitHub and SignPath.
+- **Privacy:** see the [privacy policy](PRIVACY.md). Replay Altar sends nothing to other computers except the two requests it describes, both of which can be turned off in Settings.
 
 ## Credits and sources
 

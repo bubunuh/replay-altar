@@ -83,7 +83,7 @@ describe.skipIf(!ready || !existsSync(FIXTURE))("simulating a real replay", () =
     const file = { path: FIXTURE, sha256: "x", size: st.size, mtime: st.mtime.toISOString(), durationMs: raw.output.duration, ...endTimeOf(FIXTURE, st.mtimeMs) };
     const record = buildRecord({ raw, myAccounts: ["Pedrovisk#1486"], canonicalFile: file, files: [file], archivePath: FIXTURE, ingestedAt: "now" });
 
-    const sim = (await simulateGame(record, { dataRoot: root, warcraftDocuments: [] })) as Extract<SimSummary, { status: "ok" }>;
+    const sim = (await simulateGame(record, { dataRoot: root, mapFolders: [] })) as Extract<SimSummary, { status: "ok" }>;
     expect(sim.status).toBe("ok");
     expect(sim.players).toHaveLength(2);
     for (const p of sim.players) {

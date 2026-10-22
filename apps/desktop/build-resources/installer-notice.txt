@@ -1,0 +1,20 @@
+REPLAY ALTAR - PLEASE READ BEFORE INSTALLING
+
+Replay Altar is free software (GNU General Public License v3.0). It is a fan project, not affiliated with Blizzard Entertainment.
+
+YOUR PRIVACY
+Your replays, games, statistics and settings stay on this computer. Replay Altar has no accounts, no analytics and no tracking. It uses the internet for two things only, and both can be turned off in Settings > Behaviour:
+
+1. W3Champions statistics: after each W3Champions game you play, it asks the W3Champions website for that game's end-of-game statistics. This sends both players' battletags to W3Champions.
+
+2. Update check: once a day, it asks GitHub whether a new version of Replay Altar is out. Nothing about you is sent. Updating is always your choice.
+
+Full privacy policy: https://github.com/bubunuh/replay-altar/blob/main/PRIVACY.md
+
+CHANGES TO YOUR SYSTEM
+- Installs for your user only; no administrator rights are needed.
+- Starts a small background program when you log in (an entry in your user's Run key) that saves each replay as soon as a game ends. You can disable it in Task Manager > Startup apps.
+- Reads Warcraft III's game data, maps and replays from your installation and your Documents folder; it never changes them.
+- Uninstall: Settings > Apps > Replay Altar. Your games and statistics in %LOCALAPPDATA%\replay-altar are kept until you delete that folder.
+
+Source code, license and help: https://github.com/bubunuh/replay-altar

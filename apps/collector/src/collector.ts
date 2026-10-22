@@ -1,6 +1,7 @@
 // The always-on service: archive + analyze new replays, react to Warcraft III starting.
 import { mkdirSync } from "node:fs";
 import { ingestFile, loadConfig, markCollectorRunning, mmss, openDb, paths, replayDirs, resolveLanguage, setLanguage, tr, warcraftFolders, type GameRecord } from "@replay-altar/core";
+import { syncMapCache } from "@replay-altar/sim";
 import { OfficialQueue } from "./officialqueue.ts";
 import { SimQueue } from "./simqueue.ts";
 import { notify, openDesktop, watchWarcraft } from "./system.ts";
@@ -45,7 +46,7 @@ export async function runCollector() {
       const r = out.record;
       log(`${out.status} ${r.gameKey.slice(0, 8)} ${r.classification.source}/${r.classification.category} analyzed=${r.classification.analyzed} from ${path}`);
       if (out.needsSim) sims.add(r.gameKey);
-      if (out.status === "new" && r.classification.source === "w3champions" && r.classification.analyzed) officials.add(r.gameKey);
+      if (out.status === "new" && r.classification.source === "w3champions" && r.classification.analyzed && config.fetchOfficialStats !== false) officials.add(r.gameKey);
       // Notify only for a game that just ended while we were watching. A rescan can find a
       // game from minutes ago, and its notification would land in the middle of the next match.
       const fresh = Date.now() - Date.parse(r.game.endedAt) < 10 * 60_000;
@@ -57,6 +58,14 @@ export async function runCollector() {
     },
     log,
   );
+  // Extracted maps live in the data folder; WC3V reads them from the install, which an update
+  // replaced: put them back before anything is simulated.
+  try {
+    const moved = syncMapCache(p.root);
+    if (moved.restored || moved.saved) log(`maps: ${moved.restored} restored from the data folder, ${moved.saved} saved to it`);
+  } catch (e) {
+    log(`maps: ${(e as Error).message}`);
+  }
   watcher.start();
   watcher.scanAll(); // backfill + anything played while we were down
   sims.backfill();

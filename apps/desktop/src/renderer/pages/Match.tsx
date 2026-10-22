@@ -139,7 +139,15 @@ function GameCharts({ record, refMp, refLabel }: { record: GameRecord; refMp: Ma
   const note = !sim
     ? tr("Not simulated yet: army, resources, workers and supply appear about a minute after a game ends (older games: replay-altar sim --backfill).", "Ainda não simulada: exército, recursos, trabalhadores e food aparecem cerca de um minuto depois que a partida acaba.", "Todavía sin simular: el ejército, los recursos, los trabajadores y el food aparecen un minuto después de que termine la partida (partidas antiguas: replay-altar sim --backfill).", "Pas encore simulée : l'armée, les ressources, les ouvriers et la food apparaissent environ une minute après la fin d'une partie (anciennes parties : replay-altar sim --backfill).")
     : !ok
-      ? tr(`Simulation failed: ${(sim as { reason: string }).reason}`, `A simulação falhou: ${(sim as { reason: string }).reason}`, `La simulación falló: ${(sim as { reason: string }).reason}`, `La simulation a échoué : ${(sim as { reason: string }).reason}`)
+      ? tr(`Simulation failed: ${(sim as { reason: string }).reason}`, `A simulação falhou: ${(sim as { reason: string }).reason}`, `La simulación falló: ${(sim as { reason: string }).reason}`, `La simulation a échoué : ${(sim as { reason: string }).reason}`) +
+        (/map folders/.test((sim as { reason: string }).reason)
+          ? " " + tr(
+              "Add the folder that holds your maps in Settings → Map folders, then press Simulate again.",
+              "Adicione a pasta com os seus mapas em Configurações → Pastas de mapas e clique em Simular de novo.",
+              "Añade la carpeta con tus mapas en Configuración → Carpetas de mapas y pulsa Simular otra vez.",
+              "Ajoutez le dossier qui contient vos cartes dans Paramètres → Dossiers de cartes, puis cliquez sur Simuler à nouveau.",
+            )
+          : "")
       : null;
   return (
     <div className="card">
@@ -221,6 +229,8 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
   const [detail, setDetail] = useState<GameDetail | undefined>();
   const [hideWorkers, setHideWorkers] = useState(true);
   const [sharing, setSharing] = useState(false);
+  // "Simulate again": null, running, or the reason it failed.
+  const [resim, setResim] = useState<{ running: boolean; error: string | null }>({ running: false, error: null });
   const [hideNames, setHideNames] = useState(true);
   const shareRef = useRef<HTMLDivElement>(null);
   const [kinds, setKinds] = useState(new Set(["building", "unit", "upgrade", "item"]));
@@ -304,13 +314,38 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
                 </select>
               </label>
               <button className="btn" onClick={() => api.showFile(r.provenance.archivePath)} data-tip={r.provenance.archivePath}>{tr("Replay file", "Arquivo do replay", "Archivo del replay", "Fichier du replay")}</button>
+              {row.analyzed === 1 && (
+                <button
+                  className="btn"
+                  disabled={resim.running}
+                  data-tip={tr(
+                    "Run the simulation of this game again: after an update, or after adding your map folder. Its map is extracted again from your maps if needed.",
+                    "Roda de novo a simulação desta partida: depois de uma atualização, ou depois de adicionar a sua pasta de mapas. O mapa é extraído de novo dos seus mapas, se precisar.",
+                    "Vuelve a ejecutar la simulación de esta partida: después de una actualización, o después de añadir tu carpeta de mapas. Su mapa se extrae otra vez de tus mapas si hace falta.",
+                    "Relance la simulation de cette partie : après une mise à jour, ou après avoir ajouté votre dossier de cartes. Sa carte est extraite à nouveau de vos cartes si besoin.",
+                  )}
+                  onClick={async () => {
+                    setResim({ running: true, error: null });
+                    const res = await api.resimulate(r.gameKey);
+                    setResim({ running: false, error: res.ok ? null : res.message });
+                    load();
+                  }}
+                >
+                  {resim.running ? tr("Simulating…", "Simulando…", "Simulando…", "Simulation…") : tr("Simulate again", "Simular de novo", "Simular otra vez", "Simuler à nouveau")}
+                </button>
+              )}
               {me && opp && (
                 <button className="btn" onClick={() => setSharing(!sharing)} aria-expanded={sharing}>
                   {tr("Share", "Compartilhar", "Compartir", "Partager")}
                 </button>
               )}
             </div>
-            {sharing && me && opp && <Share record={r} me={me} opp={opp} result={row.result} target={shareRef} hideNames={hideNames} setHideNames={setHideNames} />}
+            {resim.error && (
+            <p className="sub no-share">
+              {tr("The simulation failed", "A simulação falhou", "La simulación falló", "La simulation a échoué")}: {resim.error}
+            </p>
+          )}
+          {sharing && me && opp && <Share record={r} me={me} opp={opp} result={row.result} target={shareRef} hideNames={hideNames} setHideNames={setHideNames} />}
             {r.sim?.status === "ok" && me && opp && (
               <div className="build-lines small">
                 <BuildLine record={r} player={me} who={tr("Your build", "Sua build", "Tu build", "Votre build")} principles={pros?.principles} />

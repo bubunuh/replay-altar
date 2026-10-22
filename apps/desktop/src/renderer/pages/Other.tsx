@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { Config, Paths } from "@replay-altar/core/ui";
 import { LANGUAGES, language, locale, tr, type Language } from "@replay-altar/core/i18n";
 import { setTextScale, TEXT_SCALES, textScale } from "../textSize.ts";
-import { api, type AppInfo, type Folders, type RefGroupInfo, type UpdateState } from "../api.ts";
+import { api, type AppInfo, type Folders, type MapFolders as MapFolderInfo, type RefGroupInfo, type UpdateState } from "../api.ts";
 import { groupLabel } from "../format.ts";
 
 /**
@@ -67,6 +67,63 @@ export function ReplayFolders({ empty = false }: { empty?: boolean }) {
         </table>
       )}
       {all.length === 0 && <p className="sub">{tr("No Warcraft III folder found on this computer.", "Nenhuma pasta do Warcraft III encontrada neste computador.", "No se encontró ninguna carpeta de Warcraft III en este equipo.", "Aucun dossier Warcraft III trouvé sur cet ordinateur.")}</p>}
+    </div>
+  );
+}
+
+/**
+ * Where the simulation finds each game's map: every Warcraft III folder's Maps folder, and the
+ * ones you added. Extracted maps are kept in the data folder (an update doesn't lose them).
+ */
+function MapFolders() {
+  const [info, setInfo] = useState<MapFolderInfo | null>(null);
+  useEffect(() => {
+    api.mapFolders().then(setInfo);
+  }, []);
+  if (!info) return null;
+  const add = async () => {
+    const next = await api.addMapFolder();
+    if (next) setInfo(next);
+  };
+  return (
+    <div className="card">
+      <div className="card-head">
+        <h2>{tr("Map folders", "Pastas de mapas", "Carpetas de mapas", "Dossiers de cartes")}</h2>
+        <button className="btn" onClick={add}>{tr("Choose folder…", "Escolher pasta…", "Elegir carpeta…", "Choisir un dossier…")}</button>
+      </div>
+      <p className="sub">
+        {tr(
+          "To simulate a game, Replay Altar reads its map from your own copy, the first time a game on that map is simulated: Battle.net ladder maps are in Documents\\Warcraft III\\Maps\\Download, W3Champions maps in Maps\\W3Champions. Add another folder if your maps are elsewhere. Replay Altar ships no maps.",
+          "Para simular uma partida, o Replay Altar lê o mapa da sua própria cópia, na primeira vez que uma partida naquele mapa é simulada: os mapas da ladder do Battle.net ficam em Documentos\\Warcraft III\\Maps\\Download, os do W3Champions em Maps\\W3Champions. Adicione outra pasta se os seus mapas estiverem em outro lugar. O Replay Altar não distribui nenhum mapa.",
+          "Para simular una partida, Replay Altar lee su mapa de tu propia copia, la primera vez que se simula una partida en ese mapa: los mapas de la ladder de Battle.net están en Documents\\Warcraft III\\Maps\\Download, los de W3Champions en Maps\\W3Champions. Añade otra carpeta si tus mapas están en otro sitio. Replay Altar no distribuye ningún mapa.",
+          "Pour simuler une partie, Replay Altar lit sa carte dans votre propre copie, la première fois qu'une partie sur cette carte est simulée : les cartes du ladder Battle.net sont dans Documents\\Warcraft III\\Maps\\Download, celles de W3Champions dans Maps\\W3Champions. Ajoutez un autre dossier si vos cartes sont ailleurs. Replay Altar ne distribue aucune carte.",
+        )}
+      </p>
+      <table>
+        <tbody>
+          {info.found.map((d) => (
+            <tr key={d}>
+              <td><code>{d}</code></td>
+              <td className="muted small">{tr("found automatically", "encontrada automaticamente", "encontrada automáticamente", "trouvé automatiquement")}</td>
+              <td><button className="btn" onClick={() => api.openPath(d)}>{tr("Open", "Abrir", "Abrir", "Ouvrir")}</button></td>
+            </tr>
+          ))}
+          {info.added.map((d) => (
+            <tr key={d}>
+              <td><code>{d}</code></td>
+              <td className="muted small">{tr("added by you", "adicionada por você", "añadida por ti", "ajouté par vous")}</td>
+              <td><button className="btn" onClick={async () => setInfo(await api.removeMapFolder(d))}>{tr("Remove", "Remover", "Quitar", "Retirer")}</button></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="sub" style={{ marginTop: 10 }}>
+        {info.found.length + info.added.length === 0
+          ? tr("No map folder found on this computer.", "Nenhuma pasta de mapas encontrada neste computador.", "No se encontró ninguna carpeta de mapas en este equipo.", "Aucun dossier de cartes trouvé sur cet ordinateur.")
+          : tr(`${info.maps} maps in these folders.`, `${info.maps} mapas nestas pastas.`, `${info.maps} mapas en estas carpetas.`, `${info.maps} cartes dans ces dossiers.`)}{" "}
+        {tr(`Maps prepared for the simulation so far: ${info.saved}, kept in`, `Mapas preparados para a simulação até agora: ${info.saved}, guardados em`, `Mapas preparados para la simulación hasta ahora: ${info.saved}, guardados en`, `Cartes préparées pour la simulation jusqu'ici : ${info.saved}, conservées dans`)}{" "}
+        <code>{info.savedDir}</code>.
+      </p>
     </div>
   );
 }
@@ -270,12 +327,14 @@ export function Settings({ refs, update }: { refs: RefGroupInfo[]; update: Updat
         </div>
       </div>
       <ReplayFolders />
+      <MapFolders />
       <div className="card">
         <h2>{tr("Behaviour", "Comportamento", "Comportamiento", "Comportement")}</h2>
         <p className="sub">{tr("Collector", "Coletor", "Recolector", "Collecteur")}: <b>{collectorStatus(status)}</b>. {tr("Changes restart it.", "Mudanças reiniciam o coletor.", "Los cambios lo reinician.", "Les changements le redémarrent.")}</p>
         <div className="filters" style={{ flexDirection: "column", alignItems: "flex-start" }}>
           <label><input type="checkbox" checked={config.openWindowOnGameStart} onChange={(e) => save({ openWindowOnGameStart: e.target.checked })} />{tr("Open this window (without taking focus) when Warcraft III starts", "Abrir esta janela (sem tirar o foco) quando o Warcraft III abrir", "Abrir esta ventana (sin quitar el foco) cuando se inicia Warcraft III", "Ouvrir cette fenêtre (sans prendre le focus) au lancement de Warcraft III")}</label>
           <label><input type="checkbox" checked={config.notifyAfterGame} onChange={(e) => save({ notifyAfterGame: e.target.checked })} />{tr("Notify me after each analyzed game", "Me avisar depois de cada partida analisada", "Avisarme después de cada partida analizada", "Me notifier après chaque partie analysée")}</label>
+          <label><input type="checkbox" checked={config.fetchOfficialStats !== false} onChange={(e) => save({ fetchOfficialStats: e.target.checked })} />{tr("After each W3Champions game, fetch its end-of-game statistics from W3Champions (sends both battletags to W3Champions)", "Depois de cada partida do W3Champions, buscar as estatísticas de fim de partida no W3Champions (envia as duas battletags ao W3Champions)", "Después de cada partida de W3Champions, obtener sus estadísticas de final de partida de W3Champions (envía las dos battletags a W3Champions)", "Après chaque partie W3Champions, récupérer ses statistiques de fin de partie auprès de W3Champions (envoie les deux battletags à W3Champions)")}</label>
           <label><input type="checkbox" checked={config.checkUpdates !== false} onChange={(e) => save({ checkUpdates: e.target.checked })} />{tr("Check once a day whether a new version is out (asks GitHub; nothing about you is sent)", "Verificar uma vez por dia se saiu uma versão nova (pergunta ao GitHub; nada sobre você é enviado)", "Comprobar una vez al día si hay una versión nueva (pregunta a GitHub; no se envía nada sobre ti)", "Vérifier une fois par jour si une nouvelle version est sortie (interroge GitHub ; rien vous concernant n'est envoyé)")}</label>
         </div>
       </div>

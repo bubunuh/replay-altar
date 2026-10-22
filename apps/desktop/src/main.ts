@@ -1,6 +1,7 @@
 // Electron main process: one window, read-mostly access to the Replay Altar database.
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, watch, writeFileSync } from "node:fs";
-import { release as osRelease, tmpdir } from "node:os";
+import { execFile } from "node:child_process";
+import { homedir, release as osRelease, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { app, BrowserWindow, clipboard, ClipboardItem, dialog, ipcMain, nativeTheme, shell } from "electron";
 import { loadRefGroups, rulesBook } from "@replay-altar/rules";
@@ -15,6 +16,8 @@ import {
   configPath,
   dataDir,
   detectedWarcraftDocuments,
+  countMaps,
+  mapFolders,
   folderToAdd,
   replayDirs,
   getGame,
@@ -193,16 +196,21 @@ if (!app.requestSingleInstanceLock()) {
       .filter((g) => g.analyzed === 1)
       .map((g) => ({ key: g.game_key, playedAt: g.played_at, result: g.result, findings: bookOf(g.game_key).findings.map((f) => ({ id: f.id, headline: f.headline, severity: f.severity, advice: f.advice ?? null })) })),
   );
+  // A map's extracted data: in WC3V's folder, or its copy in the data folder (packages/sim/src/maps.ts).
+  const mapDir = (mapFile: string) => {
+    const name = mapDataName(mapFile);
+    return [join(projectRoot(), "vendor/wc3v/client/maps", name), join(dataDir(), "sim/maps", name, "client")].find((d) => existsSync(d)) ?? null;
+  };
   ipcMain.handle("map:activity", (_e, key: string) => {
     const r = getGame(db, p, key)?.record;
     try {
-      return r ? mapActivity(join(projectRoot(), "vendor/wc3v"), r) : null;
+      return r ? mapActivity(mapDir(r.game.map.file), r) : null;
     } catch {
       return null;
     }
   });
   // The map's minimap, as WC3V's data tool extracts it when a game on that map is first simulated.
-  ipcMain.handle("map:markers", (_e, mapFile: string) => mapMarkers(join(projectRoot(), "vendor/wc3v"), mapDataName(mapFile)));
+  ipcMain.handle("map:markers", (_e, mapFile: string) => mapMarkers(join(projectRoot(), "vendor/wc3v"), mapDir(mapFile)));
   // Race crests from the game's own menu art, copied out of the install by
   // scripts/extract-gamedata.ts (never shipped in the repo).
   ipcMain.handle("race:icons", () => {
@@ -227,8 +235,9 @@ if (!app.requestSingleInstanceLock()) {
     return existsSync(f) ? `data:font/ttf;base64,${readFileSync(f).toString("base64")}` : null;
   });
   ipcMain.handle("map:image", (_e, mapFile: string) => {
-    const file = join(projectRoot(), "vendor/wc3v/client/maps", mapDataName(mapFile), "map.jpg");
-    return existsSync(file) ? `data:image/jpeg;base64,${readFileSync(file).toString("base64")}` : null;
+    const dir = mapDir(mapFile);
+    const file = dir && join(dir, "map.jpg");
+    return file && existsSync(file) ? `data:image/jpeg;base64,${readFileSync(file).toString("base64")}` : null;
   });
   ipcMain.handle("games:list", () => listGames(db));
   ipcMain.handle("games:get", (_e, key: string) => getGame(db, p, key));
@@ -274,6 +283,66 @@ if (!app.requestSingleInstanceLock()) {
     saveConfig({ ...config, warcraftDocuments: config.warcraftDocuments.filter((d) => d !== folder) });
     restartCollectorIfRunning();
     return folders();
+  });
+  // Map folders: each Warcraft III folder's Maps (found), the ones you added, and the maps
+  // extracted so far (kept in the data folder).
+  const mapFolderInfo = () => {
+    const config = loadConfig();
+    const added = config.mapFolders ?? [];
+    const found = mapFolders(config).filter((d) => !added.includes(d) && existsSync(d));
+    const saved = join(dataDir(), "sim/maps");
+    return {
+      found,
+      added,
+      maps: [...found, ...added].reduce((n, d) => n + countMaps(d), 0),
+      saved: existsSync(saved) ? readdirSync(saved).filter((d) => existsSync(join(saved, d, "mapdata"))).length : 0,
+      savedDir: saved,
+    };
+  };
+  ipcMain.handle("maps:get", () => mapFolderInfo());
+  ipcMain.handle("maps:add", async () => {
+    const pick = await dialog.showOpenDialog(win!, { properties: ["openDirectory"], title: tr("Your maps folder", "Sua pasta de mapas", "Tu carpeta de mapas", "Votre dossier de cartes") });
+    if (pick.canceled || !pick.filePaths[0]) return null;
+    const config = loadConfig();
+    const folder = pick.filePaths[0];
+    if (!(config.mapFolders ?? []).includes(folder)) {
+      saveConfig({ ...config, mapFolders: [...(config.mapFolders ?? []), folder] });
+      restartCollectorIfRunning();
+    }
+    return mapFolderInfo();
+  });
+  ipcMain.handle("maps:remove", (_e, folder: string) => {
+    const config = loadConfig();
+    saveConfig({ ...config, mapFolders: (config.mapFolders ?? []).filter((d) => d !== folder) });
+    restartCollectorIfRunning();
+    return mapFolderInfo();
+  });
+  // "Simulate again" on a match: `replay-altar sim <game>` in its own process (the simulation
+  // takes a while and runs WC3V); it extracts the map again when its data is missing.
+  const resimulating = new Set<string>();
+  ipcMain.handle("sim:rerun", (_e, key: string) => {
+    if (resimulating.has(key)) return { ok: false, message: tr("Already simulating this game.", "Esta partida já está sendo simulada.", "Esta partida ya se está simulando.", "Cette partie est déjà en cours de simulation.") };
+    resimulating.add(key);
+    // Installed: the bundled CLI on this executable, as Node. Linux: the launcher `install` wrote.
+    // Otherwise: node with this checkout's CLI.
+    const linuxLauncher = join(homedir(), ".local/bin/replay-altar");
+    const [cli, ...cliArgs] = isInstalled()
+      ? [process.execPath, join(projectRoot(), "collector/collector.mjs")]
+      : process.platform !== "win32" && existsSync(linuxLauncher)
+        ? [linuxLauncher]
+        : ["node", join(app.getAppPath(), "../collector/src/cli.ts")];
+    const env = isInstalled() ? { ...process.env, ELECTRON_RUN_AS_NODE: "1" } : process.env;
+    return new Promise<{ ok: boolean; message: string }>((resolve) => {
+      execFile(cli, [...cliArgs, "sim", key], { env, windowsHide: true, timeout: 15 * 60_000, maxBuffer: 4 << 20 }, (err, stdout, stderr) => {
+        resimulating.delete(key);
+        books.delete(key);
+        const line = `${stdout}`.trim().split("\n").at(-1) ?? "";
+        const failed = /failed: (.*)$/.exec(line)?.[1];
+        if (/ ok in /.test(line)) resolve({ ok: true, message: "" });
+        else resolve({ ok: false, message: failed ?? (err ? `${stderr || err.message}`.trim().split("\n").at(-1)! : line) });
+        win?.webContents.send("data:changed");
+      });
+    });
   });
   // The pro statistics shipped with this version (data/reference).
   ipcMain.handle("ref:profiles", () => loadRefGroups());

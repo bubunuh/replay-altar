@@ -54,7 +54,7 @@ const record = {
 
 describe("map activity", () => {
   afterAll(() => rmSync(root, { recursive: true, force: true }));
-  const a = mapActivity(root, record)!;
+  const a = mapActivity(join(root, "client/maps/TestMap"), record)!;
 
   test("fights sit at the battle's centre, or where the units lost in them were last seen", () => {
     expect(a.fights).toEqual([
@@ -73,7 +73,7 @@ describe("map activity", () => {
   });
 
   test("nothing without a simulation or a map in the library", () => {
-    expect(mapActivity(root, { ...record, sim: { status: "failed" } } as unknown as GameRecord)).toBeNull();
-    expect(mapActivity(root, { ...record, game: { ...record.game, map: { file: "Unknown.w3x" } } } as GameRecord)).toBeNull();
+    expect(mapActivity(join(root, "client/maps/TestMap"), { ...record, sim: { status: "failed" } } as unknown as GameRecord)).toBeNull();
+    expect(mapActivity(null, record)).toBeNull();
   });
 });

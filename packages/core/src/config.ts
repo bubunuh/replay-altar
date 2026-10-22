@@ -36,6 +36,13 @@ export type Config = {
   notifyAfterGame: boolean;
   /** Ask GitHub once a day whether a newer Replay Altar was released (unset: yes). */
   checkUpdates?: boolean;
+  /** After each W3Champions game, fetch its end-of-game statistics from W3Champions (unset: yes). */
+  fetchOfficialStats?: boolean;
+  /**
+   * Map folders you added on top of the ones found by themselves (the Maps folder of each
+   * Warcraft III folder): the simulation reads each game's map from them.
+   */
+  mapFolders?: string[];
   /** Pro games (warcraft3.info tournament replays) the shipped statistics come from (maintainers). */
   reference: { groups: ReferenceGroup[] };
 };
@@ -102,6 +109,29 @@ const unique = (dirs: string[]) => {
 
 /** Every folder the app reads replays (and maps) from: the ones found, then the ones you added. */
 export const warcraftFolders = (config: Config) => unique([...detectedWarcraftDocuments(), ...config.warcraftDocuments]);
+
+/** Folders the simulation looks for maps in: each Warcraft III folder's Maps, then the ones you added. */
+export const mapFolders = (config: Config) => unique([...warcraftFolders(config).map((d) => join(d, "Maps")), ...(config.mapFolders ?? [])]);
+
+/** The maps found in a folder you picked (any depth, .w3x and .w3m), to tell you it holds some. */
+export function countMaps(dir: string, limit = 5000): number {
+  let n = 0;
+  const walk = (d: string, depth: number) => {
+    if (depth > 6 || n >= limit) return;
+    let entries;
+    try {
+      entries = readdirSync(d, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const e of entries) {
+      if (e.isDirectory()) walk(join(d, e.name), depth + 1);
+      else if (/\.w3[xm]$/i.test(e.name)) n++;
+    }
+  };
+  walk(dir, 0);
+  return n;
+}
 
 /**
  * The folder to keep for one you picked: the "Warcraft III" folder when the pick is it or

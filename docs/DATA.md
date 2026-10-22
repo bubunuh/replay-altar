@@ -102,6 +102,7 @@ Each metric has a `section`:
 
 ## Economy model (`packages/sim`)
 
+- **Maps** (`packages/sim/src/maps.ts`): WC3V needs each game's map. It is extracted from the user's own copy (the Maps folder of each Warcraft III folder, plus `mapFolders` in the settings) by WC3V's data-tool into WC3V's `mapdata/` and `client/maps/` folders, and copied to `sim/maps/<map>/` in the data folder with the map's entries of WC3V's shared files (`entries.json`). The collector copies them back at start when an update replaced WC3V's folder. Nothing extracted from a map is shipped.
 - **Spending:** every order in the replay, priced from the game data extracted from your install (`sim/gamedata/<version>/`, with a sha256 manifest):
   - The first hero is free.
   - Tier and tower upgrades cost only the step; the table stores cumulative costs.
