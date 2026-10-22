@@ -297,6 +297,7 @@ export function writeGame(db: DB, r: GameRecord, archiveSha256: string) {
       for (const [k, v] of Object.entries(p.metrics)) insMetric.run(r.gameKey, p.playerId, k, typeof v === "number" && Number.isFinite(v) ? v : null);
       for (const b of p.build) insBuild.run(r.gameKey, p.playerId, b.ms, b.kind, b.code, b.name);
       for (const h of p.heroes) {
+        if (!h.code) continue; // records saved before record.ts dropped w3gjs's id-less heroes
         insHero.run(r.gameKey, p.playerId, h.order, h.code, h.name, h.level, h.retrainings);
         for (const s of h.skills) insSkill.run(r.gameKey, p.playerId, h.order, s.ms, s.code, s.name);
       }

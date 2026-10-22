@@ -1,38 +1,64 @@
 // Research: a win-chance model from the pro games. At every moment of a game, how often does a side
-// with these leads go on to win? Trained on half the pro games, tested on the other half, then
-// applied to your games to find the moments that swung them. Writes docs/WIN-CHANCE.md (pro
-// games only); your games go to the file given as an argument, never into the repository.
+// with these leads go on to win? Fitted on the curated pro games (the calibration set), compared by
+// cross-validation on them, then scored on the validation set (reference/validation, from
+// scripts/download-validation.ts: tournament games 2022 to today, never used for fitting).
+// Writes docs/WIN-CHANCE.md (pro games only); your games go to the file given as an argument,
+// never into the repository.
 //
 //   node scripts/win-chance.ts [your-games.md]
 //
-// The model: logistic regression on the differences between the two players (army value, workers,
-// hero experience, bases, tier, resources spent and lost, food), each also multiplied by the game
-// time so a lead can matter more or less as the game goes on. No intercept and only differences,
-// so the two players' chances always add up to 100%. Each game weighs the same, whatever its length.
-import { readdirSync, writeFileSync } from "node:fs";
+// The models: logistic regression on the differences between the two players at each moment, each
+// weighted by functions of the game time so a lead can matter more or less as the game goes on.
+// No intercept and only differences, so the two players' chances always add up to 100%. Each game
+// weighs the same, whatever its length.
+import { existsSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { listGames, openDb, paths, readRecord, referencePaths, type GameRecord, type PlayerRecord, type SimSample } from "@replay-altar/core";
 import { heroesXpAt } from "@replay-altar/core/heroxp";
 import { mmss } from "@replay-altar/core/time";
 
-const GROUPS = ["pros", "pros-orc", "pros-undead", "pros-nightelf"];
+const CALIBRATION = ["pros", "pros-orc", "pros-undead", "pros-nightelf"];
+const VALIDATION = "validation";
 const STEP_MS = 30_000;
 const START_MS = 60_000;
+const FOLDS = 4;
 
 type SimOk = Extract<NonNullable<GameRecord["sim"]>, { status: "ok" }>;
-type Side = { p: PlayerRecord; series: SimSample[]; bases: { at: number; lostAt: number | null }[]; t2: number | null; t3: number | null; levels: number[][]; deaths: number[] };
+type Side = {
+  p: PlayerRecord;
+  race: string;
+  series: SimSample[];
+  bases: { at: number; lostAt: number | null }[];
+  t2: number | null;
+  t3: number | null;
+  levels: number[][];
+  deaths: { diedAt: number; revivedAt: number | null }[];
+  upgrades: number[];
+  weaponArmor: number[];
+  items: number[];
+  camps: { at: number; level: number }[];
+};
+
+// Attack and armor research of every race (the build orders' names).
+const WEAPON_ARMOR = /^(Swords|Gunpowder|Plating|Armor|Leather Armor|Studded Leather Armor|Melee Weapons|Ranged Weapons|Unit Armor|Strength of the Moon|Moon Armor|Reinforced Hides|Strength of the Wild|Unholy Strength|Unholy Armor|Creature Attack|Creature Carapace)/;
 
 const sideOf = (r: GameRecord, p: PlayerRecord): Side | null => {
   const sp = (r.sim as SimOk).players.find((x) => x.playerId === p.playerId);
   if (!sp || !sp.series.length) return null;
+  const at = (kind: string, test: (name: string) => boolean = () => true) => p.build.filter((b) => b.kind === kind && test(b.name)).map((b) => b.ms).sort((a, b) => a - b);
   return {
     p,
+    race: p.race,
     series: sp.series,
     bases: sp.bases ?? [],
     t2: sp.metrics.tier2_done_ms ?? null,
     t3: sp.metrics.tier3_done_ms ?? null,
     levels: p.heroes.map((h) => h.levelUps ?? []),
-    deaths: (sp.heroes ?? []).flatMap((h) => h.deaths.map((d) => d.diedAt)),
+    deaths: (sp.heroes ?? []).flatMap((h) => h.deaths),
+    upgrades: at("upgrade"),
+    weaponArmor: at("upgrade", (n) => WEAPON_ARMOR.test(n)),
+    items: at("item"),
+    camps: sp.camps ?? [],
   };
 };
 
@@ -41,15 +67,28 @@ const at = (series: SimSample[], t: number) => {
   for (const s of series) if (s.t <= t) best = s;
   return best;
 };
+const countTo = (times: number[], t: number) => {
+  let n = 0;
+  for (const x of times) if (x <= t) n++;
+  return n;
+};
 
-export const FEATURES = ["army value", "army value ratio (log)", "workers", "hero experience", "bases", "tier", "resources spent", "resources lost", "food used"];
+export const FEATURES = [
+  "army value", "army value ratio (log)", "workers", "hero experience", "bases", "tier", "resources spent", "resources lost", "food used",
+  "highest hero level", "heroes alive", "hero deaths", "upgrades", "attack and armor upgrades", "items bought", "creep camps (levels)",
+];
+const ORIGINAL = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 
-/** The differences A − B at time t (base features; the model adds each × time). */
+/** The differences A − B at time t, scaled to similar sizes. */
 function diffs(a: Side, b: Side, t: number, end: number): number[] {
   const sa = at(a.series, t), sb = at(b.series, t);
   const bases = (s: Side) => s.bases.filter((x) => x.at <= t && (x.lostAt === null || x.lostAt > t)).length;
   const tier = (s: Side) => (s.t2 !== null && s.t2 <= t ? 1 : 0) + (s.t3 !== null && s.t3 <= t ? 1 : 0);
   const army = (s: SimSample) => s.armyValue ?? 0;
+  const topLevel = (s: Side) => Math.max(0, ...s.levels.map((l) => countTo(l, t)));
+  const dead = (s: Side) => s.deaths.filter((d) => d.diedAt <= t && (d.revivedAt === null || d.revivedAt > t)).length;
+  const alive = (s: Side) => s.levels.filter((l) => l.length && l[0] <= t).length - dead(s);
+  const camps = (s: Side) => s.camps.filter((c) => c.at <= t).reduce((n, c) => n + c.level, 0);
   return [
     (army(sa) - army(sb)) / 1000,
     Math.log((army(sa) + 200) / (army(sb) + 200)),
@@ -60,13 +99,45 @@ function diffs(a: Side, b: Side, t: number, end: number): number[] {
     (sa.goldSpent + sa.lumberSpent - sb.goldSpent - sb.lumberSpent) / 1000,
     (sa.goldLost + sa.lumberLost - sb.goldLost - sb.lumberLost) / 1000,
     (sa.foodUsed - sb.foodUsed) / 10,
+    topLevel(a) - topLevel(b),
+    alive(a) - alive(b),
+    a.deaths.filter((d) => d.diedAt <= t).length - b.deaths.filter((d) => d.diedAt <= t).length,
+    countTo(a.upgrades, t) - countTo(b.upgrades, t),
+    countTo(a.weaponArmor, t) - countTo(b.weaponArmor, t),
+    (countTo(a.items, t) - countTo(b.items, t)) / 5,
+    (camps(a) - camps(b)) / 20,
   ];
 }
-const expand = (d: number[], t: number) => [...d, ...d.map((x) => (x * t) / 600_000)];
 
-type Row = { game: string; x: number[]; y: number; w: number; t: number };
+// ---- How a lead's weight follows the game time ------------------------------------------------
+/** linear: weight = a + b·t (the first model). curve: a weight per knot, straight lines between. */
+type Basis = "linear" | "curve";
+const KNOTS_MIN = [1, 5, 10, 15, 22, 30];
+function basis(kind: Basis, t: number): number[] {
+  if (kind === "linear") return [1, t / 600_000];
+  const m = t / 60_000;
+  const out = KNOTS_MIN.map(() => 0);
+  if (m <= KNOTS_MIN[0]) out[0] = 1;
+  else if (m >= KNOTS_MIN.at(-1)!) out[out.length - 1] = 1;
+  else {
+    const i = KNOTS_MIN.findIndex((k) => k > m) - 1;
+    const f = (m - KNOTS_MIN[i]) / (KNOTS_MIN[i + 1] - KNOTS_MIN[i]);
+    out[i] = 1 - f;
+    out[i + 1] = f;
+  }
+  return out;
+}
 
-function rowsOf(r: GameRecord): Row[] {
+const MATCHUPS = ["HvO", "HvU", "HvN", "OvU", "OvN", "UvN"];
+/** The model's view of one moment: which differences, which time curve, and race edges per matchup. */
+type Spec = { keep: number[]; basis: Basis; matchup: boolean; lambda: number };
+const label = (s: Spec) => `${s.keep.length} differences, ${s.basis === "linear" ? "straight-line" : "curved"} time weights${s.matchup ? ", matchup edges" : ""}`;
+
+type Moment = { game: string; d: number[]; t: number; y: number; w: number; races: [string, string] };
+type Game = { key: string; record: GameRecord; year: number | null; matchup: string };
+
+function momentsOf(g: Game): Moment[] {
+  const r = g.record;
   if (r.sim?.status !== "ok" || r.players.length !== 2) return [];
   const [p, q] = r.players;
   if (!["win", "loss"].includes(p.result ?? "")) return [];
@@ -75,35 +146,52 @@ function rowsOf(r: GameRecord): Row[] {
   const end = r.game.durationMs;
   const times: number[] = [];
   for (let t = START_MS; t < end; t += STEP_MS) times.push(t);
-  const out: Row[] = [];
+  const out: Moment[] = [];
   // Both sides of every game, each game weighing 1 in all.
   for (const t of times) {
     const d = diffs(a, b, t, end);
     const w = 1 / (2 * times.length);
-    out.push({ game: r.gameKey, x: expand(d, t), y: p.result === "win" ? 1 : 0, w, t });
-    out.push({ game: r.gameKey, x: expand(d.map((v) => -v), t), y: p.result === "win" ? 0 : 1, w, t });
+    out.push({ game: r.gameKey, d, t, y: p.result === "win" ? 1 : 0, w, races: [a.race, b.race] });
+    out.push({ game: r.gameKey, d: d.map((v) => -v), t, y: p.result === "win" ? 0 : 1, w, races: [b.race, a.race] });
   }
   return out;
+}
+
+/** +1 when A has the first race of the matchup, −1 when B has it: a race edge that keeps the sum at 100%. */
+const matchupTerms = (races: [string, string]) =>
+  MATCHUPS.map((mu) => (races[0] === mu[0] && races[1] === mu[2] ? 1 : races[0] === mu[2] && races[1] === mu[0] ? -1 : 0));
+
+function design(m: Moment, s: Spec): number[] {
+  const bs = basis(s.basis, m.t);
+  const x: number[] = [];
+  for (const f of s.keep) for (const b of bs) x.push(m.d[f] * b);
+  if (s.matchup) x.push(...matchupTerms(m.races));
+  return x;
 }
 
 const sigmoid = (z: number) => 1 / (1 + Math.exp(-z));
 const dot = (a: number[], b: number[]) => a.reduce((s, v, i) => s + v * b[i], 0);
 
-/** Logistic regression by Newton's method, with a small ridge penalty. */
-function fit(rows: Row[], lambda = 0.01): number[] {
-  const k = rows[0].x.length;
+/** Logistic regression by Newton's method, with a ridge penalty. */
+function fit(xs: number[][], ys: number[], ws: number[], lambda: number): number[] {
+  const k = xs[0].length;
   let w = new Array(k).fill(0);
   for (let iter = 0; iter < 30; iter++) {
     const g = new Array(k).fill(0);
     const h = Array.from({ length: k }, () => new Array(k).fill(0));
-    for (const r of rows) {
-      const p = sigmoid(dot(w, r.x));
+    for (let n = 0; n < xs.length; n++) {
+      const x = xs[n];
+      const p = sigmoid(dot(w, x));
+      const gw = ws[n] * (p - ys[n]), hw = ws[n] * p * (1 - p);
       for (let i = 0; i < k; i++) {
-        g[i] += r.w * (p - r.y) * r.x[i];
-        for (let j = 0; j < k; j++) h[i][j] += r.w * p * (1 - p) * r.x[i] * r.x[j];
+        if (x[i] === 0) continue;
+        g[i] += gw * x[i];
+        const hi = h[i], hx = hw * x[i];
+        for (let j = i; j < k; j++) hi[j] += hx * x[j];
       }
     }
     for (let i = 0; i < k; i++) {
+      for (let j = 0; j < i; j++) h[i][j] = h[j][i];
       g[i] += lambda * w[i];
       h[i][i] += lambda;
     }
@@ -130,130 +218,229 @@ function solve(a: number[][], b: number[]): number[] {
   return m.map((row, i) => row[n] / (row[i] || 1));
 }
 
-// ---- Data: pro games, each once --------------------------------------------------------------
-const games = new Map<string, GameRecord>();
-for (const g of GROUPS) {
-  const rp = referencePaths(g);
-  for (const f of readdirSync(rp.games)) {
-    const key = f.replace(/\.json$/, "");
-    if (games.has(key)) continue;
-    const r = readRecord(rp, key) as GameRecord | null;
-    if (r) games.set(key, r);
+type Model = { spec: Spec; w: number[] };
+const fitModel = (ms: Moment[], spec: Spec): Model => ({ spec, w: fit(ms.map((m) => design(m, spec)), ms.map((m) => m.y), ms.map((m) => m.w), spec.lambda) });
+const predict = (model: Model, m: Moment) => sigmoid(dot(model.w, design(m, model.spec)));
+
+// ---- Data ------------------------------------------------------------------------------------
+/** Each game once; where race groups hold different copies, the one with a simulation. */
+function loadGames(groups: string[], meta?: Map<string, { year: number; matchup: string }>): Game[] {
+  const games = new Map<string, Game>();
+  for (const g of groups) {
+    const rp = referencePaths(g);
+    if (!existsSync(rp.games)) continue;
+    for (const f of readdirSync(rp.games)) {
+      const key = f.replace(/\.json$/, "");
+      if (games.get(key)?.record.sim?.status === "ok") continue;
+      if (meta && !meta.has(key)) continue;
+      const r = readRecord(rp, key) as GameRecord | null;
+      if (!r) continue;
+      const races = r.players.map((p) => p.race).sort((a, b) => "HONU".indexOf(a) - "HONU".indexOf(b));
+      games.set(key, { key, record: r, year: meta?.get(key)?.year ?? null, matchup: meta?.get(key)?.matchup ?? races.join("v") });
+    }
+  }
+  return [...games.values()];
+}
+
+const calibration = loadGames(CALIBRATION);
+const valMeta = new Map<string, { year: number; matchup: string }>();
+const valDb = referencePaths(VALIDATION).db;
+if (existsSync(valDb)) {
+  const db = openDb(valDb);
+  try {
+    for (const r of db.prepare("SELECT game_key, year, matchup FROM val_games").all() as { game_key: string; year: number; matchup: string }[]) valMeta.set(r.game_key, r);
+  } catch {
+    // no validation games yet
   }
 }
-const all = [...games.values()].flatMap(rowsOf);
-const half = (key: string) => parseInt(key.at(-1)!, 16) % 2;
-const used = new Set(all.map((r) => r.game));
+const validation = valMeta.size ? loadGames([VALIDATION], valMeta) : [];
 
-// Two-fold: fit on one half, test on the other, both ways. `keep`: the base features used.
-type Pred = Row & { p: number };
-const masked = (rows: Row[], keep: number[]) => {
-  const cols = [...keep, ...keep.map((i) => i + FEATURES.length)];
-  return rows.map((r) => ({ ...r, x: cols.map((c) => r.x[c]) }));
-};
-function crossValidate(keep: number[]): Pred[] {
-  const rows = masked(all, keep);
+const calMoments = calibration.flatMap(momentsOf);
+const valMoments = validation.flatMap(momentsOf);
+const calUsed = new Set(calMoments.map((m) => m.game));
+const valUsed = new Set(valMoments.map((m) => m.game));
+const gameOf = new Map([...calibration, ...validation].map((g) => [g.key, g]));
+const fold = (key: string) => parseInt(key.slice(-2), 16) % FOLDS;
+
+type Pred = Moment & { p: number };
+/** Cross-validation on the calibration set: fit on three quarters, predict the fourth, four times. */
+function crossValidate(spec: Spec): Pred[] {
   const out: Pred[] = [];
-  for (const fold of [0, 1]) {
-    const w = fit(rows.filter((r) => half(r.game) !== fold));
-    for (const r of rows.filter((r) => half(r.game) === fold)) out.push({ ...r, p: sigmoid(dot(w, r.x)) });
+  for (let f = 0; f < FOLDS; f++) {
+    const model = fitModel(calMoments.filter((m) => fold(m.game) !== f), spec);
+    for (const m of calMoments.filter((m) => fold(m.game) === f)) out.push({ ...m, p: predict(model, m) });
   }
   return out;
 }
-const everything = FEATURES.map((_, i) => i);
-const lossOf = (ps: Pred[]) => -ps.reduce((s, r) => s + r.w * (r.y ? Math.log(r.p) : Math.log(1 - r.p)), 0) / ps.reduce((s, r) => s + r.w, 0);
-// Leave each difference out in turn: what does the model lose without it?
-const ablation = everything.map((i) => ({ name: FEATURES[i], loss: lossOf(crossValidate(everything.filter((j) => j !== i))) }));
-// Then drop, one at a time, any difference whose absence doesn't hurt (simpler and easier to explain).
-let keep = [...everything];
-for (;;) {
-  const base = lossOf(crossValidate(keep));
-  const tries = keep.map((i) => ({ i, loss: lossOf(crossValidate(keep.filter((j) => j !== i))) })).sort((a, b) => a.loss - b.loss);
-  if (keep.length <= 3 || tries[0].loss > base + 0.0005) break;
-  keep = keep.filter((j) => j !== tries[0].i);
+const lossOf = (ps: Pred[]) => -ps.reduce((s, r) => s + r.w * Math.log(Math.min(1 - 1e-9, Math.max(1e-9, r.y ? r.p : 1 - r.p))), 0) / ps.reduce((s, r) => s + r.w, 0);
+const brierOf = (ps: Pred[]) => ps.reduce((s, r) => s + r.w * (r.p - r.y) ** 2, 0) / ps.reduce((s, r) => s + r.w, 0);
+const cvLoss = (spec: Spec) => lossOf(crossValidate(spec));
+
+/** Drop, one at a time, any difference whose absence doesn't hurt (simpler and easier to explain). */
+function backward(start: Spec, log: (s: string) => void): Spec {
+  let spec = start;
+  let base = cvLoss(spec);
+  for (;;) {
+    if (spec.keep.length <= 3) return spec;
+    const tries = spec.keep.map((i) => ({ i, loss: cvLoss({ ...spec, keep: spec.keep.filter((j) => j !== i) }) })).sort((a, b) => a.loss - b.loss);
+    if (tries[0].loss > base + 0.0005) return spec;
+    log(`  drop ${FEATURES[tries[0].i]}: ${base.toFixed(4)} → ${tries[0].loss.toFixed(4)}`);
+    spec = { ...spec, keep: spec.keep.filter((j) => j !== tries[0].i) };
+    base = tries[0].loss;
+  }
 }
-const preds = crossValidate(keep);
-const finalSmall = fit(masked(all, keep));
-// Weights back in the full layout (zeros for dropped differences), for the curves below.
-const final = new Array(FEATURES.length * 2).fill(0);
-keep.forEach((f, k) => {
-  final[f] = finalSmall[k];
-  final[f + FEATURES.length] = finalSmall[k + keep.length];
-});
+
+// ---- Model search on the calibration set -----------------------------------------------------
+const progress = (s: string) => console.error(s);
+progress(`calibration: ${calUsed.size} games, ${calMoments.length} moments; validation: ${valUsed.size} games`);
+const firstModel = backward({ keep: ORIGINAL, basis: "linear", matchup: false, lambda: 0.01 }, progress);
+progress(`first model: ${label(firstModel)} ${cvLoss(firstModel).toFixed(4)}`);
+const allFeatures = FEATURES.map((_, i) => i);
+const widerLinear = backward({ keep: allFeatures, basis: "linear", matchup: false, lambda: 0.01 }, progress);
+progress(`more differences: ${label(widerLinear)} ${cvLoss(widerLinear).toFixed(4)}`);
+const candidates: Spec[] = [firstModel, widerLinear];
+for (const lambda of [0.01, 0.1, 0.5]) candidates.push({ ...widerLinear, basis: "curve", lambda });
+const bestCurve = candidates.slice(2).sort((a, b) => cvLoss(a) - cvLoss(b))[0];
+candidates.push({ ...bestCurve, matchup: true });
+const scored = candidates.map((spec) => ({ spec, cv: crossValidate(spec) })).map((c) => ({ ...c, loss: lossOf(c.cv), brier: brierOf(c.cv) }));
+for (const c of scored) progress(`${label(c.spec)} λ=${c.spec.lambda}: ${c.loss.toFixed(4)}`);
+const best = [...scored].sort((a, b) => a.loss - b.loss)[0];
+const finals = scored.map((c) => ({ ...c, model: fitModel(calMoments, c.spec) }));
+const finalBest = finals.find((f) => f.spec === best.spec)!;
+const finalFirst = finals[0];
 
 // ---- Scores ----------------------------------------------------------------------------------
 const pct = (v: number) => `${Math.round(v * 100)}%`;
-const logLoss = lossOf;
-const brier = (ps: Pred[]) => ps.reduce((s, r) => s + r.w * (r.p - r.y) ** 2, 0) / ps.reduce((s, r) => s + r.w, 0);
+const predsOn = (model: Model, ms: Moment[]): Pred[] => ms.map((m) => ({ ...m, p: predict(model, m) }));
+const valBest = predsOn(finalBest.model, valMoments);
+const valFirst = predsOn(finalFirst.model, valMoments);
 /** Share of games (one side each) where the favourite at minute m went on to win. */
-const accuracyAt = (minute: number) => {
+const accuracyAt = (ps: Pred[], minute: number) => {
   const t = minute * 60_000;
-  const rows = preds.filter((r) => Math.abs(r.t - t) < STEP_MS / 2 && r.y === 1);
+  const rows = ps.filter((r) => Math.abs(r.t - t) < STEP_MS / 2 && r.y === 1);
   return { n: rows.length, acc: rows.filter((r) => r.p > 0.5).length / rows.length, sure: rows.filter((r) => r.p > 0.8 || r.p < 0.2).length / rows.length };
 };
+/** Resampled by game: how sure is a difference in log loss between two models on the same moments? */
+function bootstrapDiff(a: Pred[], b: Pred[], rounds = 400): { lo: number; hi: number } {
+  const byGame = new Map<string, number[]>();
+  a.forEach((r, i) => (byGame.get(r.game) ?? byGame.set(r.game, []).get(r.game)!).push(i));
+  const games = [...byGame.values()];
+  let seed = 7;
+  const rand = () => ((seed = (seed * 1103515245 + 12345) % 2147483648), seed / 2147483648);
+  const diffs: number[] = [];
+  for (let k = 0; k < rounds; k++) {
+    let la = 0, lb = 0, w = 0;
+    for (let g = 0; g < games.length; g++) {
+      for (const i of games[Math.floor(rand() * games.length)]) {
+        const ra = a[i], rb = b[i];
+        la -= ra.w * Math.log(Math.max(1e-9, ra.y ? ra.p : 1 - ra.p));
+        lb -= rb.w * Math.log(Math.max(1e-9, rb.y ? rb.p : 1 - rb.p));
+        w += ra.w;
+      }
+    }
+    diffs.push((la - lb) / w);
+  }
+  diffs.sort((x, y) => x - y);
+  return { lo: diffs[Math.floor(rounds * 0.025)], hi: diffs[Math.floor(rounds * 0.975)] };
+}
 
 const lines: string[] = [];
 const out = (s = "") => lines.push(s);
 out("# Win chance from pro games (research)");
 out();
-out(`Generated by \`node scripts/win-chance.ts\` from ${used.size} pro games with a full simulation. Not shown in the app yet.`);
+out(`Generated by \`node scripts/win-chance.ts\`. Not shown in the app yet.`);
 out();
-out("**The model.** At every 30 seconds of a game, the differences between the two players: army value (also as a ratio), workers, hero experience, bases, tier, resources spent, resources lost and food. Each is also multiplied by the game time, so a lead can weigh more or less as the game goes on. A logistic regression with no intercept turns them into a chance to win; the two players' chances always add up to 100%. Each game weighs the same, whatever its length.");
+out(`**The data.** Fitted on the **calibration set**: ${calUsed.size} curated pro games of the current patch with a full simulation and a known winner. Scored on the **validation set**: ${valUsed.size} tournament games from warcraft3.info, 2022 to today, spread over the years and matchups (\`scripts/download-validation.ts\`), never used for fitting or for choosing the model.`);
 out();
-out(`**Differences kept:** ${keep.map((i) => FEATURES[i]).join(", ")}. The others were dropped because leaving them out made the model no worse on unseen games (the table at the end).`);
+out("**The models.** At every 30 seconds of a game, the differences between the two players. A logistic regression with no intercept turns them into a chance to win; the two players' chances always add up to 100%. Each game weighs the same, whatever its length. A lead's weight can follow the game time as a straight line (the first model) or as a curve (straight pieces between 1, 5, 10, 15, 22 and 30 minutes). *Matchup edges* add a fixed advantage per race pairing.");
 out();
-out("**The test.** Two-fold: fitted on half the games (by game key) and scored on the other half, then the other way round. Every number below is on games the model did not see.");
+out(`**Choosing a model** used only the calibration set: ${FOLDS}-fold cross-validation (fitted on three quarters of the games, scored on the rest, four times). A difference was dropped when leaving it out made the model no worse.`);
 out();
-out(`| Score on unseen games | Model | Coin flip |`);
-out(`|---|---|---|`);
-out(`| Log loss (lower is better) | ${logLoss(preds).toFixed(3)} | 0.693 |`);
-out(`| Brier score (lower is better) | ${brier(preds).toFixed(3)} | 0.250 |`);
+out("| Model | Differences | Log loss, calibration (cross-validated) | Log loss, validation | Brier, validation |");
+out("|---|---|---|---|---|");
+for (const f of finals) {
+  const v = predsOn(f.model, valMoments);
+  out(`| ${label(f.spec)}${f.spec.basis === "curve" ? ` (ridge ${f.spec.lambda})` : ""}${f === finalBest ? " **(best)**" : ""} | ${f.spec.keep.map((i) => FEATURES[i]).join(", ")} | ${f.loss.toFixed(4)} | ${valMoments.length ? lossOf(v).toFixed(4) : "–"} | ${valMoments.length ? brierOf(v).toFixed(4) : "–"} |`);
+}
+out(`| Coin flip | | 0.6931 | 0.6931 | 0.2500 |`);
 out();
-out("**How often the favourite wins**, at each minute, among games still going (and how often the model was sure: above 80% or below 20%):");
+if (valMoments.length && finalBest !== finalFirst) {
+  const d = bootstrapDiff(valBest, valFirst);
+  out(`On the validation set, the best model's log loss minus the first model's: ${(lossOf(valBest) - lossOf(valFirst)).toFixed(4)} (95% range over games resampled: ${d.lo.toFixed(4)} to ${d.hi.toFixed(4)}; below zero means better).`);
+  out();
+}
+const shown = valMoments.length ? valBest : best.cv;
+const where = valMoments.length ? "validation set" : "calibration set, cross-validated";
+out(`**How often the favourite wins** (best model, ${where}), at each minute, among games still going, and how often the model was sure (above 80% or below 20%):`);
 out();
 out("| Minute | Games | Favourite won | Model sure |");
 out("|---|---|---|---|");
 for (const m of [3, 5, 7, 10, 12, 15, 20, 25]) {
-  const a = accuracyAt(m);
+  const a = accuracyAt(shown, m);
   if (a.n >= 20) out(`| ${m}:00 | ${a.n} | ${pct(a.acc)} | ${pct(a.sure)} |`);
 }
 out();
-out("**Calibration:** when the model says X%, does that side win about X% of the time?");
+out(`**Calibration** (best model, ${where}): when the model says X%, does that side win about X% of the time?`);
 out();
 out("| Model said | Moments | Won |");
 out("|---|---|---|");
 for (let lo = 0; lo < 1; lo += 0.1) {
-  const rows = preds.filter((r) => r.p >= lo && r.p < lo + 0.1);
+  const rows = shown.filter((r) => r.p >= lo && r.p < lo + 0.1);
   if (rows.length) out(`| ${pct(lo)}–${pct(lo + 0.1)} | ${rows.length} | ${pct(rows.reduce((s, r) => s + r.y, 0) / rows.length)} |`);
 }
 out();
-out("**What weighs most** (fitted on all games; the change in win chance for a typical lead, early and late):");
+if (valMoments.length) {
+  const table = (title: string, keyOf: (g: Game) => string, order: string[]) => {
+    out(`**By ${title}** (validation set):`);
+    out();
+    out(`| ${title[0].toUpperCase() + title.slice(1)} | Games | Log loss, best | Log loss, first | Favourite won at 10:00 |`);
+    out("|---|---|---|---|---|");
+    for (const k of order) {
+      const pick = (ps: Pred[]) => ps.filter((r) => keyOf(gameOf.get(r.game)!) === k);
+      const b = pick(valBest), f = pick(valFirst);
+      if (!b.length) continue;
+      const a10 = accuracyAt(b, 10);
+      out(`| ${k} | ${new Set(b.map((r) => r.game)).size} | ${lossOf(b).toFixed(3)} | ${lossOf(f).toFixed(3)} | ${a10.n ? `${pct(a10.acc)} of ${a10.n}` : "–"} |`);
+    }
+    out();
+  };
+  table("year", (g) => String(g.year), ["2022", "2023", "2024", "2025", "2026"]);
+  table("matchup", (g) => g.matchup, ["HvH", "HvO", "HvU", "HvN", "OvO", "OvU", "OvN", "UvU", "UvN", "NvN"]);
+}
+
+out("**What weighs most** (best model fitted on the calibration set; the change in win chance for a lead of one typical step, at 5, 10 and 15 minutes):");
 out();
 const sd = FEATURES.map((_, i) => {
-  const v = all.map((r) => r.x[i]);
-  const m = v.reduce((s, x) => s + x, 0) / v.length;
-  return Math.sqrt(v.reduce((s, x) => s + (x - m) ** 2, 0) / v.length);
+  const v = calMoments.map((m) => m.d[i]);
+  const mean = v.reduce((s, x) => s + x, 0) / v.length;
+  return Math.sqrt(v.reduce((s, x) => s + (x - mean) ** 2, 0) / v.length);
 });
-out("| A lead of one typical step in… | at 5:00 | at 15:00 |");
-out("|---|---|---|");
-for (const i of keep) {
-  const name = FEATURES[i];
-  const eff = (t: number) => sigmoid(sd[i] * (final[i] + (final[i + FEATURES.length] * t) / 600_000)) - 0.5;
-  out(`| ${name} | ${eff(300_000) >= 0 ? "+" : ""}${Math.round(eff(300_000) * 100)} pts | ${eff(900_000) >= 0 ? "+" : ""}${Math.round(eff(900_000) * 100)} pts |`);
-}
+const weightAt = (model: Model, k: number, t: number) => {
+  const bs = basis(model.spec.basis, t);
+  return bs.reduce((s, b, j) => s + b * model.w[k * bs.length + j], 0);
+};
+out("| A lead of one typical step in… | at 5:00 | at 10:00 | at 15:00 |");
+out("|---|---|---|---|");
+finalBest.spec.keep.forEach((f, k) => {
+  const eff = (t: number) => {
+    const e = sigmoid(sd[f] * weightAt(finalBest.model, k, t)) - 0.5;
+    return `${e >= 0 ? "+" : ""}${Math.round(e * 100)} pts`;
+  };
+  out(`| ${FEATURES[f]} | ${eff(300_000)} | ${eff(600_000)} | ${eff(900_000)} |`);
+});
 out();
 out("(A typical step is one standard deviation of that difference across all moments. The leads overlap, so read these together, not one by one.)");
-out();
-out("**Without each difference** (all nine in the model, one left out; log loss on unseen games, all nine: " + lossOf(crossValidate(everything)).toFixed(4) + "):");
-out();
-out("| Left out | Log loss |");
-out("|---|---|");
-for (const a of ablation) out(`| ${a.name} | ${a.loss.toFixed(4)} |`);
+if (finalBest.spec.matchup) {
+  out();
+  const nb = basis(finalBest.spec.basis, 0).length * finalBest.spec.keep.length;
+  out(`Matchup edges (the first race's chance with no other difference): ${MATCHUPS.map((mu, i) => `${mu} ${pct(sigmoid(finalBest.model.w[nb + i]))}`).join(", ")}.`);
+}
 
 writeFileSync(join(import.meta.dirname, "../docs/WIN-CHANCE.md"), lines.join("\n") + "\n");
 
 // ---- Your games: the curve and the moments that swung it -------------------------------------
 lines.length = 0;
+const model = finalBest.model;
 const p = paths();
 const db = openDb(p.db);
 const mine = listGames(db).filter((g) => g.analyzed === 1 && g.sim_status === "ok");
@@ -270,8 +457,9 @@ for (const row of mine) {
   const a = sideOf(r, me), b = sideOf(r, opp);
   if (!a || !b) continue;
   const end = r.game.durationMs;
+  const momentAt = (t: number): Moment => ({ game: r.gameKey, d: diffs(a, b, t, end), t, y: 0, w: 0, races: [a.race, b.race] });
   const curve: { t: number; p: number }[] = [];
-  for (let t = START_MS; t < end; t += STEP_MS) curve.push({ t, p: sigmoid(dot(final, expand(diffs(a, b, t, end), t))) });
+  for (let t = START_MS; t < end; t += STEP_MS) curve.push({ t, p: predict(model, momentAt(t)) });
   if (!curve.length) continue;
   // Judged at 2/3 of the game: the end itself gives the answer away.
   const mid = curve[Math.floor(curve.length * 0.66)];
@@ -291,8 +479,8 @@ for (const row of mine) {
       const lm = f.losses?.[String(me.playerId)]?.value ?? 0, lo = f.losses?.[String(opp.playerId)]?.value ?? 0;
       if (lm + lo >= 150) ev.push(`${f.category.replace(/-/g, " ")} at ${mmss(f.start)} (you lost ${lm}, they lost ${lo})`);
     }
-    for (const d of a.deaths) if (d >= t0 && d <= t1) ev.push(`your hero died at ≈${mmss(d)}`);
-    for (const d of b.deaths) if (d >= t0 && d <= t1) ev.push(`their hero died at ≈${mmss(d)}`);
+    for (const d of a.deaths) if (d.diedAt >= t0 && d.diedAt <= t1) ev.push(`your hero died at ≈${mmss(d.diedAt)}`);
+    for (const d of b.deaths) if (d.diedAt >= t0 && d.diedAt <= t1) ev.push(`their hero died at ≈${mmss(d.diedAt)}`);
     for (const x of a.bases) if (x.lostAt !== null && x.lostAt >= t0 && x.lostAt <= t1) ev.push(`your expansion fell at ${mmss(x.lostAt)}`);
     for (const x of b.bases) if (x.lostAt !== null && x.lostAt >= t0 && x.lostAt <= t1) ev.push(`their expansion fell at ${mmss(x.lostAt)}`);
     for (const [s, who] of [[a, "your"], [b, "their"]] as const) {
@@ -304,12 +492,12 @@ for (const row of mine) {
   // Which differences moved the chance: each one's share of the change in the model's score.
   const drivers = (t0: number, t1: number, up: boolean) => {
     const d0 = diffs(a, b, t0, end), d1 = diffs(a, b, t1, end);
-    const weight = (i: number, t: number) => final[i] + (final[i + FEATURES.length] * t) / 600_000;
-    return FEATURES.map((name, i) => ({ name, c: weight(i, t1) * d1[i] - weight(i, t0) * d0[i] }))
+    return model.spec.keep
+      .map((f, k) => ({ name: FEATURES[f], c: weightAt(model, k, t1) * d1[f] - weightAt(model, k, t0) * d0[f] }))
       .filter((x) => (up ? x.c > 0.05 : x.c < -0.05))
       .sort((x, y) => Math.abs(y.c) - Math.abs(x.c))
       .slice(0, 2)
-      .map((x) => `${x.name} (${(x.c > 0) === true ? "in your favour" : "in theirs"})`)
+      .map((x) => `${x.name} (${x.c > 0 ? "in your favour" : "in theirs"})`)
       .join(", ");
   };
   if (examples.length < 8)

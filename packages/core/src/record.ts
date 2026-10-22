@@ -170,6 +170,8 @@ export function buildRecord(input: {
           result.winnerTeamId === null ? "unknown" : seat.teamId === result.winnerTeamId ? "win" : "loss",
         apmPerMinute: p.actions!.timed,
         heroes: (p.heroes ?? [])
+          // w3gjs sometimes adds a level-1 hero with no id (seen in 3.0 tournament replays); nothing to show
+          .filter((h) => h.id)
           .map((h) => ({
             code: h.id,
             name: nameOf(h.id, "heroes"),

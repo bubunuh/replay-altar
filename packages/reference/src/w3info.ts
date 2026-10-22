@@ -13,7 +13,11 @@ export type W3iPlayer = {
   /** The site's curated player profile; null for players it doesn't know. */
   stats_player: { id: number; name: string; main_race: string | null } | null;
 };
-export type W3iReplay = { id: number; type: string; duration: number; map: string; created_at: string; players: W3iPlayer[] };
+export type W3iReplay = {
+  id: number; type: string; duration: number; map: string; created_at: string; players: W3iPlayer[];
+  /** The winning team when the site knows it (set by hand, or detected); often null. */
+  winner?: number | null; detected_winner?: number | null;
+};
 
 export type W3iMapFile = { id: number; original_name: string; checksum_sha1: string };
 

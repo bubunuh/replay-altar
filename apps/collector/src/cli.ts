@@ -320,10 +320,13 @@ switch (cmd) {
         console.log(`${g.id}: +${res.downloaded} downloaded, ${res.skipped} skipped, ${res.pruned} pruned (old patch); ${res.kept} games, ${Object.keys(res.profile.matchups).filter((k) => k !== "all").map((k) => `${k} ${res.profile.matchups[k].n}`).join(", ")}`);
       }
     } else if (sub === "resim") {
-      // After a simulation fix: the groups' failed games again (the replays are archived).
+      // After a simulation fix: the groups' failed games again (the replays are archived), and games
+      // saved without a simulation (an ingest that stopped part way).
       for (const g of groups) {
         const ref = openReference(g.id, config);
-        const keys = (ref.db.prepare("SELECT game_key FROM games WHERE sim_status = 'failed'").all() as { game_key: string }[]).map((r) => r.game_key);
+        const failed = (ref.db.prepare("SELECT game_key FROM games WHERE sim_status = 'failed'").all() as { game_key: string }[]).map((r) => r.game_key);
+        const unsimulated = readdirSync(ref.paths.games).map((f) => f.replace(/\.json$/, "")).filter((k) => !readRecord(ref.paths, k)?.sim);
+        const keys = [...new Set([...failed, ...unsimulated])];
         let fixed = 0;
         for (const key of keys) {
           const record = readRecord(ref.paths, key);
