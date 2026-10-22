@@ -190,7 +190,11 @@ if (cliAt >= 0) {
         await new Promise((r) => setTimeout(r, 800));
         // Dev/test: a script run on the page just before the capture, e.g. to hide player names.
         const script = process.env.REPLAY_ALTAR_SHOT_JS;
-        if (script) await win!.webContents.executeJavaScript(readFileSync(script, "utf8"));
+        if (script) {
+          await win!.webContents.executeJavaScript(readFileSync(script, "utf8"));
+          // An offscreen page paints the change on its next frame.
+          await new Promise((r) => setTimeout(r, 800));
+        }
         writeFileSync(file, (await win!.webContents.capturePage()).toPNG());
         app.quit();
       }, 1500);
