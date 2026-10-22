@@ -12,6 +12,8 @@ import { Tip } from "../Tip.tsx";
 import { RaceIcon } from "../RaceIcon.tsx";
 import { HeroIcons } from "../HeroIcons.tsx";
 import { Share } from "../Share.tsx";
+import { shareText } from "../shareText.ts";
+import { openIssue } from "../feedback.ts";
 import { ScorePanel } from "../ScorePanel.tsx";
 import { Chart, heroLevelsChart, timeLines, type Band, type HeroLine, type Tokens } from "../Chart.tsx";
 import { assess, describeRef, groupForRace, pickProfile } from "@replay-altar/reference/compare";
@@ -378,7 +380,16 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
         </div>
 
         {row.analyzed === 1 && me && opp && r.game.durationMs >= MIN_GAME_MS && (
-          <RulesCard key={`rules-${r.gameKey}`} gameKey={r.gameKey} />
+          <RulesCard
+            key={`rules-${r.gameKey}`}
+            gameKey={r.gameKey}
+            onFeedback={(book) =>
+              openIssue("idea.yml", {
+                title: `${tr("Findings", "Análise", "Análisis", "Analyse")}: ${book.findings[0]?.headline ?? book.recap.slice(0, 80)} (${me.race}v${opp.race})`,
+                report: shareText(r, me, opp, row.result, book),
+              })
+            }
+          />
         )}
       </div>
 

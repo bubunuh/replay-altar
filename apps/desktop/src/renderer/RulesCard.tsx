@@ -7,7 +7,8 @@ import { api } from "./api.ts";
 import { Tip } from "./Tip.tsx";
 import { tr } from "@replay-altar/core/i18n";
 
-export function RulesCard({ gameKey }: { gameKey: string }) {
+/** `onFeedback`: the Feedback button, given this report. */
+export function RulesCard({ gameKey, onFeedback }: { gameKey: string; onFeedback?: (book: RulesBook) => void }) {
   const [book, setBook] = useState<RulesBook | null>(null);
   const [more, setMore] = useState(false);
   useEffect(() => {
@@ -73,9 +74,25 @@ export function RulesCard({ gameKey }: { gameKey: string }) {
           </ul>
         </div>
       )}
-      <button className="btn" onClick={() => setMore((x) => !x)} data-tip={tr("The opponent's plan from their orders, and every number the rules used.", "O plano do oponente pelas ordens dele, e todos os números que as regras usaram.", "El plan del rival a partir de sus órdenes, y cada número que usaron las reglas.", "Le plan de l'adversaire d'après ses ordres, et chaque nombre utilisé par les règles.")}>
-        {more ? tr("Show less", "Mostrar menos", "Mostrar menos", "Afficher moins") : tr("Show more", "Mostrar mais", "Mostrar más", "Afficher plus")}
-      </button>
+      <div className="rules-footer">
+        <button className="btn" onClick={() => setMore((x) => !x)} data-tip={tr("The opponent's plan from their orders, and every number the rules used.", "O plano do oponente pelas ordens dele, e todos os números que as regras usaram.", "El plan del rival a partir de sus órdenes, y cada número que usaron las reglas.", "Le plan de l'adversaire d'après ses ordres, et chaque nombre utilisé par les règles.")}>
+          {more ? tr("Show less", "Mostrar menos", "Mostrar menos", "Afficher moins") : tr("Show more", "Mostrar mais", "Mostrar más", "Afficher plus")}
+        </button>
+        {onFeedback && (
+          <button
+            className="btn"
+            onClick={() => onFeedback(book)}
+            data-tip={tr(
+              "Were these findings right about your game? Tell us on the project's GitHub page; the report is filled in for you, without any player's name. It helps fix the rules.",
+              "Esta análise acertou sobre a sua partida? Conte para nós na página do projeto no GitHub; a análise já vem preenchida, sem o nome de nenhum jogador. Isso ajuda a corrigir as regras.",
+              "¿Acertó este análisis sobre tu partida? Cuéntanos en la página del proyecto en GitHub; el análisis ya viene rellenado, sin el nombre de ningún jugador. Ayuda a corregir las reglas.",
+              "Cette analyse a-t-elle vu juste sur votre partie ? Dites-le-nous sur la page GitHub du projet ; l'analyse est déjà remplie, sans le nom d'aucun joueur. Cela aide à corriger les règles.",
+            )}
+          >
+            {tr("Feedback", "Opinar", "Opinar", "Donner mon avis")}
+          </button>
+        )}
+      </div>
       {more && (
         <div className="rules-more">
           <h3>{tr("Opponent's plan", "Plano do oponente", "Plan del rival", "Plan de l'adversaire")}</h3>

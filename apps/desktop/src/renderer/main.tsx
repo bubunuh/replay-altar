@@ -9,6 +9,7 @@ import { Analyzer } from "./pages/Analyzer.tsx";
 import { Performance } from "./pages/Performance.tsx";
 import { TipLayer } from "./Tip.tsx";
 import { CollectorProgress } from "./CollectorProgress.tsx";
+import { openIssue } from "./feedback.ts";
 import { applyTextScale } from "./textSize.ts";
 import { tr } from "@replay-altar/core/i18n";
 import "./styles.css";
@@ -96,6 +97,9 @@ function App() {
             </button>
           ))}
         </nav>
+        <button className="btn topbar-bug" onClick={() => openIssue("bug.yml")} title={tr("Something doesn't work? Opens the project's GitHub page with the version and system filled in.", "Algo não funciona? Abre a página do projeto no GitHub com a versão e o sistema preenchidos.", "¿Algo no funciona? Abre la página del proyecto en GitHub con la versión y el sistema ya rellenados.", "Quelque chose ne marche pas ? Ouvre la page GitHub du projet avec la version et le système remplis.")}>
+          {tr("Report a bug", "Relatar um problema", "Informar de un problema", "Signaler un bug")}
+        </button>
         <span className="status">
           {tr(`${analyzed} games analyzed`, `${analyzed} partidas analisadas`, `${analyzed} partidas analizadas`, `${analyzed} parties analysées`)}
           {simulating ? tr(` · ${simulating} waiting for simulation`, ` · ${simulating} aguardando simulação`, ` · ${simulating} esperando la simulación`, ` · ${simulating} en attente de simulation`) : ""}

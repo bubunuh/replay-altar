@@ -52,7 +52,7 @@ The default game location is the Lutris Battle.net prefix in `~/Games/battlenet`
 
 ## Using it
 
-- **Matches:** every analyzed game, with its main problem. Open one for its report, charts, key numbers against pros, the build orders and a map of the fights and each player's creeping.
+- **Matches:** every analyzed game, with its main problem. Open one for its report, charts, key numbers against pros, the build orders and a map of the fights and each player's creeping. **Feedback** under a game's findings tells us on GitHub whether they were right (the report is filled in, without player names), and **Report a bug** at the top opens a bug report.
 - **Performance:** your win rates, recurring problems with the one to work on now, and your numbers in wins, losses and against pros.
 - **Analyzer:** choose a replay file and the player whose side to take; the report opens like one of your games. Analyzed replays are listed there and kept apart from your stats.
 - **Settings:** your battletags, language, light or dark theme, replay folders, map folders, notifications, updates (a yellow mark on Settings when a new version is out; updating is your choice), which pro games your numbers are compared with, and **Help and feedback** to report a problem or suggest an idea.

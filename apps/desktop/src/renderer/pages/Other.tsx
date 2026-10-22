@@ -4,6 +4,7 @@ import { LANGUAGES, language, locale, tr, type Language } from "@replay-altar/co
 import { setTextScale, TEXT_SCALES, textScale } from "../textSize.ts";
 import { api, type AppInfo, type Folders, type MapFolders as MapFolderInfo, type RefGroupInfo, type UpdateState } from "../api.ts";
 import { groupLabel } from "../format.ts";
+import { openIssue } from "../feedback.ts";
 
 /**
  * Where replays are read from: the folders found by themselves, and the ones you added with the
@@ -162,7 +163,6 @@ function ProGames({ refs }: { refs: RefGroupInfo[] }) {
   );
 }
 
-const ISSUES = "https://github.com/bubunuh/replay-altar/issues/new";
 
 /** Release notes as plain text: GitHub's Markdown without its marks (never rendered as HTML). */
 const plainNotes = (md: string) => md.replace(/\r/g, "").replace(/\*\*|`/g, "").replace(/^#+\s*/gm, "").trim();
@@ -232,10 +232,7 @@ function Version({ update }: { update: UpdateState | null }) {
 /** Problems and ideas go to the project's GitHub issues, with the version and system filled in. */
 function Help({ info }: { info: AppInfo | null }) {
   if (!info) return null;
-  const open = (template: string) => {
-    const q = new URLSearchParams({ template, version: info.version, system: info.system });
-    api.openUrl(`${ISSUES}?${q}`);
-  };
+  const open = (template: "bug.yml" | "idea.yml") => openIssue(template);
   return (
     <div className="card">
       <h2>{tr("Help and feedback", "Ajuda e sugestões", "Ayuda y sugerencias", "Aide et suggestions")}</h2>

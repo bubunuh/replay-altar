@@ -451,7 +451,10 @@ if (!app.requestSingleInstanceLock()) {
   ipcMain.handle("shell:showFile", (_e, file: string) => shell.showItemInFolder(file));
   ipcMain.handle("shell:openPath", (_e, dir: string) => shell.openPath(dir));
   ipcMain.handle("shell:openUrl", (_e, url: string) => {
-    if (/^https:\/\/github\.com\/bubunuh\/replay-altar\b/.test(url)) return shell.openExternal(url);
+    if (!/^https:\/\/github\.com\/bubunuh\/replay-altar\b/.test(url)) return;
+    // Dev/test: write the address down instead of opening the browser.
+    if (process.env.REPLAY_ALTAR_OPENED_URLS) return writeFileSync(process.env.REPLAY_ALTAR_OPENED_URLS, url + "\n", { flag: "a" });
+    return shell.openExternal(url);
   });
   ipcMain.handle("progress:get", () => {
     const file = join(p.root, "progress.json");

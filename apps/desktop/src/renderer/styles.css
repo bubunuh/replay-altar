@@ -91,9 +91,12 @@ html.printing .card { break-inside: avoid-page; }
 .analyzer-error { margin: 6px 0; color: var(--critical-text); }
 .analyzer-warning { margin: 6px 0; color: var(--ink); background: color-mix(in srgb, var(--warning) 18%, transparent); border-left: 3px solid var(--warning); padding: 6px 10px; border-radius: 4px; }
 .share-box { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; padding: 10px 12px; border-radius: 8px; background: var(--surface-2); text-align: left; }
+.rules-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 12px; }
 .collector-progress { max-width: 1240px; margin: 0 auto 16px; }
 .progress { height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
 .progress > div { height: 100%; background: var(--accent); transition: width 0.4s; }
+.topbar .topbar-bug { margin-left: auto; }
+.topbar .topbar-bug + .status { margin-left: 0; }
 .topbar .status { margin-left: auto; color: var(--muted); font-size: calc(12.5px * var(--text-scale)); }
 main { overflow: auto; padding: 20px; }
 .page { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }

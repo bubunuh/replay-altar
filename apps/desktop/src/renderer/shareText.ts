@@ -7,7 +7,7 @@ import { mmss, RACE, SOURCE } from "./format.ts";
 
 export const PROJECT_URL = "https://github.com/bubunuh/replay-altar";
 
-const mapName = (file: string) => file.replace(/^.*[\\/]/, "").replace(/^\(\d+\)|\.w3x$/gi, "").replace(/_/g, " ");
+const mapName = (file: string) => file.replace(/^.*[\\/]/, "").replace(/^\(\d+\)|\.w3[xm]$/gi, "").replace(/^\d*_?w3c_(s\d+_)?\d+_\d+_/, "").replace(/_/g, " ");
 const heroes = (p: PlayerRecord) =>
   [...p.heroes]
     .sort((a, b) => a.order - b.order)

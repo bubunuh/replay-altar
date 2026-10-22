@@ -27,6 +27,11 @@ describe("sharing a report as text", () => {
     expect(text).not.toMatch(/Me#1234|Someone|#\d{4}/);
   });
 
+  test("W3Champions map files read as the map's name", () => {
+    const w3c = { ...r, game: { ...r.game, map: { file: "1051_w3c_260919_1153_EchoIsles_v2.2.w3x" } } } as unknown as GameRecord;
+    expect(shareText(w3c, me, opp, "win", null).split("\n")[0]).toContain("· EchoIsles v2.2 ·");
+  });
+
   test("without a report, just the game", () => {
     expect(shareText(r, me, opp, "loss", null).split("\n")).toHaveLength(4);
   });

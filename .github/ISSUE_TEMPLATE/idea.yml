@@ -1,17 +1,24 @@
 name: Suggest an idea
-description: Something Replay Altar could do, or do better.
+description: Something Replay Altar could do or do better, or feedback on what it found about one of your games.
 labels: [idea]
 body:
   - type: markdown
     attributes:
-      value: You can write in English, Portuguese, Spanish or French.
+      value: |
+        You can write in English, Portuguese, Spanish or French.
+        Came here from **Feedback** under a game's findings? The report is filled in below; tell us which findings were right or wrong and what really happened. That is how the rules get better.
   - type: textarea
     id: idea
     attributes:
-      label: Your idea
-      description: What you would like, and how it would help you improve.
+      label: Your idea or feedback
+      description: What you would like, or which findings were right or wrong for this game and why.
     validations:
       required: true
+  - type: textarea
+    id: report
+    attributes:
+      label: The report this is about (filled in by the app)
+      description: Names no player. Attaching the replay (zipped) lets us check the game ourselves.
   - type: input
     id: version
     attributes:
