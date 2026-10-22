@@ -5,7 +5,8 @@
 # w3scope, MIT; layout from github.com/sides/war3structs, MIT). The game only fills the block for an
 # observer (a replay counts); while you play, every player field stays zero.
 #
-#   python3 scripts/observer/record.py out.jsonl [--timeout 3600]
+#   python3 scripts/observer/record.py out.jsonl [--timeout 3600]     one replay
+#   python3 scripts/observer/record.py <folder> [--timeout 3600]      every replay watched, a file each
 import json
 import mmap
 import os
@@ -118,60 +119,82 @@ def player(m, i):
     }
 
 
-def main():
-    out = sys.argv[1]
-    timeout = float(sys.argv[sys.argv.index("--timeout") + 1]) if "--timeout" in sys.argv else 3600
-    start = time.time()
+def attach(timeout_at):
     pid = m = None
     while m is None:
         pid, m = discover()
         if m is None:
-            if time.time() - start > timeout:
-                sys.exit("no observer block found (is Warcraft III running?)")
+            if time.time() > timeout_at:
+                return None, None
             time.sleep(2)
     print(f"observer block found in pid {pid}; version {struct.unpack_from('<I', m, 0)[0]}", flush=True)
-    struct.pack_into("<I", m, 4, 100)  # refresh every 100 ms: the block stays empty until a reader asks
+    return pid, m
+
+
+def main():
+    """`out` ending in .jsonl: one replay. Otherwise a folder: every replay watched, one file each, until
+    the game closes or the timeout."""
+    out = sys.argv[1]
+    session = not out.endswith(".jsonl")
+    timeout = float(sys.argv[sys.argv.index("--timeout") + 1]) if "--timeout" in sys.argv else 3600
+    timeout_at = time.time() + timeout
+    if session:
+        os.makedirs(out, exist_ok=True)
+    pid, m = attach(timeout_at)
+    if m is None:
+        sys.exit("no observer block found (is Warcraft III running?)")
+    f = None
+    names = None
     last_t = -1
     samples = 0
-    with open(out, "a") as f:
-        while time.time() - start < timeout:
-            try:
-                # The game puts its own 2000 ms back when a replay starts: ask again whenever it differs.
-                if struct.unpack_from("<I", m, 4)[0] != 100:
-                    struct.pack_into("<I", m, 4, 100)
-                g = game(m)
-            except (ValueError, OSError):
-                print("block gone (game closed)", flush=True)
-                break
-            if g["in_game"] and g["t"] >= last_t + 1000:
-                players = [player(m, i) for i in range(28)]
-                players = [p for p in players if p["type"] in ("player", "computer")]
-                if players and any(p["food"] or p["units"] for p in players):
-                    last_t = g["t"]
-                    f.write(json.dumps({"game": g, "players": players}) + "\n")
-                    f.flush()
-                    samples += 1
-                    if samples % 60 == 0:
-                        print(f"{g['t'] // 60000}:{g['t'] // 1000 % 60:02d} {samples} samples", flush=True)
-                    if all(p["result"] != "playing" for p in players):
-                        print("game over", flush=True)
-                        break
-            if not os.path.exists(f"/proc/{pid}"):
-                if samples:
-                    print("game closed", flush=True)
-                    break
-                # The game can restart itself before a replay starts (Battle.net login): find it again.
-                m.close()
-                pid = m = None
-                while m is None and time.time() - start < timeout:
-                    time.sleep(2)
-                    pid, m = discover()
-                if m is None:
-                    break
+    recorded = 0
+    while time.time() < timeout_at:
+        try:
+            # The game puts its own 2000 ms back when a replay starts: ask again whenever it differs.
+            if struct.unpack_from("<I", m, 4)[0] != 100:
                 struct.pack_into("<I", m, 4, 100)
-                print(f"observer block found again in pid {pid}", flush=True)
-            time.sleep(0.05)
-    print(f"{samples} samples written to {out}", flush=True)
+            g = game(m)
+        except (ValueError, OSError):
+            g = {"in_game": False}
+        players = None
+        if g["in_game"]:
+            players = [p for p in (player(m, i) for i in range(28)) if p["type"] in ("player", "computer")]
+            if not players or not any(p["food"] or p["units"] for p in players):
+                players = None
+        now_names = tuple(p["name"] for p in players) if players else None
+        # A replay ended (left, or another one started from the beginning).
+        if f and (not g["in_game"] or (players and (now_names != names or g["t"] < last_t - 5000))):
+            f.close()
+            print(f"saved {samples} samples ({last_t // 60000}:{last_t // 1000 % 60:02d} of game)", flush=True)
+            f = None
+            if not session:
+                break
+        if players and g["t"] >= last_t + 500 or (players and f is None):
+            if f is None:
+                names, last_t, samples = now_names, -1, 0
+                recorded += 1
+                path = out if not session else os.path.join(out, f"{time.strftime('%Y%m%d-%H%M%S')}-{'-'.join(n.replace('/', '_') for n in names)}.jsonl")
+                f = open(path, "a")
+                print(f"recording {' vs '.join(names)} on {os.path.basename(g['map'])} -> {os.path.basename(path)}", flush=True)
+            last_t = g["t"]
+            f.write(json.dumps({"game": g, "players": players}) + "\n")
+            f.flush()
+            samples += 1
+        if not os.path.exists(f"/proc/{pid}"):
+            if f:
+                f.close()
+                print(f"saved {samples} samples (game closed)", flush=True)
+                f = None
+            if not session and recorded:
+                break
+            m.close()
+            pid, m = attach(timeout_at)  # the game restarted (Battle.net login) or was started again
+            if m is None:
+                break
+        time.sleep(0.05)
+    if f:
+        f.close()
+    print(f"{recorded} replays recorded", flush=True)
 
 
 if __name__ == "__main__":
