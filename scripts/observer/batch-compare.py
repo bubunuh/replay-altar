@@ -186,6 +186,8 @@ def main():
             total[who][0] += e_today / n
             total[who][1] += e_new / n
             total[who][2] += 1
+    if os.environ.get("JSON_OUT"):
+        json.dump([dict(batch=os.path.basename(batch.rstrip("/")), file=f, player=p, today=a, new=b, snapshots=n) for f, p, a, b, n in rows], open(os.environ["JSON_OUT"], "w"), indent=1)
     print("| Replay | Player | Army value error today | New | Snapshots |")
     print("|---|---|---|---|---|")
     for row in rows:

@@ -66,7 +66,7 @@ Each metric's `source` says how much to trust it:
 ## Army, heroes and kills (`packages/sim/src/army.ts`)
 
 - **Army food:** food used minus workers minus heroes (5 each), from the simulated supply. The game's "largest army" is counted in food: our maximum, heroes included, matched it at 0.95× (correlation 0.90).
-- **Army value (estimate):** army food × the average resource cost per food of the army units you'd finished training by then, taken from your orders. Stored as `series[].armyValue`; the pro curve is `armyValue`.
+- **Army value (estimate):** what the army units alive at that moment cost (gold + lumber), a unit valued as the form it had then (an Obsidian Statue before it became a Destroyer). Alive means finished training and not yet dead by the losses rule below. Stored as `series[].armyValue`; the pro curve is `armyValue`.
 - **Hero timelines** (`sim.players[].heroes`):
   - **Appearance:** WC3V's training-finished time.
   - **Levels:** from the replay (exact).
@@ -109,7 +109,7 @@ Each metric has a `section`:
   - Research level *n* costs `base + mod × (n−1)`.
   - Items are priced from the item table.
   - Cancelled orders still count.
-- **Losses:** units WC3V marks `lost` or `possiblyLost`, heroes excluded.
+- **Losses:** units WC3V marks `lost` or `possiblyLost`, heroes excluded, corrected with the replay's selection lists (`packages/sim/src/deaths.ts`): when a player switches selection the replay lists what was really selected, dead units already missing, so a unit that stops appearing in later lists of its group died in between. Units WC3V never saw move after training (it calls them lost at once) count as alive unless the lists show a death; units it followed die when the lists show them gone, if that is earlier. Ghouls are left to WC3V (they leave the army to gather lumber). Measured against Warcraft III's own unit counts (observer data, `scripts/observer/`) on 50 player-games: average army value error 257 → 183 (`army-value-error.png`).
 - **Income (estimate):** simulated second by second.
   - Workers alive (from WC3V) go to mines, at most 5 per active mine.
   - Mines: the starting mine plus each expansion once it's built. Undead count Haunted Gold Mines only. Each mine holds 12,500 gold.

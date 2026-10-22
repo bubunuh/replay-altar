@@ -9,6 +9,8 @@ import { buildTimelines, economyMetrics, ESTIMATE_HORIZON_MS, runIncome, type Ec
 import constantsJson from "./economy-constants.json" with { type: "json" };
 import { ensureMapData, refreshMapCache, type FromGame } from "./maps.ts";
 import { armyAt, armyValueFn, heroTimelines, unitsKilledEstimate } from "./army.ts";
+import { unitDeaths, type DeathUnit } from "./deaths.ts";
+import { readSelections, type Selections } from "./selections.ts";
 import { DRIVER, gamedataDir, simNotReady, simOutputPath, wc3vCommit } from "./paths.ts";
 
 export { buildTimelines, runIncome, economyMetrics, loadCosts, simNotReady, simOutputPath, gamedataDir, ESTIMATE_HORIZON_MS };
@@ -16,6 +18,7 @@ export type { EconomyConstants, WOutput, CostTables };
 export type { Timeline } from "./economy.ts";
 export { mapDataName, ensureMapData, mapCacheDir, mapClientDir, syncMapCache, type FromGame } from "./maps.ts";
 export { armyAt, heroTimelines, unitsKilledEstimate } from "./army.ts";
+export { readSelections, type Selections } from "./selections.ts";
 
 export const CONSTANTS = constantsJson as unknown as EconomyConstants;
 const RUN_TIMEOUT_MS = 180_000;
@@ -45,6 +48,16 @@ function runDriver(replay: string, out: string): Promise<DriverResult> {
   });
 }
 
+/** The replay's selection actions, or nothing when the replay can't be read (deaths stay WC3V's). */
+export async function selectionsOf(replayPath: string | undefined): Promise<Selections | undefined> {
+  if (!replayPath || !existsSync(replayPath)) return undefined;
+  try {
+    return await readSelections(replayPath);
+  } catch {
+    return undefined;
+  }
+}
+
 export function readSimOutput(path: string): WOutput {
   return JSON.parse(gunzipSync(readFileSync(path)).toString("utf8"));
 }
@@ -53,7 +66,8 @@ export function readSimOutput(path: string): WOutput {
 /** WC3V stops reading some replays part way (it reports PARSE_TRUNCATED); more than this missing makes the game unusable. */
 const MAX_MISSING_MS = 30_000;
 
-export function summarize(record: GameRecord, o: WOutput, costs: CostTables, k: EconomyConstants, meta: { ranAt: string; runMs: number; outputPath: string }): SimSummary {
+/** `selections`: the replay's selection actions (readSelections), which correct WC3V's unit deaths. */
+export function summarize(record: GameRecord, o: WOutput, costs: CostTables, k: EconomyConstants, meta: { ranAt: string; runMs: number; outputPath: string }, selections?: Selections): SimSummary {
   // A truncated read looks like a game where everyone stopped playing: no fights, no levels,
   // no spending after the cut. Better no simulation than one that misleads (7-10% of the pro
   // corpus on WC3V 2026-10).
@@ -62,7 +76,15 @@ export function summarize(record: GameRecord, o: WOutput, costs: CostTables, k: 
     const at = Math.round((cut.lastActionGameTimeMs ?? 0) / 1000);
     return { status: "failed", engine: { name: "wc3v", commit: wc3vCommit() }, ranAt: meta.ranAt, reason: `the simulation could read the replay only up to ${Math.floor(at / 60)}:${String(at % 60).padStart(2, "0")} (WC3V parse truncated)` };
   }
-  const timelines = buildTimelines(o, record, costs);
+  const deaths = new Map<number, Map<object, number | null>>();
+  const deathsOf = (playerId: number) => {
+    if (!deaths.has(playerId)) {
+      const units = ((o.players[String(playerId)] as unknown as { units?: DeathUnit[] })?.units ?? []);
+      deaths.set(playerId, unitDeaths(units, costs, selections?.[String(playerId)]));
+    }
+    return deaths.get(playerId)!;
+  };
+  const timelines = buildTimelines(o, record, costs, deathsOf);
   const incomes = timelines.map((tl) => runIncome(tl, k));
   const warnings: string[] = [];
   const players = timelines.map((tl, i) => {
@@ -75,7 +97,7 @@ export function summarize(record: GameRecord, o: WOutput, costs: CostTables, k: 
     }
     const pw = (o.validation?.warnings ?? []).filter((w) => String(w.player) === String(tl.playerId)).map((w) => `${w.type ?? "warning"}: ${w.message ?? ""}`.trim());
     const rp = record.players.find((p) => p.playerId === tl.playerId)!;
-    const valueAt = armyValueFn(o, tl.playerId, costs);
+    const valueAt = armyValueFn(o, tl.playerId, costs, deathsOf(tl.playerId));
     const series = incomes[i].series.map((s) => ({ ...s, ...armyAt(s.t, s.foodUsed, s.workers, rp, costs), armyValue: valueAt(s.t) }));
     metrics.units_killed = unitsKilledEstimate(o, tl.playerId, tl.teamId, k.unitsKilledFactor ?? 1.49, costs);
     // The game counts its "largest army" in food, heroes included.
@@ -219,7 +241,7 @@ export async function simulateGame(record: GameRecord, opts: { dataRoot: string;
   }
   try {
     const costs = loadCosts(gamedataDir(gamedataRoot));
-    const sim = summarize(record, readSimOutput(out), costs, CONSTANTS, { ranAt, runMs: res.ms, outputPath: out });
+    const sim = summarize(record, readSimOutput(out), costs, CONSTANTS, { ranAt, runMs: res.ms, outputPath: out }, await selectionsOf(record.provenance.archivePath));
     // WC3V can run to the end and still follow nobody (seen on a classic Reign of Chaos .w3m map).
     if (sim.status === "ok" && sim.players.every((p) => !p.series.length)) return { status: "failed", engine, ranAt, reason: "the simulation followed no units on this map (WC3V may not support it)" };
     return sim;

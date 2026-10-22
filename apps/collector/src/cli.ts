@@ -20,7 +20,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { activeReferenceGroups, applyOfficial, applySim, collectorState, proDataDir, projectRoot, readRecord, referencePaths, type RefLookup } from "@replay-altar/core";
-import { CONSTANTS, gamedataDir, loadCosts, readSimOutput, simNotReady, simulateGame, summarize } from "@replay-altar/sim";
+import { CONSTANTS, gamedataDir, loadCosts, readSimOutput, selectionsOf, simNotReady, simulateGame, summarize } from "@replay-altar/sim";
 import { buildProfile, officialForMatch, officialForOwnGame, openReference, readState, refreshGroup, w3cClient } from "@replay-altar/reference";
 import { rulesBook } from "@replay-altar/rules";
 import { currentReplayBuild, racesPlayed } from "./reference.ts";
@@ -173,7 +173,7 @@ switch (cmd) {
           const record = readRecord(ref.paths, game_key);
           if (record?.sim?.status !== "ok") continue;
           const { ranAt, runMs, outputPath } = record.sim;
-          applySim(ref, game_key, summarize(record, readSimOutput(outputPath), costs, CONSTANTS, { ranAt, runMs, outputPath }));
+          applySim(ref, game_key, summarize(record, readSimOutput(outputPath), costs, CONSTANTS, { ranAt, runMs, outputPath }, await selectionsOf(record.provenance.archivePath)));
         }
       }
       const p = buildProfile(ref.db, ref.paths, g, currentReplayBuild(c.db));
@@ -256,7 +256,7 @@ switch (cmd) {
           const record = readRecord(ctx.paths, game_key);
           if (!record || record.sim?.status !== "ok") continue;
           const { ranAt, runMs, outputPath } = record.sim;
-          applySim(ctx as Parameters<typeof applySim>[0], game_key, summarize(record, readSimOutput(outputPath), costs, CONSTANTS, { ranAt, runMs, outputPath }));
+          applySim(ctx as Parameters<typeof applySim>[0], game_key, summarize(record, readSimOutput(outputPath), costs, CONSTANTS, { ranAt, runMs, outputPath }, await selectionsOf(record.provenance.archivePath)));
         }
         const group = (rest as { group?: (typeof c.config.reference.groups)[number] }).group;
         if (group && rows.length) buildProfile(ctx.db, ctx.paths, group, currentReplayBuild(c.db));
