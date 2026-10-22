@@ -6,16 +6,18 @@ Replay Altar is a Warcraft III: Reforged replay analyzer for 1v1 players. It run
 
 [Download](https://github.com/bubunuh/replay-altar/releases)
 
-- **Every replay kept.** A small background program saves each replay the moment a game ends, before the game overwrites `LastReplay.w3g`. Battle.net ladder, W3Champions and custom melee games are all picked up.
-- **The game reconstructed.** Each 1v1 is simulated from its replay with [WC3V](https://github.com/jblanchette/wc3v): workers, army value, supply, creep camps, hero levels and fights over time.
-- **Compared with pros.** Your numbers are set against about 200 recent tournament games per race, played on your current patch and analyzed on your computer the same way.
-- **A report per game.** Rules drawn from well-known guides (Grubby, Liquipedia, Warcraft 3 Gym, Vortix and others) point out the main problems, the facts behind them, the fight that turned the game, your strengths and the opponent's plan. Each finding comes with concrete advice.
+- **Every replay kept, automatically.** A small background program saves each replay the moment a game ends, before the game overwrites `LastReplay.w3g`. Battle.net ladder, W3Champions and custom melee games are all picked up, with nothing to upload or click.
+- **The game reconstructed.** Each 1v1 is simulated from its replay with the [WC3V](https://github.com/jblanchette/wc3v) engine: workers, army value, supply, creep camps, hero levels and fights over time.
+- **A coach's report after every game.** Rules drawn from well-known guides (Grubby, Liquipedia, Warcraft 3 Gym, Vortix and others) name the problems that cost you the game, show the facts behind each one, explain why it happened and say what to do next time. The report also points out the fight that turned the game (with the moment to rewatch), your strengths and the opponent's plan.
+- **One thing to work on.** Each report ends with the single most useful habit for your next game. Across your recent games, the Performance page picks the problem that keeps coming back and shows whether it is getting better.
+- **Every number in context.** Your numbers are placed among about 200 recent tournament games of your race and matchup, on the current patch ("better than 86% of pro games"), with a green, yellow or red verdict: at pro level, at least as good as your opponent, or behind both.
+- **Knows your build.** It recognises the build order each player went for, from guide builds and builds mined from pro games, and shows where your timings drifted from the pros who play it.
 - **Your progress.** Win rates by matchup, map and game length; problems that keep coming back; how you play in wins against losses; any number over time.
-- **Analyze any replay:** the Analyzer tab analyzes a 1v1 replay that isn't yours (a pro game, one found online) from the side of the player you choose, without counting it in your stats; it warns when the replay is from an older version of the game.
+- **Any replay, not only yours.** The Analyzer tab analyzes a 1v1 replay you found, such as a pro game, from the side of the player you choose, without counting it in your stats.
 - **Share a report** as text or as a PDF of the whole report, for Reddit or Discord, without your opponent's battletag.
-- **English, Brazilian Portuguese, Spanish and French.**
+- **Private and local.** Everything runs on your computer, with no account. In English, Brazilian Portuguese, Spanish and French.
 
-![The report of a game: result, heroes, the main numbers against the opponent, the map, and the findings with advice](docs/images/report.png)
+![The report of a won game: result, heroes, the main numbers against the opponent, the map, and the findings with advice](docs/images/report.png)
 
 Your games stay on your computer. Replay Altar fetches only two things from the internet, and Settings can turn off either: the game's own end-of-game statistics for your W3Champions games (a few small requests per game, one game at a time; they carry both battletags), and once a day the list of Replay Altar releases from GitHub, to tell you when a new version is out. The pro statistics come with the app, and no maps are shipped: each game's map is read from your own copy. See the [privacy policy](PRIVACY.md).
 
@@ -63,6 +65,10 @@ Custom maps, games against the computer, team games and games you only observed 
 
 Player names in these screenshots are replaced with placeholders.
 
+**A lost game:** the problems that decided it, with the facts, the reason behind each and what to do next time, the fight that turned it and the moment to rewatch.
+
+![The report of a lost game: three findings with evidence and advice, the turning point, and one thing for next game](docs/images/report-loss.png)
+
 **Matches**
 
 ![The list of games with result, matchup, opponent, map, length, APM, source and main problem](docs/images/matches.png)
@@ -75,9 +81,13 @@ Player names in these screenshots are replaced with placeholders.
 
 ![Win rate, recurring problems and win rates by matchup, map and game length](docs/images/performance.png)
 
+**Analyzer:** any 1v1 replay, from the side of the player you choose, with a warning when it comes from an older version of the game.
+
+![The Analyzer: a picked replay with a warning about its game version, the player to analyze, and the list of analyzed replays](docs/images/analyzer.png)
+
 **Settings**
 
-![Settings: battletags, language, replay folders, behaviour and pro games](docs/images/settings.png)
+![Settings: battletags, language and theme, replay and map folders, behaviour, pro games, and help and feedback](docs/images/settings.png)
 
 When Warcraft III starts, the window opens behind the game without taking focus, and a notification after each game opens its report. Both can be turned off in Settings.
 

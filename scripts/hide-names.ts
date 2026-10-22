@@ -20,6 +20,9 @@ const root = join(import.meta.dirname, "..");
 const dbs = [join(dataDir(), "replay-altar.sqlite")];
 const refDir = join(dataDir(), "reference");
 if (existsSync(refDir)) for (const g of readdirSync(refDir)) if (existsSync(join(refDir, g, "reference.sqlite"))) dbs.push(join(refDir, g, "reference.sqlite"));
+// Replays analyzed on the Analyzer page, each in a folder of its own.
+const analyzerDir = join(dataDir(), "analyzer");
+if (existsSync(analyzerDir)) for (const a of readdirSync(analyzerDir)) if (existsSync(join(analyzerDir, a, "replay-altar.sqlite"))) dbs.push(join(analyzerDir, a, "replay-altar.sqlite"));
 
 const names = new Set<string>();
 for (const file of dbs) {
