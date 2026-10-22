@@ -34,6 +34,8 @@ export type Config = {
   openWindowOnGameStart: boolean;
   /** Desktop notification after each analyzed game. */
   notifyAfterGame: boolean;
+  /** Light or dark window (unset: follow the system's setting). */
+  theme?: "system" | "light" | "dark";
   /** Ask GitHub once a day whether a newer Replay Altar was released (unset: yes). */
   checkUpdates?: boolean;
   /** After each W3Champions game, fetch its end-of-game statistics from W3Champions (unset: yes). */

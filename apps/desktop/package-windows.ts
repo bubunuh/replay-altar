@@ -23,6 +23,8 @@ const casc = join(root, "scripts/casc/bin/casc-extract.exe");
 if (!existsSync(casc)) execFileSync(join(root, "scripts/casc/build-windows.sh"), { stdio: "inherit" });
 
 rmSync(stage, { recursive: true, force: true });
+// Replay Altar's fixes to WC3V (patches/wc3v), so this build simulates like every other copy.
+execFileSync(process.execPath, [join(root, "scripts/patch-wc3v.ts")], { stdio: "inherit" });
 execFileSync(process.execPath, [join(desktop, "build.ts")], { stdio: "inherit" });
 
 // The app: built window and its assets, with a package.json of its own (nothing to install).

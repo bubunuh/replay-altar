@@ -81,7 +81,8 @@ a { color: var(--accent); }
 .share-credit { display: none; margin: 0; text-align: right; }
 html.printing, html.printing body, html.printing #root { height: auto; }
 html.printing .app { display: block; height: auto; }
-html.printing main { overflow: visible; padding: 0; }
+html.printing main { overflow: visible; padding: 24px; }
+html.printing body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 html.printing .share-credit { display: block; }
 html.printing .topbar, html.printing .collector-progress, html.printing .no-print, html.printing .filters.no-share, html.printing .share-box, html.printing button, html.printing .tip, html.printing .map-layers { display: none !important; }
 html.printing .build ol, html.printing .fact-sheet { max-height: none; overflow: visible; }

@@ -33,8 +33,12 @@ export function Share({ record, me, opp, result, hideNames, setHideNames, setAno
   };
   const savePdf = async () => {
     setStatus(tr("Making the PDF…", "Gerando o PDF…", "Generando el PDF…", "Création du PDF…"));
-    // The page laid out for paper: no buttons or menus, every section full length.
-    document.documentElement.classList.add("printing");
+    // The page laid out for paper: no buttons or menus, every section full length, and in the
+    // window's colours (printing would otherwise switch to the light ones).
+    const root = document.documentElement;
+    const themeBefore = root.getAttribute("data-theme");
+    root.setAttribute("data-theme", matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    root.classList.add("printing");
     setAnonymous(hideNames);
     try {
       // Charts redraw for the new layout and names: give them a moment.
@@ -44,7 +48,9 @@ export function Share({ record, me, opp, result, hideNames, setHideNames, setAno
       else setStatus(null);
     } finally {
       setAnonymous(false);
-      document.documentElement.classList.remove("printing");
+      root.classList.remove("printing");
+      if (themeBefore === null) root.removeAttribute("data-theme");
+      else root.setAttribute("data-theme", themeBefore);
     }
   };
 

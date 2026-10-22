@@ -226,6 +226,7 @@ switch (cmd) {
     };
     if (!existsSync(join(root, "vendor/wc3v/wc3v.js"))) run("git", ["submodule", "update", "--init", "--depth", "1", "vendor/wc3v"]);
     if (!existsSync(join(root, "vendor/wc3v/node_modules/w3gjs"))) run("npm", ["ci", "--omit=dev", "--no-audit", "--no-fund"], join(root, "vendor/wc3v"), process.platform === "win32");
+    if (existsSync(join(root, "scripts/patch-wc3v.ts"))) run(process.execPath, [join(root, "scripts/patch-wc3v.ts")]);
     extractGameData();
     const problem = simNotReady(paths().root);
     console.log(problem ? `Not ready: ${problem}` : "Simulation ready. Run `replay-altar sim --backfill` to simulate existing games.");

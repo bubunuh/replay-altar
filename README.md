@@ -55,7 +55,7 @@ The default game location is the Lutris Battle.net prefix in `~/Games/battlenet`
 - **Matches:** every analyzed game, with its main problem. Open one for its report, charts, key numbers against pros, the build orders and a map of the fights and each player's creeping.
 - **Performance:** your win rates, recurring problems with the one to work on now, and your numbers in wins, losses and against pros.
 - **Analyzer:** choose a replay file and the player whose side to take; the report opens like one of your games. Analyzed replays are listed there and kept apart from your stats.
-- **Settings:** your battletags, language, replay folders, map folders, notifications, updates (a yellow mark on Settings when a new version is out; updating is your choice), which pro games your numbers are compared with, and **Help and feedback** to report a problem or suggest an idea.
+- **Settings:** your battletags, language, light or dark theme, replay folders, map folders, notifications, updates (a yellow mark on Settings when a new version is out; updating is your choice), which pro games your numbers are compared with, and **Help and feedback** to report a problem or suggest an idea.
 
 Custom maps, games against the computer, team games and games you only observed are kept in the archive but not counted.
 
@@ -140,6 +140,8 @@ The code is TypeScript run directly by Node (type stripping), in npm workspaces:
 `fixtures/replays/` holds real replays used by the tests. Texts are written in place as `tr("English", "Português", "Español", "Français")` (`packages/core/src/i18n.ts`); metric names have a table per language (`packages/core/src/metrics.*.ts`).
 
 **Branches and builds.** Work goes to `dev`; `main` only gets tested work. Every push runs the tests on GitHub, and every push to `dev` also builds a test Windows installer (Actions → Windows installer → the run → Artifacts). Pushing a version tag (`v0.1.3`) builds it again and puts it on a draft release, with the `latest.yml` the app's Update button reads.
+
+**WC3V fixes.** `patches/wc3v/` holds fixes to WC3V that Replay Altar applies on top of the submodule (`node scripts/patch-wc3v.ts`, run by `setup-sim` and the Windows build); each is meant to go upstream. The first lets WC3V read past a recycled unit handle, which used to cut about 5% of games short.
 
 **Screenshots** for this page: `node scripts/hide-names.ts /tmp/hide-names.js`, then `REPLAY_ALTAR_SHOT_JS=/tmp/hide-names.js` on a screenshot run replaces every player name with a placeholder.
 

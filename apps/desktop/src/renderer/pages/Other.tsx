@@ -288,6 +288,10 @@ export function Settings({ refs, update }: { refs: RefGroupInfo[]; update: Updat
     await save({ language: l });
     window.location.reload();
   };
+  const setTheme = async (theme: "system" | "light" | "dark") => {
+    await save({ theme });
+    window.location.reload();
+  };
 
   return (
     <div className="page" style={{ maxWidth: 820 }}>
@@ -314,6 +318,14 @@ export function Settings({ refs, update }: { refs: RefGroupInfo[]; update: Updat
               {LANGUAGES.map(([id, name]) => (
                 <option key={id} value={id}>{name}</option>
               ))}
+            </select>
+          </label>
+          <label>
+            {tr("Theme", "Tema", "Tema", "Thème")}
+            <select value={config.theme ?? "system"} onChange={(e) => setTheme(e.target.value as "system" | "light" | "dark")}>
+              <option value="system">{tr("Same as the system", "Igual ao sistema", "Igual que el sistema", "Comme le système")}</option>
+              <option value="light">{tr("Light", "Claro", "Claro", "Clair")}</option>
+              <option value="dark">{tr("Dark", "Escuro", "Oscuro", "Sombre")}</option>
             </select>
           </label>
           <label>

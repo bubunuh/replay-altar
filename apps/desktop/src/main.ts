@@ -163,8 +163,9 @@ if (!app.requestSingleInstanceLock()) {
         log: (m) => console.log(m),
       });
     }
-    const theme = arg(process.argv, "theme"); // dev/test: force light or dark
-    if (theme === "light" || theme === "dark") nativeTheme.themeSource = theme;
+    // Light or dark: the setting, or the system's; --theme forces one (dev/test).
+    const theme = arg(process.argv, "theme") ?? loadConfig().theme;
+    nativeTheme.themeSource = theme === "light" || theme === "dark" ? theme : "system";
     win = new BrowserWindow({
       width: 1280,
       height: 860,
@@ -275,6 +276,8 @@ if (!app.requestSingleInstanceLock()) {
   ipcMain.handle("config:set", (_e, config: Config) => {
     const before = loadConfig().language;
     saveConfig(config);
+    // The page reloads after a theme change (charts take their colours when drawn).
+    if (!arg(process.argv, "theme")) nativeTheme.themeSource = config.theme === "light" || config.theme === "dark" ? config.theme : "system";
     if (config.language !== before) {
       applyLanguage();
       books.clear(); // reports are written in the language
@@ -465,7 +468,8 @@ if (!app.requestSingleInstanceLock()) {
     const page = BrowserWindow.fromWebContents(e.sender);
     if (!page) return false;
     const width = page.getContentSize()[0];
-    const pdf = await e.sender.printToPDF({ pageSize: "A4", printBackground: true, scale: Math.min(1, Math.max(0.3, 720 / width)), margins: { top: 0.4, bottom: 0.4, left: 0.4, right: 0.4 } });
+    // No paper margins: they would print white around the window's colours; the page pads itself.
+    const pdf = await e.sender.printToPDF({ pageSize: "A4", printBackground: true, scale: Math.min(1, Math.max(0.3, 794 / width)), margins: { top: 0, bottom: 0, left: 0, right: 0 } });
     const options = { defaultPath: join(app.getPath("documents"), name), filters: [{ name: "PDF", extensions: ["pdf"] }] };
     // Dev/test: save without the dialog.
     const testFile = process.env.REPLAY_ALTAR_SAVE_TO;
