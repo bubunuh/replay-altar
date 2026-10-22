@@ -429,7 +429,7 @@ if (valMoments.length) {
     out();
   };
   table("year", (g) => String(g.year), ["2022", "2023", "2024", "2025", "2026"]);
-  table("matchup", (g) => g.matchup, ["HvH", "HvO", "HvU", "HvN", "OvO", "OvU", "OvN", "UvU", "UvN", "NvN"]);
+  table("matchup", (g) => g.matchup, ["HvH", "HvO", "HvU", "HvN", "OvO", "OvU", "OvN", "UvU", "NvU", "NvN"]);
 }
 
 out("**What weighs most** (best model fitted on the calibration set; the change in win chance for a lead of one typical step, at 5, 10 and 15 minutes):");
@@ -526,7 +526,7 @@ const results = {
   favourite: [3, 5, 7, 10, 12, 15, 20, 25].map((m) => ({ minute: m, ...accuracyAt(valMoments.length ? valBest : best.cv, m) })),
   calibrationBins: { cv: binsOf(best.cv), validation: valMoments.length ? binsOf(valBest) : null },
   byYear: groupScores((g) => String(g.year), ["2022", "2023", "2024", "2025", "2026"]),
-  byMatchup: groupScores((g) => g.matchup, ["HvH", "HvO", "HvU", "HvN", "OvO", "OvU", "OvN", "UvU", "UvN", "NvN"]),
+  byMatchup: groupScores((g) => g.matchup, ["HvH", "HvO", "HvU", "HvN", "OvO", "OvU", "OvN", "UvU", "NvU", "NvN"]),
   weights: finalBest.spec.keep.map((f, k) => ({
     feature: FEATURES[f],
     sd: sd[f],
