@@ -7,14 +7,14 @@ import { RACES, type GameRecord, type RaceCode, type SimFight, type SimPlayer, t
 import { loadCosts, type CostTables } from "./costs.ts";
 import { buildTimelines, economyMetrics, ESTIMATE_HORIZON_MS, runIncome, type EconomyConstants, type WOutput } from "./economy.ts";
 import constantsJson from "./economy-constants.json" with { type: "json" };
-import { ensureMapData } from "./maps.ts";
+import { ensureMapData, refreshMapCache, type FromGame } from "./maps.ts";
 import { armyAt, armyValueFn, heroTimelines, unitsKilledEstimate } from "./army.ts";
 import { DRIVER, gamedataDir, simNotReady, simOutputPath, wc3vCommit } from "./paths.ts";
 
 export { buildTimelines, runIncome, economyMetrics, loadCosts, simNotReady, simOutputPath, gamedataDir, ESTIMATE_HORIZON_MS };
 export type { EconomyConstants, WOutput, CostTables };
 export type { Timeline } from "./economy.ts";
-export { mapDataName, ensureMapData, mapCacheDir, mapClientDir, syncMapCache } from "./maps.ts";
+export { mapDataName, ensureMapData, mapCacheDir, mapClientDir, syncMapCache, type FromGame } from "./maps.ts";
 export { armyAt, heroTimelines, unitsKilledEstimate } from "./army.ts";
 
 export const CONSTANTS = constantsJson as unknown as EconomyConstants;
@@ -201,20 +201,28 @@ function fightsOf(o: WOutput): SimFight[] {
  * and the extracted maps (sim/maps), so reference corpora share the user's. mapFolders: where the
  * map files are (mapFolders in core's config).
  */
-export async function simulateGame(record: GameRecord, opts: { dataRoot: string; mapFolders: string[]; gamedataRoot?: string }): Promise<SimSummary> {
+export async function simulateGame(record: GameRecord, opts: { dataRoot: string; mapFolders: string[]; gamedataRoot?: string; fromGame?: FromGame }): Promise<SimSummary> {
   const ranAt = new Date().toISOString();
   const engine = { name: "wc3v" as const, commit: wc3vCommit() };
   const gamedataRoot = opts.gamedataRoot ?? opts.dataRoot;
   const notReady = simNotReady(gamedataRoot);
   if (notReady) return { status: "failed", engine, ranAt, reason: notReady };
-  const mapProblem = ensureMapData(record.game.map.file, opts.mapFolders, gamedataRoot);
+  const mapProblem = ensureMapData(record.game.map.file, opts.mapFolders, gamedataRoot, opts.fromGame);
   if (mapProblem) return { status: "failed", engine, ranAt, reason: mapProblem };
   const out = simOutputPath(opts.dataRoot, record.gameKey);
   const res = await runDriver(record.provenance.archivePath, out);
   if (!res.ok || !existsSync(out)) return { status: "failed", engine, ranAt, reason: res.error ?? "simulation produced no output" };
   try {
+    refreshMapCache(gamedataRoot, record.game.map.file);
+  } catch {
+    // the cache is a convenience; the simulation itself worked
+  }
+  try {
     const costs = loadCosts(gamedataDir(gamedataRoot));
-    return summarize(record, readSimOutput(out), costs, CONSTANTS, { ranAt, runMs: res.ms, outputPath: out });
+    const sim = summarize(record, readSimOutput(out), costs, CONSTANTS, { ranAt, runMs: res.ms, outputPath: out });
+    // WC3V can run to the end and still follow nobody (seen on a classic Reign of Chaos .w3m map).
+    if (sim.status === "ok" && sim.players.every((p) => !p.series.length)) return { status: "failed", engine, ranAt, reason: "the simulation followed no units on this map (WC3V may not support it)" };
+    return sim;
   } catch (e) {
     return { status: "failed", engine, ranAt, reason: `summary failed: ${(e as Error).message}` };
   }

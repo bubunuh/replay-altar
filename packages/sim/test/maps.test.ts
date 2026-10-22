@@ -56,6 +56,6 @@ describe("extracted maps are kept in the data folder", () => {
   });
 
   test("a map nobody has extracted and that isn't in the map folders says where to add it", () => {
-    expect(ensureMapData("(2)Nowhere.w3x", [join(data, "no-such-folder")], data)).toMatch(/not found in your map folders/);
+    expect(ensureMapData("(2)Nowhere.w3x", [join(data, "no-such-folder")], data)).toMatch(/not found in your map folders or the game/);
   });
 });

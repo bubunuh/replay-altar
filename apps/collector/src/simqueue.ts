@@ -1,6 +1,7 @@
 // Runs game simulations one at a time, after the fast analysis has been stored and announced.
 import { applySim, mapFolders, readRecord, type IngestContext } from "@replay-altar/core";
 import { simulateGame } from "@replay-altar/sim";
+import { builtinMap } from "./gamedata.ts";
 
 export class SimQueue {
   private queue: string[] = [];
@@ -46,7 +47,7 @@ export class SimQueue {
       for (let key = this.queue.shift(); key; key = this.queue.shift()) {
         const record = readRecord(this.ctx.paths, key);
         if (!record) continue;
-        const sim = await simulateGame(record, { dataRoot: this.ctx.paths.root, mapFolders: mapFolders(this.ctx.config) });
+        const sim = await simulateGame(record, { dataRoot: this.ctx.paths.root, mapFolders: mapFolders(this.ctx.config), fromGame: builtinMap });
         applySim(this.ctx, key, sim);
         this.done++;
         if (sim.status === "ok") this.totalMs += sim.runMs;

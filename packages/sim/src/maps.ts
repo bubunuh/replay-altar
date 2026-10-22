@@ -10,7 +10,7 @@
 import { execFileSync } from "node:child_process";
 import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { mapDataName } from "./mapname.ts";
 import { WC3V_DIR } from "./paths.ts";
 
@@ -132,10 +132,26 @@ export function syncMapCache(dataRoot: string): { restored: number; saved: numbe
       if (!inCache(cache, name)) {
         save(cache, name);
         saved++;
+        continue;
       }
+      // Files WC3V added after the copy was made (placed units, written by the first simulation).
+      const client = join(WC3V_DIR, "client/maps", name);
+      const copy = join(cache, name, "client");
+      if (existsSync(client) && readdirSync(client).some((f) => !existsSync(join(copy, f)))) cpSync(client, copy, { recursive: true });
     }
   }
   return { restored, saved };
+}
+
+/**
+ * After a simulation: WC3V writes some of a map's files (its placed units, read by the match
+ * page) only when it first simulates a game there, so the cached copy is refreshed.
+ */
+export function refreshMapCache(dataRoot: string, mapFile: string) {
+  const name = mapDataName(mapFile);
+  const client = join(WC3V_DIR, "client/maps", name);
+  const cache = mapCacheDir(dataRoot);
+  if (existsSync(client) && inCache(cache, name)) cpSync(client, join(cache, name, "client"), { recursive: true });
 }
 
 /** Where the match page finds a map's pictures and grid: WC3V's folder, else the cache. */
@@ -145,11 +161,15 @@ export function mapClientDir(dataRoot: string, file: string): string | null {
   return null;
 }
 
+/** A map that comes with the game, copied out of its storage into a temporary folder (null: none). */
+export type FromGame = (mapFile: string) => string | null;
+
 /**
  * Returns null when ready, or the reason the map can't be prepared. `folders`: where to look for
- * the map file (any depth); `dataRoot`: whose cache to use (null: no cache, e.g. tests).
+ * the map file (any depth); `dataRoot`: whose cache to use (null: no cache, e.g. tests);
+ * `fromGame`: for Blizzard's own maps, which are inside the game rather than in a folder.
  */
-export function ensureMapData(mapFile: string, folders: string[], dataRoot: string | null): string | null {
+export function ensureMapData(mapFile: string, folders: string[], dataRoot: string | null, fromGame?: FromGame): string | null {
   const name = mapDataName(mapFile);
   const cache = dataRoot ? mapCacheDir(dataRoot) : null;
   if (inWc3v(name)) {
@@ -160,8 +180,16 @@ export function ensureMapData(mapFile: string, folders: string[], dataRoot: stri
     restore(cache, name);
     return null;
   }
-  const source = findMapFile(folders, mapFile);
-  if (!source) return `map file ${mapFile} not found in your map folders (Settings → Map folders)`;
+  let source = findMapFile(folders, mapFile);
+  let copied: string | null = null;
+  if (!source && fromGame) {
+    try {
+      source = copied = fromGame(mapFile);
+    } catch (e) {
+      return `map file ${mapFile} not found in your map folders, and reading it from the game failed: ${(e as Error).message}`;
+    }
+  }
+  if (!source) return `map file ${mapFile} not found in your map folders or the game (Settings → Map folders)`;
   const tmp = mkdtempSync(join(tmpdir(), "replay-altar-map-"));
   try {
     // The data-tool only reads .w3x; a .w3m (classic-format map) is the same kind of archive.
@@ -179,6 +207,7 @@ export function ensureMapData(mapFile: string, folders: string[], dataRoot: stri
     return `map extraction failed: ${(e as Error).message}`;
   } finally {
     rmSync(tmp, { recursive: true, force: true });
+    if (copied) rmSync(dirname(copied), { recursive: true, force: true });
   }
   if (!inWc3v(name)) return `map extraction produced no data for ${name}`;
   if (cache) save(cache, name);

@@ -73,6 +73,33 @@ function extract(wc3: string, out: string, names: string[]) {
   execFileSync("nice", ["-n", "19", "podman", "run", "--rm", "--security-opt", "label=disable", "-v", `${wc3}:/war3:O`, "-v", `${out}:/out:z`, IMAGE, "/war3", "/out", ...args], { stdio: "ignore" });
 }
 
+/** CASC paths containing `part` (case-insensitive), without the "war3.w3mod:" prefix. */
+function list(wc3: string, part: string): string[] {
+  const out = windows
+    ? execFileSync(process.env.REPLAY_ALTAR_CASC_EXTRACT ?? join(ROOT, "scripts/casc/bin/casc-extract.exe"), [wc3, "--list", part], { encoding: "utf8", windowsHide: true, maxBuffer: 16 << 20 })
+    : execFileSync("nice", ["-n", "19", "podman", "run", "--rm", "--security-opt", "label=disable", "-v", `${wc3}:/war3:O`, IMAGE, "/war3", "--list", part], { encoding: "utf8", maxBuffer: 16 << 20 });
+  return out
+    .split(/\r?\n/)
+    .filter((l) => l.startsWith("war3.w3mod:"))
+    .map((l) => l.slice("war3.w3mod:".length));
+}
+
+/**
+ * A map that comes with the game (Blizzard's own melee maps, played in custom games) is not in
+ * the Documents folder but inside the game's storage: copied out read-only into a temporary
+ * folder for the simulation's map extraction. Null when the game has no map of that name.
+ */
+export function builtinMap(file: string, wc3 = defaultWarcraftDir()): string | null {
+  if (!existsSync(join(wc3, ".build.info"))) return null;
+  const name = file.replace(/^.*[\\/]/, "").toLowerCase();
+  const hit = list(wc3, name).find((p) => p.replace(/^.*\\/, "").toLowerCase() === name);
+  if (!hit) return null;
+  const out = mkdtempSync(join(tmpdir(), "replay-altar-builtin-"));
+  extract(wc3, out, [hit]);
+  const path = join(out, hit.replace(/^.*\\/, ""));
+  return existsSync(path) ? path : null;
+}
+
 const sha256 = (file: string) => createHash("sha256").update(readFileSync(file)).digest("hex");
 
 /**

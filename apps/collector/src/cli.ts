@@ -25,7 +25,7 @@ import { currentReplayBuild, racesPlayed } from "./reference.ts";
 import { runCollector } from "./collector.ts";
 import { isReplayFile } from "./watcher.ts";
 import { install, resume, suspend, uninstall } from "./install.ts";
-import { extractGameData } from "./gamedata.ts";
+import { builtinMap, extractGameData } from "./gamedata.ts";
 
 const HELP = `replay-altar — Warcraft III replay archive & stats
 
@@ -221,7 +221,7 @@ switch (cmd) {
     for (const key of keys) {
       const record = readRecord(c.paths, key);
       if (!record) continue;
-      const sim = await simulateGame(record, { dataRoot: c.paths.root, mapFolders: mapFolders(c.config) });
+      const sim = await simulateGame(record, { dataRoot: c.paths.root, mapFolders: mapFolders(c.config), fromGame: builtinMap });
       applySim(c, key, sim);
       console.log(`[${++i}/${keys.length}] ${key.slice(0, 8)} ${sim.status === "ok" ? `ok in ${(sim.runMs / 1000).toFixed(1)}s${sim.warnings.length ? ` (${sim.warnings.join("; ")})` : ""}` : `failed: ${sim.reason}`}`);
     }
