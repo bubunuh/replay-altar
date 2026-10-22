@@ -14,7 +14,7 @@
 import { existsSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { listGames, openDb, paths, readRecord, referencePaths, researchLevels, type GameRecord, type PlayerRecord, type SimSample } from "@replay-altar/core";
-import { heroesXpAt } from "@replay-altar/core/heroxp";
+import { HERO_XP_FOR_LEVEL } from "@replay-altar/core/heroxp";
 import { mmss } from "@replay-altar/core/time";
 import { gamedataDir, loadCosts } from "@replay-altar/sim";
 
@@ -94,8 +94,15 @@ export const FEATURES = [
 ];
 const ORIGINAL = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 
+/**
+ * Hero experience known at time t: the XP of the levels reached so far. (heroesXpAt, used for the
+ * charts, fills in between level-ups with the next one's time, which would let the model see a
+ * level-up, and so a won fight, coming.)
+ */
+const xpSoFar = (s: Side, t: number) => s.levels.reduce((sum, l) => sum + HERO_XP_FOR_LEVEL[Math.min(10, countTo(l, t))], 0);
+
 /** The differences A − B at time t, scaled to similar sizes. */
-function diffs(a: Side, b: Side, t: number, end: number): number[] {
+function diffs(a: Side, b: Side, t: number): number[] {
   const sa = at(a.series, t), sb = at(b.series, t);
   const bases = (s: Side) => s.bases.filter((x) => x.at <= t && (x.lostAt === null || x.lostAt > t)).length;
   const tier = (s: Side) => (s.t2 !== null && s.t2 <= t ? 1 : 0) + (s.t3 !== null && s.t3 <= t ? 1 : 0);
@@ -108,7 +115,7 @@ function diffs(a: Side, b: Side, t: number, end: number): number[] {
     (army(sa) - army(sb)) / 1000,
     Math.log((army(sa) + 200) / (army(sb) + 200)),
     (sa.workers - sb.workers) / 10,
-    (heroesXpAt(a.levels, t, end) - heroesXpAt(b.levels, t, end)) / 1000,
+    (xpSoFar(a, t) - xpSoFar(b, t)) / 1000,
     bases(a) - bases(b),
     tier(a) - tier(b),
     (sa.goldSpent + sa.lumberSpent - sb.goldSpent - sb.lumberSpent) / 1000,
@@ -164,7 +171,7 @@ function momentsOf(g: Game): Moment[] {
   const out: Moment[] = [];
   // Both sides of every game, each game weighing 1 in all.
   for (const t of times) {
-    const d = diffs(a, b, t, end);
+    const d = diffs(a, b, t);
     const w = 1 / (2 * times.length);
     out.push({ game: r.gameKey, d, t, y: p.result === "win" ? 1 : 0, w, races: [a.race, b.race] });
     out.push({ game: r.gameKey, d: d.map((v) => -v), t, y: p.result === "win" ? 0 : 1, w, races: [b.race, a.race] });
@@ -572,7 +579,7 @@ for (const row of mine) {
   const a = sideOf(r, me), b = sideOf(r, opp);
   if (!a || !b) continue;
   const end = r.game.durationMs;
-  const momentAt = (t: number): Moment => ({ game: r.gameKey, d: diffs(a, b, t, end), t, y: 0, w: 0, races: [a.race, b.race] });
+  const momentAt = (t: number): Moment => ({ game: r.gameKey, d: diffs(a, b, t), t, y: 0, w: 0, races: [a.race, b.race] });
   const curve: { t: number; p: number }[] = [];
   for (let t = START_MS; t < end; t += STEP_MS) curve.push({ t, p: predict(model, momentAt(t)) });
   if (!curve.length) continue;
@@ -606,7 +613,7 @@ for (const row of mine) {
   };
   // Which differences moved the chance: each one's share of the change in the model's score.
   const drivers = (t0: number, t1: number, up: boolean) => {
-    const d0 = diffs(a, b, t0, end), d1 = diffs(a, b, t1, end);
+    const d0 = diffs(a, b, t0), d1 = diffs(a, b, t1);
     return model.spec.keep
       .map((f, k) => ({ name: FEATURES[f], c: weightAt(model, k, t1) * d1[f] - weightAt(model, k, t0) * d0[f] }))
       .filter((x) => (up ? x.c > 0.05 : x.c < -0.05))
