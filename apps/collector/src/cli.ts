@@ -13,6 +13,8 @@ import {
   reingestAll,
   replayDirs,
   mapFolders,
+  parseReplay,
+  seatsOf,
 } from "@replay-altar/core";
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
@@ -46,7 +48,7 @@ const HELP = `replay-altar — Warcraft III replay archive & stats
   replay-altar sim --retry-failed  simulate games whose simulation failed
   replay-altar sim --rerun         simulate every analyzed game again
   replay-altar sim --resummarize   recompute economy numbers from stored simulations (after a model update)
-  replay-altar sim <game>          simulate one game
+  replay-altar sim <game> [--store <dir>]   simulate one game (--store: an analyzed replay's folder)
   Maintainers (the pro statistics shipped in data/reference; users never download pro games):
   replay-altar ref                 pro reference games: status
   replay-altar ref refresh [--target N] [--group id|--all]   download recent tournament games from warcraft3.info
@@ -57,6 +59,9 @@ const HELP = `replay-altar — Warcraft III replay archive & stats
                               (yours and reference games) that don't have them yet
   replay-altar report <game|latest> the rules' report of one game: recap, findings with causes and advice, turning point
   replay-altar report <game> --facts  the fact sheet behind the report
+  replay-altar inspect <file.w3g>  what a replay holds (players, game version, map), as JSON
+  replay-altar analyze <file.w3g> --player <name> --store <dir>   analyze a replay that isn't yours
+                              from that player's side, in a folder of its own (not in your stats)
   replay-altar collector           run the collector in the foreground (what the service runs)
 `;
 
@@ -70,7 +75,55 @@ const resolveKey = (db: ReturnType<typeof openDb>, ref: string) => {
   return row.game_key;
 };
 
+/** An analyzed replay's own folder (the Analyzer page): its database and files, like yours. */
+const storeCtx = (dir: string, accounts?: string[]) => {
+  const config = loadConfig();
+  return { db: openDb(paths(dir).db), config: accounts ? { ...config, accounts } : config, paths: paths(dir) };
+};
+const option = (name: string) => {
+  const i = args.indexOf(name);
+  return i >= 0 ? args[i + 1] : undefined;
+};
+
 switch (cmd) {
+  case "inspect": {
+    let raw;
+    try {
+      raw = await parseReplay(readFileSync(resolve(args[0])));
+    } catch (e) {
+      console.log(JSON.stringify({ error: (e as Error).message }));
+      break;
+    }
+    const players = seatsOf(raw).map((s) => ({
+      ...s,
+      race: raw.output.players.find((p) => p.id === s.playerId)?.race ?? null,
+    }));
+    console.log(JSON.stringify({ version: raw.output.version, build: raw.output.buildNumber, durationMs: raw.output.duration, map: raw.output.map.file, players }));
+    break;
+  }
+  case "analyze": {
+    // A replay that isn't yours, seen from one player's side, in its own folder: it never
+    // counts in your stats. The game data and the prepared maps are yours.
+    const store = option("--store");
+    const player = option("--player");
+    if (!store || !player) throw new Error("usage: replay-altar analyze <file.w3g> --player <name> --store <dir>");
+    const c = storeCtx(store, [player]);
+    const out = await ingestFile(c, resolve(args[0]));
+    if (out.status === "error") {
+      console.log(JSON.stringify({ ok: false, reason: out.error }));
+      break;
+    }
+    const key = out.status === "duplicate" ? out.gameKey : out.record.gameKey;
+    const record = readRecord(c.paths, key);
+    if (!record?.classification.analyzed) {
+      console.log(JSON.stringify({ ok: false, key, reason: record?.classification.skipReason ?? "not analyzed" }));
+      break;
+    }
+    const sim = record.sim?.status === "ok" ? record.sim : await simulateGame(record, { dataRoot: c.paths.root, gamedataRoot: paths().root, mapFolders: mapFolders(c.config), fromGame: builtinMap });
+    if (record.sim?.status !== "ok") applySim(c, key, sim);
+    console.log(JSON.stringify({ ok: true, key, sim: sim.status, reason: sim.status === "failed" ? sim.reason : null }));
+    break;
+  }
   case "collector":
     await runCollector();
     break;
@@ -214,6 +267,8 @@ switch (cmd) {
       : flag === "--retry-failed" ? "analyzed = 1 AND sim_status = 'failed'"
       : flag === "--rerun" ? "analyzed = 1"
       : null;
+    const storeDir = option("--store");
+    if (storeDir) Object.assign(c, storeCtx(storeDir));
     const keys = where
       ? (c.db.prepare(`SELECT game_key FROM games WHERE ${where} ORDER BY played_at`).all() as { game_key: string }[]).map((r) => r.game_key)
       : [resolveKey(c.db, flag)];
@@ -221,7 +276,7 @@ switch (cmd) {
     for (const key of keys) {
       const record = readRecord(c.paths, key);
       if (!record) continue;
-      const sim = await simulateGame(record, { dataRoot: c.paths.root, mapFolders: mapFolders(c.config), fromGame: builtinMap });
+      const sim = await simulateGame(record, { dataRoot: c.paths.root, gamedataRoot: paths().root, mapFolders: mapFolders(c.config), fromGame: builtinMap });
       applySim(c, key, sim);
       console.log(`[${++i}/${keys.length}] ${key.slice(0, 8)} ${sim.status === "ok" ? `ok in ${(sim.runMs / 1000).toFixed(1)}s${sim.warnings.length ? ` (${sim.warnings.join("; ")})` : ""}` : `failed: ${sim.reason}`}`);
     }

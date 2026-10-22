@@ -77,10 +77,18 @@ a { color: var(--accent); }
 .tab-alert { display: inline-grid; place-items: center; width: 16px; height: 16px; margin-left: 6px; border-radius: 50%; background: var(--warning); color: #1a1a19; font-size: 11px; font-weight: 700; line-height: 1; vertical-align: 1px; }
 .notes { white-space: pre-wrap; font-size: 0.9em; color: var(--ink-2); background: var(--surface-2); border-radius: 8px; padding: 10px 12px; max-height: 320px; overflow: auto; }
 .share-area { display: flex; flex-direction: column; gap: 16px; }
-.capturing .no-share, .capturing .share-box, .capturing button { display: none !important; }
-/* Only in the shared picture. */
+/* The page laid out for a PDF (Share → Save as PDF): the whole document, no controls. */
 .share-credit { display: none; margin: 0; text-align: right; }
-.capturing .share-credit { display: block; }
+html.printing, html.printing body, html.printing #root { height: auto; }
+html.printing .app { display: block; height: auto; }
+html.printing main { overflow: visible; padding: 0; }
+html.printing .share-credit { display: block; }
+html.printing .topbar, html.printing .collector-progress, html.printing .no-print, html.printing .filters.no-share, html.printing .share-box, html.printing button, html.printing .tip, html.printing .map-layers { display: none !important; }
+html.printing .build ol, html.printing .fact-sheet { max-height: none; overflow: visible; }
+html.printing .card { break-inside: avoid-page; }
+.analyzer-pick { margin-top: 12px; padding: 12px; border-radius: 8px; background: var(--surface-2); }
+.analyzer-error { margin: 6px 0; color: var(--critical-text); }
+.analyzer-warning { margin: 6px 0; color: var(--ink); background: color-mix(in srgb, var(--warning) 18%, transparent); border-left: 3px solid var(--warning); padding: 6px 10px; border-radius: 4px; }
 .share-box { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; padding: 10px 12px; border-radius: 8px; background: var(--surface-2); text-align: left; }
 .collector-progress { max-width: 1240px; margin: 0 auto 16px; }
 .progress { height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }

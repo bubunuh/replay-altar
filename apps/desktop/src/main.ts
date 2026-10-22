@@ -1,9 +1,10 @@
 // Electron main process: one window, read-mostly access to the Replay Altar database.
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, watch, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, watch, writeFileSync } from "node:fs";
 import { execFile } from "node:child_process";
+import { createHash } from "node:crypto";
 import { homedir, release as osRelease, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { app, BrowserWindow, clipboard, ClipboardItem, dialog, ipcMain, nativeTheme, shell } from "electron";
+import { app, BrowserWindow, clipboard, dialog, ipcMain, nativeTheme, shell } from "electron";
 import { loadRefGroups, rulesBook } from "@replay-altar/rules";
 import { mapDataName } from "@replay-altar/sim/mapname";
 import { mapMarkers } from "./mapOverlay.ts";
@@ -85,9 +86,25 @@ if (!app.requestSingleInstanceLock()) {
   const applyLanguage = () => setLanguage(resolveLanguage(loadConfig().language, app.getLocale()));
   const db = openDb(p.db);
   // Rules reports by game, kept until the data or a result changes.
+  // An analyzed replay's own database (the Analyzer page), opened on first use.
+  const storeDbs = new Map<string, ReturnType<typeof openDb>>();
+  const storeDb = (id: string) => {
+    if (!storeDbs.has(id)) storeDbs.set(id, openDb(paths(join(dataDir(), "analyzer", id)).db));
+    return storeDbs.get(id)!;
+  };
+  /** Your games by their key; an analyzed replay by "analyzer:<folder>:<key>". */
+  const route = (key: string) => {
+    const m = /^analyzer:([0-9a-f]{16}-p\d+):(.+)$/.exec(key);
+    if (!m) return { db, p, key, store: null as string | null };
+    const store = join(dataDir(), "analyzer", m[1]);
+    return { db: storeDb(m[1]), p: paths(store), key: m[2], store };
+  };
   const books = new Map<string, RulesBook>();
   const bookOf = (key: string) => {
-    if (!books.has(key)) books.set(key, rulesBook(db, p, key));
+    if (!books.has(key)) {
+      const at = route(key);
+      books.set(key, rulesBook(at.db, at.p, at.key));
+    }
     return books.get(key)!;
   };
 
@@ -202,7 +219,8 @@ if (!app.requestSingleInstanceLock()) {
     return [join(projectRoot(), "vendor/wc3v/client/maps", name), join(dataDir(), "sim/maps", name, "client")].find((d) => existsSync(d)) ?? null;
   };
   ipcMain.handle("map:activity", (_e, key: string) => {
-    const r = getGame(db, p, key)?.record;
+    const at = route(key);
+    const r = getGame(at.db, at.p, at.key)?.record;
     try {
       return r ? mapActivity(mapDir(r.game.map.file), r) : null;
     } catch {
@@ -240,12 +258,18 @@ if (!app.requestSingleInstanceLock()) {
     return file && existsSync(file) ? `data:image/jpeg;base64,${readFileSync(file).toString("base64")}` : null;
   });
   ipcMain.handle("games:list", () => listGames(db));
-  ipcMain.handle("games:get", (_e, key: string) => getGame(db, p, key));
+  ipcMain.handle("games:get", (_e, key: string) => {
+    const at = route(key);
+    const detail = getGame(at.db, at.p, at.key);
+    // The page knows a game by the key it asked with.
+    return detail && at.store ? { ...detail, record: { ...detail.record, gameKey: key } } : detail;
+  });
   ipcMain.handle("perf:data", () => performanceData(db));
   ipcMain.handle("games:override", (_e, key: string, result: "win" | "loss" | null) => {
     books.delete(key);
     // result null = back to the detected result (the view takes the latest override).
-    addAnnotation(db, { gameKey: key, kind: "result_override", source: "user", author: "desktop", body: { result } });
+    const at = route(key);
+    addAnnotation(at.db, { gameKey: at.key, kind: "result_override", source: "user", author: "desktop", body: { result } });
   });
   ipcMain.handle("config:get", () => ({ config: loadConfig(), configPath: configPath(), paths: p }));
   ipcMain.handle("config:set", (_e, config: Config) => {
@@ -317,32 +341,107 @@ if (!app.requestSingleInstanceLock()) {
     restartCollectorIfRunning();
     return mapFolderInfo();
   });
-  // "Simulate again" on a match: `replay-altar sim <game>` in its own process (the simulation
-  // takes a while and runs WC3V); it extracts the map again when its data is missing.
-  const resimulating = new Set<string>();
-  ipcMain.handle("sim:rerun", (_e, key: string) => {
-    if (resimulating.has(key)) return { ok: false, message: tr("Already simulating this game.", "Esta partida já está sendo simulada.", "Esta partida ya se está simulando.", "Cette partie est déjà en cours de simulation.") };
-    resimulating.add(key);
-    // Installed: the bundled CLI on this executable, as Node. Linux: the launcher `install` wrote.
-    // Otherwise: node with this checkout's CLI.
+  // The CLI in its own process, for slow work (simulations run WC3V). Installed: the bundled CLI
+  // on this executable, as Node. Linux: the launcher `install` wrote. Otherwise: node with this
+  // checkout's CLI.
+  const runCli = (cliArgs: string[], timeoutMs = 15 * 60_000) => {
     const linuxLauncher = join(homedir(), ".local/bin/replay-altar");
-    const [cli, ...cliArgs] = isInstalled()
+    const [cli, ...base] = isInstalled()
       ? [process.execPath, join(projectRoot(), "collector/collector.mjs")]
       : process.platform !== "win32" && existsSync(linuxLauncher)
         ? [linuxLauncher]
         : ["node", join(app.getAppPath(), "../collector/src/cli.ts")];
     const env = isInstalled() ? { ...process.env, ELECTRON_RUN_AS_NODE: "1" } : process.env;
-    return new Promise<{ ok: boolean; message: string }>((resolve) => {
-      execFile(cli, [...cliArgs, "sim", key], { env, windowsHide: true, timeout: 15 * 60_000, maxBuffer: 4 << 20 }, (err, stdout, stderr) => {
-        resimulating.delete(key);
-        books.delete(key);
-        const line = `${stdout}`.trim().split("\n").at(-1) ?? "";
-        const failed = /failed: (.*)$/.exec(line)?.[1];
-        if (/ ok in /.test(line)) resolve({ ok: true, message: "" });
-        else resolve({ ok: false, message: failed ?? (err ? `${stderr || err.message}`.trim().split("\n").at(-1)! : line) });
-        win?.webContents.send("data:changed");
-      });
+    return new Promise<{ stdout: string; error: string | null }>((resolve) =>
+      execFile(cli, [...base, ...cliArgs], { env, windowsHide: true, timeout: timeoutMs, maxBuffer: 16 << 20 }, (err, stdout, stderr) =>
+        resolve({ stdout: `${stdout}`.trim(), error: err ? `${stderr || err.message}`.trim().split("\n").at(-1)! : null }),
+      ),
+    );
+  };
+  const lastLine = (s: string) => s.split("\n").at(-1) ?? "";
+
+  // "Simulate again" on a match: `replay-altar sim <game>`; it extracts the map again when its
+  // data is missing.
+  const resimulating = new Set<string>();
+  ipcMain.handle("sim:rerun", async (_e, key: string) => {
+    if (resimulating.has(key)) return { ok: false, message: tr("Already simulating this game.", "Esta partida já está sendo simulada.", "Esta partida ya se está simulando.", "Cette partie est déjà en cours de simulation.") };
+    resimulating.add(key);
+    const at = route(key);
+    const res = await runCli(["sim", at.key, ...(at.store ? ["--store", at.store] : [])]);
+    resimulating.delete(key);
+    books.delete(key);
+    const line = lastLine(res.stdout);
+    const failed = /failed: (.*)$/.exec(line)?.[1];
+    win?.webContents.send("data:changed");
+    if (/ ok in /.test(line)) return { ok: true, message: "" };
+    return { ok: false, message: failed ?? res.error ?? line };
+  });
+
+  // The Analyzer page: replays that aren't yours (a pro game, a friend's), each analyzed from one
+  // player's side in a folder of its own under <data>/analyzer/, never in your stats. Their keys
+  // are "analyzer:<folder>:<game key>" (route() below).
+  const analyzerRoot = join(dataDir(), "analyzer");
+  ipcMain.handle("analyzer:pick", async () => {
+    // Dev/test: a replay without the dialog.
+    if (process.env.REPLAY_ALTAR_PICK_FILE) return inspectReplay(process.env.REPLAY_ALTAR_PICK_FILE);
+    const pick = await dialog.showOpenDialog(win!, {
+      properties: ["openFile"],
+      filters: [{ name: tr("Warcraft III replays", "Replays do Warcraft III", "Replays de Warcraft III", "Replays de Warcraft III"), extensions: ["w3g"] }],
+      title: tr("A replay to analyze", "Um replay para analisar", "Un replay para analizar", "Un replay à analyser"),
     });
+    if (pick.canceled || !pick.filePaths[0]) return null;
+    const file = pick.filePaths[0];
+    return inspectReplay(file);
+  });
+  const inspectReplay = async (file: string) => {
+    const res = await runCli(["inspect", file], 60_000);
+    let info: { version: string; build: number; durationMs: number; map: string; players: { playerId: number; name: string; race: string | null; teamId: number; isComputer: boolean; isObserver: boolean }[] };
+    try {
+      info = JSON.parse(lastLine(res.stdout));
+    } catch {
+      return { file, error: res.error ?? res.stdout };
+    }
+    if ("error" in info) return { file, error: String((info as { error: unknown }).error) };
+    // The current game: your latest game, or the pro statistics', whichever is newer.
+    const latest = (db.prepare("SELECT MAX(build) b FROM games").get() as { b: number | null }).b ?? 0;
+    const proBuild = Math.max(0, ...loadRefGroups().map((g) => g.profile?.replayBuild ?? 0));
+    return { file, ...info, currentBuild: Math.max(latest, proBuild) || null, accounts: loadConfig().accounts };
+  };
+  ipcMain.handle("analyzer:run", async (_e, file: string, player: { playerId: number; name: string }) => {
+    const id = `${createHash("sha256").update(readFileSync(file)).digest("hex").slice(0, 16)}-p${player.playerId}`;
+    const store = join(analyzerRoot, id);
+    mkdirSync(store, { recursive: true });
+    const res = await runCli(["analyze", file, "--player", player.name, "--store", store]);
+    let out: { ok: boolean; key?: string; sim?: string; reason?: string | null };
+    try {
+      out = JSON.parse(lastLine(res.stdout));
+    } catch {
+      out = { ok: false, reason: res.error ?? res.stdout };
+    }
+    if (!out.ok || !out.key) {
+      rmSync(store, { recursive: true, force: true });
+      return { ok: false, reason: out.reason ?? "?" };
+    }
+    writeFileSync(join(store, "analyzed.json"), JSON.stringify({ file, player: player.name, key: out.key, at: new Date().toISOString() }));
+    return { ok: true, key: `analyzer:${id}:${out.key}`, sim: out.sim, reason: out.reason ?? null };
+  });
+  ipcMain.handle("analyzer:list", () => {
+    if (!existsSync(analyzerRoot)) return [];
+    return readdirSync(analyzerRoot)
+      .flatMap((id) => {
+        const meta = join(analyzerRoot, id, "analyzed.json");
+        if (!existsSync(meta)) return [];
+        const m = JSON.parse(readFileSync(meta, "utf8")) as { file: string; player: string; key: string; at: string };
+        const row = listGames(storeDb(id)).find((g) => g.game_key === m.key);
+        return row ? [{ id, key: `analyzer:${id}:${m.key}`, file: m.file, player: m.player, addedAt: m.at, row }] : [];
+      })
+      .sort((a, b) => b.addedAt.localeCompare(a.addedAt));
+  });
+  ipcMain.handle("analyzer:remove", (_e, id: string) => {
+    if (!/^[0-9a-f]{16}-p\d+$/.test(id)) return;
+    storeDbs.get(id)?.close();
+    storeDbs.delete(id);
+    rmSync(join(analyzerRoot, id), { recursive: true, force: true });
   });
   // The pro statistics shipped with this version (data/reference).
   ipcMain.handle("ref:profiles", () => loadRefGroups());
@@ -360,16 +459,19 @@ if (!app.requestSingleInstanceLock()) {
     }
   });
   ipcMain.handle("share:copyText", (_e, text: string) => clipboard.writeText(text));
-  ipcMain.handle("share:copyImage", (_e, png: string) =>
-    clipboard.write([new ClipboardItem({ "image/png": new Blob([Buffer.from(png.replace(/^data:image\/png;base64,/, ""), "base64")], { type: "image/png" }) })]),
-  );
-  ipcMain.handle("share:saveImage", async (_e, png: string, name: string) => {
-    const options = { defaultPath: join(app.getPath("pictures"), name), filters: [{ name: "PNG", extensions: ["png"] }] };
+  // Share → Save as PDF: the page as it is now (the page has laid itself out for paper), A4,
+  // scaled so the paper is about as wide as the window.
+  ipcMain.handle("share:pdf", async (e, name: string) => {
+    const page = BrowserWindow.fromWebContents(e.sender);
+    if (!page) return false;
+    const width = page.getContentSize()[0];
+    const pdf = await e.sender.printToPDF({ pageSize: "A4", printBackground: true, scale: Math.min(1, Math.max(0.3, 720 / width)), margins: { top: 0.4, bottom: 0.4, left: 0.4, right: 0.4 } });
+    const options = { defaultPath: join(app.getPath("documents"), name), filters: [{ name: "PDF", extensions: ["pdf"] }] };
     // Dev/test: save without the dialog.
     const testFile = process.env.REPLAY_ALTAR_SAVE_TO;
-    const picked = testFile ? { canceled: false, filePath: testFile } : win ? await dialog.showSaveDialog(win, options) : await dialog.showSaveDialog(options);
+    const picked = testFile ? { canceled: false, filePath: testFile } : await dialog.showSaveDialog(page, options);
     if (picked.canceled || !picked.filePath) return false;
-    writeFileSync(picked.filePath, Buffer.from(png.replace(/^data:image\/png;base64,/, ""), "base64"));
+    writeFileSync(picked.filePath, pdf);
     return true;
   });
   ipcMain.handle("nav:pending", () => {

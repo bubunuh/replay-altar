@@ -9,7 +9,8 @@ Replay Altar is a Warcraft III: Reforged replay analyzer for 1v1 players. It run
 - **Compared with pros.** Your numbers are set against about 200 recent tournament games per race, played on your current patch and analyzed on your computer the same way.
 - **A report per game.** Rules drawn from well-known guides (Grubby, Liquipedia, Warcraft 3 Gym, Vortix and others) point out the main problems, the facts behind them, the fight that turned the game, your strengths and the opponent's plan. Each finding comes with concrete advice.
 - **Your progress.** Win rates by matchup, map and game length; problems that keep coming back; how you play in wins against losses; any number over time.
-- **Share a report** as text or as a picture, for Reddit or Discord, without your opponent's battletag.
+- **Analyze any replay:** the Analyzer tab analyzes a 1v1 replay that isn't yours (a pro game, one found online) from the side of the player you choose, without counting it in your stats; it warns when the replay is from an older version of the game.
+- **Share a report** as text or as a PDF of the whole report, for Reddit or Discord, without your opponent's battletag.
 - **English, Brazilian Portuguese, Spanish and French.**
 
 ![The report of a game: result, heroes, the main numbers against the opponent, the map, and the findings with advice](docs/images/report.png)
@@ -53,6 +54,7 @@ The default game location is the Lutris Battle.net prefix in `~/Games/battlenet`
 
 - **Matches:** every analyzed game, with its main problem. Open one for its report, charts, key numbers against pros, the build orders and a map of the fights and each player's creeping.
 - **Performance:** your win rates, recurring problems with the one to work on now, and your numbers in wins, losses and against pros.
+- **Analyzer:** choose a replay file and the player whose side to take; the report opens like one of your games. Analyzed replays are listed there and kept apart from your stats.
 - **Settings:** your battletags, language, replay folders, map folders, notifications, updates (a yellow mark on Settings when a new version is out; updating is your choice), which pro games your numbers are compared with, and **Help and feedback** to report a problem or suggest an idea.
 
 Custom maps, games against the computer, team games and games you only observed are kept in the archive but not counted.

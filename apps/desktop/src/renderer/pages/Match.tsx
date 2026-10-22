@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { BuildEvent, GameDetail, GameRecord, MetricDef, PlayerRecord, SimSample } from "@replay-altar/core/ui";
 import { per10Minutes } from "@replay-altar/core/metrics";
 import { heroesXpAt } from "@replay-altar/core/heroxp";
@@ -100,9 +100,9 @@ function GameCharts({ record, refMp, refLabel }: { record: GameRecord; refMp: Ma
     { name: shortName(me?.name ?? tr("You", "Você", "Tú", "Vous")), color: t.series1, points: mine.map((s) => [s.t, pick(s)] as [number, number]) },
     { name: shortName(opp?.name ?? tr("Opponent", "Oponente", "Rival", "Adversaire")), color: t.series2, points: theirs.map((s) => [s.t, pick(s)] as [number, number]) },
   ];
-  const army = useMemo(() => timeLines(both((s) => s.armyValue ?? 0), undefined, bandOf(refMp?.curves.armyValue, refLabel)), [mine, theirs, refMp]);
-  const spent = useMemo(() => timeLines(both((s) => s.goldSpent + s.lumberSpent), undefined, bandOf(refMp?.curves.spent, refLabel)), [mine, theirs, refMp]);
-  const workers = useMemo(() => timeLines(both((s) => s.workers), undefined, bandOf(refMp?.curves.workers, refLabel)), [mine, theirs, refMp]);
+  const army = useMemo(() => timeLines(both((s) => s.armyValue ?? 0), undefined, bandOf(refMp?.curves.armyValue, refLabel)), [mine, theirs, refMp, me?.name, opp?.name]);
+  const spent = useMemo(() => timeLines(both((s) => s.goldSpent + s.lumberSpent), undefined, bandOf(refMp?.curves.spent, refLabel)), [mine, theirs, refMp, me?.name, opp?.name]);
+  const workers = useMemo(() => timeLines(both((s) => s.workers), undefined, bandOf(refMp?.curves.workers, refLabel)), [mine, theirs, refMp, me?.name, opp?.name]);
   const supplyFor = (series: SimSample[], mineColor: boolean, band: Band | null = null) =>
     timeLines((t) => [
       { name: tr("food used", "food usado", "food usado", "food utilisée"), color: mineColor ? t.series1 : t.series2, points: series.map((s) => [s.t, s.foodUsed] as [number, number]), step: true },
@@ -229,17 +229,26 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
   const [detail, setDetail] = useState<GameDetail | undefined>();
   const [hideWorkers, setHideWorkers] = useState(true);
   const [sharing, setSharing] = useState(false);
+  // A replay from the Analyzer page rather than one of your games.
+  const analyzed = gameKey.startsWith("analyzer:");
   // "Simulate again": null, running, or the reason it failed.
   const [resim, setResim] = useState<{ running: boolean; error: string | null }>({ running: false, error: null });
   const [hideNames, setHideNames] = useState(true);
-  const shareRef = useRef<HTMLDivElement>(null);
   const [kinds, setKinds] = useState(new Set(["building", "unit", "upgrade", "item"]));
   const load = useCallback(() => api.getGame(gameKey).then(setDetail), [gameKey]);
   useEffect(() => {
     load();
   }, [load]);
 
-  const r = detail?.record;
+  // While a PDF is made with the opponent's battletag hidden, the page shows a placeholder for it
+  // everywhere (headers, chart legends, build orders).
+  const [anonymous, setAnonymous] = useState(false);
+  const real = detail?.record;
+  const r = useMemo(() => {
+    if (!real || !anonymous) return real;
+    const alias = tr("Opponent", "Oponente", "Rival", "Adversaire");
+    return { ...real, players: real.players.map((p) => (p.playerId === real.classification.opponentId ? { ...p, name: alias } : p)) };
+  }, [real, anonymous]);
   const me = r?.players.find((p) => p.isMe);
   const opp = r?.players.find((p) => p.playerId === r.classification.opponentId);
   const pros = groupForRace(refs, me?.race);
@@ -271,8 +280,18 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
 
   return (
     <div className="page">
-      <div><button className="btn" onClick={onBack}>← {tr("All matches", "Todas as partidas", "Todas las partidas", "Toutes les parties")}</button></div>
-      <div ref={shareRef} className="share-area">
+      <p className="share-credit muted small">{tr("Analyzed with Replay Altar", "Analisado com o Replay Altar", "Analizado con Replay Altar", "Analysé avec Replay Altar")} · github.com/bubunuh/replay-altar</p>
+      <div className="no-print">
+        <button className="btn" onClick={onBack}>
+          ← {analyzed ? tr("Analyzed replays", "Replays analisados", "Replays analizados", "Replays analysés") : tr("All matches", "Todas as partidas", "Todas las partidas", "Toutes les parties")}
+        </button>
+        {analyzed && me && (
+          <span className="muted small" style={{ marginLeft: 12 }}>
+            {tr(`An analyzed replay, from ${me.name}'s side: "you" in the report is ${me.name}. It doesn't count in your stats.`, `Um replay analisado, do lado de ${me.name}: "você" na análise é ${me.name}. Ele não entra nas suas estatísticas.`, `Un replay analizado, desde el lado de ${me.name}: "tú" en el análisis es ${me.name}. No cuenta en tus estadísticas.`, `Un replay analysé, du côté de ${me.name} : « vous » dans l'analyse désigne ${me.name}. Il ne compte pas dans vos statistiques.`)}
+          </span>
+        )}
+      </div>
+      <div className="share-area">
         <div className="card match-card">
           <div className="match-side">{me && opp && <ScorePanel record={r} me={me} opp={opp} metrics={metrics} mp={ref?.mp ?? null} />}</div>
           <div className="match-head">
@@ -280,7 +299,7 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
             <div className="versus">
               <div className="versus-side me">
                 <div className="versus-name">
-                  <b>{tr("You", "Você", "Tú", "Vous")}</b>
+                  <b>{analyzed && me ? me.name : tr("You", "Você", "Tú", "Vous")}</b>
                   <RaceIcon race={me?.race} />
                 </div>
                 {me && <HeroIcons p={me} record={r} />}
@@ -345,7 +364,7 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
               {tr("The simulation failed", "A simulação falhou", "La simulación falló", "La simulation a échoué")}: {resim.error}
             </p>
           )}
-          {sharing && me && opp && <Share record={r} me={me} opp={opp} result={row.result} target={shareRef} hideNames={hideNames} setHideNames={setHideNames} />}
+          {sharing && me && opp && <Share record={r} me={me} opp={opp} result={row.result} hideNames={hideNames} setHideNames={setHideNames} setAnonymous={setAnonymous} />}
             {r.sim?.status === "ok" && me && opp && (
               <div className="build-lines small">
                 <BuildLine record={r} player={me} who={tr("Your build", "Sua build", "Tu build", "Votre build")} principles={pros?.principles} />
@@ -361,7 +380,6 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
         {row.analyzed === 1 && me && opp && r.game.durationMs >= MIN_GAME_MS && (
           <RulesCard key={`rules-${r.gameKey}`} gameKey={r.gameKey} />
         )}
-        <p className="share-credit muted small">{tr("Analyzed with Replay Altar", "Analisado com o Replay Altar", "Analizado con Replay Altar", "Analysé avec Replay Altar")} · github.com/bubunuh/replay-altar</p>
       </div>
 
       <GameCharts record={r} refMp={ref?.mp ?? null} refLabel="Pros" />

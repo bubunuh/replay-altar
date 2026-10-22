@@ -5,6 +5,7 @@ import { api, type RefGroupInfo, type UpdateState } from "./api.ts";
 import { Match } from "./pages/Match.tsx";
 import { Matches } from "./pages/Matches.tsx";
 import { Settings } from "./pages/Other.tsx";
+import { Analyzer } from "./pages/Analyzer.tsx";
 import { Performance } from "./pages/Performance.tsx";
 import { TipLayer } from "./Tip.tsx";
 import { CollectorProgress } from "./CollectorProgress.tsx";
@@ -22,10 +23,11 @@ api.uiFont().then((url) => {
   face.load().then((f) => document.fonts.add(f)).catch(() => {});
 });
 
-type Page = "matches" | "performance" | "settings";
+type Page = "matches" | "performance" | "analyzer" | "settings";
 const TABS: [Page, string][] = [
   ["matches", tr("Matches", "Partidas", "Partidas", "Parties")],
   ["performance", tr("Performance", "Desempenho", "Rendimiento", "Performances")],
+  ["analyzer", tr("Analyzer", "Analisador", "Analizador", "Analyseur")],
   ["settings", tr("Settings", "Configurações", "Configuración", "Paramètres")],
 ];
 
@@ -105,6 +107,8 @@ function App() {
           <Match key={`${game}:${version}`} gameKey={game} metrics={perf.metrics} refs={refs} onBack={() => setGame(null)} />
         ) : page === "matches" ? (
           <Matches games={games} onOpen={open} />
+        ) : page === "analyzer" ? (
+          <Analyzer onOpen={open} />
         ) : page === "performance" ? (
           <Performance games={perf.games} metrics={perf.metrics} refs={refs} onOpen={open} />
         ) : (
