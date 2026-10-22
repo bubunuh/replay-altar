@@ -21,6 +21,11 @@ const GROUP = "validation";
 const CALIBRATION = ["pros", "pros-orc", "pros-undead", "pros-nightelf"];
 const YEARS = [2022, 2023, 2024, 2025, 2026];
 const REQUEST_GAP_MS = 5000;
+/** A slow site gets more room: the gap is at least this many times the last answer's time. */
+const SLOW_FACTOR = 3;
+/** When the site is down (5xx twice), wait this long and try again, this many times, before stopping. */
+const OUTAGE_WAIT_MS = 15 * 60_000;
+const OUTAGE_TRIES = 4;
 const MIN_DURATION_S = 180;
 /** Games taken from one list page at most, so a year isn't a handful of tournaments. */
 const PER_PAGE = 4;
@@ -84,16 +89,19 @@ for (const g of CALIBRATION) {
 
 // ---- The site, one request every 5 seconds --------------------------------------------------
 let lastRequest = 0;
+let gapMs = REQUEST_GAP_MS;
 let queue = Promise.resolve();
 const politeFetch = (url: string, init?: RequestInit) => {
   const turn = queue.then(async () => {
-    const wait = lastRequest + REQUEST_GAP_MS - Date.now();
+    const wait = lastRequest + gapMs - Date.now();
     if (wait > 0) await sleep(wait);
     for (let attempt = 0; ; attempt++) {
       lastRequest = Date.now();
       counts.requests++;
       try {
-        return await fetch(url, init);
+        const res = await fetch(url, init);
+        gapMs = Math.max(REQUEST_GAP_MS, SLOW_FACTOR * (Date.now() - lastRequest));
+        return res;
       } catch (e) {
         if (attempt >= RETRY_WAITS_MS.length) throw new RateLimited(`network error after ${attempt + 1} tries: ${(e as Error).message}`);
         console.log(`network error (${(e as Error).message}); trying again in ${RETRY_WAITS_MS[attempt] / 60_000} min`);
@@ -104,7 +112,23 @@ const politeFetch = (url: string, init?: RequestInit) => {
   queue = turn.then(() => {}, () => {});
   return turn;
 };
-const client = w3infoClient({ fetch: politeFetch as never, sleep });
+const raw = w3infoClient({ fetch: politeFetch as never, sleep });
+/** Rides out a site outage (5xx); a request to slow down (429) still stops the run. */
+const patient =
+  <A extends unknown[], R>(fn: (...a: A) => Promise<R>) =>
+  async (...a: A): Promise<R> => {
+    for (let i = 1; ; i++) {
+      try {
+        return await fn(...a);
+      } catch (e) {
+        if (!(e instanceof RateLimited) || e.message.includes("429") || i >= OUTAGE_TRIES) throw e;
+        console.log(`${e.message}; waiting ${OUTAGE_WAIT_MS / 60_000} min before trying again (${i}/${OUTAGE_TRIES - 1})`);
+        writeStatus("running", `site outage, waiting: ${e.message}`);
+        await sleep(OUTAGE_WAIT_MS);
+      }
+    }
+  };
+const client = { listReplays: patient(raw.listReplays), download: patient(raw.download), mapFiles: patient(raw.mapFiles), downloadMap: patient(raw.downloadMap) };
 
 // ---- Which list pages hold each year (newest first) ------------------------------------------
 async function newestOn(page: number): Promise<string | null> {
