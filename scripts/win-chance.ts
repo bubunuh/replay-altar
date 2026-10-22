@@ -222,6 +222,71 @@ type Model = { spec: Spec; w: number[] };
 const fitModel = (ms: Moment[], spec: Spec): Model => ({ spec, w: fit(ms.map((m) => design(m, spec)), ms.map((m) => m.y), ms.map((m) => m.w), spec.lambda) });
 const predict = (model: Model, m: Moment) => sigmoid(dot(model.w, design(m, model.spec)));
 
+// ---- A more flexible model: boosted decision trees --------------------------------------------
+// Small trees on the differences and the game time, added up (gradient boosting on log loss). A
+// side's score is half its trees' value minus half the other side's, so the chances still add to
+// 100%. Compared with the logistic models above; not used for the explanations.
+type TreeSpec = { trees: number; depth: number; rate: number };
+type Node = { f: number; thr: number; left: Node | number; right: Node | number };
+type Trees = { spec: TreeSpec; nodes: (Node | number)[] };
+const treeInput = (m: Moment, sign = 1) => [...m.d.map((v) => v * sign), m.t / 60_000];
+const BINS = 32;
+
+function fitTrees(ms: Moment[], spec: TreeSpec): Trees {
+  const xs = ms.map((m) => treeInput(m));
+  const k = xs[0].length;
+  const scale = ms.length / ms.reduce((s, m) => s + m.w, 0); // weights average 1 per moment
+  const ws = ms.map((m) => m.w * scale);
+  // Split points: quantiles of each input.
+  const cuts = Array.from({ length: k }, (_, f) => {
+    const v = xs.map((x) => x[f]).sort((a, b) => a - b);
+    return [...new Set(Array.from({ length: BINS - 1 }, (_, i) => v[Math.floor(((i + 1) * v.length) / BINS)]))];
+  });
+  const bin = xs.map((x) => x.map((v, f) => {
+    let b = 0;
+    while (b < cuts[f].length && v > cuts[f][b]) b++;
+    return b;
+  }));
+  const score = new Array(ms.length).fill(0);
+  const nodes: (Node | number)[] = [];
+  const lambda = 1, minHess = 20;
+  for (let t = 0; t < spec.trees; t++) {
+    const g = ms.map((m, i) => ws[i] * (sigmoid(score[i]) - m.y));
+    const h = ms.map((_, i) => { const p = sigmoid(score[i]); return ws[i] * p * (1 - p); });
+    const grow = (rows: number[], depth: number): Node | number => {
+      let G = 0, H = 0;
+      for (const i of rows) { G += g[i]; H += h[i]; }
+      const leaf = (-G / (H + lambda)) * spec.rate;
+      if (depth >= spec.depth || H < 2 * minHess) return leaf;
+      let best = { gain: 0, f: -1, b: -1 };
+      for (let f = 0; f < k; f++) {
+        const hg = new Array(BINS).fill(0), hh = new Array(BINS).fill(0);
+        for (const i of rows) { hg[bin[i][f]] += g[i]; hh[bin[i][f]] += h[i]; }
+        let gl = 0, hl = 0;
+        for (let b = 0; b < cuts[f].length; b++) {
+          gl += hg[b]; hl += hh[b];
+          const gr = G - gl, hr = H - hl;
+          if (hl < minHess || hr < minHess) continue;
+          const gain = (gl * gl) / (hl + lambda) + (gr * gr) / (hr + lambda) - (G * G) / (H + lambda);
+          if (gain > best.gain) best = { gain, f, b };
+        }
+      }
+      if (best.f < 0) return leaf;
+      const left = rows.filter((i) => bin[i][best.f] <= best.b), right = rows.filter((i) => bin[i][best.f] > best.b);
+      return { f: best.f, thr: cuts[best.f][best.b], left: grow(left, depth + 1), right: grow(right, depth + 1) };
+    };
+    const tree = grow(ms.map((_, i) => i), 0);
+    nodes.push(tree);
+    for (let i = 0; i < ms.length; i++) score[i] += treeValue(tree, xs[i]);
+  }
+  return { spec, nodes };
+}
+const treeValue = (n: Node | number, x: number[]): number => (typeof n === "number" ? n : treeValue(x[n.f] <= n.thr ? n.left : n.right, x));
+const predictTrees = (model: Trees, m: Moment) => {
+  const a = treeInput(m, 1), b = treeInput(m, -1);
+  return sigmoid(model.nodes.reduce<number>((s, n) => s + (treeValue(n, a) - treeValue(n, b)) / 2, 0));
+};
+
 // ---- Data ------------------------------------------------------------------------------------
 /** Each game once; where race groups hold different copies, the one with a simulation. */
 function loadGames(groups: string[], meta?: Map<string, { year: number; matchup: string }>): Game[] {
@@ -309,6 +374,29 @@ const finals = scored.map((c) => ({ ...c, model: fitModel(calMoments, c.spec) })
 const finalBest = finals.find((f) => f.spec === best.spec)!;
 const finalFirst = finals[0];
 
+// Boosted trees, chosen by the same cross-validation.
+const treeCv = (spec: TreeSpec): Pred[] => {
+  const out: Pred[] = [];
+  for (let f = 0; f < FOLDS; f++) {
+    const model = fitTrees(calMoments.filter((m) => fold(m.game) !== f), spec);
+    for (const m of calMoments.filter((m) => fold(m.game) === f)) out.push({ ...m, p: predictTrees(model, m) });
+  }
+  return out;
+};
+const treeTries = [
+  { trees: 150, depth: 2, rate: 0.05 },
+  { trees: 300, depth: 2, rate: 0.05 },
+  { trees: 150, depth: 3, rate: 0.05 },
+  { trees: 300, depth: 3, rate: 0.03 },
+].map((spec) => {
+  const cv = treeCv(spec);
+  progress(`trees ${spec.trees}×depth ${spec.depth}: ${lossOf(cv).toFixed(4)}`);
+  return { spec, cv, loss: lossOf(cv) };
+});
+const bestTrees = treeTries.sort((a, b) => a.loss - b.loss)[0];
+const treeModel = fitTrees(calMoments, bestTrees.spec);
+const valTrees: Pred[] = valMoments.map((m) => ({ ...m, p: predictTrees(treeModel, m) }));
+
 // ---- Scores ----------------------------------------------------------------------------------
 const pct = (v: number) => `${Math.round(v * 100)}%`;
 const predsOn = (model: Model, ms: Moment[]): Pred[] => ms.map((m) => ({ ...m, p: predict(model, m) }));
@@ -362,11 +450,17 @@ for (const f of finals) {
   const v = predsOn(f.model, valMoments);
   out(`| ${label(f.spec)}${f.spec.basis === "curve" ? ` (ridge ${f.spec.lambda})` : ""}${f === finalBest ? " **(best)**" : ""} | ${f.spec.keep.map((i) => FEATURES[i]).join(", ")} | ${f.loss.toFixed(4)} | ${valMoments.length ? lossOf(v).toFixed(4) : "–"} | ${valMoments.length ? brierOf(v).toFixed(4) : "–"} |`);
 }
+out(`| Boosted trees (${bestTrees.spec.trees} trees of depth ${bestTrees.spec.depth}) | all ${FEATURES.length}, and the game time | ${bestTrees.loss.toFixed(4)} | ${valMoments.length ? lossOf(valTrees).toFixed(4) : "–"} | ${valMoments.length ? brierOf(valTrees).toFixed(4) : "–"} |`);
 out(`| Coin flip | | 0.6931 | 0.6931 | 0.2500 |`);
 out();
 if (valMoments.length && finalBest !== finalFirst) {
   const d = bootstrapDiff(valBest, valFirst);
   out(`On the validation set, the best model's log loss minus the first model's: ${(lossOf(valBest) - lossOf(valFirst)).toFixed(4)} (95% range over games resampled: ${d.lo.toFixed(4)} to ${d.hi.toFixed(4)}; below zero means better).`);
+  out();
+}
+if (valMoments.length) {
+  const d = bootstrapDiff(valTrees, valBest);
+  out(`Boosted trees minus the best logistic model, on the validation set: ${(lossOf(valTrees) - lossOf(valBest)).toFixed(4)} (95% range: ${d.lo.toFixed(4)} to ${d.hi.toFixed(4)}).`);
   out();
 }
 const shown = valMoments.length ? valBest : best.cv;
