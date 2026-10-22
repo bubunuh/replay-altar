@@ -12,12 +12,12 @@
 // No intercept and only differences, so the two players' chances always add up to 100%. Each game
 // weighs the same, whatever its length.
 import { execFileSync } from "node:child_process";
-import { existsSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { listGames, openDb, paths, readRecord, referencePaths, researchLevels, type GameRecord, type PlayerRecord, type SimSample } from "@replay-altar/core";
 import { mmss } from "@replay-altar/core/time";
 import { gamedataDir, loadCosts } from "@replay-altar/sim";
-import { basis, diffs, FEATURES, sideOf, sigmoid, START_MS, STEP_MS, weightAt, winCurve, type ResearchTimes, type Side, type SwingEvent, type WinModel } from "@replay-altar/rules/winchance";
+import { basis, diffs, FEATURES, KNOTS_MIN, sideOf, sigmoid, START_MS, STEP_MS, weightAt, winCurve, type ResearchTimes, type Side, type SwingEvent, type WinModel } from "@replay-altar/rules/winchance";
 import { fightLabel } from "@replay-altar/rules/series";
 
 const costs = loadCosts(gamedataDir(paths().root));
@@ -37,13 +37,15 @@ const label = (s: Spec) => `${s.keep.length} differences, ${s.basis === "linear"
 type Moment = { game: string; d: number[]; t: number; y: number; w: number; races: [string, string] };
 type Game = { key: string; record: GameRecord; year: number | null; matchup: string };
 
-function momentsOf(g: Game): Moment[] {
+/** `tweak` changes a side before the differences are taken (the sensitivity test below). */
+function momentsOf(g: Game, tweak: (s: Side) => Side = (s) => s): Moment[] {
   const r = g.record;
   if (r.sim?.status !== "ok" || r.players.length !== 2) return [];
   const [p, q] = r.players;
   if (!["win", "loss"].includes(p.result ?? "")) return [];
-  const a = sideOf(r, p, RESEARCH), b = sideOf(r, q, RESEARCH);
-  if (!a || !b) return [];
+  const sa = sideOf(r, p, RESEARCH), sb = sideOf(r, q, RESEARCH);
+  if (!sa || !sb) return [];
+  const a = tweak(sa), b = tweak(sb);
   const end = r.game.durationMs;
   const times: number[] = [];
   for (let t = START_MS; t < end; t += STEP_MS) times.push(t);
@@ -226,8 +228,8 @@ const finiteGames = (ms: Moment[]) => {
   if (bad.size) console.error(`left out ${bad.size} games with unreadable numbers`);
   return ms.filter((m) => !bad.has(m.game));
 };
-const calMoments = finiteGames(calibration.flatMap(momentsOf));
-const valMoments = finiteGames(validation.flatMap(momentsOf));
+const calMoments = finiteGames(calibration.flatMap((g) => momentsOf(g)));
+const valMoments = finiteGames(validation.flatMap((g) => momentsOf(g)));
 const calUsed = new Set(calMoments.map((m) => m.game));
 const valUsed = new Set(valMoments.map((m) => m.game));
 const gameOf = new Map([...calibration, ...validation].map((g) => [g.key, g]));
@@ -314,13 +316,35 @@ const accuracyAt = (ps: Pred[], minute: number) => {
   const rows = ps.filter((r) => Math.abs(r.t - t) < STEP_MS / 2 && r.y === 1);
   return { n: rows.length, acc: rows.filter((r) => r.p > 0.5).length / rows.length, sure: rows.filter((r) => r.p > 0.8 || r.p < 0.2).length / rows.length };
 };
+/** A small seeded random number generator (mulberry32), so every run resamples the same way. */
+function mulberry32(seed: number) {
+  return () => {
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+/** Calibration slope: b in P(win) = σ(b · logit p). 1 means honest confidence, below 1 too confident. */
+function calibrationSlope(ps: Pred[]): number {
+  let b = 1;
+  for (let i = 0; i < 30; i++) {
+    let g = 0, h = 0;
+    for (const r of ps) {
+      const p = Math.min(1 - 1e-9, Math.max(1e-9, r.p)), z = Math.log(p / (1 - p)), q = sigmoid(b * z);
+      g += r.w * (q - r.y) * z;
+      h += r.w * q * (1 - q) * z * z;
+    }
+    b -= g / h;
+  }
+  return b;
+}
 /** Resampled by game: how sure is a difference in log loss between two models on the same moments? */
 function bootstrapDiff(a: Pred[], b: Pred[], rounds = 400): { lo: number; hi: number } {
   const byGame = new Map<string, number[]>();
   a.forEach((r, i) => (byGame.get(r.game) ?? byGame.set(r.game, []).get(r.game)!).push(i));
   const games = [...byGame.values()];
-  let seed = 7;
-  const rand = () => ((seed = (seed * 1103515245 + 12345) % 2147483648), seed / 2147483648);
+  const rand = mulberry32(7);
   const diffs: number[] = [];
   for (let k = 0; k < rounds; k++) {
     let la = 0, lb = 0, w = 0;
@@ -435,6 +459,101 @@ if (finalBest.spec.matchup) {
 
 writeFileSync(join(import.meta.dirname, "../docs/WIN-CHANCE.md"), lines.join("\n") + "\n");
 
+// ---- Sensitivity: how much does the army value's error matter? -------------------------------
+// The army value is an estimate (docs/DATA.md: typically off by about 30%). Extra noise of that
+// size, added to each player's army value at every sample, shows how much the model loses with an
+// army value twice as wrong; leaving the army out entirely bounds what a perfect one could add.
+const cvOn = (ms: Moment[], spec: Spec): Pred[] => {
+  const out: Pred[] = [];
+  for (let f = 0; f < FOLDS; f++) {
+    const model = fitModel(ms.filter((m) => fold(m.game) !== f), spec);
+    for (const m of ms.filter((m) => fold(m.game) === f)) out.push({ ...m, p: predict(model, m) });
+  }
+  return out;
+};
+const ARMY = [0, 1];
+const sensitivity: { name: string; cv: number; validation: number | null }[] = [];
+const scoreOn = (name: string, cal: Moment[], val: Moment[], spec: Spec) => {
+  const model = fitModel(cal, spec);
+  sensitivity.push({ name, cv: lossOf(cvOn(cal, spec)), validation: val.length ? lossOf(predsOn(model, val)) : null });
+  progress(`sensitivity, ${name}: ${sensitivity.at(-1)!.cv.toFixed(4)}`);
+};
+scoreOn("as fitted", calMoments, valMoments, finalBest.spec);
+if (finalBest.spec.keep.some((f) => ARMY.includes(f))) scoreOn("without the army value", calMoments, valMoments, { ...finalBest.spec, keep: finalBest.spec.keep.filter((f) => !ARMY.includes(f)) });
+for (const sigma of [500, 1000]) {
+  const rand = mulberry32(sigma);
+  const gauss = () => Math.sqrt(-2 * Math.log(1 - rand())) * Math.cos(2 * Math.PI * rand());
+  const noisy = (s: Side): Side => ({ ...s, series: s.series.map((x) => ({ ...x, armyValue: Math.max(0, (x.armyValue ?? 0) + sigma * gauss()) })) });
+  const keep = (ms: Moment[], used: Set<string>) => ms.filter((m) => used.has(m.game));
+  scoreOn(`army value with extra noise (sd ${sigma} per player)`, keep(calibration.flatMap((g) => momentsOf(g, noisy)), calUsed), keep(validation.flatMap((g) => momentsOf(g, noisy)), valUsed), finalBest.spec);
+}
+
+// ---- Everything the technical report quotes: docs/win-chance/results.json, games.csv --------
+const reportDir = join(import.meta.dirname, "../docs/win-chance");
+mkdirSync(reportDir, { recursive: true });
+const commit = execFileSync("git", ["rev-parse", "--short", "HEAD"], { cwd: import.meta.dirname, encoding: "utf8" }).trim();
+const valCounts = (() => {
+  if (!existsSync(valDb)) return null;
+  const db = openDb(valDb);
+  const one = (sql: string) => (db.prepare(sql).get() as { n: number }).n;
+  return { downloaded: one("SELECT count(*) n FROM val_games"), simulationFailed: one("SELECT count(*) n FROM games WHERE sim_status = 'failed'"), simulated: one("SELECT count(*) n FROM games WHERE sim_status = 'ok'") };
+})();
+const binsOf = (ps: Pred[]) =>
+  Array.from({ length: 10 }, (_, i) => {
+    const rows = ps.filter((r) => r.p >= i / 10 && (r.p < (i + 1) / 10 || (i === 9 && r.p <= 1)));
+    const w = rows.reduce((s, r) => s + r.w, 0);
+    return { from: i / 10, to: (i + 1) / 10, moments: rows.length, said: rows.reduce((s, r) => s + r.w * r.p, 0) / w, won: rows.reduce((s, r) => s + r.w * r.y, 0) / w };
+  });
+const groupScores = (keyOf: (g: Game) => string, order: string[]) =>
+  order
+    .map((k) => {
+      const pick = (ps: Pred[]) => ps.filter((r) => keyOf(gameOf.get(r.game)!) === k);
+      const b = pick(valBest), f = pick(valFirst);
+      return b.length ? { key: k, games: new Set(b.map((r) => r.game)).size, best: lossOf(b), first: lossOf(f), favouriteAt10: accuracyAt(b, 10) } : null;
+    })
+    .filter((x) => x);
+const knotTimes = finalBest.spec.basis === "curve" ? KNOTS_MIN.map((m) => m * 60_000) : [60_000, 600_000, 1_800_000];
+const results = {
+  generatedAt: new Date().toISOString(),
+  commit,
+  calibration: { games: calUsed.size, moments: calMoments.length },
+  validation: { ...valCounts, scored: valUsed.size, moments: valMoments.length },
+  features: FEATURES,
+  models: scored.map((c) => ({ label: label(c.spec), keep: c.spec.keep.map((f) => FEATURES[f]), basis: c.spec.basis, matchup: c.spec.matchup, lambda: c.spec.lambda, cv: c.loss, validation: valMoments.length ? lossOf(predsOn(finals.find((f) => f.spec === c.spec)!.model, valMoments)) : null, brier: valMoments.length ? brierOf(predsOn(finals.find((f) => f.spec === c.spec)!.model, valMoments)) : null, best: c.spec === best.spec })),
+  trees: { trees: bestTrees.spec.trees, depth: bestTrees.spec.depth, cv: bestTrees.loss, validation: valMoments.length ? lossOf(valTrees) : null, brier: valMoments.length ? brierOf(valTrees) : null },
+  bootstrap: valMoments.length ? { bestMinusFirst: { diff: lossOf(valBest) - lossOf(valFirst), ...bootstrapDiff(valBest, valFirst) }, treesMinusBest: { diff: lossOf(valTrees) - lossOf(valBest), ...bootstrapDiff(valTrees, valBest) } } : null,
+  slope: { cv: calibrationSlope(best.cv), validation: valMoments.length ? calibrationSlope(valBest) : null },
+  favourite: [3, 5, 7, 10, 12, 15, 20, 25].map((m) => ({ minute: m, ...accuracyAt(valMoments.length ? valBest : best.cv, m) })),
+  calibrationBins: { cv: binsOf(best.cv), validation: valMoments.length ? binsOf(valBest) : null },
+  byYear: groupScores((g) => String(g.year), ["2022", "2023", "2024", "2025", "2026"]),
+  byMatchup: groupScores((g) => g.matchup, ["HvH", "HvO", "HvU", "HvN", "OvO", "OvU", "OvN", "UvU", "UvN", "NvN"]),
+  weights: finalBest.spec.keep.map((f, k) => ({
+    feature: FEATURES[f],
+    sd: sd[f],
+    atKnots: knotTimes.map((t) => ({ minute: t / 60_000, weight: weightOf(finalBest.model, k, t) })),
+    effect: [5, 10, 15].map((m) => ({ minute: m, points: sigmoid(sd[f] * weightOf(finalBest.model, k, m * 60_000)) - 0.5 })),
+  })),
+  sensitivity,
+};
+writeFileSync(join(reportDir, "results.json"), JSON.stringify(results, null, 1) + "\n");
+// Which games: their warcraft3.info replay ids (or W3Champions match ids), never the replays.
+const sourceOf = new Map<string, string>();
+for (const g of CALIBRATION) {
+  const db = referencePaths(g).db;
+  if (!existsSync(db)) continue;
+  for (const r of openDb(db).prepare("SELECT game_key, w3c_match_id FROM ref_matches").all() as { game_key: string; w3c_match_id: string }[]) if (!sourceOf.has(r.game_key)) sourceOf.set(r.game_key, r.w3c_match_id);
+}
+const csv = ["set,source,id,matchup"];
+for (const key of [...calUsed].sort()) {
+  const id = sourceOf.get(key) ?? "";
+  csv.push(`calibration,${id.startsWith("w3info:") ? "warcraft3.info" : "w3champions"},${id.replace(/^w3info:/, "")},${gameOf.get(key)!.matchup}`);
+}
+if (existsSync(valDb)) {
+  const ids = new Map((openDb(valDb).prepare("SELECT game_key, w3info_id FROM val_games").all() as { game_key: string; w3info_id: number }[]).map((r) => [r.game_key, r.w3info_id]));
+  for (const key of [...valUsed].sort()) csv.push(`validation,warcraft3.info,${ids.get(key)},${gameOf.get(key)!.matchup}`);
+}
+writeFileSync(join(reportDir, "games.csv"), csv.join("\n") + "\n");
+
 // ---- The model the app uses: data/winchance.json ----------------------------------------------
 if (finalBest.spec.matchup) throw new Error("the app's model has no matchup edges (packages/rules/src/winchance.ts)");
 const exported: WinModel = {
@@ -446,7 +565,7 @@ const exported: WinModel = {
     games: calUsed.size,
     patch: "3.0",
     fittedAt: new Date().toISOString().slice(0, 10),
-    commit: execFileSync("git", ["rev-parse", "--short", "HEAD"], { cwd: import.meta.dirname, encoding: "utf8" }).trim(),
+    commit,
     cvLogLoss: Number(best.loss.toFixed(4)),
     validationGames: valUsed.size,
     validationLogLoss: valMoments.length ? Number(lossOf(valBest).toFixed(4)) : NaN,
