@@ -5,7 +5,7 @@
 # appearing in later lists of the group it belonged to died in between.
 #
 #   node scripts/observer/actions.cjs <replay> <playerId> > <dir>/obs/p<playerId>.jsonl
-#   python3 scripts/observer/compare.py <dir> <playerId> <wc3v.gz> <observer.jsonl> <game record.json>
+#   python3 scripts/observer/compare.py <dir> <playerId> <wc3v.gz> <observer.jsonl> <game record.json> <player name>
 import json,sys,gzip,collections
 S=sys.argv[1]; pid=sys.argv[2]; wc3v=sys.argv[3]
 m=lambda x:'%d:%02d'%(x//60000,x//1000%60)
@@ -69,7 +69,7 @@ def est(t,ty=None):
     return tot
 match={}
 truth=[json.loads(l) for l in open(sys.argv[4])]
-pname={'2':'OrsoGrasso','3':'Pedrovisk'}[pid]
+pname=sys.argv[6]  # the player's name as the observer recording shows it
 def tval(p):
     return sum(COST.get(x['id'],0)*x['alive'] for x in p['units'] if army(x['id']))
 rec=json.load(open(sys.argv[5]))
