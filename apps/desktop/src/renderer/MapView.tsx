@@ -29,13 +29,14 @@ const LAYERS: [Layer, string, string][] = [
 ];
 
 export function MapView({ mapFile, gameKey }: { mapFile: string; gameKey: string }) {
-  const [image, setImage] = useState<string | null>(null);
+  // undefined while loading; null when this map has no extracted data (yet).
+  const [image, setImage] = useState<string | null | undefined>(undefined);
   const [markers, setMarkers] = useState<MapMarker[] | null>(null);
   const [activity, setActivity] = useState<MapActivity | null | undefined>(undefined);
   const [large, setLarge] = useState(false);
   const [shown, setShown] = useState<Set<Layer>>(new Set(["map", "fights", "mine", "theirs"]));
   useEffect(() => {
-    setImage(null);
+    setImage(undefined);
     setMarkers(null);
     setActivity(undefined);
     api.mapImage(mapFile).then(setImage);
@@ -44,7 +45,20 @@ export function MapView({ mapFile, gameKey }: { mapFile: string; gameKey: string
   useEffect(() => {
     if (large && activity === undefined) api.mapActivity(gameKey).then(setActivity);
   }, [large, gameKey, activity]);
-  if (!image) return null;
+  if (image === undefined) return null;
+  if (image === null)
+    return (
+      <figure className="map-view">
+        <div className="map-missing">
+          {tr(
+            "No map picture: this game's map isn't prepared on this computer. Press \"Simulate again\" to prepare it.",
+            "Sem imagem do mapa: o mapa desta partida não está preparado neste computador. Clique em \"Simular de novo\" para prepará-lo.",
+            "Sin imagen del mapa: el mapa de esta partida no está preparado en este equipo. Pulsa \"Simular otra vez\" para prepararlo.",
+            "Pas d'image de la carte : la carte de cette partie n'est pas préparée sur cet ordinateur. Cliquez sur « Simuler à nouveau » pour la préparer.",
+          )}
+        </div>
+      </figure>
+    );
   const name = mapFile.replace(/^\d*_?w3c_\d+_\d+_/, "").replace(/\.w3[xm]$/, "").replace(/_/g, " ");
   const on = (l: Layer) => shown.has(l) && (l === "map" || large);
   const toggle = (l: Layer) =>

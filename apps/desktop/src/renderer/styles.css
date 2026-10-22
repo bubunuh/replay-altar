@@ -138,6 +138,8 @@ td.num, th.num { text-align: right; }
 .hero-icon .hero-name { display: flex; align-items: center; justify-content: center; height: 100%; font-size: calc(9px * var(--text-scale)); padding: 2px; }
 .hero-level { position: absolute; right: -4px; bottom: -4px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: #111; border: 1px solid #c9a227; color: #f3d77a; font-size: calc(11px * var(--text-scale)); font-weight: 700; line-height: 16px; text-align: center; }
 .map-view { width: 286px; margin: 0; }
+/* Where the map would be when its data isn't prepared yet. */
+.map-missing { aspect-ratio: 1; display: grid; place-items: center; padding: 20px; text-align: center; border: 1px dashed var(--border); border-radius: 8px; color: var(--muted); font-size: calc(13px * var(--text-scale)); }
 .score-panel { width: 100%; }
 .score-panel th, .score-panel td { padding: 5px 6px; font-size: calc(13px * var(--text-scale)); }
 .score-panel td:first-child { color: var(--ink-2); }
