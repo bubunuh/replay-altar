@@ -9,7 +9,7 @@ Replay Altar is a Warcraft III: Reforged replay analyzer for 1v1 players. It run
 - **Every replay kept, automatically.** A small background program saves each replay the moment a game ends, before the game overwrites `LastReplay.w3g`. Battle.net ladder, W3Champions and custom melee games are all picked up, with nothing to upload or click.
 - **The game reconstructed.** Each 1v1 is simulated from its replay with the [WC3V](https://github.com/jblanchette/wc3v) engine: workers, army value, supply, creep camps, hero levels and fights over time.
 - **A coach's report after every game.** Rules drawn from well-known guides (Grubby, Liquipedia, Warcraft 3 Gym, Vortix and others) name the problems that cost you the game, show the facts behind each one, explain why it happened and say what to do next time. The report also points out the fight that turned the game (with the moment to rewatch), your strengths and the opponent's plan.
-- **Your chance to win, moment by moment.** <kbd>upcoming</kbd> A curve of how often a pro player in your position went on to win, at every moment of the game, with the three moments that swung it most and what moved them. [More below](#the-win-chance-curve).
+- **An evaluation curve, like in chess.** <kbd>upcoming</kbd> Who was ahead at every moment of the game, as how often a pro player in your position went on to win, with the three moments that swung it most and what moved them. [More below](#the-evaluation-curve).
 - **One thing to work on.** Each report ends with the single most useful habit for your next game. Across your recent games, the Performance page picks the problem that keeps coming back and shows whether it is getting better.
 - **Every number in context.** Your numbers are placed among about 200 recent tournament games of your race and matchup, on the current patch ("better than 86% of pro games"), with a green, yellow or red verdict: at pro level, at least as good as your opponent, or behind both.
 - **Knows your build.** It recognises the build order each player went for, from guide builds and builds mined from pro games, and shows where your timings drifted from the pros who play it.
@@ -25,13 +25,13 @@ Your games stay on your computer. Replay Altar fetches only two things from the 
 
 > Replay Altar is a fan project. It is not affiliated with, endorsed by or connected to Blizzard Entertainment. Warcraft is a trademark of Blizzard Entertainment, Inc. The game's data and pictures (unit costs, race crests, hero portraits, the game's font) are read from your own Warcraft III installation, never modified there, and never distributed with this project; the screenshots on this page only show them as the app displays them.
 
-## The win-chance curve
+## The evaluation curve
 
 <kbd>upcoming</kbd> in the next version.
 
-![The chance-to-win chart of one game: the curve over time with three swings marked, and under it what moved each swing and what happened then](docs/images/win-chance.png)
+![The evaluation chart of one game: the curve over time, blue while you were ahead, with three swings marked, and under it what moved each swing and what happened then](docs/images/win-chance.png)
 
-Each game's page shows a curve of your **chance to win**, from the first minute to the last. At every moment, Replay Altar compares your position with your opponent's: army, workers, hero experience, heroes alive, expansions, units lost and upgrades. The curve then answers one question: **how often did professional players in that same position go on to win?** It learned the answer from 513 recent pro games.
+Each game's page shows an **evaluation curve**, like the ones chess sites draw under a game: blue while you were ahead, red while your opponent was, from the first minute to the last. At every moment, Replay Altar compares your position with your opponent's: army, workers, hero experience, heroes alive, expansions, units lost and upgrades. Its height answers one question: **how often did professional players in that same position go on to win?** 50% is even. It learned the answer from 513 recent pro games.
 
 Read it as a measure of how good your position was, not as a prediction of your game. Pros rarely throw a lead away, so the curve is more sure of itself than games between less experienced players turn out. That is on purpose: when the curve drops from 60% to 20% in a minute, that is a moment where a pro would have lost ground, and worth rewatching. The three biggest swings are marked on the chart, with the differences that moved them (for example "losses: you lost more", "hero experience: in their favour") and what happened around then (a fight and what each side lost, a hero dying, an expansion falling, a tier finishing).
 
