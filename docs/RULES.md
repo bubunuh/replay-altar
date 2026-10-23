@@ -18,7 +18,14 @@ target and 9 in 10 pros). Expansions come from the simulation's standing halls. 
 games of every race and level, and what they changed: [REVIEWS.md](REVIEWS.md). Shared principles
 and how pros play each library build: [PRINCIPLES.md](PRINCIPLES.md).
 
-Shown per game (top 3): 1.47 findings in wins, 2.22 in losses.
+**Shown in the app** (since 2026-10-23): only the rules whose whole 95% range of lift (games
+resampled 400 times) lies above 1: fights, heroes, hero deaths, expansion, out-expanded, workers
+lost, no sustain, mine dry, floating, upgrades and supply (`SHOWN_RULES` in `findings.ts`). The
+others still run and are scored here, but stay hidden until they can be tuned per skill level:
+several matter more for beginners than for tournament players. The hotkeys check (`mechanics`)
+is shown whenever it fires, win or lose, on top of the three main findings.
+
+Shown per game (top 3 of the shown rules): 1.10 findings in wins, 1.97 in losses.
 
 ## Main findings
 
@@ -37,7 +44,7 @@ Shown per game (top 3): 1.47 findings in wins, 2.22 in losses.
 | `exposed` | you had no army for 4+ minutes while they had one | Replay Altar | 2% / 2% | 1.0 (inf 0.9 0.0 0.6) |
 | `no_heroes` | you fought while all your heroes were dead (lost 300+; not counting their attacks on your towers or base) | Blizzard hero basics | 0% / 1% | 1.7 (1.0 2.7 3.6 0.0) |
 | `no_anti_air` | 40%+ of their recent army flew (1,200+ value) and under 25% of yours could attack air | game data | 1% / 1% | 1.1 (1.0 2.7 0.6 0.4) |
-| `mechanics` | APM and hotkey use far below pros, shown only when little else stands out | metric research | 2% / 1% | 0.5 (0.2 0.7 0.4 0.8) |
+| `mechanics` | no control groups (at most 1 group, or under 5 recalls a minute) or under 15% of selections by hotkey: limits below 99 in 100 tournament player-games; shown whenever it fires | tournament data (8,294 player-games) | 0% / 1% | 4.7 (shown whatever the lift) |
 
 ## Basics (beginner mistakes, ranked below the main findings)
 

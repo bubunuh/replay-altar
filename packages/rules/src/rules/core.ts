@@ -195,24 +195,34 @@ export function supplyFinding(c: Ctx): Finding | null {
   };
 }
 
+/**
+ * Played without control groups or hotkeys: shown whenever it happens, win or lose, because it
+ * caps how much a player can do. The limits sit below 99 in 100 tournament player-games (8,294
+ * of them, 2022-2026: at least 2 groups, 8.6 group recalls a minute and 23% of selections by
+ * hotkey at the 1st percentile).
+ */
+export const HOTKEY_LIMITS = { groups: 1, recallsPerMin: 5, hotkeyShare: 0.15 };
+
 export function mechanicsFinding(c: Ctx): Finding | null {
-  const apm = proGap(c, "apm");
-  const hotkeys = proGap(c, "hotkey_select_share");
-  if (!apm || !hotkeys || apm.worseThan < 0.9 || hotkeys.worseThan < 0.75) return null;
   const m = c.me.metrics;
+  if (m.control_groups_used == null || m.control_group_recalls_per_min == null || m.hotkey_select_share == null) return null;
+  const noGroups = m.control_groups_used <= HOTKEY_LIMITS.groups || m.control_group_recalls_per_min < HOTKEY_LIMITS.recallsPerMin;
+  const noHotkeys = m.hotkey_select_share < HOTKEY_LIMITS.hotkeyShare;
+  if (!noGroups && !noHotkeys) return null;
+  const pct = (v: number) => `${Math.round(v * 100)}%`;
   return {
     id: "mechanics",
-    // Real but slow to fix: ranked below the game-specific findings.
-    severity: 0.5,
-    headline: tr("Speed and hotkeys are a long-term gap", "Velocidade e atalhos são uma lacuna de longo prazo", "La velocidad y los atajos son una tarea a largo plazo", "La vitesse et les raccourcis sont un travail de long terme"),
+    severity: 0.6,
+    headline: noGroups
+      ? tr("You played without control groups", "Você jogou sem grupos de controle", "Jugaste sin grupos de control", "Vous avez joué sans groupes de contrôle")
+      : tr("You selected almost everything with the mouse", "Você selecionou quase tudo com o mouse", "Seleccionaste casi todo con el ratón", "Vous avez presque tout sélectionné à la souris"),
     evidence: [
-      tr(`APM: you ${num(m.apm)}, opp ${num(c.opp.metrics.apm)}${vsPros(c, "apm")}.`, `APM: você ${num(m.apm)}, oponente ${num(c.opp.metrics.apm)}${vsPros(c, "apm")}.`, `APM: tú ${num(m.apm)}, rival ${num(c.opp.metrics.apm)}${vsPros(c, "apm")}.`, `APM : vous ${num(m.apm)}, adversaire ${num(c.opp.metrics.apm)}${vsPros(c, "apm")}.`),
-      tr(`Selections via hotkey: ${Math.round((m.hotkey_select_share ?? 0) * 100)}%${vsPros(c, "hotkey_select_share", (v) => `${Math.round(v * 100)}%`)}.`, `Seleções por atalho: ${Math.round((m.hotkey_select_share ?? 0) * 100)}%${vsPros(c, "hotkey_select_share", (v) => `${Math.round(v * 100)}%`)}.`, `Selecciones con atajo: ${Math.round((m.hotkey_select_share ?? 0) * 100)}%${vsPros(c, "hotkey_select_share", (v) => `${Math.round(v * 100)}%`)}.`, `Sélections par raccourci : ${Math.round((m.hotkey_select_share ?? 0) * 100)} %${vsPros(c, "hotkey_select_share", (v) => `${Math.round(v * 100)} %`)}.`),
-      tr(`Control-group recalls per minute: ${num(m.control_group_recalls_per_min)}${vsPros(c, "control_group_recalls_per_min")}.`, `Chamadas de grupo de controle por minuto: ${num(m.control_group_recalls_per_min)}${vsPros(c, "control_group_recalls_per_min")}.`, `Llamadas a grupos de control por minuto: ${num(m.control_group_recalls_per_min)}${vsPros(c, "control_group_recalls_per_min")}.`, `Rappels de groupes de contrôle par minute : ${num(m.control_group_recalls_per_min)}${vsPros(c, "control_group_recalls_per_min")}.`),
+      tr(`Control groups used: ${num(m.control_groups_used)}; recalls per minute: ${num(m.control_group_recalls_per_min)}${vsPros(c, "control_group_recalls_per_min")}.`, `Grupos de controle usados: ${num(m.control_groups_used)}; chamadas por minuto: ${num(m.control_group_recalls_per_min)}${vsPros(c, "control_group_recalls_per_min")}.`, `Grupos de control usados: ${num(m.control_groups_used)}; llamadas por minuto: ${num(m.control_group_recalls_per_min)}${vsPros(c, "control_group_recalls_per_min")}.`, `Groupes de contrôle utilisés : ${num(m.control_groups_used)} ; rappels par minute : ${num(m.control_group_recalls_per_min)}${vsPros(c, "control_group_recalls_per_min")}.`),
+      tr(`Selections via hotkey: ${pct(m.hotkey_select_share)}${vsPros(c, "hotkey_select_share", pct)}.`, `Seleções por atalho: ${pct(m.hotkey_select_share)}${vsPros(c, "hotkey_select_share", pct)}.`, `Selecciones con atajo: ${pct(m.hotkey_select_share)}${vsPros(c, "hotkey_select_share", pct)}.`, `Sélections par raccourci : ${pct(m.hotkey_select_share)}${vsPros(c, "hotkey_select_share", pct)}.`),
+      tr("99 in 100 tournament players use at least 2 groups and select about a quarter or more of the time by hotkey.", "99 em cada 100 jogadores de torneio usam pelo menos 2 grupos e selecionam pelo atalho em um quarto das vezes ou mais.", "99 de cada 100 jugadores de torneo usan al menos 2 grupos y seleccionan con atajo una cuarta parte de las veces o más.", "99 joueurs de tournoi sur 100 utilisent au moins 2 groupes et sélectionnent par raccourci au moins un quart du temps."),
     ],
   };
 }
-
 
 /** Official basics: keep heroes alive "at all costs"; a Town Portal is the way out. */
 export function heroDeathsFinding(c: Ctx): Finding | null {

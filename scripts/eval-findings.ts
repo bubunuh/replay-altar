@@ -12,7 +12,7 @@ import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import { openDb, paths, referencePaths, readRecord, listGames, type GameRecord } from "@replay-altar/core";
 import { loadRefGroups, refFor as refForPlayers } from "../packages/rules/src/context.ts";
-import { allFindings } from "../packages/rules/src/findings.ts";
+import { allFindings, SHOWN_RULES } from "../packages/rules/src/findings.ts";
 import { execFileSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -41,11 +41,11 @@ if (VALIDATION || POOL) {
     for (const p of r.players.filter((x) => x.result === "win" || x.result === "loss")) {
       let found;
       try {
-        found = allFindings(r, refFor(r, p.playerId), p.playerId);
+        found = allFindings(r, refFor(r, p.playerId), p.playerId, { all: true });
       } catch {
         continue; // a broken simulation
       }
-      rows.push({ game: r.gameKey, race: p.race, win: p.result === "win", ids: found.map((x) => x.id), top: found.slice(0, 3).map((x) => x.id) });
+      rows.push({ game: r.gameKey, race: p.race, win: p.result === "win", ids: found.map((x) => x.id), top: found.filter((x) => SHOWN_RULES.has(x.id)).slice(0, 3).map((x) => x.id) });
     }
   }
 }
@@ -57,8 +57,8 @@ for (const { group, profile } of VALIDATION ? [] : groups) {
     if (r.sim?.status !== "ok" || r.players.length !== 2 || !scored(r.gameKey)) continue;
     // Both players of the group's race (the profile is for that race).
     for (const p of r.players.filter((x) => x.race === group.race && (x.result === "win" || x.result === "loss"))) {
-      const found = allFindings(r, refFor(r, p.playerId), p.playerId);
-      rows.push({ game: r.gameKey, race: p.race, win: p.result === "win", ids: found.map((x) => x.id), top: found.slice(0, 3).map((x) => x.id) });
+      const found = allFindings(r, refFor(r, p.playerId), p.playerId, { all: true });
+      rows.push({ game: r.gameKey, race: p.race, win: p.result === "win", ids: found.map((x) => x.id), top: found.filter((x) => SHOWN_RULES.has(x.id)).slice(0, 3).map((x) => x.id) });
     }
   }
 }
@@ -88,7 +88,7 @@ for (const id of ids) {
   console.log(id.padEnd(22), `| ${pct(w)}   ${pct(l)}  | ${lift(w, l).padStart(4)} | ${liftRange(id).padStart(9)} | ${byRace.join(" ")}`);
 }
 const avg = (set: Row[]) => (set.reduce((n, r) => n + r.top.length, 0) / Math.max(1, set.length)).toFixed(2);
-console.log(`\nshown findings per game (top 3): wins ${avg(wins)}, losses ${avg(losses)}`);
+console.log(`\nshown findings per game (top 3 of the shown rules): wins ${avg(wins)}, losses ${avg(losses)}`);
 
 if (VALIDATION) process.exit(0);
 console.log("\n== your games: top 3 (+ the rest)");

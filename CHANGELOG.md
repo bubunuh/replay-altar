@@ -14,12 +14,15 @@ statistics (`data/`).
 - **Some replays that could not be imported now can** (a hero the replay reader reports without a type).
 - **Evaluation curve** on each game's page, drawn like a chess evaluation graph (blue while you were ahead, red while your opponent was): how often a pro in your position went on to win, moment by moment, with the three moments that swung it most, what moved them (losses, hero experience, workers, army, expansions, heroes alive, upgrades) and what happened then. Learned from 513 pro games and checked on 2,998 tournament games from 2022 to 2026 it never saw; the method is in [docs/win-chance/report.pdf](docs/win-chance/report.pdf).
 - **Comparisons with pros on about eight times more games:** about 1,700 player-games per race instead of about 200. The current patch's pro games are pooled with about 3,000 tournament games from 2022 to 2026 (older patches, players from semi-pro to the very top). The findings' thresholds and the mined principles use the same pool, and every rule was scored again on it, held out, with the WC3V fixes and the new army counting (docs/RULES.md).
+- **Findings you can trust more:** the Findings card now shows only the rules that, tested on 3,388 player-games they were not tuned on, fire clearly more often in losses than in wins (11 rules). The others are hidden for now.
+- **Control groups and hotkeys:** the old "speed and hotkeys" finding is replaced by a check that appears whenever you played without control groups or hotkeys, win or lose, with a first habit to start with.
 - **A note on the game's charts** that army value, losses and fight results are estimates, with how far off they typically are and how that was measured.
 - **Linux AppImage**, alongside the Windows installer: one file, no Node, git or podman needed. On first start it sets up the background collector (a systemd user service), the `replay-altar` command and a menu entry, reads the game data with a built-in read-only extractor, and updates itself in place like the Windows version.
 - **Linux: Battle.net is found in more places:** Lutris folders under `~/Games`, `~/.wine`, Steam's Proton prefixes and Bottles, for both the replays and the game data.
 
 ## Later
 
+- **Re-simulate every game with WC3V's merged fixes:** once the WC3V author has merged the revised fixes (#19, #21), switch Replay Altar's patches to the merged code and simulate all pro, tournament and your games again (about half an hour at full CPU). Measured beforehand: findings unchanged, the evaluation curve moves by more than half a point in 4% of games (6 points at most).
 - **Findings by skill level:** download ladder games across skill levels (W3Champions, by MMR) and choose and tune the findings for the level detected for each player, so beginner checks (upkeep, supply, towers…) show where they matter and stay hidden for strong players.
 - **More languages:** German, Ukrainian, Russian, Chinese and Korean (needs a text format that scales past four languages, and fonts for Cyrillic, Chinese and Korean).
 - **Code signing:** SignPath turned the project down for now (too new, no reputation); try again later.

@@ -93,8 +93,20 @@ function becauseFor(f: Finding, c: Ctx): string[] {
   return out;
 }
 
-/** Every rule that fires, most costly first. */
-export function allFindings(r: GameRecord, ref: FactsRef | null, subjectId?: number): Finding[] {
+/**
+ * The rules the Findings card shows: those that fire clearly more often in losses than in wins,
+ * the whole 95% range of their lift above 1, on 3,388 held-out player-games (docs/RULES.md,
+ * 2026-10-23). The others still run (scripts/eval-findings.ts scores them) but stay hidden until
+ * they can be tuned per skill level.
+ */
+export const SHOWN_RULES = new Set(["fights", "heroes", "hero_deaths", "expansion", "out_expanded", "workers_lost", "no_sustain", "mine_dry", "floating", "upgrades", "supply"]);
+
+/**
+ * Every rule that fires, most costly first: the shown rules, plus the hotkeys check (shown whenever
+ * a player played without control groups or hotkeys, whatever the result). `all`: every rule, for
+ * scoring them.
+ */
+export function allFindings(r: GameRecord, ref: FactsRef | null, subjectId?: number, opts: { all?: boolean } = {}): Finding[] {
   const me = subjectId === undefined ? r.players.find((p) => p.isMe) : r.players.find((p) => p.playerId === subjectId);
   const opp = r.players.find((p) => p.playerId !== me?.playerId && p.teamId !== me?.teamId);
   if (!me || !opp || r.game.durationMs < MIN_GAME_MS) return [];
@@ -134,16 +146,19 @@ export function allFindings(r: GameRecord, ref: FactsRef | null, subjectId?: num
     noSustainFinding(c),
     noScoutFinding(c),
   ]
-    .filter((f): f is Finding => !!f && f.severity >= MIN_SEVERITY)
+    .filter((f): f is Finding => !!f && f.severity >= MIN_SEVERITY && (opts.all || SHOWN_RULES.has(f.id)))
     .sort((a, b) => b.severity - a.severity);
-  // Mechanics are a real but constant, slow-to-fix gap: shown only when the game itself had
-  // little else to point at.
-  const mech = found.length < 2 ? mechanicsFinding(c) : null;
+  const mech = mechanicsFinding(c);
   return [...found, ...(mech ? [mech] : [])].map((f) => ({ ...f, advice: f.advice ?? adviceFor(f.id, c) ?? undefined, because: becauseFor(f, c) }));
 }
 
-/** The most important problems in a game, most costly first (at most 3). */
-export const findings = (r: GameRecord, ref: FactsRef | null, subjectId?: number) => allFindings(r, ref, subjectId).slice(0, MAX_FINDINGS);
+/** The most important problems in a game, most costly first (at most 3), plus the hotkeys check when it fires. */
+export const findings = (r: GameRecord, ref: FactsRef | null, subjectId?: number) => {
+  const all = allFindings(r, ref, subjectId);
+  const top = all.filter((f) => f.id !== "mechanics").slice(0, MAX_FINDINGS);
+  const mech = all.find((f) => f.id === "mechanics");
+  return mech ? [...top, mech] : top;
+};
 
 /** Core metrics at pro level, best first: what went well (at most 2). */
 /** Strengths that would contradict a finding shown for the same game (found in scripts/scan-reports.ts). */
