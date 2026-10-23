@@ -4,7 +4,7 @@ import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { heroesXpAt, METRICS, per10Minutes, readRecord, researchLevels, transaction, type DB, type GameRecord, type ReferenceGroup } from "@replay-altar/core";
 import { summarizeValues, type Stat } from "./quantiles.ts";
-import type { RefPaths } from "./store.ts";
+import { openReference, type RefPaths } from "./store.ts";
 
 export const CURVES = ["apm", "workers", "spent", "food", "armyFood", "heroXp", "armyValue"] as const;
 export type CurveKey = (typeof CURVES)[number];
@@ -29,6 +29,8 @@ export type RefProfile = {
   builtAt: string;
   replayBuild: number | null;
   games: number;
+  /** Tournament games pooled in (the validation set's): player-games used, games they came from, and their years. */
+  pooled?: { games: number; sourceGames: number; years: [string, string] | null };
   /** "all" plus one entry per matchup from the subject's side, e.g. "HvO". */
   matchups: Record<string, MatchupProfile>;
 };
@@ -115,7 +117,10 @@ function profileOf(samples: Sample[]): MatchupProfile {
   return { n: samples.length, metrics, curves, upgrades };
 }
 
-export function buildProfile(db: DB, paths: RefPaths, group: ReferenceGroup, replayBuild: number | null): RefProfile {
+/** More games to pool in: every player of the group's race in them (a reference group of another kind). */
+export type ExtraGames = { paths: RefPaths; keys: string[]; years: [string, string] | null };
+
+export function buildProfile(db: DB, paths: RefPaths, group: ReferenceGroup, replayBuild: number | null, extra?: ExtraGames): RefProfile {
   const rows = db
     .prepare(
       `SELECT r.game_key, r.subject_player_id FROM ref_matches r JOIN games g ON g.game_key = r.game_key
@@ -130,6 +135,16 @@ export function buildProfile(db: DB, paths: RefPaths, group: ReferenceGroup, rep
     if (!record || !subject || !opp) continue;
     samples.push({ record, subjectId: subject.playerId, matchup: `${subject.race}v${opp.race}` });
   }
+  let pooled = 0;
+  for (const key of extra?.keys ?? []) {
+    const record = readRecord(extra!.paths, key);
+    if (record?.sim?.status !== "ok" || record.players.length !== 2) continue;
+    for (const subject of record.players.filter((p) => p.race === group.race && (p.result === "win" || p.result === "loss"))) {
+      const opp = record.players.find((p) => p.playerId !== subject.playerId)!;
+      samples.push({ record, subjectId: subject.playerId, matchup: `${subject.race}v${opp.race}` });
+      pooled++;
+    }
+  }
   const matchups: RefProfile["matchups"] = { all: profileOf(samples) };
   for (const mu of new Set(samples.map((s) => s.matchup))) matchups[mu] = profileOf(samples.filter((s) => s.matchup === mu));
 
@@ -138,6 +153,7 @@ export function buildProfile(db: DB, paths: RefPaths, group: ReferenceGroup, rep
     builtAt: new Date().toISOString(),
     replayBuild,
     games: samples.length,
+    ...(extra ? { pooled: { games: pooled, sourceGames: extra.keys.length, years: extra.years } } : {}),
     matchups,
   };
   writeFileSync(join(paths.root, "profile.json"), JSON.stringify(profile));
@@ -149,4 +165,18 @@ export function buildProfile(db: DB, paths: RefPaths, group: ReferenceGroup, rep
     }
   });
   return profile;
+}
+
+/** A reference group's simulated games, to pool into the pro profiles (`ref profile --pool <group>`). */
+export function poolOf(groupId: string, config: Parameters<typeof openReference>[1]): ExtraGames {
+  const ref = openReference(groupId, config);
+  const keys = (ref.db.prepare("SELECT game_key FROM games WHERE sim_status = 'ok'").all() as { game_key: string }[]).map((r) => r.game_key);
+  // The validation set keeps each game's year (games.played_at is when it was downloaded).
+  let years: string[] = [];
+  try {
+    years = (ref.db.prepare("SELECT DISTINCT year FROM val_games ORDER BY year").all() as { year: number }[]).map((r) => String(r.year));
+  } catch {
+    // another kind of group
+  }
+  return { paths: ref.paths, keys, years: years.length ? [years[0], years.at(-1)!] : null };
 }

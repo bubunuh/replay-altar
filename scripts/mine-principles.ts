@@ -3,7 +3,10 @@
 // they differ between wins and losses, and whether they hold across builds (openings) and
 // matchups. Writes reference/<group>/principles.json (read by the rules) and docs/PRINCIPLES.md.
 //
-//   node scripts/mine-principles.ts
+//   node scripts/mine-principles.ts [--pool validation]
+//
+// --pool <group>: also every player of the race in that group's games (the validation set's
+// tournament games, 2022 to today, of every level from semi-pro to the very top).
 import { readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { loadConfig, readRecord, referencePaths, RACE_NAMES, type GameRecord } from "@replay-altar/core";
@@ -73,6 +76,9 @@ const config = loadConfig();
 // games that did not set their thresholds); --out <dir>: write principles there instead.
 const arg = (name: string) => { const i = process.argv.indexOf(name); return i >= 0 ? process.argv[i + 1] : null; };
 const sample = arg("--sample");
+const pool = arg("--pool");
+const poolPaths = pool ? referencePaths(pool) : null;
+const poolFiles = poolPaths ? readdirSync(poolPaths.games) : [];
 const outDir = arg("--out");
 export const inSample = (gameKey: string, which: string | null) => which === null || (parseInt(gameKey.at(-1)!, 16) % 2 === 0) === (which === "even");
 const md: string[] = [
@@ -82,6 +88,7 @@ const md: string[] = [
   "",
 ];
 
+if (pool) md.splice(4, 0, `**Pooled in:** every player of the race in the validation set's tournament games from 2022 to today (\`scripts/download-validation.ts\`: older patches, players from semi-pro to the very top), so the numbers below rest on about eight times more games than the current-patch pro games alone.`, "");
 for (const group of config.reference.groups) {
   const rp = referencePaths(group.id);
   let files: string[];
@@ -95,8 +102,8 @@ for (const group of config.reference.groups) {
   const buildStats = new Map<string, { name: string; n: number; wins: number; scores: number[]; steps: Map<string, { label: string; guideFood: number; foods: number[]; seen: number }> }>();
   // Plans: the order of heroes, tier upgrades and expansions, with the food at each.
   const plans = new Map<string, { n: number; wins: number; foods: number[][] }>();
-  for (const f of files) {
-    const r = readRecord(rp, f.replace(/\.json$/, "")) as GameRecord | null;
+  for (const [paths, f] of [...files.map((f) => [rp, f] as const), ...poolFiles.map((f) => [poolPaths!, f] as const)]) {
+    const r = readRecord(paths, f.replace(/\.json$/, "")) as GameRecord | null;
     if (!r || r.sim?.status !== "ok" || r.game.durationMs < 300_000 || !inSample(r.gameKey, sample)) continue;
     for (const p of subjectsOf(r, group.race)) {
       const m = milestonesOf(r, p.playerId);

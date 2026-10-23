@@ -4,6 +4,10 @@
 //
 //   node scripts/eval-findings.ts
 //   node scripts/eval-findings.ts --holdout   (thresholds mined from half the games, scored on the other half)
+//   node scripts/eval-findings.ts --holdout --pool validation   (the same, with the validation games
+//                                                pooled into the mining and the scoring, as shipped)
+//   node scripts/eval-findings.ts --validation   (the shipped thresholds, scored on the validation set's
+//                                                tournament games, 2022 to today: scripts/download-validation.ts)
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import { openDb, paths, referencePaths, readRecord, listGames, type GameRecord } from "@replay-altar/core";
@@ -15,7 +19,8 @@ import { tmpdir } from "node:os";
 
 // --holdout: mine thresholds from the even half of the pro games, score the rules on the odd half.
 const HOLDOUT_DIR = process.argv.includes("--holdout") ? mkdtempSync(join(tmpdir(), "replay-altar-holdout-")) : null;
-if (HOLDOUT_DIR) execFileSync(process.execPath, [join(import.meta.dirname, "mine-principles.ts"), "--sample", "even", "--out", HOLDOUT_DIR], { stdio: "ignore" });
+const POOL = process.argv.includes("--pool") ? process.argv[process.argv.indexOf("--pool") + 1] : null;
+if (HOLDOUT_DIR) execFileSync(process.execPath, [join(import.meta.dirname, "mine-principles.ts"), "--sample", "even", "--out", HOLDOUT_DIR, ...(POOL ? ["--pool", POOL] : [])], { stdio: "ignore" });
 const scored = (gameKey: string) => !HOLDOUT_DIR || parseInt(gameKey.at(-1)!, 16) % 2 === 1;
 
 const groups = loadRefGroups(HOLDOUT_DIR ?? undefined);
@@ -26,7 +31,25 @@ const refFor = (r: GameRecord, pid: number) => {
 
 type Row = { race: string; win: boolean; ids: string[]; top: string[] };
 const rows: Row[] = [];
-for (const { group, profile } of groups) {
+// --validation: every player of every validation game, against the pros of their race.
+const VALIDATION = process.argv.includes("--validation");
+if (VALIDATION || POOL) {
+  const rp = referencePaths(POOL ?? "validation");
+  for (const f of readdirSync(rp.games)) {
+    const r = readRecord(rp, f.replace(/\.json$/, "")) as GameRecord;
+    if (r?.sim?.status !== "ok" || r.players.length !== 2 || !scored(r.gameKey)) continue;
+    for (const p of r.players.filter((x) => x.result === "win" || x.result === "loss")) {
+      let found;
+      try {
+        found = allFindings(r, refFor(r, p.playerId), p.playerId);
+      } catch {
+        continue; // a broken simulation
+      }
+      rows.push({ race: p.race, win: p.result === "win", ids: found.map((x) => x.id), top: found.slice(0, 3).map((x) => x.id) });
+    }
+  }
+}
+for (const { group, profile } of VALIDATION ? [] : groups) {
   if (!profile) continue;
   const rp = referencePaths(group.id);
   for (const f of readdirSync(rp.games)) {
@@ -55,6 +78,7 @@ for (const id of ids) {
 const avg = (set: Row[]) => (set.reduce((n, r) => n + r.top.length, 0) / Math.max(1, set.length)).toFixed(2);
 console.log(`\nshown findings per game (top 3): wins ${avg(wins)}, losses ${avg(losses)}`);
 
+if (VALIDATION) process.exit(0);
 console.log("\n== your games: top 3 (+ the rest)");
 const p = paths();
 const db = openDb(p.db);

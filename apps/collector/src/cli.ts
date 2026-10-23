@@ -21,7 +21,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { activeReferenceGroups, applyOfficial, applySim, collectorState, proDataDir, projectRoot, readRecord, referencePaths, type RefLookup } from "@replay-altar/core";
 import { CONSTANTS, gamedataDir, loadCosts, readSimOutput, selectionsOf, simNotReady, simulateGame, summarize } from "@replay-altar/sim";
-import { buildProfile, officialForMatch, officialForOwnGame, openReference, readState, refreshGroup, w3cClient } from "@replay-altar/reference";
+import { buildProfile, poolOf, officialForMatch, officialForOwnGame, openReference, readState, refreshGroup, w3cClient } from "@replay-altar/reference";
 import { rulesBook } from "@replay-altar/rules";
 import { currentReplayBuild, racesPlayed } from "./reference.ts";
 import { runCollector } from "./collector.ts";
@@ -342,10 +342,14 @@ switch (cmd) {
       // --build: the game build the pro games are from (default: your latest game's).
       const bi = args.indexOf("--build");
       const profileBuild = bi >= 0 ? Number(args[bi + 1]) : build;
+      // --pool <group>: also every player of the race in that group's games (the validation set's
+      // tournament games, 2022 to today: scripts/download-validation.ts), whatever their build.
+      const pi = args.indexOf("--pool");
+      const extra = pi >= 0 ? poolOf(args[pi + 1], config) : undefined;
       for (const g of groups) {
         const ref = openReference(g.id, config);
-        const p = buildProfile(ref.db, ref.paths, g, profileBuild);
-        console.log(`${g.id}: profile from ${p.games} games`);
+        const p = buildProfile(ref.db, ref.paths, g, profileBuild, extra);
+        console.log(`${g.id}: profile from ${p.games} player-games${p.pooled ? ` (${p.pooled.games} pooled from ${p.pooled.sourceGames} games${p.pooled.years ? `, ${p.pooled.years.join("–")}` : ""})` : ""}`);
       }
     } else {
       console.log(`current replay build: ${build ?? "unknown (no games yet)"}; update with \`replay-altar ref refresh --all\`, then \`replay-altar ref publish\``);

@@ -136,10 +136,10 @@ function ProGames({ refs }: { refs: RefGroupInfo[] }) {
       <h2>{tr("Pro games", "Partidas de pros", "Partidas de pros", "Parties de pros")}</h2>
       <p className="sub">
         {tr(
-          "The games your numbers are compared with: recent tournament games of each race from warcraft3.info, analyzed the same way as yours. The Replay Altar maintainers collect them and ship only the statistics, updated with new versions of Replay Altar.",
-          "As partidas com que os seus números são comparados: partidas recentes de torneios de cada raça do warcraft3.info, analisadas do mesmo jeito que as suas. Os mantenedores do Replay Altar coletam essas partidas e distribuem só as estatísticas, atualizadas a cada nova versão do Replay Altar.",
-          "Las partidas con las que se comparan tus números: partidas recientes de torneos de cada raza de warcraft3.info, analizadas igual que las tuyas. Los mantenedores de Replay Altar las recopilan y solo distribuyen las estadísticas, actualizadas con cada nueva versión de Replay Altar.",
-          "Les parties auxquelles vos chiffres sont comparés : des parties récentes de tournois pour chaque race, de warcraft3.info, analysées de la même façon que les vôtres. Les mainteneurs de Replay Altar les rassemblent et ne distribuent que les statistiques, mises à jour avec chaque nouvelle version de Replay Altar.",
+          "The games your numbers are compared with: tournament games of each race from warcraft3.info: recent pro games on the current patch, plus tournament games from 2022 on (older patches, players from semi-pro to the very top), all analyzed the same way as yours. The Replay Altar maintainers collect them and ship only the statistics, updated with new versions of Replay Altar.",
+          "As partidas com que os seus números são comparados: partidas de torneios de cada raça do warcraft3.info: partidas recentes de pros no patch atual, mais partidas de torneio desde 2022 (patches anteriores, jogadores de semi-pros ao topo), todas analisadas do mesmo jeito que as suas. Os mantenedores do Replay Altar coletam essas partidas e distribuem só as estatísticas, atualizadas a cada nova versão do Replay Altar.",
+          "Las partidas con las que se comparan tus números: partidas de torneos de cada raza de warcraft3.info: partidas recientes de pros en el parche actual, más partidas de torneo desde 2022 (parches anteriores, jugadores desde semi-pros hasta lo más alto), todas analizadas igual que las tuyas. Los mantenedores de Replay Altar las recopilan y solo distribuyen las estadísticas, actualizadas con cada nueva versión de Replay Altar.",
+          "Les parties auxquelles vos chiffres sont comparés : des parties de tournois pour chaque race, de warcraft3.info : des parties récentes de pros sur le patch actuel, plus des parties de tournoi depuis 2022 (patchs antérieurs, joueurs du semi-pro au plus haut niveau), toutes analysées de la même façon que les vôtres. Les mainteneurs de Replay Altar les rassemblent et ne distribuent que les statistiques, mises à jour avec chaque nouvelle version de Replay Altar.",
         )}
       </p>
       <table>
@@ -151,7 +151,12 @@ function ProGames({ refs }: { refs: RefGroupInfo[] }) {
                 {r.profile
                   ? tr(`${r.profile.games} games`, `${r.profile.games} partidas`, `${r.profile.games} partidas`, `${r.profile.games} parties`) +
                     ` (${Object.entries(r.profile.matchups).filter(([k]) => k !== "all").map(([k, v]) => `${k} ${v.n}`).join(", ")})` +
-                    (r.profile.replayBuild ? ` · ${tr("game build", "build do jogo", "build del juego", "build du jeu")} ${r.profile.replayBuild}` : "") +
+                    (r.profile.pooled
+                      ? ` · ${(({ games, sourceGames: n, years }) => {
+                          const y = years ? ` ${years[0]}–${years[1]}` : "";
+                          return tr(`${games} of them from ${n} tournament games${y} (older patches too)`, `${games} delas de ${n} partidas de torneio${y} (patches anteriores também)`, `${games} de ellas de ${n} partidas de torneo${y} (también parches anteriores)`, `dont ${games} issues de ${n} parties de tournoi${y} (patchs antérieurs aussi)`);
+                        })(r.profile.pooled)}`
+                      : r.profile.replayBuild ? ` · ${tr("game build", "build do jogo", "build del juego", "build du jeu")} ${r.profile.replayBuild}` : "") +
                     ` · ${tr("updated", "atualizado em", "actualizado", "mis à jour le")} ${new Date(r.profile.builtAt).toLocaleDateString(locale())}`
                   : tr("not included in this version", "não incluídas nesta versão", "no incluidas en esta versión", "non incluses dans cette version")}
               </td>
