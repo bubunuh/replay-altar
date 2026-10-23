@@ -50,6 +50,11 @@ export type Config = {
    * Warcraft III folder): the simulation reads each game's map from them.
    */
   mapFolders?: string[];
+  /**
+   * How many of the newest replays in your folders are imported (unset: IMPORT_STEP); "all" for
+   * every one. New games are always imported; the rest wait for "Import more" on the match list.
+   */
+  importLimit?: number | "all";
   /** Pro games (warcraft3.info tournament replays) the shipped statistics come from (maintainers). */
   reference: { groups: ReferenceGroup[] };
 };
@@ -181,6 +186,9 @@ export function folderToAdd(picked: string): string {
   if (i > 0) return parts.slice(0, i).join(sep) || parse(picked).root;
   return picked;
 }
+
+/** Replays imported on a first start, and how many more each "Import more" adds. */
+export const IMPORT_STEP = 50;
 
 export const DEFAULT_CONFIG: Config = {
   // Never guessed: you confirm the one found in your replays (apps/collector/src/firstrun.ts) or type it in Settings.

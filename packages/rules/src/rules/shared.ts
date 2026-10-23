@@ -45,7 +45,8 @@ export function proGap(c: Ctx, key: string): { worseThan: number; median: number
   return { worseThan: def.better === "higher" ? 1 - below : below, median: stat.p50 };
 }
 
-export const num = (v: number | null | undefined) => (v === null || v === undefined ? "—" : Number.isInteger(v) ? String(v) : decimal(v));
+// Whole numbers from 100 up (a median of 1160.5 XP reads as 1161); one decimal below.
+export const num = (v: number | null | undefined) => (v === null || v === undefined ? "—" : Number.isInteger(v) ? String(v) : Math.abs(v) >= 100 ? String(Math.round(v)) : decimal(v));
 export const vsPros = (c: Ctx, key: string, fmt: (v: number) => string = num) => {
   const g = proGap(c, key);
   return g ? tr(` (pros median ${fmt(g.median)}; worse than ${Math.round(g.worseThan * 100)}% of pro games)`, ` (mediana dos pros ${fmt(g.median)}; pior que ${Math.round(g.worseThan * 100)}% das partidas de pros)`, ` (mediana de los pros ${fmt(g.median)}; peor que el ${Math.round(g.worseThan * 100)}% de las partidas de pros)`, ` (médiane des pros ${fmt(g.median)} ; moins bien que ${Math.round(g.worseThan * 100)} % des parties de pros)`) : "";

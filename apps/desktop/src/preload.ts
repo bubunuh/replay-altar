@@ -45,7 +45,10 @@ const api = {
   heroIcons: () => ipcRenderer.invoke("hero:icons"),
   findingsSummary: () => ipcRenderer.invoke("findings:summary"),
   mapActivity: (key: string) => ipcRenderer.invoke("map:activity", key),
-  onDataChanged: (fn: () => void) => ipcRenderer.on("data:changed", () => fn()),
+  replaysScan: () => ipcRenderer.invoke("replays:scan"),
+  importMore: (all: boolean) => ipcRenderer.invoke("replays:importMore", all),
+  logError: (message: string) => ipcRenderer.send("window:error", message),
+  onDataChanged: (fn: (keys: string[] | null) => void) => ipcRenderer.on("data:changed", (_e, keys: string[] | null) => fn(keys)),
   onNavGame: (fn: (key: string) => void) => ipcRenderer.on("nav:game", (_e, key: string) => fn(key)),
   onNavPage: (fn: (page: string) => void) => ipcRenderer.on("nav:page", (_e, page: string) => fn(page)),
 };

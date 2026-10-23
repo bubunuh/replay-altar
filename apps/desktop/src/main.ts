@@ -1,6 +1,6 @@
 // Electron main process: one window, read-mostly access to the Replay Altar database.
 import { freshCopy, pruneOldCopies } from "./appimage.ts";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, watch, writeFileSync } from "node:fs";
+import { appendFileSync, closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readdirSync, readFileSync, readSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
 import { execFile, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { homedir, release as osRelease, tmpdir } from "node:os";
@@ -23,6 +23,7 @@ import {
   folderToAdd,
   replayDirs,
   getGame,
+  IMPORT_STEP,
   projectRoot,
   isInstalled,
   collectorFiles,
@@ -119,6 +120,9 @@ function ensureAppImageCollector() {
   pruneOldCopies();
 } // window class, so the .desktop entry's StartupWMClass matches
 
+/** The window hears about new and changed games at most this often. */
+const REFRESH_MS = 3000;
+
 type Launch = { background: boolean; game: string | null; page: string | null; screenshot: string | null };
 const arg = (argv: string[], name: string) => argv.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3) ?? null;
 const parseArgs = (argv: string[]): Launch => ({
@@ -142,6 +146,14 @@ if (cliAt >= 0) {
 } else {
   let win: BrowserWindow | null = null;
   const p = paths();
+  const logWindow = (message: string) => {
+    try {
+      mkdirSync(join(p.root, "logs"), { recursive: true });
+      appendFileSync(join(p.root, "logs", "window.log"), `${new Date().toISOString()} ${app.getVersion()} ${message}\n`);
+    } catch {
+      // nowhere to write
+    }
+  };
   // The language of the reports and the window (the preload asks for it before the page loads).
   const applyLanguage = () => setLanguage(resolveLanguage(loadConfig().language, app.getLocale()));
   const db = openDb(p.db);
@@ -260,6 +272,11 @@ if (cliAt >= 0) {
       },
     });
     win.removeMenu();
+    // A crashed page is written down and reloaded instead of leaving a blank window.
+    win.webContents.on("render-process-gone", (_e, d) => {
+      logWindow(`window crashed: ${d.reason} (exit code ${d.exitCode})`);
+      if (d.reason !== "clean-exit") win?.webContents.reload();
+    });
     // Links in the UI open in the system browser, never inside the app.
     win.webContents.setWindowOpenHandler(({ url }) => {
       shell.openExternal(url);
@@ -268,27 +285,76 @@ if (cliAt >= 0) {
     win.loadFile(join(import.meta.dirname, "renderer/index.html"));
     win.once("ready-to-show", () => show(launch));
 
-    // The collector appends to events.jsonl after every ingest; tell the UI to refresh.
-    let timer: NodeJS.Timeout | undefined;
+    // The collector appends a line to events.jsonl after every import or simulation. Only the
+    // games named in the new lines lose their findings (re-sorting all games clears them all),
+    // and the window hears at most every few seconds, with the games that changed: during a
+    // first import of hundreds of replays it used to reload everything after each one.
     // On a first start the collector may not have made the folder yet.
     mkdirSync(p.root, { recursive: true });
+    let offset = existsSync(p.events) ? statSync(p.events).size : 0;
+    let changed = new Set<string>();
+    let everything = false;
+    let timer: NodeJS.Timeout | undefined;
+    let lastSent = 0;
+    const flush = () => {
+      timer = undefined;
+      lastSent = Date.now();
+      win?.webContents.send("data:changed", everything ? null : [...changed]);
+      changed = new Set();
+      everything = false;
+    };
     watch(p.root, (_ev, name) => {
       if (name !== "events.jsonl") return;
-      books.clear();
-      clearTimeout(timer);
-      timer = setTimeout(() => win?.webContents.send("data:changed"), 500);
+      for (const line of appended()) {
+        try {
+          const e = JSON.parse(line) as { type?: string; gameKey?: string };
+          if (e.type === "reingested") everything = true;
+          if (e.gameKey) changed.add(e.gameKey);
+        } catch {
+          everything = true; // a line cut in two: refresh everything rather than miss a change
+        }
+      }
+      if (everything) books.clear();
+      for (const key of changed) books.delete(key);
+      timer ??= setTimeout(flush, Math.max(300, REFRESH_MS - (Date.now() - lastSent)));
     });
+    /** Lines added to events.jsonl since the last call. */
+    function appended(): string[] {
+      try {
+        const size = statSync(p.events).size;
+        if (size < offset) offset = 0;
+        if (size === offset) return [];
+        const buf = Buffer.alloc(size - offset);
+        const fd = openSync(p.events, "r");
+        try {
+          readSync(fd, buf, 0, buf.length, offset);
+        } finally {
+          closeSync(fd);
+        }
+        const text = buf.toString("utf8");
+        const end = text.lastIndexOf("\n") + 1;
+        offset += Buffer.byteLength(text.slice(0, end));
+        return text.slice(0, end).split("\n").filter(Boolean);
+      } catch {
+        return [];
+      }
+    }
   });
 
   app.on("window-all-closed", () => app.quit());
 
   ipcMain.handle("rules:get", (_e, key: string) => bookOf(key));
   // Every analyzed game's findings, newest first: for recurring problems and the match list.
-  ipcMain.handle("findings:summary", () =>
-    listGames(db)
-      .filter((g) => g.analyzed === 1)
-      .map((g) => ({ key: g.game_key, playedAt: g.played_at, result: g.result, findings: bookOf(g.game_key).findings.map((f) => ({ id: f.id, headline: f.headline, severity: f.severity, advice: f.advice ?? null })) })),
-  );
+  ipcMain.handle("findings:summary", async () => {
+    const games = listGames(db).filter((g) => g.analyzed === 1);
+    const out = [];
+    for (const [i, g] of games.entries()) {
+      // Other requests get through now and then: hundreds of games not worked out yet take a while.
+      if (i % 25 === 24) await new Promise((r) => setImmediate(r));
+      out.push({ key: g.game_key, playedAt: g.played_at, result: g.result, findings: bookOf(g.game_key).findings.map((f) => ({ id: f.id, headline: f.headline, severity: f.severity, advice: f.advice ?? null })) });
+    }
+    return out;
+  });
   // A map's extracted data: in WC3V's folder, or its copy in the data folder (packages/sim/src/maps.ts).
   const mapDir = (mapFile: string) => {
     const name = mapDataName(mapFile);
@@ -360,6 +426,25 @@ if (cliAt >= 0) {
     }
     restartCollectorIfRunning();
   });
+  // Replays in your folders not imported yet (older than the newest IMPORT_STEP, or the limit you
+  // raised), as the collector's last scan counted them; "Import more" raises the limit.
+  ipcMain.handle("replays:scan", () => {
+    try {
+      return JSON.parse(readFileSync(join(p.root, "replays.json"), "utf8")) as { found: number; older: number };
+    } catch {
+      return null;
+    }
+  });
+  ipcMain.handle("replays:importMore", (_e, all: boolean) => {
+    const config = loadConfig();
+    const now = config.importLimit ?? IMPORT_STEP;
+    if (now === "all") return;
+    saveConfig({ ...config, importLimit: all ? "all" : now + IMPORT_STEP });
+    restartCollectorIfRunning();
+  });
+  // A page that broke (the window shows a message instead) and a window that crashed go to a log
+  // next to the collector's, so a bug report can include them.
+  ipcMain.on("window:error", (_e, message: string) => logWindow(message));
   ipcMain.on("lang:get", (e) => {
     e.returnValue = language();
   });

@@ -11,6 +11,7 @@ import { TipLayer } from "./Tip.tsx";
 import { AccountPrompt } from "./AccountPrompt.tsx";
 import { CollectorProgress } from "./CollectorProgress.tsx";
 import { Installing, UpdateBanner } from "./Update.tsx";
+import { ErrorBoundary } from "./ErrorBoundary.tsx";
 import { openIssue } from "./feedback.ts";
 import { applyTextScale } from "./textSize.ts";
 import { tr } from "@replay-altar/core/i18n";
@@ -39,7 +40,7 @@ function App() {
   const [game, setGame] = useState<string | null>(null);
   const [games, setGames] = useState<GameRow[]>([]);
   const [perf, setPerf] = useState<{ games: PerfGame[]; metrics: MetricDef[] }>({ games: [], metrics: [] });
-  const [version, setVersion] = useState(0); // bumps when the collector adds a game
+  const [version, setVersion] = useState(0); // bumps when the open game changed (its page reloads)
   const [refs, setRefs] = useState<RefGroupInfo[]>([]);
   const [update, setUpdate] = useState<UpdateState | null>(null);
   // The update banner, until "Not now" (it comes back at the next start); then the message shown
@@ -58,16 +59,26 @@ function App() {
     mainRef.current?.scrollTo(0, 0);
   }, [page, game]);
 
-  const load = useCallback(() => {
+  // The lists, after the collector imported or simulated games. The pro statistics don't change
+  // then, and an open report reloads only when its own game changed.
+  const loadLists = useCallback(() => {
     api.listGames().then(setGames);
     api.performance().then(setPerf);
+  }, []);
+  const load = useCallback(() => {
+    loadLists();
     api.referenceProfiles().then(setRefs);
     setVersion((v) => v + 1);
-  }, []);
+  }, [loadLists]);
+  const gameRef = useRef(game);
+  gameRef.current = game;
 
   useEffect(() => {
     load();
-    api.onDataChanged(load);
+    api.onDataChanged((keys) => {
+      loadLists();
+      if (!keys || (gameRef.current && keys.includes(gameRef.current))) setVersion((v) => v + 1);
+    });
     api.onNavGame((key) => {
       load();
       setGame(key);
@@ -82,7 +93,7 @@ function App() {
       if (nav?.page) setPage(nav.page as Page);
       if (nav?.game) setGame(nav.game);
     });
-  }, [load]);
+  }, [load, loadLists]);
 
   const open = (key: string) => setGame(key);
   const analyzed = games.filter((g) => g.analyzed === 1).length;
@@ -145,17 +156,19 @@ function App() {
           />
         )}
         <CollectorProgress onDone={load} />
-        {game ? (
-          <Match key={`${game}:${version}`} gameKey={game} metrics={perf.metrics} refs={refs} onBack={() => setGame(null)} />
-        ) : page === "matches" ? (
-          <Matches games={games} onOpen={open} />
-        ) : page === "analyzer" ? (
-          <Analyzer onOpen={open} />
-        ) : page === "performance" ? (
-          <Performance games={perf.games} metrics={perf.metrics} refs={refs} onOpen={open} />
-        ) : (
-          <Settings refs={refs} update={update} onInstall={install} />
-        )}
+        <ErrorBoundary key={game ?? page}>
+          {game ? (
+            <Match key={`${game}:${version}`} gameKey={game} metrics={perf.metrics} refs={refs} onBack={() => setGame(null)} />
+          ) : page === "matches" ? (
+            <Matches games={games} onOpen={open} />
+          ) : page === "analyzer" ? (
+            <Analyzer onOpen={open} />
+          ) : page === "performance" ? (
+            <Performance games={perf.games} metrics={perf.metrics} refs={refs} onOpen={open} />
+          ) : (
+            <Settings refs={refs} update={update} onInstall={install} />
+          )}
+        </ErrorBoundary>
       </main>
     </div>
   );

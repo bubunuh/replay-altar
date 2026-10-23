@@ -103,7 +103,13 @@ type W3Api = {
   findingsSummary(): Promise<GameFindings[]>;
   /** Fights and creep camps cleared, positioned on the map; null without a simulation or map data. */
   mapActivity(key: string): Promise<MapActivity | null>;
-  onDataChanged(fn: () => void): void;
+  /** Replays in your folders not imported yet, as the collector's last scan counted them. */
+  replaysScan(): Promise<{ found: number; older: number } | null>;
+  /** Imports the next IMPORT_STEP older replays, or all of them. */
+  importMore(all: boolean): Promise<void>;
+  logError(message: string): void;
+  /** The games that changed, or null when everything may have (e.g. re-sorted by battletag). */
+  onDataChanged(fn: (keys: string[] | null) => void): void;
   onNavGame(fn: (key: string) => void): void;
   onNavPage(fn: (page: string) => void): void;
 };
