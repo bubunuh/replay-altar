@@ -268,6 +268,8 @@ tr.tier-row-below td:first-child { box-shadow: inset 3px 0 0 var(--critical); }
 .win-chance .swing-head { white-space: nowrap; }
 button.linklike { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; font: inherit; text-decoration: underline; text-underline-offset: 2px; }
 .account-prompt { margin-bottom: 14px; }
+.import-more { margin-top: 14px; text-align: center; }
+.import-more .filters { justify-content: center; }
 .update-banner { margin-bottom: 14px; border-left: 3px solid var(--warning); }
 .update-banner p { margin: 0 0 8px; }
 .installing { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px; background: rgb(0 0 0 / 0.55); }

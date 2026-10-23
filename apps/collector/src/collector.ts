@@ -1,7 +1,7 @@
 // The always-on service: archive + analyze new replays, react to Warcraft III starting.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ingestFile, reingestAll, loadConfig, markCollectorRunning, mmss, openDb, paths, replayDirs, resolveLanguage, setLanguage, tr, warcraftFolders, type GameRecord } from "@replay-altar/core";
+import { IMPORT_STEP, ingestFile, reingestAll, loadConfig, markCollectorRunning, mmss, openDb, paths, replayDirs, resolveLanguage, setLanguage, tr, warcraftFolders, type GameRecord } from "@replay-altar/core";
 import { simNotReady, syncMapCache } from "@replay-altar/sim";
 import { OfficialQueue } from "./officialqueue.ts";
 import { SimQueue } from "./simqueue.ts";
@@ -49,6 +49,7 @@ export async function runCollector() {
   const dirs = replayDirs(config);
   if (dirs.length === 0) log(`no replay folders found under ${warcraftFolders(config).join(", ") || "Documents/Warcraft III"}; add yours in Settings`);
 
+  const knownFile = db.prepare("SELECT 1 FROM files WHERE path = ? AND size = ? AND mtime = ?");
   const watcher = new ReplayWatcher(
     dirs,
     async (path, origin) => {
@@ -69,6 +70,12 @@ export async function runCollector() {
       }
     },
     log,
+    {
+      // The newest replays only, until you ask for more on the match list.
+      limit: config.importLimit === "all" ? null : (config.importLimit ?? IMPORT_STEP),
+      known: (path, size, mtime) => !!knownFile.get(path, size, mtime),
+      onScan: (r) => writeFileSync(join(p.root, "replays.json"), JSON.stringify(r)),
+    },
   );
   // Extracted maps live in the data folder; WC3V reads them from the install, which an update
   // replaced: put them back before anything is simulated.

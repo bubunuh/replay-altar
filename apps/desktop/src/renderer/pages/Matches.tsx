@@ -143,6 +143,47 @@ export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: str
           </table>
         )}
       </div>
+      <ImportMore games={games} />
+    </div>
+  );
+}
+
+/**
+ * Older replays in your folders that aren't imported yet: a first start imports only the newest
+ * ones (a folder with thousands of replays took ages and kept the window busy).
+ */
+function ImportMore({ games }: { games: GameRow[] }) {
+  const [scan, setScan] = useState<{ found: number; older: number } | null>(null);
+  const [asked, setAsked] = useState(false);
+  useEffect(() => {
+    api.replaysScan().then((s) => {
+      setScan(s);
+      setAsked(false);
+    });
+  }, [games]);
+  if (!scan?.older) return null;
+  const more = async (all: boolean) => {
+    setAsked(true);
+    await api.importMore(all);
+  };
+  return (
+    <div className="import-more">
+      <p className="sub">
+        {scan.older === 1
+          ? tr("1 older replay in your folders isn't imported yet.", "1 replay mais antigo nas suas pastas ainda não foi importado.", "1 replay más antiguo de tus carpetas aún no se ha importado.", "1 replay plus ancien de vos dossiers n'est pas encore importé.")
+          : tr(`${scan.older} older replays in your folders aren't imported yet.`, `${scan.older} replays mais antigos nas suas pastas ainda não foram importados.`, `${scan.older} replays más antiguos de tus carpetas aún no se han importado.`, `${scan.older} replays plus anciens de vos dossiers ne sont pas encore importés.`)}
+      </p>
+      <div className="filters">
+        {scan.older > 50 && (
+          <button className="btn" disabled={asked} onClick={() => more(false)}>
+            {tr("Import 50 more replays", "Importar mais 50 replays", "Importar 50 replays más", "Importer 50 replays de plus")}
+          </button>
+        )}
+        <button className="btn" disabled={asked} onClick={() => more(true)}>
+          {tr(`Import all replays (${scan.older})`, `Importar todos os replays (${scan.older})`, `Importar todos los replays (${scan.older})`, `Importer tous les replays (${scan.older})`)}
+        </button>
+        {asked && <span className="muted small">{tr("Importing… the list fills in as they're read.", "Importando… a lista se completa conforme eles são lidos.", "Importando… la lista se completa a medida que se leen.", "Importation… la liste se remplit au fur et à mesure.")}</span>}
+      </div>
     </div>
   );
 }

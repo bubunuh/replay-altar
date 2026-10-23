@@ -7,6 +7,9 @@ statistics (`data/`).
 
 ## Unreleased (next version)
 
+- **Big replay folders:** the first start imports only your newest 50 replays, so your latest games show up within seconds. At the end of the match list, *Import 50 more replays* and *Import all replays* bring in the older ones. Replays are read one at a time (they were all read at once, which filled the memory), and a scan no longer reads replays it already imported.
+- **The window stays usable while games are imported:** it refreshes the lists at most every 3 seconds instead of after every game, an open report reloads only when its own game changed, and the findings of the match list are worked out once per game instead of all again after every import (500 games took 8 seconds each time; the pro statistics are now read once instead of for every game).
+- **No more blank window:** a page that hits an error shows a message with *Report a bug*, and the error goes to `window.log` next to the collector's log; a crashed window is written down there and reloaded.
 - Findings show large numbers rounded (a pros median of 1160.5 XP now reads 1161).
 
 ## 0.2.0 (2026-10-23)
