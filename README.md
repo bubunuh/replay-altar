@@ -2,14 +2,14 @@
 
 <h1 align="center">Replay Altar</h1>
 
-Replay Altar is a Warcraft III: Reforged replay analyzer for 1v1 players. It runs on your own computer, keeps every game you play, and after each one tells you what decided it and what to do differently next time, compared with tournament players of your race.
+Replay Altar is a Warcraft III: Reforged replay analyzer for 1v1 players. It runs on your own computer, keeps every game you play, and after each one tells you what decided it and what to do differently next time, compared with tournament players of your race. Everything it tells you is measured on real games: each finding, comparison and curve has been tested on thousands of tournament games, and the numbers are on this page.
 
 [Download](https://github.com/bubunuh/replay-altar/releases)
 
 - **Every replay kept, automatically.** A small background program saves each replay the moment a game ends, before the game overwrites `LastReplay.w3g`. Battle.net ladder, W3Champions and custom melee games are all picked up, with nothing to upload or click.
 - **The game reconstructed.** Each 1v1 is simulated from its replay with the [WC3V](https://github.com/jblanchette/wc3v) engine: workers, army value, supply, creep camps, hero levels and fights over time.
-- **A coach's report after every game.** Rules drawn from well-known guides (Grubby, Liquipedia, Warcraft 3 Gym, Vortix and others) name the problems that cost you the game, show the facts behind each one, explain why it happened and say what to do next time. The report also points out the fight that turned the game (with the moment to rewatch), your strengths and the opponent's plan.
-- **An evaluation curve, like in chess.** <kbd>upcoming</kbd> Who was ahead at every moment of the game, as how often a pro player in your position went on to win, with the three moments that swung it most and what moved them. [More below](#the-evaluation-curve).
+- **A coach's report after every game.** Rules drawn from well-known guides (Grubby, Liquipedia, Warcraft 3 Gym, Vortix and others) name the problems that cost you the game, show the facts behind each one, explain why it happened and say what to do next time. <kbd>upcoming</kbd> Only rules that proved themselves on 3,388 tournament player-games are shown: each one appears clearly more often in lost games than in won ones. The report also points out the fight that turned the game (with the moment to rewatch), your strengths and the opponent's plan. [More below](#how-the-report-is-made).
+- **An evaluation curve, like in chess.** <kbd>upcoming</kbd> Who was ahead at every moment of the game, as how often a pro player in your position went on to win, with the three moments that swung it most and what moved them. Learned from 513 pro games and tested on 2,998 tournament games it had never seen. [More below](#the-evaluation-curve).
 - **One thing to work on.** Each report ends with the single most useful habit for your next game. Across your recent games, the Performance page picks the problem that keeps coming back and shows whether it is getting better.
 - **Every number in context.** Your numbers are placed among about 1,700 tournament games of your race and matchup <kbd>upcoming</kbd> (until now about 200, current patch only) ("better than 86% of pro games"), with a green, yellow or red verdict: at pro level, at least as good as your opponent, or behind both.
 - **Knows your build.** It recognises the build order each player went for, from guide builds and builds mined from pro games, and shows where your timings drifted from the pros who play it.
@@ -24,6 +24,30 @@ Replay Altar is a Warcraft III: Reforged replay analyzer for 1v1 players. It run
 Your games stay on your computer. Replay Altar fetches only two things from the internet, and Settings can turn off either: the game's own end-of-game statistics for your W3Champions games (a few small requests per game, one game at a time; they carry both battletags), and once a day the list of Replay Altar releases from GitHub, to tell you when a new version is out. The pro statistics come with the app, and no maps are shipped: each game's map is read from your own copy. See the [privacy policy](PRIVACY.md).
 
 > Replay Altar is a fan project. It is not affiliated with, endorsed by or connected to Blizzard Entertainment. Warcraft is a trademark of Blizzard Entertainment, Inc. The game's data and pictures (unit costs, race crests, hero portraits, the game's font) are read from your own Warcraft III installation, never modified there, and never distributed with this project; the screenshots on this page only show them as the app displays them.
+
+## How the report is made
+
+**1. Reading the game.** A replay only records the players' orders, so Replay Altar rebuilds the game from them with the [WC3V](https://github.com/jblanchette/wc3v) simulation: workers, army, supply, creep camps, heroes and fights, every few seconds. Some of this can be checked against the game itself, and was:
+- **Hero experience** matches W3Champions' official numbers closely (correlation 0.96 on 56 pro player-games).
+- **Army value** was compared with Warcraft III's own unit counts on 50 recorded player-games: it is typically off by about 30%, so it is marked ≈ wherever it appears. <kbd>upcoming</kbd> A correction from the replay's selection lists cut that error by 29%.
+
+**2. Comparing with tournament players.** Every number is placed among about 1,700 player-games of your race <kbd>upcoming</kbd>: recent pro games on the current patch plus tournament games from 2022 to 2026, analyzed exactly like yours. "Better than 86% of pro games" means just that: 86% of those games had a worse number.
+
+**3. Deciding what mattered.** Each rule comes from a guide or from the pro data, and has to prove itself before it is shown <kbd>upcoming</kbd>. Every rule was run on 3,388 player-games whose results it had not been tuned on, from both players' side. A rule is shown only if it fires clearly more often in losses than in wins (the whole 95% confidence range above "no difference"). For example:
+
+| Finding | Appears in lost games | Appears in won games |
+|---|---|---|
+| Your fights cost far more than theirs | 39% | 13% |
+| Your heroes fell behind | 67% | 24% |
+| You lost your heroes too often | 14% | 6% |
+| No expansion in a long game | 7% | 3% |
+| They had more bases than you | 21% | 13% |
+
+11 rules passed and are shown; 18 did not, and stay hidden until they can be tuned for each skill level. On those games, a lost game gets about two findings and a won game about one. One check is shown whatever the result: playing without control groups or hotkeys, which 99 in 100 tournament players never do (measured on 8,294 player-games) <kbd>upcoming</kbd>.
+
+**4. What to do about it.** Each finding comes with the facts behind it, the likely reason found elsewhere in the game, and one concrete thing to do next time. Games of every race and level were also read by hand and compared with the report ([docs/REVIEWS.md](docs/REVIEWS.md)).
+
+Every rule, its source and its scores: [docs/RULES.md](docs/RULES.md). The milestones mined from the pro games: [docs/PRINCIPLES.md](docs/PRINCIPLES.md).
 
 ## The evaluation curve
 
@@ -149,7 +173,7 @@ When Warcraft III starts, the window opens behind the game without taking focus,
 - **Official numbers:** for W3Champions games, the game's own end-of-game statistics (gold and lumber collected, experience, units killed, upkeep lost) replace the estimates and are marked "official".
 - **Pro games:** tournament games from [warcraft3.info](https://warcraft3.info/replays/), collected by the maintainers rather than by each copy of the app, so the site gets one slow download per game instead of one per user. About 200 per race are recent games on the current patch: 1v1 games of at least 3 minutes by players with a curated profile, at most 20 per player. <kbd>upcoming</kbd> To these are added about 3,000 tournament games from 2022 to today, spread over the years and matchups, of players from semi-pro to the very top, on older patches too; every player of a race in them counts, which makes about 1,700 player-games per race. More games make the comparisons steadier; the price is a mix of patches and levels (on most numbers the medians differ by under a third of the pros' normal range). All are analyzed the same way as yours, and only the resulting statistics are published, in `data/reference/`, updated with new versions of Replay Altar.
 - **Verdicts:** the main numbers get a colour: green at or above the pro median, yellow when at least as good as your opponent, red below both. Timings that depend on strategy (tier, heroes, expansions) are compared without a better or worse.
-- **Findings:** [docs/RULES.md](docs/RULES.md) lists every rule, where it comes from and how well it separates pro losses from pro wins. [docs/PRINCIPLES.md](docs/PRINCIPLES.md) holds the milestones mined from the pro games; [docs/DATA.md](docs/DATA.md) describes the data format.
+- **Findings:** see [How the report is made](#how-the-report-is-made); [docs/RULES.md](docs/RULES.md) lists every rule, where it comes from and how well it separates losses from wins. [docs/PRINCIPLES.md](docs/PRINCIPLES.md) holds the milestones mined from the pro games; [docs/DATA.md](docs/DATA.md) describes the data format.
 
 After a game patch, run `node scripts/extract-gamedata.ts` and `node scripts/extract-combat.ts` (Linux checkout) so unit costs and combat data follow the new balance, then update the pro games. The Windows version reads the game data again by itself.
 
