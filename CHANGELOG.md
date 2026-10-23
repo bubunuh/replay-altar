@@ -7,8 +7,11 @@ statistics (`data/`).
 
 ## Unreleased (next version)
 
-**Ready on `dev`:**
-- **Windows: games are simulated again.** The Windows builds up to 0.1.3 shipped a Linux part of the map reader, so no map could be prepared and every simulation failed (no army, fights, map picture or evaluation curve). Games that failed this way are simulated again by themselves after the update.
+Nothing yet.
+
+## 0.2.0 (2026-10-23)
+
+- **Windows: the simulation works.** The Windows builds up to 0.1.3 shipped a Linux part of the map reader, so no map could be prepared and every simulation failed (no army, fights, map picture or evaluation curve). Games that failed this way are simulated again by themselves after the update.
 - **Updates keep the game data:** after an update Replay Altar puts back the unit table it had already read from your game, instead of reading the game again.
 - **Clearer failures:** a simulation that fails now records the actual error, not the command that was run.
 - **Updates are easier to see:** a banner at the top of the window says when a new version is out (before, only a small "!" on the Settings tab), and while the update installs the window says what happens and the installer shows its progress, instead of the app vanishing for a minute.
