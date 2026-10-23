@@ -7,7 +7,7 @@ import { chmodSync, copyFileSync, existsSync, mkdirSync, readdirSync, readFileSy
 import { homedir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import { collectorFiles, configPath, dataDir, disableCollector, enableCollector, projectRoot, SERVICE, windowsLauncher } from "@replay-altar/core";
+import { collectorFiles, configPath, dataDir, disableCollector, enableCollector, linuxUnit, projectRoot, SERVICE, windowsLauncher } from "@replay-altar/core";
 
 const home = homedir();
 const windows = process.platform === "win32";
@@ -190,24 +190,7 @@ export function install() {
     write(INSTALLED.desktopIcon, entry, 0o755);
   }
 
-  write(
-    INSTALLED.service,
-    [
-      "[Unit]",
-      "Description=Replay Altar replay collector (archives and analyzes Warcraft III replays)",
-      "After=graphical-session.target",
-      "",
-      "[Service]",
-      `ExecStart="${node}" "${PROJECT}/apps/collector/src/cli.ts" collector`,
-      "Restart=on-failure",
-      "RestartSec=10",
-      "Nice=10",
-      "",
-      "[Install]",
-      "WantedBy=default.target",
-      "",
-    ].join("\n"),
-  );
+  write(INSTALLED.service, linuxUnit([node, `${PROJECT}/apps/collector/src/cli.ts`, "collector"]));
   enableCollector();
   console.log(`\nDone. Collector is running${hasDesktop ? "; Replay Altar is on your desktop and in the app menu" : " (desktop app not built yet)"}.`);
 }

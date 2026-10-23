@@ -122,6 +122,9 @@ function Avg({ def, values }: { def: MetricDef; values: (number | null | undefin
   );
 }
 
+/** A mean in seconds, or a dash without the unit when no game has it. */
+const seconds = (v: number | null) => (v === null || v === undefined ? "—" : `${metricValue({ unit: "count" }, v)} s`);
+
 export function Performance({ games: all, metrics, refs, onOpen }: { games: PerfGame[]; metrics: MetricDef[]; refs: RefGroupInfo[]; onOpen: (key: string) => void }) {
   const [period, setPeriod] = useState("all");
   const [source, setSource] = useState("all");
@@ -257,8 +260,8 @@ export function Performance({ games: all, metrics, refs, onOpen }: { games: Perf
         </div>
         <div className="card tile">
           <div className="label">{tr("Supply blocked per game", "Travado no food por partida", "Bloqueo de food por partida", "Blocage de food par partie")}</div>
-          <div className="value">{metricValue({ unit: "count" }, mean(games.map((g) => g.me.supply_blocked_s)))} s</div>
-          <div className="note">{tr("opponents", "oponentes", "rivales", "adversaires")} {metricValue({ unit: "count" }, mean(games.map((g) => g.opp.supply_blocked_s)))} s · {tr("from the simulation", "pela simulação", "de la simulación", "d'après la simulation")}</div>
+          <div className="value">{seconds(mean(games.map((g) => g.me.supply_blocked_s)))}</div>
+          <div className="note">{tr("opponents", "oponentes", "rivales", "adversaires")} {seconds(mean(games.map((g) => g.opp.supply_blocked_s)))} · {tr("from the simulation", "pela simulação", "de la simulación", "d'après la simulation")}</div>
         </div>
         <div className="card tile">
           <div className="label">{tr("Tier 2 started", "Tier 2 iniciado", "Tier 2 empezado", "Tier 2 lancé")}</div>

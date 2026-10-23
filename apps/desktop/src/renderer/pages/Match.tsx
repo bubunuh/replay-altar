@@ -19,6 +19,8 @@ import { Chart, heroLevelsChart, timeLines, type Band, type HeroLine, type Token
 import { assess, describeRef, groupForRace, pickProfile } from "@replay-altar/reference/compare";
 import { ProMedian, Standing } from "../Standing.tsx";
 import { groupDetails, SECTION_INFO, splitMetrics } from "../sections.ts";
+import { WinChance } from "../WinChance.tsx";
+import { EstimatesNote } from "../Estimates.tsx";
 import { proText, researchTimes, upgradeRows, upgradeStanding } from "../upgrades.ts";
 import type { RaceCode } from "@replay-altar/core/gamedata";
 import type { CurvePoint, MatchupProfile } from "@replay-altar/reference/types";
@@ -142,6 +144,14 @@ function GameCharts({ record, refMp, refLabel }: { record: GameRecord; refMp: Ma
     ? tr("Not simulated yet: army, resources, workers and supply appear about a minute after a game ends (older games: replay-altar sim --backfill).", "Ainda não simulada: exército, recursos, trabalhadores e food aparecem cerca de um minuto depois que a partida acaba.", "Todavía sin simular: el ejército, los recursos, los trabajadores y el food aparecen un minuto después de que termine la partida (partidas antiguas: replay-altar sim --backfill).", "Pas encore simulée : l'armée, les ressources, les ouvriers et la food apparaissent environ une minute après la fin d'une partie (anciennes parties : replay-altar sim --backfill).")
     : !ok
       ? tr(`Simulation failed: ${(sim as { reason: string }).reason}`, `A simulação falhou: ${(sim as { reason: string }).reason}`, `La simulación falló: ${(sim as { reason: string }).reason}`, `La simulation a échoué : ${(sim as { reason: string }).reason}`) +
+        (/^game data/.test((sim as { reason: string }).reason)
+          ? " " + tr(
+              "Replay Altar reads the unit data it needs from your Warcraft III install, and found none on this computer. Once Warcraft III is installed, restart your computer: Replay Altar then reads the data and simulates these games by itself.",
+              "O Replay Altar lê os dados das unidades da sua instalação do Warcraft III e não encontrou nenhuma neste computador. Depois de instalar o Warcraft III, reinicie o computador: o Replay Altar então lê os dados e simula estas partidas sozinho.",
+              "Replay Altar lee los datos de las unidades de tu instalación de Warcraft III y no encontró ninguna en este equipo. Cuando Warcraft III esté instalado, reinicia el equipo: Replay Altar leerá entonces los datos y simulará estas partidas solo.",
+              "Replay Altar lit les données des unités dans votre installation de Warcraft III et n'en a trouvé aucune sur cet ordinateur. Une fois Warcraft III installé, redémarrez l'ordinateur : Replay Altar lira alors les données et simulera ces parties tout seul.",
+            )
+          : "") +
         (/map folders/.test((sim as { reason: string }).reason)
           ? " " + tr(
               "Add the folder that holds your maps in Settings → Map folders, then press Simulate again.",
@@ -165,6 +175,7 @@ function GameCharts({ record, refMp, refLabel }: { record: GameRecord; refMp: Ma
         />
       </h2>
       {note && <p className="sub">{note}</p>}
+      {ok && <EstimatesNote />}
       {ok && (
         <>
           <h3 className="chart-title" data-tip={tr("Gold and lumber in living army units, heroes excluded; estimated by the simulation.", "Ouro e madeira nas unidades de exército vivas, sem heróis; estimado pela simulação.", "Oro y madera en unidades de ejército vivas, sin contar los héroes; estimado por la simulación.", "Or et bois dans les unités d'armée vivantes, héros exclus ; estimé par la simulation.")}>≈ {tr("Army value", "Valor do exército", "Valor del ejército", "Valeur de l'armée")}</h3>
@@ -392,6 +403,8 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
           />
         )}
       </div>
+
+      {me && opp && r.sim?.status === "ok" && r.game.durationMs >= MIN_GAME_MS && <WinChance key={`win-${r.gameKey}`} record={r} me={me} opp={opp} />}
 
       <GameCharts record={r} refMp={ref?.mp ?? null} refLabel="Pros" />
 

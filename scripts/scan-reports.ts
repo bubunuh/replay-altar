@@ -50,7 +50,7 @@ for (const { id, p } of sources) {
       const view = asPlayer(r, me.playerId);
       const ref = refFor(groups, me, opp);
       const found = findings(view, ref);
-      if (id === "review") ladder.push({ win: result === "win", ids: allFindings(view, ref).map((x) => x.id) });
+      if (id === "review") ladder.push({ win: result === "win", ids: allFindings(view, ref, undefined, { all: true }).map((x) => x.id) });
       const good = strengths(view, ref, found);
       const tag = `${id} ${r.gameKey.slice(0, 8)} p${me.playerId} ${me.race}v${opp.race} ${result} ${Math.round(r.game.durationMs / 60_000)}m`;
       const recap = recapOf(view, opp, result, found, good);

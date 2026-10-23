@@ -1,7 +1,8 @@
 // The always-on service: archive + analyze new replays, react to Warcraft III starting.
-import { mkdirSync } from "node:fs";
-import { ingestFile, loadConfig, markCollectorRunning, mmss, openDb, paths, replayDirs, resolveLanguage, setLanguage, tr, warcraftFolders, type GameRecord } from "@replay-altar/core";
-import { syncMapCache } from "@replay-altar/sim";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { ingestFile, reingestAll, loadConfig, markCollectorRunning, mmss, openDb, paths, replayDirs, resolveLanguage, setLanguage, tr, warcraftFolders, type GameRecord } from "@replay-altar/core";
+import { simNotReady, syncMapCache } from "@replay-altar/sim";
 import { OfficialQueue } from "./officialqueue.ts";
 import { SimQueue } from "./simqueue.ts";
 import { notify, openDesktop, watchWarcraft } from "./system.ts";
@@ -32,6 +33,17 @@ export async function runCollector() {
   const db = openDb(p.db);
   markCollectorRunning();
   const ctx = { db, config, paths: p };
+  // Your battletags changed (confirmed or edited in Settings, which restarts the collector): sort
+  // the archived games again, so the ones you played count as yours.
+  const applied = join(p.root, "accounts-applied.json");
+  const accountsKey = JSON.stringify([...config.accounts].sort());
+  if (!existsSync(applied) || readFileSync(applied, "utf8") !== accountsKey) {
+    writeProgress({ setup: "accounts", import: null, sims: null });
+    const out = await reingestAll(ctx);
+    log(`battletags ${config.accounts.join(", ") || "(none)"}: re-sorted ${out.games} archived games`);
+    writeFileSync(applied, accountsKey);
+    writeProgress({ setup: null, import: null, sims: null });
+  }
   const sims = new SimQueue(ctx, log);
   const officials = new OfficialQueue(ctx, log);
   const dirs = replayDirs(config);
@@ -69,6 +81,14 @@ export async function runCollector() {
   watcher.start();
   watcher.scanAll(); // backfill + anything played while we were down
   sims.backfill();
+  // Games that failed for a reason outside the replay are simulated again: missing game data
+  // whenever it's there now (it appears once the game is installed), and map failures once per
+  // version, which may have fixed them (the 0.1 Windows builds couldn't prepare any map).
+  const version = process.env.REPLAY_ALTAR_VERSION;
+  const retried = join(p.root, "sims-retried.txt");
+  const newVersion = !!version && (!existsSync(retried) || readFileSync(retried, "utf8") !== version);
+  if (!simNotReady(p.root)) sims.retryFailed(newVersion ? /^(map |game data|WC3V)/ : /^(game data|WC3V)/);
+  if (newVersion) writeFileSync(retried, version);
 
   // Progress for the window: the replays found at start (later rescans find known files and
   // would only flash a bar), then the simulations.

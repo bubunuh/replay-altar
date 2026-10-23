@@ -11,7 +11,8 @@
     "./principles": "./src/principles.ts",
     "./builds": "./src/builds.ts",
     "./series": "./src/series.ts",
-    "./problems": "./src/problems.ts"
+    "./problems": "./src/problems.ts",
+    "./winchance": "./src/winchance.ts"
   },
   "dependencies": {
     "@replay-altar/core": "*",

@@ -1,0 +1,43 @@
+# Changelog
+
+What changes for players in each version. Work happens on `dev`; a version is made from `main`
+(see README, "Branches and builds"). Research scripts, experiments and the data they use are not
+part of a version: an installer ships only the app, the simulation engine and the published pro
+statistics (`data/`).
+
+## Unreleased (next version)
+
+Nothing yet.
+
+## 0.2.0 (2026-10-23)
+
+- **Windows: the simulation works.** The Windows builds up to 0.1.3 shipped a Linux part of the map reader, so no map could be prepared and every simulation failed (no army, fights, map picture or evaluation curve). Games that failed this way are simulated again by themselves after the update.
+- **Updates keep the game data:** after an update Replay Altar puts back the unit table it had already read from your game, instead of reading the game again.
+- **Clearer failures:** a simulation that fails now records the actual error, not the command that was run.
+- **Updates are easier to see:** a banner at the top of the window says when a new version is out (before, only a small "!" on the Settings tab), and while the update installs the window says what happens and the installer shows its progress, instead of the app vanishing for a minute.
+- **First start:** until you confirm your battletag, the match list says how many replays are waiting for it; choosing "No, I'll type mine" opens Settings with the battletag field ready to type in (Enter saves).
+- **Small windows:** the report's heading switches to one column when the report is narrow, so the map is no longer cut off at the right.
+- **Small fixes:** after you change your battletag, reports no longer show the old side's findings until reopened; "your heroes levelled faster than theirs" is only said when the timed numbers agree; the pros' band on time charts stops where your game ended (short games are no longer squeezed into a 40-minute axis); each page opens at its top; "1 game analyzed"; on Windows, Settings explains how to uninstall instead of showing commands.
+- **More accurate army value and losses.** A replay records no deaths, so they are reconstructed. They now also use what the replay does record: whenever a player switches selection, the game writes down which units were really selected, and dead units are already missing. Before, the opponent's new units could count as lost the moment they were trained, and units lost in a fight could stay alive. Checked against Warcraft III's own unit counts on 50 recorded player-games, the army value error fell by about 29% (by far the most for players the simulation followed poorly). Losses, trades and fight results in the report and on the map use the same counting, and so does the pro comparison.
+- **Undead:** an Obsidian Statue is no longer valued as a Destroyer before it transforms.
+- **More games simulate to the end:** two fixes to WC3V (reviving a hero that used a Town Portal; training from a building WC3V hadn't seen being built). On the pro games, 16 of 518 were cut short before. The pro comparison now uses 513 games.
+- **Some replays that could not be imported now can** (a hero the replay reader reports without a type).
+- **Evaluation curve** on each game's page, drawn like a chess evaluation graph (blue while you were ahead, red while your opponent was): how often a pro in your position went on to win, moment by moment, with the three moments that swung it most, what moved them (losses, hero experience, workers, army, expansions, heroes alive, upgrades) and what happened then. Learned from 513 pro games and checked on 2,998 tournament games from 2022 to 2026 it never saw; the method is in [docs/win-chance/report.pdf](docs/win-chance/report.pdf).
+- **Comparisons with pros on about eight times more games:** about 1,700 player-games per race instead of about 200. The current patch's pro games are pooled with about 3,000 tournament games from 2022 to 2026 (older patches, players from semi-pro to the very top). The findings' thresholds and the mined principles use the same pool, and every rule was scored again on it, held out, with the WC3V fixes and the new army counting (docs/RULES.md).
+- **Findings you can trust more:** the Findings card now shows only the rules that, tested on 3,388 player-games they were not tuned on, fire clearly more often in losses than in wins (11 rules). The others are hidden for now.
+- **Control groups and hotkeys:** the old "speed and hotkeys" finding is replaced by a check that appears whenever you played without control groups or hotkeys, win or lose, with a first habit to start with.
+- **Your battletag is never guessed:** on the first start Replay Altar looks for the battletag in most of your replays and asks you to confirm it (or to pick between two, when a frequent opponent shows up as often), or to type yours in Settings. Before, it set the guess silently, and a frequent opponent could be taken for you. Changing your battletag in Settings now sorts your games again by itself (no command needed).
+- **A note on the game's charts** that army value, losses and fight results are estimates, with how far off they typically are and how that was measured.
+- **Linux AppImage**, alongside the Windows installer: one file, no Node, git or podman needed. On first start it sets up the background collector (a systemd user service), the `replay-altar` command and a menu entry, reads the game data with a built-in read-only extractor, and updates itself in place like the Windows version.
+- **Linux: Battle.net is found in more places:** Lutris folders under `~/Games`, `~/.wine`, Steam's Proton prefixes and Bottles, for both the replays and the game data.
+
+## Later
+
+- **Re-simulate every game with WC3V's merged fixes:** once the WC3V author has merged the revised fixes (#19, #21), switch Replay Altar's patches to the merged code and simulate all pro, tournament and your games again (about half an hour at full CPU). Measured beforehand: findings unchanged, the evaluation curve moves by more than half a point in 4% of games (6 points at most).
+- **Findings by skill level:** download ladder games across skill levels (W3Champions, by MMR) and choose and tune the findings for the level detected for each player, so beginner checks (upkeep, supply, towers…) show where they matter and stay hidden for strong players.
+- **More languages:** German, Ukrainian, Russian, Chinese and Korean (needs a text format that scales past four languages, and fonts for Cyrillic, Chinese and Korean).
+- **Code signing:** SignPath turned the project down for now (too new, no reputation); try again later.
+
+## 0.1.3 and earlier
+
+See the [GitHub releases](https://github.com/bubunuh/replay-altar/releases).

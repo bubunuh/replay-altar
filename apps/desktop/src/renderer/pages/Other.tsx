@@ -136,10 +136,10 @@ function ProGames({ refs }: { refs: RefGroupInfo[] }) {
       <h2>{tr("Pro games", "Partidas de pros", "Partidas de pros", "Parties de pros")}</h2>
       <p className="sub">
         {tr(
-          "The games your numbers are compared with: recent tournament games of each race from warcraft3.info, analyzed the same way as yours. The Replay Altar maintainers collect them and ship only the statistics, updated with new versions of Replay Altar.",
-          "As partidas com que os seus números são comparados: partidas recentes de torneios de cada raça do warcraft3.info, analisadas do mesmo jeito que as suas. Os mantenedores do Replay Altar coletam essas partidas e distribuem só as estatísticas, atualizadas a cada nova versão do Replay Altar.",
-          "Las partidas con las que se comparan tus números: partidas recientes de torneos de cada raza de warcraft3.info, analizadas igual que las tuyas. Los mantenedores de Replay Altar las recopilan y solo distribuyen las estadísticas, actualizadas con cada nueva versión de Replay Altar.",
-          "Les parties auxquelles vos chiffres sont comparés : des parties récentes de tournois pour chaque race, de warcraft3.info, analysées de la même façon que les vôtres. Les mainteneurs de Replay Altar les rassemblent et ne distribuent que les statistiques, mises à jour avec chaque nouvelle version de Replay Altar.",
+          "The games your numbers are compared with: tournament games of each race from warcraft3.info: recent pro games on the current patch, plus tournament games from 2022 on (older patches, players from semi-pro to the very top), all analyzed the same way as yours. The Replay Altar maintainers collect them and ship only the statistics, updated with new versions of Replay Altar.",
+          "As partidas com que os seus números são comparados: partidas de torneios de cada raça do warcraft3.info: partidas recentes de pros no patch atual, mais partidas de torneio desde 2022 (patches anteriores, jogadores de semi-pros ao topo), todas analisadas do mesmo jeito que as suas. Os mantenedores do Replay Altar coletam essas partidas e distribuem só as estatísticas, atualizadas a cada nova versão do Replay Altar.",
+          "Las partidas con las que se comparan tus números: partidas de torneos de cada raza de warcraft3.info: partidas recientes de pros en el parche actual, más partidas de torneo desde 2022 (parches anteriores, jugadores desde semi-pros hasta lo más alto), todas analizadas igual que las tuyas. Los mantenedores de Replay Altar las recopilan y solo distribuyen las estadísticas, actualizadas con cada nueva versión de Replay Altar.",
+          "Les parties auxquelles vos chiffres sont comparés : des parties de tournois pour chaque race, de warcraft3.info : des parties récentes de pros sur le patch actuel, plus des parties de tournoi depuis 2022 (patchs antérieurs, joueurs du semi-pro au plus haut niveau), toutes analysées de la même façon que les vôtres. Les mainteneurs de Replay Altar les rassemblent et ne distribuent que les statistiques, mises à jour avec chaque nouvelle version de Replay Altar.",
         )}
       </p>
       <table>
@@ -151,7 +151,12 @@ function ProGames({ refs }: { refs: RefGroupInfo[] }) {
                 {r.profile
                   ? tr(`${r.profile.games} games`, `${r.profile.games} partidas`, `${r.profile.games} partidas`, `${r.profile.games} parties`) +
                     ` (${Object.entries(r.profile.matchups).filter(([k]) => k !== "all").map(([k, v]) => `${k} ${v.n}`).join(", ")})` +
-                    (r.profile.replayBuild ? ` · ${tr("game build", "build do jogo", "build del juego", "build du jeu")} ${r.profile.replayBuild}` : "") +
+                    (r.profile.pooled
+                      ? ` · ${(({ games, sourceGames: n, years }) => {
+                          const y = years ? ` ${years[0]}–${years[1]}` : "";
+                          return tr(`${games} of them from ${n} tournament games${y} (older patches too)`, `${games} delas de ${n} partidas de torneio${y} (patches anteriores também)`, `${games} de ellas de ${n} partidas de torneo${y} (también parches anteriores)`, `dont ${games} issues de ${n} parties de tournoi${y} (patchs antérieurs aussi)`);
+                        })(r.profile.pooled)}`
+                      : r.profile.replayBuild ? ` · ${tr("game build", "build do jogo", "build del juego", "build du jeu")} ${r.profile.replayBuild}` : "") +
                     ` · ${tr("updated", "atualizado em", "actualizado", "mis à jour le")} ${new Date(r.profile.builtAt).toLocaleDateString(locale())}`
                   : tr("not included in this version", "não incluídas nesta versão", "no incluidas en esta versión", "non incluses dans cette version")}
               </td>
@@ -168,7 +173,7 @@ function ProGames({ refs }: { refs: RefGroupInfo[] }) {
 const plainNotes = (md: string) => md.replace(/\r/g, "").replace(/\*\*|`/g, "").replace(/^#+\s*/gm, "").trim();
 
 /** This version, and the newer one when there is one: what's new, and the Update button. */
-function Version({ update }: { update: UpdateState | null }) {
+function Version({ update, onInstall }: { update: UpdateState | null; onInstall: () => void }) {
   const [notes, setNotes] = useState(false);
   const [checking, setChecking] = useState(false);
   if (!update) return null;
@@ -203,7 +208,7 @@ function Version({ update }: { update: UpdateState | null }) {
             <button className="btn" onClick={() => setNotes(!notes)}>{tr("What's new", "O que há de novo", "Novedades", "Nouveautés")}</button>
             {update.installable && update.download === "idle" && <button className="btn" onClick={() => api.downloadUpdate()}>{tr("Update", "Atualizar", "Actualizar", "Mettre à jour")}</button>}
             {update.installable && update.download === "failed" && <button className="btn" onClick={() => api.downloadUpdate()}>{tr("Try again", "Tentar de novo", "Reintentar", "Réessayer")}</button>}
-            {update.download === "ready" && <button className="btn" onClick={() => api.installUpdate()}>{tr("Restart and install", "Reiniciar e instalar", "Reiniciar e instalar", "Redémarrer et installer")}</button>}
+            {update.download === "ready" && <button className="btn" onClick={onInstall}>{tr("Restart and install", "Reiniciar e instalar", "Reiniciar e instalar", "Redémarrer et installer")}</button>}
           </div>
           {update.download === "downloading" && (
             <div style={{ marginTop: 10 }}>
@@ -254,7 +259,7 @@ function Help({ info }: { info: AppInfo | null }) {
   );
 }
 
-export function Settings({ refs, update }: { refs: RefGroupInfo[]; update: UpdateState | null }) {
+export function Settings({ refs, update, onInstall }: { refs: RefGroupInfo[]; update: UpdateState | null; onInstall: () => void }) {
   const [state, setState] = useState<{ config: Config; configPath: string; paths: Paths } | null>(null);
   const [accounts, setAccounts] = useState("");
   const [saved, setSaved] = useState(false);
@@ -281,6 +286,7 @@ export function Settings({ refs, update }: { refs: RefGroupInfo[]; update: Updat
     setTimeout(() => setSaved(false), 2000);
   };
   const config = state.config;
+  const saveAccounts = () => save({ accounts: accounts.split(",").map((a) => a.trim()).filter(Boolean) });
   const setLanguage = async (l: Language) => {
     await save({ language: l });
     window.location.reload();
@@ -292,17 +298,29 @@ export function Settings({ refs, update }: { refs: RefGroupInfo[]; update: Updat
 
   return (
     <div className="page" style={{ maxWidth: 820 }}>
-      <Version update={update} />
+      <Version update={update} onInstall={onInstall} />
       <div className="card">
         <h2>{tr("You", "Você", "Tú", "Vous")}</h2>
         <p className="sub">
-          {tr('Your battletags, comma separated. Games where none of them played are archived as "observed". Run ', 'Suas battletags, separadas por vírgula. Partidas em que nenhuma delas jogou são arquivadas como "assistidas". Rode ', "Tus battletags, separadas por comas. Las partidas en las que no jugó ninguna se archivan como \"observadas\". Ejecuta ", "Vos battletags, séparés par des virgules. Les parties où aucun d'eux n'a joué sont archivées comme « observées ». Lancez ")}
-          <code>replay-altar reingest</code>
-          {tr(" after changing this to reclassify old games.", " depois de mudar isto para reclassificar as partidas antigas.", " después de cambiar esto para reclasificar las partidas antiguas.", " après avoir modifié ceci pour reclasser les anciennes parties.")}
+          {tr(
+            'Your battletags, comma separated, exactly as in the game (name#1234). Games where none of them played are kept as "observed". After you save, your games are sorted again.',
+            'Suas battletags, separadas por vírgula, exatamente como no jogo (nome#1234). Partidas em que nenhuma delas jogou ficam como "assistidas". Depois de salvar, as suas partidas são separadas de novo.',
+            'Tus battletags, separadas por comas, exactamente como en el juego (nombre#1234). Las partidas en las que no jugó ninguna se guardan como "observadas". Al guardar, tus partidas se ordenan de nuevo.',
+            "Vos battletags, séparés par des virgules, exactement comme dans le jeu (nom#1234). Les parties où aucun d'eux n'a joué sont gardées comme « observées ». Après l'enregistrement, vos parties sont triées à nouveau.",
+          )}
         </p>
         <div className="filters">
-          <input type="text" style={{ flex: 1 }} value={accounts} onChange={(e) => setAccounts(e.target.value)} />
-          <button className="btn" onClick={() => save({ accounts: accounts.split(",").map((a) => a.trim()).filter(Boolean) })}>{tr("Save", "Salvar", "Guardar", "Enregistrer")}</button>
+          {/* Ready to type when you have no battletag yet (e.g. after "No, I'll type mine"). */}
+          <input
+            type="text"
+            style={{ flex: 1 }}
+            value={accounts}
+            placeholder="name#1234"
+            autoFocus={config.accounts.length === 0}
+            onChange={(e) => setAccounts(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && saveAccounts()}
+          />
+          <button className="btn" onClick={saveAccounts}>{tr("Save", "Salvar", "Guardar", "Enregistrer")}</button>
           {saved && <span className="muted small">{tr("Saved", "Salvo", "Guardado", "Enregistré")}</span>}
         </div>
       </div>
@@ -359,9 +377,16 @@ export function Settings({ refs, update }: { refs: RefGroupInfo[]; update: Updat
             <tr><td>{tr("Settings file", "Arquivo de configurações", "Archivo de configuración", "Fichier des paramètres")}</td><td><code>{state.configPath}</code></td><td /></tr>
           </tbody>
         </table>
-        <p className="sub" style={{ marginTop: 12 }}>
-          {tr("Pause", "Pausar", "Pausar", "Pause")}: <code>replay-altar suspend</code> · {tr("resume", "retomar", "reanudar", "reprendre")}: <code>replay-altar resume</code> · {tr("remove", "remover", "quitar", "désinstaller")}: <code>replay-altar uninstall</code> ({tr("add", "adicione", "añade", "ajoutez")} <code>--purge</code> {tr("to also delete your archive and stats", "para apagar também o seu arquivo e estatísticas", "para borrar también tu archivo y tus estadísticas", "pour supprimer aussi votre archive et vos statistiques")}).
-        </p>
+        {/* Windows has no replay-altar command: the app is removed like any other. */}
+        {navigator.userAgent.includes("Windows") ? (
+          <p className="sub" style={{ marginTop: 12 }}>
+            {tr("To remove Replay Altar, uninstall it in Windows Settings → Apps. Your archive and stats above are kept unless you delete those folders.", "Para remover o Replay Altar, desinstale-o em Configurações do Windows → Aplicativos. Seu arquivo e suas estatísticas acima são mantidos, a menos que você apague essas pastas.", "Para quitar Replay Altar, desinstálalo en Configuración de Windows → Aplicaciones. Tu archivo y tus estadísticas de arriba se conservan salvo que borres esas carpetas.", "Pour supprimer Replay Altar, désinstallez-le dans Paramètres Windows → Applications. Votre archive et vos statistiques ci-dessus sont conservées, sauf si vous supprimez ces dossiers.")}
+          </p>
+        ) : (
+          <p className="sub" style={{ marginTop: 12 }}>
+            {tr("Pause", "Pausar", "Pausar", "Pause")}: <code>replay-altar suspend</code> · {tr("resume", "retomar", "reanudar", "reprendre")}: <code>replay-altar resume</code> · {tr("remove", "remover", "quitar", "désinstaller")}: <code>replay-altar uninstall</code> ({tr("add", "adicione", "añade", "ajoutez")} <code>--purge</code> {tr("to also delete your archive and stats", "para apagar também o seu arquivo e estatísticas", "para borrar también tu archivo y tus estadísticas", "pour supprimer aussi votre archive et vos statistiques")}).
+          </p>
+        )}
       </div>
     </div>
   );

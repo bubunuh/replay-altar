@@ -20,8 +20,8 @@ import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { activeReferenceGroups, applyOfficial, applySim, collectorState, proDataDir, projectRoot, readRecord, referencePaths, type RefLookup } from "@replay-altar/core";
-import { CONSTANTS, gamedataDir, loadCosts, readSimOutput, simNotReady, simulateGame, summarize } from "@replay-altar/sim";
-import { buildProfile, officialForMatch, officialForOwnGame, openReference, readState, refreshGroup, w3cClient } from "@replay-altar/reference";
+import { CONSTANTS, gamedataDir, loadCosts, readSimOutput, selectionsOf, simNotReady, simulateGame, summarize } from "@replay-altar/sim";
+import { buildProfile, poolOf, officialForMatch, officialForOwnGame, openReference, readState, refreshGroup, w3cClient } from "@replay-altar/reference";
 import { rulesBook } from "@replay-altar/rules";
 import { currentReplayBuild, racesPlayed } from "./reference.ts";
 import { runCollector } from "./collector.ts";
@@ -173,7 +173,7 @@ switch (cmd) {
           const record = readRecord(ref.paths, game_key);
           if (record?.sim?.status !== "ok") continue;
           const { ranAt, runMs, outputPath } = record.sim;
-          applySim(ref, game_key, summarize(record, readSimOutput(outputPath), costs, CONSTANTS, { ranAt, runMs, outputPath }));
+          applySim(ref, game_key, summarize(record, readSimOutput(outputPath), costs, CONSTANTS, { ranAt, runMs, outputPath }, await selectionsOf(record.provenance.archivePath)));
         }
       }
       const p = buildProfile(ref.db, ref.paths, g, currentReplayBuild(c.db));
@@ -256,7 +256,7 @@ switch (cmd) {
           const record = readRecord(ctx.paths, game_key);
           if (!record || record.sim?.status !== "ok") continue;
           const { ranAt, runMs, outputPath } = record.sim;
-          applySim(ctx as Parameters<typeof applySim>[0], game_key, summarize(record, readSimOutput(outputPath), costs, CONSTANTS, { ranAt, runMs, outputPath }));
+          applySim(ctx as Parameters<typeof applySim>[0], game_key, summarize(record, readSimOutput(outputPath), costs, CONSTANTS, { ranAt, runMs, outputPath }, await selectionsOf(record.provenance.archivePath)));
         }
         const group = (rest as { group?: (typeof c.config.reference.groups)[number] }).group;
         if (group && rows.length) buildProfile(ctx.db, ctx.paths, group, currentReplayBuild(c.db));
@@ -320,10 +320,13 @@ switch (cmd) {
         console.log(`${g.id}: +${res.downloaded} downloaded, ${res.skipped} skipped, ${res.pruned} pruned (old patch); ${res.kept} games, ${Object.keys(res.profile.matchups).filter((k) => k !== "all").map((k) => `${k} ${res.profile.matchups[k].n}`).join(", ")}`);
       }
     } else if (sub === "resim") {
-      // After a simulation fix: the groups' failed games again (the replays are archived).
+      // After a simulation fix: the groups' failed games again (the replays are archived), and games
+      // saved without a simulation (an ingest that stopped part way).
       for (const g of groups) {
         const ref = openReference(g.id, config);
-        const keys = (ref.db.prepare("SELECT game_key FROM games WHERE sim_status = 'failed'").all() as { game_key: string }[]).map((r) => r.game_key);
+        const failed = (ref.db.prepare("SELECT game_key FROM games WHERE sim_status = 'failed'").all() as { game_key: string }[]).map((r) => r.game_key);
+        const unsimulated = readdirSync(ref.paths.games).map((f) => f.replace(/\.json$/, "")).filter((k) => !readRecord(ref.paths, k)?.sim);
+        const keys = [...new Set([...failed, ...unsimulated])];
         let fixed = 0;
         for (const key of keys) {
           const record = readRecord(ref.paths, key);
@@ -339,10 +342,14 @@ switch (cmd) {
       // --build: the game build the pro games are from (default: your latest game's).
       const bi = args.indexOf("--build");
       const profileBuild = bi >= 0 ? Number(args[bi + 1]) : build;
+      // --pool <group>: also every player of the race in that group's games (the validation set's
+      // tournament games, 2022 to today: scripts/download-validation.ts), whatever their build.
+      const pi = args.indexOf("--pool");
+      const extra = pi >= 0 ? poolOf(args[pi + 1], config) : undefined;
       for (const g of groups) {
         const ref = openReference(g.id, config);
-        const p = buildProfile(ref.db, ref.paths, g, profileBuild);
-        console.log(`${g.id}: profile from ${p.games} games`);
+        const p = buildProfile(ref.db, ref.paths, g, profileBuild, extra);
+        console.log(`${g.id}: profile from ${p.games} player-games${p.pooled ? ` (${p.pooled.games} pooled from ${p.pooled.sourceGames} games${p.pooled.years ? `, ${p.pooled.years.join("–")}` : ""})` : ""}`);
       }
     } else {
       console.log(`current replay build: ${build ?? "unknown (no games yet)"}; update with \`replay-altar ref refresh --all\`, then \`replay-altar ref publish\``);

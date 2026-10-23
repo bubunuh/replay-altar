@@ -1,4 +1,4 @@
-import { StrictMode, useCallback, useEffect, useState } from "react";
+import { StrictMode, useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import type { GameRow, MetricDef, PerfGame } from "@replay-altar/core/ui";
 import { api, type RefGroupInfo, type UpdateState } from "./api.ts";
@@ -8,7 +8,9 @@ import { Settings } from "./pages/Other.tsx";
 import { Analyzer } from "./pages/Analyzer.tsx";
 import { Performance } from "./pages/Performance.tsx";
 import { TipLayer } from "./Tip.tsx";
+import { AccountPrompt } from "./AccountPrompt.tsx";
 import { CollectorProgress } from "./CollectorProgress.tsx";
+import { Installing, UpdateBanner } from "./Update.tsx";
 import { openIssue } from "./feedback.ts";
 import { applyTextScale } from "./textSize.ts";
 import { tr } from "@replay-altar/core/i18n";
@@ -40,6 +42,21 @@ function App() {
   const [version, setVersion] = useState(0); // bumps when the collector adds a game
   const [refs, setRefs] = useState<RefGroupInfo[]>([]);
   const [update, setUpdate] = useState<UpdateState | null>(null);
+  // The update banner, until "Not now" (it comes back at the next start); then the message shown
+  // while the window closes to install.
+  const [updateDismissed, setUpdateDismissed] = useState(false);
+  const [installing, setInstalling] = useState<string | null>(null);
+  const install = () => {
+    if (!update?.latest) return;
+    setInstalling(update.latest.version);
+    // Long enough to read before the window closes.
+    setTimeout(() => api.installUpdate(), 4000);
+  };
+  // Each page (and each report) opens at its top, not at the last one's scroll position.
+  const mainRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    mainRef.current?.scrollTo(0, 0);
+  }, [page, game]);
 
   const load = useCallback(() => {
     api.listGames().then(setGames);
@@ -101,11 +118,32 @@ function App() {
           {tr("Report a bug", "Relatar um problema", "Informar de un problema", "Signaler un bug")}
         </button>
         <span className="status">
-          {tr(`${analyzed} games analyzed`, `${analyzed} partidas analisadas`, `${analyzed} partidas analizadas`, `${analyzed} parties analysées`)}
+          {analyzed === 1 ? tr("1 game analyzed", "1 partida analisada", "1 partida analizada", "1 partie analysée") : tr(`${analyzed} games analyzed`, `${analyzed} partidas analisadas`, `${analyzed} partidas analizadas`, `${analyzed} parties analysées`)}
           {simulating ? tr(` · ${simulating} waiting for simulation`, ` · ${simulating} aguardando simulação`, ` · ${simulating} esperando la simulación`, ` · ${simulating} en attente de simulation`) : ""}
         </span>
       </header>
-      <main>
+      <main ref={mainRef}>
+        {installing && <Installing version={installing} />}
+        {update?.latest && !updateDismissed && !(page === "settings" && !game) && (
+          <UpdateBanner
+            update={update}
+            onSettings={() => {
+              setGame(null);
+              setPage("settings");
+            }}
+            onInstall={install}
+            onDismiss={() => setUpdateDismissed(true)}
+          />
+        )}
+        {/* Settings has the battletag field itself (focused when empty). */}
+        {!(page === "settings" && !game) && (
+          <AccountPrompt
+            onOpenSettings={() => {
+              setGame(null);
+              setPage("settings");
+            }}
+          />
+        )}
         <CollectorProgress onDone={load} />
         {game ? (
           <Match key={`${game}:${version}`} gameKey={game} metrics={perf.metrics} refs={refs} onBack={() => setGame(null)} />
@@ -116,7 +154,7 @@ function App() {
         ) : page === "performance" ? (
           <Performance games={perf.games} metrics={perf.metrics} refs={refs} onOpen={open} />
         ) : (
-          <Settings refs={refs} update={update} />
+          <Settings refs={refs} update={update} onInstall={install} />
         )}
       </main>
     </div>

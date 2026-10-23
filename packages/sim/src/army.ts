@@ -49,17 +49,24 @@ export function armyAt(
 
 /**
  * Army value at each time from the simulation's own units: what the army units finished by then
- * cost, minus those it saw die (lost or possibly lost, like the loss series). The supply count
- * can't be used for this: the simulation rarely takes dead units off it (pros sit at "100 food"
- * after losing half their army), so a wiped army still looked full.
+ * cost, minus those that died by then (`deaths`, from deaths.ts; without it WC3V's lost or possibly
+ * lost, like the loss series). The supply count can't be used for this: the simulation rarely takes
+ * dead units off it (pros sit at "100 food" after losing half their army), so a wiped army still
+ * looked full. A unit that changed form (Obsidian Statue to Destroyer) is valued as what it was then.
  */
-export function armyValueFn(o: WOutput, playerId: number, costs: CostTables): (t: number) => number {
-  const units = ((o.players[String(playerId)] as unknown as { units?: (WUnitX & { isBuilding?: boolean; isIllusion?: boolean })[] })?.units ?? [])
+export function armyValueFn(o: WOutput, playerId: number, costs: CostTables, deaths?: Map<object, number | null>): (t: number) => number {
+  type U = WUnitX & { isBuilding?: boolean; isIllusion?: boolean; morphHistory?: { gameTime: number; itemId: string; from: string }[] };
+  const units = ((o.players[String(playerId)] as unknown as { units?: U[] })?.units ?? [])
     .filter((u) => !u.isBuilding && !u.isIllusion && !WORKERS.has(u.itemId))
     .map((u) => ({ u, c: costOf(costs, u.itemId) }))
     .filter(({ c }) => !c.isHero && c.food > 0)
-    .map(({ u, c }) => ({ from: u.trainedTime ?? u.spawnTime ?? Infinity, to: isLost(u) ? u.lostState!.since : Infinity, value: c.gold + c.lumber }));
-  return (t) => units.reduce((n, x) => (x.from <= t && x.to > t ? n + x.value : n), 0);
+    .map(({ u, c }) => {
+      const morphs = [...(u.morphHistory ?? [])].sort((a, b) => a.gameTime - b.gameTime);
+      const before = morphs.length ? costOf(costs, morphs[0].from) : c;
+      const died = deaths ? (deaths.get(u) ?? null) : isLost(u) ? u.lostState!.since : null;
+      return { from: u.trainedTime ?? u.spawnTime ?? Infinity, to: died ?? Infinity, morphAt: morphs[0]?.gameTime ?? -Infinity, value: c.gold + c.lumber, valueBefore: before.gold + before.lumber };
+    });
+  return (t) => units.reduce((n, x) => (x.from <= t && x.to > t ? n + (t < x.morphAt ? x.valueBefore : x.value) : n), 0);
 }
 
 /** Revive duration in ms by the game's formula (miscgame: factor 0.6 per level, at most 2x build time, max 150 s). */

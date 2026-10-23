@@ -8,16 +8,16 @@ Replay Altar is a Warcraft III: Reforged replay analyzer for 1v1 players. It run
 
 - **Every replay kept, automatically.** A small background program saves each replay the moment a game ends, before the game overwrites `LastReplay.w3g`. Battle.net ladder, W3Champions and custom melee games are all picked up, with nothing to upload or click.
 - **The game reconstructed.** Each 1v1 is simulated from its replay with the [WC3V](https://github.com/jblanchette/wc3v) engine: workers, army value, supply, creep camps, hero levels and fights over time.
-- **A coach's report after every game.** Rules drawn from well-known guides (Grubby, Liquipedia, Warcraft 3 Gym, Vortix and others) name the problems that cost you the game, show the facts behind each one, explain why it happened and say what to do next time. <kbd>upcoming</kbd> Only rules that proved themselves on 3,388 tournament player-games are shown: each one appears clearly more often in lost games than in won ones. The report also points out the fight that turned the game (with the moment to rewatch), your strengths and the opponent's plan. [More below](#how-the-report-is-made).
-- **An evaluation curve, like in chess.** <kbd>upcoming</kbd> Who was ahead at every moment of the game, as how often a pro player in your position went on to win, with the three moments that swung it most and what moved them. Learned from 513 pro games and tested on 2,998 tournament games it had never seen. [More below](#the-evaluation-curve).
+- **A coach's report after every game.** Rules drawn from well-known guides (Grubby, Liquipedia, Warcraft 3 Gym, Vortix and others) name the problems that cost you the game, show the facts behind each one, explain why it happened and say what to do next time. Only rules that proved themselves on 3,388 tournament player-games are shown: each one appears clearly more often in lost games than in won ones. The report also points out the fight that turned the game (with the moment to rewatch), your strengths and the opponent's plan. [More below](#how-the-report-is-made).
+- **An evaluation curve, like in chess.** Who was ahead at every moment of the game, as how often a pro player in your position went on to win, with the three moments that swung it most and what moved them. Learned from 513 pro games and tested on 2,998 tournament games it had never seen. [More below](#the-evaluation-curve).
 - **One thing to work on.** Each report ends with the single most useful habit for your next game. Across your recent games, the Performance page picks the problem that keeps coming back and shows whether it is getting better.
-- **Every number in context.** Your numbers are placed among about 1,700 tournament games of your race and matchup <kbd>upcoming</kbd> (until now about 200, current patch only) ("better than 86% of pro games"), with a green, yellow or red verdict: at pro level, at least as good as your opponent, or behind both.
+- **Every number in context.** Your numbers are placed among about 1,700 tournament games of your race and matchup ("better than 86% of pro games"), with a green, yellow or red verdict: at pro level, at least as good as your opponent, or behind both.
 - **Knows your build.** It recognises the build order each player went for, from guide builds and builds mined from pro games, and shows where your timings drifted from the pros who play it.
 - **Your progress.** Win rates by matchup, map and game length; problems that keep coming back; how you play in wins against losses; any number over time.
 - **Any replay, not only yours.** The Analyzer tab analyzes a 1v1 replay you found, such as a pro game, from the side of the player you choose, without counting it in your stats.
 - **Share a report** as text or as a PDF of the whole report, for Reddit or Discord, without your opponent's battletag.
 - **Private and local.** Everything runs on your computer, with no account. In English, Brazilian Portuguese, Spanish and French.
-- **Windows and Linux.** A Windows installer, and for Linux a single AppImage file <kbd>upcoming</kbd>.
+- **Windows and Linux.** A Windows installer, and for Linux a single AppImage file.
 
 ![The report of a won game: result, heroes, the main numbers against the opponent, the map, and the findings with advice](docs/images/report.png)
 
@@ -29,11 +29,11 @@ Your games stay on your computer. Replay Altar fetches only two things from the 
 
 **1. Reading the game.** A replay only records the players' orders, so Replay Altar rebuilds the game from them with the [WC3V](https://github.com/jblanchette/wc3v) simulation: workers, army, supply, creep camps, heroes and fights, every few seconds. Some of this can be checked against the game itself, and was:
 - **Hero experience** matches W3Champions' official numbers closely (correlation 0.96 on 56 pro player-games).
-- **Army value** was compared with Warcraft III's own unit counts on 50 recorded player-games: it is typically off by about 30%, so it is marked ≈ wherever it appears. <kbd>upcoming</kbd> A correction from the replay's selection lists cut that error by 29%.
+- **Army value** was compared with Warcraft III's own unit counts on 50 recorded player-games: it is typically off by about 30%, so it is marked ≈ wherever it appears. A correction from the replay's selection lists cut that error by 29%.
 
-**2. Comparing with tournament players.** Every number is placed among about 1,700 player-games of your race <kbd>upcoming</kbd>: recent pro games on the current patch plus tournament games from 2022 to 2026, analyzed exactly like yours. "Better than 86% of pro games" means just that: 86% of those games had a worse number.
+**2. Comparing with tournament players.** Every number is placed among about 1,700 player-games of your race: recent pro games on the current patch plus tournament games from 2022 to 2026, analyzed exactly like yours. "Better than 86% of pro games" means just that: 86% of those games had a worse number.
 
-**3. Deciding what mattered.** Each rule comes from a guide or from the pro data, and has to prove itself before it is shown <kbd>upcoming</kbd>. Every rule was run on 3,388 player-games whose results it had not been tuned on, from both players' side. A rule is shown only if it fires clearly more often in losses than in wins (the whole 95% confidence range above "no difference"). For example:
+**3. Deciding what mattered.** Each rule comes from a guide or from the pro data, and has to prove itself before it is shown. Every rule was run on 3,388 player-games whose results it had not been tuned on, from both players' side. A rule is shown only if it fires clearly more often in losses than in wins (the whole 95% confidence range above "no difference"). For example:
 
 | Finding | Appears in lost games | Appears in won games |
 |---|---|---|
@@ -43,7 +43,7 @@ Your games stay on your computer. Replay Altar fetches only two things from the 
 | No expansion in a long game | 7% | 3% |
 | They had more bases than you | 21% | 13% |
 
-11 rules passed and are shown. On those games, a lost game gets about two findings and a won game about one. One check is shown whatever the result: playing without control groups or hotkeys. <kbd>upcoming</kbd>
+11 rules passed and are shown. On those games, a lost game gets about two findings and a won game about one. One check is shown whatever the result: playing without control groups or hotkeys.
 
 In the future, suggestions will be skill based: during the analysis, the app will estimate your skill level and these suggestions will be more personal. <kbd>planned</kbd>
 
@@ -52,8 +52,6 @@ In the future, suggestions will be skill based: during the analysis, the app wil
 Every rule, its source and its scores: [docs/RULES.md](docs/RULES.md). The milestones mined from the pro games: [docs/PRINCIPLES.md](docs/PRINCIPLES.md).
 
 ## The evaluation curve
-
-<kbd>upcoming</kbd> in the next version.
 
 ![The evaluation chart of one game: the curve over time, blue while you were ahead, with three swings marked, and under it what moved each swing and what happened then](docs/images/win-chance.png)
 
@@ -73,7 +71,7 @@ How well does it work? It was tested on 2,998 tournament games from 2022 to 2026
 2. Run it. Windows will probably warn that it protected your PC, because the installer isn't digitally signed yet: click **More info**, then **Run anyway**.
 3. The installer first shows what Replay Altar does on your computer (privacy, starting at login); click **I Agree**. It needs no administrator rights, installs for your user, adds a Start menu and desktop shortcut, and opens the app.
 
-On the first start, in the background, Replay Altar reads the data it needs from your Warcraft III installation and imports the replays you already have. It looks for the battletag that appears in most of your replays and asks you to confirm it <kbd>upcoming</kbd> (or type yours in Settings); until you do, nothing counts as yours. The list of games fills in by itself after a few minutes. From then on it starts with Windows and picks up each game as it ends.
+On the first start, in the background, Replay Altar reads the data it needs from your Warcraft III installation and imports the replays you already have. It looks for the battletag that appears in most of your replays and asks you to confirm it (or type yours in Settings); until you do, nothing counts as yours. The list of games fills in by itself after a few minutes. From then on it starts with Windows and picks up each game as it ends.
 
 - **Replays somewhere else?** It finds the game's `Documents\Warcraft III` folder by itself, OneDrive included. If yours is elsewhere, use **Settings → Replay folders → Choose folder…**.
 - **Something wrong?** The log is in `%LOCALAPPDATA%\replay-altar\logs\collector.log`.
@@ -81,7 +79,7 @@ On the first start, in the background, Replay Altar reads the data it needs from
 
 ### Linux (Battle.net under Wine or Lutris)
 
-**AppImage** <kbd>upcoming</kbd>
+**AppImage**
 
 1. Download `ReplayAltar-<version>.AppImage` from the [Releases](../../releases) page.
 2. Make it executable (`chmod +x ReplayAltar-*.AppImage`, or Properties → Permissions in your file manager) and run it.
@@ -124,7 +122,7 @@ Player names in these screenshots are replaced with placeholders.
 
 ![The list of games with result, matchup, opponent, map, length, APM, source and main problem](docs/images/matches.png)
 
-**A game over time:** army value, hero levels, resources, workers, supply and APM, against the pro median, with a note on which numbers are estimates and how far off they typically are <kbd>upcoming</kbd>.
+**A game over time:** army value, hero levels, resources, workers, supply and APM, against the pro median, with a note on which numbers are estimates and how far off they typically are.
 
 ![Charts of one game over time, both players against the pro median](docs/images/charts.png)
 
@@ -173,7 +171,7 @@ When Warcraft III starts, the window opens behind the game without taking focus,
 - **From the simulation:** workers, supply, army value, creep camps and fights come from WC3V's reconstruction of the game. Values marked ≈ are estimates: losses and trades (deaths are inferred), and the mined-income model, shown for the first 10 minutes only.
 - **Maps:** the simulation needs each game's map. Replay Altar ships none: the first time a game on a map is simulated, it reads the map from your own copy (the game keeps Battle.net ladder maps in `Documents\Warcraft III\Maps\Download` and W3Champions maps in `Maps\W3Champions`; the maps that come with the game are read, read-only, from the game's own files; Settings → Map folders adds others) and keeps what the simulation needs in its data folder, so updates don't lose it. **Simulate again** on a match runs a game's simulation again, for example after adding a map folder.
 - **Official numbers:** for W3Champions games, the game's own end-of-game statistics (gold and lumber collected, experience, units killed, upkeep lost) replace the estimates and are marked "official".
-- **Pro games:** tournament games from [warcraft3.info](https://warcraft3.info/replays/), collected by the maintainers rather than by each copy of the app, so the site gets one slow download per game instead of one per user. About 200 per race are recent games on the current patch: 1v1 games of at least 3 minutes by players with a curated profile, at most 20 per player. <kbd>upcoming</kbd> To these are added about 3,000 tournament games from 2022 to today, spread over the years and matchups, of players from semi-pro to the very top, on older patches too; every player of a race in them counts, which makes about 1,700 player-games per race. More games make the comparisons steadier; the price is a mix of patches and levels (on most numbers the medians differ by under a third of the pros' normal range). All are analyzed the same way as yours, and only the resulting statistics are published, in `data/reference/`, updated with new versions of Replay Altar.
+- **Pro games:** tournament games from [warcraft3.info](https://warcraft3.info/replays/), collected by the maintainers rather than by each copy of the app, so the site gets one slow download per game instead of one per user. About 200 per race are recent games on the current patch: 1v1 games of at least 3 minutes by players with a curated profile, at most 20 per player. To these are added about 3,000 tournament games from 2022 to today, spread over the years and matchups, of players from semi-pro to the very top, on older patches too; every player of a race in them counts, which makes about 1,700 player-games per race. More games make the comparisons steadier; the price is a mix of patches and levels (on most numbers the medians differ by under a third of the pros' normal range). All are analyzed the same way as yours, and only the resulting statistics are published, in `data/reference/`, updated with new versions of Replay Altar.
 - **Verdicts:** the main numbers get a colour: green at or above the pro median, yellow when at least as good as your opponent, red below both. Timings that depend on strategy (tier, heroes, expansions) are compared without a better or worse.
 - **Findings:** see [How the report is made](#how-the-report-is-made); [docs/RULES.md](docs/RULES.md) lists every rule, where it comes from and how well it separates losses from wins. [docs/PRINCIPLES.md](docs/PRINCIPLES.md) holds the milestones mined from the pro games; [docs/DATA.md](docs/DATA.md) describes the data format.
 
@@ -187,7 +185,7 @@ npm run typecheck
 npm run build          # the desktop app (apps/desktop/out)
 npm start -w @replay-altar/desktop
 node apps/desktop/package-windows.ts   # Windows installer (built on Linux; needs wine on PATH)
-node apps/desktop/package-linux.ts     # Linux AppImage (upcoming)
+node apps/desktop/package-linux.ts     # Linux AppImage
 ```
 
 The code is TypeScript run directly by Node (type stripping), in npm workspaces:
@@ -203,9 +201,9 @@ The code is TypeScript run directly by Node (type stripping), in npm workspaces:
 
 `fixtures/replays/` holds real replays used by the tests. Texts are written in place as `tr("English", "Português", "Español", "Français")` (`packages/core/src/i18n.ts`); metric names have a table per language (`packages/core/src/metrics.*.ts`).
 
-**Branches and builds.** Work goes to `dev`; `main` only gets tested work. Every push runs the tests on GitHub, and every push to `dev` also builds a test Windows installer, and from 0.2.0 a test AppImage (Actions → the run → Artifacts). Pushing a version tag (`v0.1.3`) builds them again and puts them on a draft release, with the `latest.yml` (and `latest-linux.yml`) the app's Update button reads.
+**Branches and builds.** Work goes to `dev`; `main` only gets tested work. Every push runs the tests on GitHub, and every push to `dev` also builds a test Windows installer, and from 0.2.0 a test AppImage (Actions → the run → Artifacts). Pushing a version tag (`v0.2.0`) builds them again and puts them on a draft release, with the `latest.yml` (and `latest-linux.yml`) the app's Update button reads.
 
-**WC3V fixes.** `patches/wc3v/` holds fixes to WC3V that Replay Altar applies on top of the submodule (`node scripts/patch-wc3v.ts`, run by `setup-sim` and the Windows build); each is meant to go upstream. The first lets WC3V read past a recycled unit handle, which used to cut about 5% of games short (proposed upstream as [jblanchette/wc3v#19](https://github.com/jblanchette/wc3v/pull/19)).
+**WC3V fixes.** `patches/wc3v/` holds fixes to WC3V that Replay Altar applies on top of the submodule (`node scripts/patch-wc3v.ts`, run by `setup-sim` and the Windows build); each is meant to go upstream. The first lets WC3V read past a recycled unit handle, which used to cut about 5% of games short (proposed upstream as [jblanchette/wc3v#19](https://github.com/jblanchette/wc3v/pull/19)). The second and third stop two errors that ended the simulation part way: reviving a hero that had used a Town Portal, and training from a building WC3V first met as a plain unit (an Ancient of War built while not selected), proposed as [#20](https://github.com/jblanchette/wc3v/pull/20) and [#21](https://github.com/jblanchette/wc3v/pull/21). Together they recovered 16 of the 518 pro games.
 
 **Screenshots** for this page: `node scripts/hide-names.ts /tmp/hide-names.js`, then `REPLAY_ALTAR_SHOT_JS=/tmp/hide-names.js` on a screenshot run replaces every player name with a placeholder.
 

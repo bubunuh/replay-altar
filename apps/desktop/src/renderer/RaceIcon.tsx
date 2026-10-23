@@ -9,7 +9,12 @@ let loaded: Promise<Record<string, string>> | null = null;
 export function RaceIcon({ race, size = "large" }: { race?: string | null; size?: "large" | "small" }) {
   const [icons, setIcons] = useState<Record<string, string>>({});
   useEffect(() => {
-    loaded ??= api.raceIcons();
+    // Kept once there are any: on a first start the game data (and these pictures) arrive while
+    // the window is already open, so an empty answer is asked again next time.
+    loaded ??= api.raceIcons().then((x) => {
+      if (!Object.keys(x).length) loaded = null;
+      return x;
+    });
     loaded.then(setIcons);
   }, []);
   const name = RACE[race ?? ""] ?? race ?? "?";

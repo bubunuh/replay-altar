@@ -179,7 +179,10 @@ td.num, th.num { text-align: right; }
 .route.me circle { fill: var(--series-1); }
 .route.opp polyline { stroke: var(--series-2); }
 .route.opp circle { fill: var(--series-2); }
-@media (max-width: 1000px) { .match-card { grid-template-columns: 1fr; } .match-card > .match-side:first-child { order: 2; } .match-side .map-view { margin: 0 auto; } }
+/* One column when the report itself is narrow (a small window, or a larger text size): measured on
+   the report, not the window, so the heading never pushes the map off the right edge. */
+.share-area { container-type: inline-size; }
+@container (max-width: 1000px) { .match-card { grid-template-columns: 1fr; } .match-card > .match-side:first-child { order: 2; } .match-side .map-view { margin: 0 auto; } }
 .map-frame { position: relative; cursor: zoom-in; line-height: 0; }
 .map-view.large .map-frame { cursor: zoom-out; }
 .map-frame img { width: 100%; aspect-ratio: 1; border-radius: 6px; border: 1px solid var(--border); object-fit: cover; }
@@ -258,3 +261,14 @@ tr.tier-row-below td:first-child { box-shadow: inset 3px 0 0 var(--critical); }
 .trend { font-size: calc(12.5px * var(--text-scale)); font-weight: 600; white-space: nowrap; }
 .trend.better { color: var(--good-text); }
 .trend.worse { color: var(--critical-text); }
+
+/* Chance to win: the swings under the chart. */
+.win-chance .swings { margin: 10px 0 0; padding: 0; list-style: none; font-size: calc(13px * var(--text-scale)); }
+.win-chance .swings li { margin: 0 0 6px; line-height: 1.45; }
+.win-chance .swing-head { white-space: nowrap; }
+button.linklike { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; font: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.account-prompt { margin-bottom: 14px; }
+.update-banner { margin-bottom: 14px; border-left: 3px solid var(--warning); }
+.update-banner p { margin: 0 0 8px; }
+.installing { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px; background: rgb(0 0 0 / 0.55); }
+.installing .card { max-width: 480px; }

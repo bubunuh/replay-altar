@@ -199,12 +199,17 @@ export function ensureMapData(mapFile: string, folders: string[], dataRoot: stri
     const prefix = /^\d+_w3c_/.test(mapFile) ? [] : ["--prefix="];
     execFileSync(process.execPath, [join(WC3V_DIR, "tools/data-tool.js"), `--source=${tmp}`, ...prefix], {
       cwd: WC3V_DIR,
-      stdio: "ignore",
+      // Its errors are kept for the reason below; its progress output isn't.
+      stdio: ["ignore", "ignore", "pipe"],
+      windowsHide: true,
+      maxBuffer: 16 * 1024 * 1024,
       timeout: 120_000,
       env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" },
     });
   } catch (e) {
-    return `map extraction failed: ${(e as Error).message}`;
+    // The tool's error line says why (the message itself is only the command line).
+    const lines = String((e as { stderr?: Buffer }).stderr ?? "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    return `map extraction failed: ${lines.find((l) => /Error\b/.test(l)) ?? lines.at(-1) ?? (e as Error).message}`;
   } finally {
     rmSync(tmp, { recursive: true, force: true });
     if (copied) rmSync(dirname(copied), { recursive: true, force: true });

@@ -20,6 +20,11 @@ export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: str
   useEffect(() => {
     api.findingsSummary().then((list) => setFound(new Map(list.map((g) => [g.key, g.findings]))));
   }, [games]);
+  // Replays found before you confirmed your battletag are kept, but none of them is yours yet.
+  const [noBattletag, setNoBattletag] = useState(false);
+  useEffect(() => {
+    api.getConfig().then((s) => setNoBattletag(s.config.accounts.length === 0));
+  }, [games]);
   // Problems that come up in the reports (the top three each), most frequent first.
   const problems = useMemo(() => {
     const n = new Map<string, number>();
@@ -86,7 +91,11 @@ export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: str
       <div className="card" style={{ padding: 0 }}>
         {rows.length === 0 ? (
           <div className="empty">
-            {games.some((g) => g.analyzed === 1)
+            {noBattletag && games.length
+              ? (games.length === 1 ? tr("1 replay found.", "1 replay encontrado.", "1 replay encontrado.", "1 replay trouvé.") : tr(`${games.length} replays found.`, `${games.length} replays encontrados.`, `${games.length} replays encontrados.`, `${games.length} replays trouvés.`)) +
+                " " +
+                tr("Confirm your battletag above (or type it in Settings) to see your games.", "Confirme a sua battletag acima (ou digite-a em Configurações) para ver as suas partidas.", "Confirma tu battletag arriba (o escríbela en Configuración) para ver tus partidas.", "Confirmez votre battletag ci-dessus (ou saisissez-le dans les Paramètres) pour voir vos parties.")
+              : games.some((g) => g.analyzed === 1)
               ? tr("No games match these filters.", "Nenhuma partida com esses filtros.", "Ninguna partida coincide con estos filtros.", "Aucune partie ne correspond à ces filtres.")
               : tr("No analyzed games yet. Play a 1v1 — it shows up here when the game ends.", "Nenhuma partida analisada ainda. Jogue um 1v1 — ele aparece aqui quando a partida acabar.", "Todavía no hay partidas analizadas. Juega un 1v1: aparece aquí cuando termina la partida.", "Aucune partie analysée pour l'instant. Jouez un 1v1 : il apparaît ici à la fin de la partie.")}
           </div>

@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, dirname, join, parse, sep } from "node:path";
 import type { Language } from "./i18n.ts";
@@ -23,6 +23,11 @@ export type ReferenceGroup = {
 export type Config = {
   /** Battletags that are you. Games where none of them played are archived as "observed". */
   accounts: string[];
+  /**
+   * Battletags found in most of your replays on the first run, waiting for you to confirm one
+   * (the window asks); never used as yours until then. Cleared once accounts are set.
+   */
+  suggestedAccounts?: { name: string; games: number; of: number }[];
   /**
    * Folders you added on top of the ones found by themselves (warcraftFolders): a
    * "Documents/Warcraft III" folder (replays under BattleNet/<account>/Replays), or any folder of replays.
@@ -69,7 +74,7 @@ const OLD_DEFAULTS = windows
 /** Windows' own Documents folder from the registry: it may be moved (D:\Documentos) or kept by OneDrive. */
 function windowsDocuments(): string | null {
   try {
-    const out = execFileSync("reg", ["query", "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders", "/v", "Personal"], { encoding: "utf8", windowsHide: true });
+    const out = execFileSync("reg", ["query", "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders", "/v", "Personal"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], windowsHide: true });
     const raw = out.match(/Personal\s+REG_(?:EXPAND_)?SZ\s+(.+)/)?.[1]?.trim();
     return raw ? raw.replace(/%([^%]+)%/g, (m, name: string) => process.env[name] ?? m) : null;
   } catch {
@@ -77,16 +82,47 @@ function windowsDocuments(): string | null {
   }
 }
 
+/**
+ * Wine prefixes Battle.net may be installed in (Linux): Lutris' default ~/Games/battlenet and the
+ * other folders Lutris makes under ~/Games, plain Wine's ~/.wine, Steam's Proton prefixes and
+ * Bottles' bottles. Only the ones that exist.
+ */
+export function winePrefixes(): string[] {
+  if (windows) return [];
+  const under = (dir: string, sub = "") => safeList(dir).map((d) => join(dir, d, sub));
+  const candidates = [
+    join(home, "Games/battlenet"),
+    ...under(join(home, "Games")),
+    join(home, ".wine"),
+    ...under(join(home, ".local/share/Steam/steamapps/compatdata"), "pfx"),
+    ...under(join(home, ".steam/steam/steamapps/compatdata"), "pfx"),
+    ...under(join(home, ".var/app/com.usebottles.bottles/data/bottles/bottles")),
+    ...under(join(home, ".local/share/bottles/bottles")),
+  ];
+  // ~/.steam/steam usually links to ~/.local/share/Steam: each prefix once.
+  const real = (d: string) => {
+    try {
+      return realpathSync(d);
+    } catch {
+      return d;
+    }
+  };
+  return unique(candidates.filter((d) => existsSync(join(d, "drive_c"))).map(real));
+}
+
 let detected: string[] | null = null;
 
 /**
  * The game's "Documents/Warcraft III" folders that exist on this computer. Windows: the
  * registry's Documents folder, the usual one, and OneDrive's (whose folder name follows the
- * language, e.g. "OneDrive\Documentos"). Linux: the Wine prefix Lutris installs Battle.net in.
+ * language, e.g. "OneDrive\Documentos"). Linux: every user's Documents in the Wine prefixes
+ * Battle.net may be in (winePrefixes).
  */
 export function detectedWarcraftDocuments(): string[] {
   if (detected) return detected;
-  const docs = windows ? [windowsDocuments(), join(home, "Documents")] : [join(home, "Games/battlenet/drive_c/users/steamuser/Documents")];
+  const docs = windows
+    ? [windowsDocuments(), join(home, "Documents")]
+    : winePrefixes().flatMap((prefix) => safeList(join(prefix, "drive_c/users")).map((user) => join(prefix, "drive_c/users", user, "Documents")));
   if (windows) {
     for (const onedrive of safeList(home).filter((d) => d.startsWith("OneDrive"))) {
       for (const name of ["Documents", "Documentos"]) docs.push(join(home, onedrive, name));
@@ -147,7 +183,7 @@ export function folderToAdd(picked: string): string {
 }
 
 export const DEFAULT_CONFIG: Config = {
-  // Found from your replays on the first run (apps/collector/src/firstrun.ts), or set in Settings.
+  // Never guessed: you confirm the one found in your replays (apps/collector/src/firstrun.ts) or type it in Settings.
   accounts: [],
   warcraftDocuments: [],
   openWindowOnGameStart: true,
@@ -194,7 +230,7 @@ export const proDataDir = (groupId: string) => join(projectRoot(), "data", "refe
  */
 export type Progress = {
   at: string;
-  setup: "gamedata" | null;
+  setup: "gamedata" | "accounts" | null;
   import: { done: number; total: number } | null;
   sims: { done: number; total: number; avgMs: number | null } | null;
 };

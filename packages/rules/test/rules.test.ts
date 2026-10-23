@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { GameRecord, SimSample } from "@replay-altar/core/ui";
-import { findings, opponentPlan } from "@replay-altar/rules";
+import { allFindings, findings, opponentPlan } from "@replay-altar/rules";
 import { leads } from "../src/series.ts";
 
 describe("leads", () => {
@@ -48,32 +48,32 @@ function game(opts: { youExpandAt?: number; yourFood?: (t: number) => number; th
 
 describe("findings", () => {
   test("an opponent without army for minutes is a window you did not use", () => {
-    const f = findings(game({}), null);
+    const f = allFindings(game({}), null, undefined, { all: true });
     const w = f.find((x) => x.id === "window");
     expect(w?.evidence[0]).toContain("from 4:00 to 10:00");
     expect(w?.evidence[1]).toContain("You did not expand");
   });
   test("not a window when they put it into heroes instead (hero rush)", () => {
     const rush = game({ theirHeroLevelUps: [60_000, 150_000, 240_000, 330_000, 420_000] });
-    expect(findings(rush, null).find((x) => x.id === "window")).toBeUndefined();
+    expect(allFindings(rush, null, undefined, { all: true }).find((x) => x.id === "window")).toBeUndefined();
   });
   test("over 80 food on one base for minutes is high upkeep", () => {
-    const f = findings(game({ yourFood: (t) => (t >= 500_000 ? 90 : 40) }), null).find((x) => x.id === "upkeep");
+    const f = allFindings(game({ yourFood: (t) => (t >= 500_000 ? 90 : 40) }), null, undefined, { all: true }).find((x) => x.id === "upkeep");
     expect(f?.evidence[0]).toContain("from 8:20");
-    expect(findings(game({ yourFood: (t) => (t >= 780_000 ? 90 : 40) }), null).find((x) => x.id === "upkeep")).toBeUndefined(); // brief: before an attack
+    expect(allFindings(game({ yourFood: (t) => (t >= 780_000 ? 90 : 40) }), null, undefined, { all: true }).find((x) => x.id === "upkeep")).toBeUndefined(); // brief: before an attack
   });
   test("workers are judged against what the bases need (5 on gold + lumber crew)", () => {
-    expect(findings(game({}), null).find((x) => x.id === "economy")).toBeUndefined(); // 13 of 14 on one base: saturated
-    const f = findings(game({ yourWorkers: 9 }), null).find((x) => x.id === "economy");
+    expect(allFindings(game({}), null, undefined, { all: true }).find((x) => x.id === "economy")).toBeUndefined(); // 13 of 14 on one base: saturated
+    const f = allFindings(game({ yourWorkers: 9 }), null, undefined, { all: true }).find((x) => x.id === "economy");
     expect(f?.evidence[0]).toBe("Workers at 6:00: 9 of the 14 your base needs (5 on gold per base + lumber crew).");
   });
   test("reaching 50 food and then doing nothing with it", () => {
-    const f = findings(game({ yourFood: (t) => (t >= 300_000 ? 52 : 30) }), null).find((x) => x.id === "unused_spike");
+    const f = allFindings(game({ yourFood: (t) => (t >= 300_000 ? 52 : 30) }), null, undefined, { all: true }).find((x) => x.id === "unused_spike");
     expect(f?.evidence[0]).toContain("first had 50 food at 5:00");
-    expect(findings(game({ yourFood: (t) => (t >= 300_000 ? 52 : 30), youExpandAt: 400_000 }), null).find((x) => x.id === "unused_spike")).toBeUndefined();
+    expect(allFindings(game({ yourFood: (t) => (t >= 300_000 ? 52 : 30), youExpandAt: 400_000 }), null, undefined, { all: true }).find((x) => x.id === "unused_spike")).toBeUndefined();
   });
   test("expanding in the window counts as using it", () => {
-    expect(findings(game({ youExpandAt: 400_000 }), null).find((x) => x.id === "window")).toBeUndefined();
+    expect(allFindings(game({ youExpandAt: 400_000 }), null, undefined, { all: true }).find((x) => x.id === "window")).toBeUndefined();
   });
   test("the opponent's plan comes from their orders", () => {
     const plan = opponentPlan(game({}), null);
@@ -133,9 +133,29 @@ describe("milestones", () => {
   });
 });
 
+describe("hotkeys check", () => {
+  const withKeys = (groups: number, recalls: number, share: number, result: "win" | "loss") => {
+    const r = game({});
+    const me = r.players.find((p) => p.isMe)!;
+    me.result = result;
+    me.metrics = { ...me.metrics, control_groups_used: groups, control_group_recalls_per_min: recalls, hotkey_select_share: share };
+    return r;
+  };
+  test("shown whenever a player used no control groups, win or lose, and on top of the three main findings", () => {
+    for (const result of ["win", "loss"] as const) {
+      const f = findings(withKeys(0, 0, 0, result), null);
+      expect(f.at(-1)?.id).toBe("mechanics");
+      expect(f.at(-1)?.headline).toMatch(/without control groups/);
+    }
+  });
+  test("never shown when the player uses groups and hotkeys like tournament players", () => {
+    expect(findings(withKeys(4, 30, 0.55, "loss"), null).find((x) => x.id === "mechanics")).toBeUndefined();
+  });
+});
+
 describe("report without the model", () => {
   test("every finding carries advice; the window links to the opponent's tech", async () => {
-    const f = findings(game({}), null);
+    const f = allFindings(game({}), null, undefined, { all: true });
     const w = f.find((x) => x.id === "window")!;
     expect(w.advice).toMatch(/expansion/);
     expect(w.because?.[0]).toMatch(/tier 2 at 3:00/);
@@ -154,7 +174,7 @@ describe("report without the model", () => {
     expect(tp.text).toMatch(/from 8:00/);
     expect(turningPoint(r, me, opp, "win")).toBeNull();
     // You still had the bigger army when this loss ended: the recap says so before the findings.
-    expect(recapOf(r, opp, "loss", findings(r, null), [])).toMatch(/^You lost in 14:00 against Human\. The game ended while your army was bigger \(1500 vs 700\).* The biggest problem: they left a window open/);
+    expect(recapOf(r, opp, "loss", allFindings(r, null, undefined, { all: true }), [])).toMatch(/^You lost in 14:00 against Human\. The game ended while your army was bigger \(1500 vs 700\).* The biggest problem: they left a window open/);
   });
 
   test("composition: attack types against armor, and anti-air", async () => {

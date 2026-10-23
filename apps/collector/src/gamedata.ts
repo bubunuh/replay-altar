@@ -2,10 +2,12 @@
 // simulation reads, and the race crests, hero portraits and UI font the app shows.
 //
 // The game's files sit in CASC storage, read with casc-extract (scripts/casc, built on CascLib).
-// Linux: in a podman container, with the install mounted as an overlay (:O); CascLib opens some
-// files read-write, and the overlay sends anything it might write to a throwaway layer.
 // Windows: scripts/casc/bin/casc-extract.exe (scripts/casc/build-windows.sh), whose CascLib is
-// patched to open every file read-only. Either way the game files are never touched.
+// patched to open every file read-only. Linux: scripts/casc/bin/casc-extract when it is there
+// (scripts/casc/build-linux.sh; the AppImage ships it), patched the same way; otherwise in a podman
+// container, with the install mounted as an overlay (:O), since upstream CascLib opens some files
+// read-write and the overlay sends anything it might write to a throwaway layer. Either way the
+// game files are never touched.
 //
 // Output: vendor/wc3v/helpers/UnitBalance.json, plus a copy of the source tables and a manifest
 // under <data>/sim/gamedata/<game version>/ (and sim/gamedata/current pointing at it), and the
@@ -15,7 +17,7 @@ import { createHash } from "node:crypto";
 import { copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
-import { dataDir, projectRoot } from "@replay-altar/core";
+import { dataDir, projectRoot, winePrefixes } from "@replay-altar/core";
 import { decodeDds, encodePng } from "./dds.ts";
 
 const ROOT = projectRoot();
@@ -36,11 +38,14 @@ const HEROES: Record<string, string> = {
   Nbst: "btnbeastmaster", Ntin: "btnherotinker", Nfir: "btnheroavatarofflame", Nalc: "btnheroalchemist", Npal: "btnforsakenpaladin",
 };
 
-/** Battle.net's install folder: from the registry on Windows, else the usual places. */
+/** Battle.net's install folder: from the registry on Windows; on Linux in the first Wine prefix that has it. */
 export function defaultWarcraftDir(): string {
-  if (!windows) return join(homedir(), "Games/battlenet/drive_c/Program Files (x86)/Warcraft III");
+  if (!windows) {
+    const dirs = [join(homedir(), "Games/battlenet"), ...winePrefixes()].flatMap((p) => ["Program Files (x86)", "Program Files"].map((pf) => join(p, "drive_c", pf, "Warcraft III")));
+    return dirs.find((d) => existsSync(join(d, ".build.info"))) ?? dirs[0];
+  }
   try {
-    const out = execFileSync("reg", ["query", "HKLM\\SOFTWARE\\WOW6432Node\\Blizzard Entertainment\\Warcraft III", "/v", "InstallPath"], { encoding: "utf8", windowsHide: true });
+    const out = execFileSync("reg", ["query", "HKLM\\SOFTWARE\\WOW6432Node\\Blizzard Entertainment\\Warcraft III", "/v", "InstallPath"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], windowsHide: true });
     const path = out.match(/InstallPath\s+REG_SZ\s+(.+)/)?.[1]?.trim();
     if (path && existsSync(join(path, ".build.info"))) return path;
   } catch {
@@ -59,14 +64,22 @@ function gameVersion(wc3: string): string {
   return version;
 }
 
+/** The read-only extractor run directly (Windows always; Linux when it was built), or null for podman. */
+function nativeExtractor(): string | null {
+  if (process.env.REPLAY_ALTAR_CASC_EXTRACT) return process.env.REPLAY_ALTAR_CASC_EXTRACT;
+  const exe = join(ROOT, windows ? "scripts/casc/bin/casc-extract.exe" : "scripts/casc/bin/casc-extract");
+  if (existsSync(exe)) return exe;
+  if (windows) throw new Error(`${exe} is missing (build it on Linux with scripts/casc/build-windows.sh)`);
+  return null;
+}
+
 /** Copies CASC files (paths inside war3.w3mod) into `out`, flat, at the lowest priority. */
 function extract(wc3: string, out: string, names: string[]) {
   const args = names.map((n) => `war3.w3mod:${n}`);
   mkdirSync(out, { recursive: true });
-  if (windows) {
-    const exe = process.env.REPLAY_ALTAR_CASC_EXTRACT ?? join(ROOT, "scripts/casc/bin/casc-extract.exe");
-    if (!existsSync(exe)) throw new Error(`${exe} is missing (build it on Linux with scripts/casc/build-windows.sh)`);
-    // Written to the working directory: the extractor takes ANSI paths, and the user's folder may not be.
+  const exe = nativeExtractor();
+  if (exe) {
+    // Written to the working directory: the Windows extractor takes ANSI paths, and the user's folder may not be.
     execFileSync(exe, [wc3, ".", ...args], { cwd: out, stdio: "ignore", windowsHide: true });
     return;
   }
@@ -75,8 +88,9 @@ function extract(wc3: string, out: string, names: string[]) {
 
 /** CASC paths containing `part` (case-insensitive), without the "war3.w3mod:" prefix. */
 function list(wc3: string, part: string): string[] {
-  const out = windows
-    ? execFileSync(process.env.REPLAY_ALTAR_CASC_EXTRACT ?? join(ROOT, "scripts/casc/bin/casc-extract.exe"), [wc3, "--list", part], { encoding: "utf8", windowsHide: true, maxBuffer: 16 << 20 })
+  const exe = nativeExtractor();
+  const out = exe
+    ? execFileSync(exe, [wc3, "--list", part], { encoding: "utf8", windowsHide: true, maxBuffer: 16 << 20 })
     : execFileSync("nice", ["-n", "19", "podman", "run", "--rm", "--security-opt", "label=disable", "-v", `${wc3}:/war3:O`, IMAGE, "/war3", "--list", part], { encoding: "utf8", maxBuffer: 16 << 20 });
   return out
     .split(/\r?\n/)
@@ -115,13 +129,26 @@ function pointCurrent(dir: string, version: string) {
   else symlinkSync(version, current);
 }
 
+/**
+ * An update replaces the program folder and with it WC3V's unit table; the copy kept with the
+ * extracted game data (data folder) goes back instead of extracting everything again. True when
+ * it was put back.
+ */
+export function restoreUnitBalance(): boolean {
+  const kept = join(dataDir(), "sim/gamedata/current/UnitBalance.json");
+  const target = join(ROOT, "vendor/wc3v/helpers/UnitBalance.json");
+  if (existsSync(target) || !existsSync(kept)) return false;
+  copyFileSync(kept, target);
+  return true;
+}
+
 export function extractGameData(wc3 = defaultWarcraftDir()) {
   if (!existsSync(join(wc3, ".build.info"))) throw new Error(`No Warcraft III install at ${wc3}`);
   const version = gameVersion(wc3);
   const data = dataDir();
   const out = join(data, "sim/gamedata", version);
 
-  if (!windows) {
+  if (!nativeExtractor()) {
     try {
       execFileSync("podman", ["image", "exists", IMAGE]);
     } catch {

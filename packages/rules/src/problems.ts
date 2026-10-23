@@ -34,7 +34,7 @@ export const PROBLEM_NAME: Record<Finding["id"], string> = trTable({
   no_anti_air: ["No anti-air", "Sem anti-aéreo", "Sin antiaéreo", "Pas d'anti-aérien"],
   towers: ["Too many towers", "Torres demais", "Demasiadas torres", "Trop de tours"],
   build_drift: ["Build steps late", "Passos da build atrasados", "Pasos de la build tarde", "Étapes de build en retard"],
-  mechanics: ["Speed and hotkeys", "Velocidade e atalhos", "Velocidad y atajos", "Vitesse et raccourcis"],
+  mechanics: ["Control groups and hotkeys", "Grupos de controle e atalhos", "Grupos de control y atajos", "Groupes de contrôle et raccourcis"],
 });
 
 export const problemName = (id: string) => PROBLEM_NAME[id as Finding["id"]] ?? id.replace(/_/g, " ");

@@ -22,7 +22,12 @@ function heroTip(h: PlayerRecord["heroes"][number], deaths: { diedAt: number; re
 export function HeroIcons({ p, record }: { p: PlayerRecord; record: GameRecord }) {
   const [icons, setIcons] = useState<Record<string, string>>({});
   useEffect(() => {
-    loaded ??= api.heroIcons();
+    // Kept once there are any: on a first start the game data (and these pictures) arrive while
+    // the window is already open, so an empty answer is asked again next time.
+    loaded ??= api.heroIcons().then((x) => {
+      if (!Object.keys(x).length) loaded = null;
+      return x;
+    });
     loaded.then(setIcons);
   }, []);
   const heroes = [...p.heroes].sort((a, b) => a.order - b.order);

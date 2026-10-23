@@ -3,3 +3,4 @@ dist/
 out/
 apps/desktop/out/
 scripts/casc/bin/
+scripts/observer/__pycache__/

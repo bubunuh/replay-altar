@@ -1,6 +1,7 @@
 // Electron main process: one window, read-mostly access to the Replay Altar database.
+import { freshCopy, pruneOldCopies } from "./appimage.ts";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, watch, writeFileSync } from "node:fs";
-import { execFile } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { homedir, release as osRelease, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -26,6 +27,7 @@ import {
   isInstalled,
   collectorFiles,
   enableCollector,
+  linuxUnit,
   windowsLauncher,
   language,
   listGames,
@@ -43,6 +45,19 @@ import {
 
 app.setName("replay-altar");
 
+// A Linux AppImage's collector and command line: `ReplayAltar.AppImage --cli <command…>` runs the
+// CLI on this executable as Node (the systemd unit runs `--cli collector`). The AppImage's files
+// only exist while it runs, so this process stays, without a window, until the CLI is done.
+const cliAt = process.argv.indexOf("--cli");
+if (cliAt >= 0) {
+  const child = spawn(process.execPath, [join(projectRoot(), "collector/collector.mjs"), ...process.argv.slice(cliAt + 1)], {
+    stdio: "inherit",
+    env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" },
+  });
+  child.on("exit", (code, signal) => app.exit(code ?? (signal ? 1 : 0)));
+  for (const sig of ["SIGTERM", "SIGINT"] as const) process.on(sig, () => child.kill(sig));
+}
+
 /**
  * An installed copy on Windows sets up its own collector: started now and at every login, on this
  * executable as Node (the launcher is rewritten when an update moves the executable).
@@ -59,6 +74,49 @@ function ensureWindowsCollector() {
     restartCollectorIfRunning();
   }
   enableCollector();
+}
+
+/** A desktop entry's Exec word: quoted, with ", `, $ and \ escaped. */
+const execWord = (s: string) => `"${s.replace(/(["`$\\])/g, "\\$1")}"`;
+/** A word for /bin/sh: single quotes, with any ' closed and reopened. */
+const shWord = (s: string) => `'${s.replaceAll("'", "'\\''")}'`;
+
+/**
+ * A Linux AppImage sets up what `replay-altar install` sets up for a checkout: the collector as a
+ * systemd user service (started now and at every login) running through this AppImage file, the
+ * `replay-altar` command and a menu entry with its icon. Rewritten when the AppImage moves (an
+ * update may rename it).
+ */
+function ensureAppImageCollector() {
+  const appImage = process.env.APPIMAGE;
+  if (process.platform !== "linux" || !appImage) return;
+  const home = homedir();
+  const headless = "--ozone-platform=headless";
+  const files: [string, string, number][] = [
+    [join(home, ".config/systemd/user/replay-altar-collector.service"), linuxUnit([appImage, headless, "--cli", "collector"]), 0o644],
+    [join(home, ".local/bin/replay-altar"), `#!/bin/sh\nexec ${shWord(appImage)} ${headless} --cli "$@"\n`, 0o755],
+    [
+      join(home, ".local/share/applications/replay-altar.desktop"),
+      ["[Desktop Entry]", "Type=Application", "Name=Replay Altar", "Comment=Warcraft III replay stats", `Exec=${execWord(appImage)}`, "Icon=replay-altar", "Categories=Game;", "StartupWMClass=replay-altar", ""].join("\n"),
+      0o755,
+    ],
+  ];
+  let unitChanged = false;
+  for (const [file, content, mode] of files) {
+    if (existsSync(file) && readFileSync(file, "utf8") === content) continue;
+    mkdirSync(dirname(file), { recursive: true });
+    writeFileSync(file, content, { mode });
+    if (file.endsWith(".service")) unitChanged = true;
+  }
+  const icon = join(home, ".local/share/icons/hicolor/scalable/apps/replay-altar.svg");
+  if (!existsSync(icon)) {
+    mkdirSync(dirname(icon), { recursive: true });
+    writeFileSync(icon, readFileSync(join(import.meta.dirname, "../assets/replay-altar.svg")));
+  }
+  enableCollector();
+  // A new unit or a new version: the running collector must move to it before old copies go.
+  if (unitChanged || freshCopy) restartCollectorIfRunning();
+  pruneOldCopies();
 } // window class, so the .desktop entry's StartupWMClass matches
 
 type Launch = { background: boolean; game: string | null; page: string | null; screenshot: string | null };
@@ -77,7 +135,9 @@ if (parseArgs(process.argv).screenshot) {
   app.setPath("userData", mkdtempSync(join(tmpdir(), "replay-altar-shot-")));
 }
 
-if (!app.requestSingleInstanceLock()) {
+if (cliAt >= 0) {
+  // The CLI only (above).
+} else if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
   let win: BrowserWindow | null = null;
@@ -125,12 +185,23 @@ if (!app.requestSingleInstanceLock()) {
           await win!.webContents.executeJavaScript(`document.querySelector(${JSON.stringify(click)})?.click()`);
           await new Promise((r) => setTimeout(r, 1500));
         }
+        // Dev/test: zoom in (e.g. 1.4) so text reads on a phone when the picture is shrunk to fit;
+        // the page then lays out about 1280 / zoom pixels wide.
+        const zoom = Number(process.env.REPLAY_ALTAR_SHOT_ZOOM) || 1;
+        if (zoom !== 1) {
+          win!.webContents.setZoomFactor(zoom);
+          await new Promise((r) => setTimeout(r, 800));
+        }
         const height = await win!.webContents.executeJavaScript("document.querySelector('main').scrollHeight + 52");
-        win!.setContentSize(1280, Math.min(Math.max(860, height), 6000));
+        win!.setContentSize(1280, Math.min(Math.max(860, Math.ceil(height * zoom)), 8000));
         await new Promise((r) => setTimeout(r, 800));
         // Dev/test: a script run on the page just before the capture, e.g. to hide player names.
         const script = process.env.REPLAY_ALTAR_SHOT_JS;
-        if (script) await win!.webContents.executeJavaScript(readFileSync(script, "utf8"));
+        if (script) {
+          await win!.webContents.executeJavaScript(readFileSync(script, "utf8"));
+          // An offscreen page paints the change on its next frame.
+          await new Promise((r) => setTimeout(r, 800));
+        }
         writeFileSync(file, (await win!.webContents.capturePage()).toPNG());
         app.quit();
       }, 1500);
@@ -153,11 +224,15 @@ if (!app.requestSingleInstanceLock()) {
   app.whenReady().then(() => {
     applyLanguage();
     const launch = parseArgs(process.argv);
-    if (!launch.screenshot) ensureWindowsCollector();
+    if (!launch.screenshot) {
+      ensureWindowsCollector();
+      ensureAppImageCollector();
+    }
     // Screenshot runs stay offline unless pointed at a test list of releases.
     if (!launch.screenshot || process.env.REPLAY_ALTAR_RELEASES_URL) {
       updates = updater({
-        installable: process.platform === "win32" && isInstalled(),
+        // electron-updater replaces an AppImage in place, like the Windows installer.
+        installable: (process.platform === "win32" && isInstalled()) || !!process.env.APPIMAGE,
         enabled: () => loadConfig().checkUpdates !== false,
         onChange: (s) => win?.webContents.send("update:state", s),
         log: (m) => console.log(m),
@@ -275,7 +350,8 @@ if (!app.requestSingleInstanceLock()) {
   ipcMain.handle("config:get", () => ({ config: loadConfig(), configPath: configPath(), paths: p }));
   ipcMain.handle("config:set", (_e, config: Config) => {
     const before = loadConfig().language;
-    saveConfig(config);
+    // Once you have a battletag, the first run's suggestions are done with.
+    saveConfig(config.accounts.length ? { ...config, suggestedAccounts: undefined } : config);
     // The page reloads after a theme change (charts take their colours when drawn).
     if (!arg(process.argv, "theme")) nativeTheme.themeSource = config.theme === "light" || config.theme === "dark" ? config.theme : "system";
     if (config.language !== before) {
@@ -448,6 +524,15 @@ if (!app.requestSingleInstanceLock()) {
   });
   // The pro statistics shipped with this version (data/reference).
   ipcMain.handle("ref:profiles", () => loadRefGroups());
+  // The win-chance model shipped in data/ (scripts/win-chance.ts); null when missing.
+  let winModel: unknown;
+  ipcMain.handle("winchance:model", () => {
+    if (winModel === undefined) {
+      const file = join(projectRoot(), "data", "winchance.json");
+      winModel = existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : null;
+    }
+    return winModel;
+  });
   ipcMain.handle("shell:showFile", (_e, file: string) => shell.showItemInFolder(file));
   ipcMain.handle("shell:openPath", (_e, dir: string) => shell.openPath(dir));
   ipcMain.handle("shell:openUrl", (_e, url: string) => {

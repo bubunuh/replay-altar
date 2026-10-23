@@ -2,6 +2,7 @@ import type { Config, GameDetail, GameRow, MetricDef, Paths, PerfGame, Progress,
 import type { RefProfile } from "@replay-altar/reference/types";
 import type { RulesBook } from "@replay-altar/rules/types";
 import type { Principles } from "@replay-altar/rules/principles";
+import type { WinModel } from "@replay-altar/rules/winchance";
 import type { MapMarker } from "../mapOverlay.ts";
 import type { MapActivity } from "../mapActivity.ts";
 import type { UpdateState } from "../updates.ts";
@@ -67,6 +68,8 @@ type W3Api = {
   analyzerList(): Promise<AnalyzedReplay[]>;
   analyzerRemove(id: string): Promise<void>;
   referenceProfiles(): Promise<RefGroupInfo[]>;
+  /** The win-chance model (data/winchance.json); null when the app has none. */
+  winModel(): Promise<WinModel | null>;
   showFile(file: string): Promise<void>;
   openPath(dir: string): Promise<void>;
   /** Opens a page of the project on GitHub in the browser (other addresses are ignored). */

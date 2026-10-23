@@ -1,0 +1,98 @@
+# Builds the Windows installer and the Linux AppImage on GitHub's machines, the same way as
+# `node apps/desktop/package-windows.ts` and `node apps/desktop/package-linux.ts` on a maintainer's
+# Linux PC: the game-data extractor built in a container (podman), electron-builder (with wine for
+# the .exe's icon and version). Every push to dev makes test builds, whose files are kept with the
+# run (Actions → the run → Artifacts); so does running it by hand. Pushing a version tag (v0.2.0)
+# also puts them on a draft release, published by hand after its notes are written.
+name: Installers
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [dev]
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "26"
+          cache: npm
+      - name: Install wine
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends wine64 wine32:i386 wine
+      - run: npm ci --no-audit --no-fund
+      - name: WC3V's packages (the simulation)
+        run: npm ci --omit=dev --no-audit --no-fund
+        working-directory: vendor/wc3v
+      - run: npm run typecheck
+      - run: npx vitest run
+      - name: Game-data extractor (casc-extract.exe)
+        run: scripts/casc/build-windows.sh
+      - name: Installer
+        run: node apps/desktop/package-windows.ts
+        env:
+          WINEDEBUG: "-all"
+      - uses: actions/upload-artifact@v5
+        with:
+          name: ReplayAltar-Windows
+          path: |
+            dist/ReplayAltar-Setup-*.exe
+            dist/ReplayAltar-Setup-*.exe.blockmap
+            dist/latest.yml
+          if-no-files-found: error
+
+  linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "26"
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: WC3V's packages (the simulation)
+        run: npm ci --omit=dev --no-audit --no-fund
+        working-directory: vendor/wc3v
+      - name: Game-data extractor (casc-extract)
+        run: scripts/casc/build-linux.sh
+      - name: AppImage
+        run: node apps/desktop/package-linux.ts
+      - uses: actions/upload-artifact@v5
+        with:
+          name: ReplayAltar-Linux
+          path: |
+            dist/ReplayAltar-*.AppImage
+            dist/latest-linux.yml
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [windows, linux]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Checksums
+        run: cd dist && sha256sum ReplayAltar-Setup-*.exe ReplayAltar-*.AppImage | tee SHA256SUMS.txt
+      - name: Draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft --prerelease --title "Replay Altar ${GITHUB_REF_NAME#v}" \
+            --notes "Built by GitHub Actions from $GITHUB_SHA. Notes to be written. Code signing policy: https://github.com/bubunuh/replay-altar#code-signing-policy" \
+            dist/ReplayAltar-Setup-*.exe dist/ReplayAltar-Setup-*.exe.blockmap dist/latest.yml dist/ReplayAltar-*.AppImage dist/latest-linux.yml dist/SHA256SUMS.txt
