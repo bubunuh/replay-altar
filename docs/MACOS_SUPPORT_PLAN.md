@@ -1,6 +1,6 @@
 # macOS support plan
 
-This document captures the implementation plan for adding first-class macOS support to Replay Altar.
+This document captures the implementation plan for adding macOS support to Replay Altar. Project work should target the `dev` branch; `main` is reserved for tested work.
 
 ## Goal
 
@@ -26,12 +26,12 @@ The code is structured well enough for a platform abstraction layer, but macOS s
 - macOS data/config paths
 - app packaging for macOS
 - login startup using `launchd` / LaunchAgent
-- replay folder discovery
+- native Warcraft III install and replay-folder discovery
 - process detection
 - collector lifecycle
 - game-data extraction
 - desktop notifications and app behavior
-- release validation on Intel and Apple Silicon Macs
+- release validation on Apple Silicon Macs, with Intel support assessed separately
 
 ### Out of scope
 
@@ -67,7 +67,7 @@ This layer should expose a common contract for:
 1. Add a `darwin` branch alongside existing Windows/Linux logic.
 2. Centralize storage paths in a platform-aware API.
 3. Add macOS-specific app-data and config folder defaults.
-4. Add detection for common Warcraft III install locations.
+4. Add detection for the native macOS Warcraft III install and replay locations.
 5. Preserve the current Linux/Windows behavior while adding macOS support.
 
 ### Output
@@ -91,9 +91,11 @@ The collector runs in the background on a Mac and can be managed with the same c
 
 ### Tasks
 
-1. Add macOS detection of Warcraft III and related processes.
-2. Implement replay-folder detection for native Mac installs and any Wine/CrossOver setup supported by the project.
+1. Add macOS detection for the native Warcraft III client process, including the process name used by the Mac client.
+2. Implement replay-folder detection for native Mac installs.
 3. Make the collector react correctly when a match ends and a replay is written.
+
+Native macOS Warcraft III is the first supported target. Wine and CrossOver setups can be considered later, after the native flow is reliable.
 
 ### Output
 
@@ -103,18 +105,16 @@ The app can recognize the active game and archive replays without Windows/Linux-
 
 The repo currently uses different extraction strategies depending on OS:
 
-- Linux: `podman` container-based extraction
+- Linux: native read-only extractor built from CascLib (`scripts/casc/Containerfile.linux` and `scripts/casc/build-linux.sh`)
 - Windows: a compiled helper binary
 
 ### Tasks
 
-1. Decide whether macOS will use the Podman path or a native extraction path.
-2. Add macOS compatibility to the install/game-data extraction flow.
-3. Validate the extracted game data and UI assets for a Mac install.
+1. Build a native macOS `casc-extract` from CascLib, patched to open game files read-only, following the Linux extractor approach.
+2. Add macOS compatibility to the install/game-data extraction flow and locate the native game install.
+3. Validate extracted balance data and UI assets against a Mac install.
 
-### Recommendation
-
-Use the container-based path for the first macOS release unless a native solution is required for packaging or reliability.
+Do not depend on Podman for the Mac app: it requires a virtual machine on macOS. A native extractor is the simpler app experience and avoids that dependency.
 
 ## Phase 5: desktop app behavior
 
@@ -133,10 +133,11 @@ The UI behaves like a normal macOS app while still being the replay-collector co
 
 ### Tasks
 
-1. Add a macOS packaging script comparable to the Windows build path.
-2. Produce a signed and notarized build.
-3. Create a DMG or ZIP release artifact.
-4. Add CI release automation for macOS builds.
+1. Add `apps/desktop/package-mac.ts` beside the Windows and Linux packaging scripts, using the shared `apps/desktop/stage.ts` flow on `dev`.
+2. Bundle the native extractor and arrange writable simulation resources in the user's data directory, adapting the Linux AppImage approach in `apps/desktop/src/appimage.ts` as appropriate for an app bundle.
+3. Create a `.app` bundle and a DMG or ZIP release artifact.
+4. Add CI build automation for macOS artifacts.
+5. Document that the first build will be unsigned and not notarized because the project has no Apple Developer account; users will need to allow it in System Settings → Privacy & Security.
 
 ### Output
 
@@ -156,19 +157,17 @@ Before calling macOS support complete, validate:
 - notifications work
 - uninstall removes the app cleanly
 
-Validate on both:
-
-- Intel Macs
-- Apple Silicon Macs
+The first validation target is Apple Silicon. Intel support should be claimed only after the app and native extractor have been built and tested for that architecture.
 
 ## Risks and constraints
 
 ### Main risks
 
-- difference between native Mac Warcraft III install and Wine/CrossOver flows
+- variation in native Mac Warcraft III install and replay-folder locations
+- Wine/CrossOver support expanding the process and path-detection scope
 - collision between app install conventions and Electron packaging expectations
 - launchd / login integration details
-- notarization/signing requirements for macOS distribution
+- unsigned-app first-run friction and the absence of notarization
 
 ### Mitigations
 
@@ -180,7 +179,7 @@ Validate on both:
 
 ### Milestone 1
 
-macOS config paths + replay discovery + app can run locally in dev mode.
+macOS config paths, native Warcraft III install/replay discovery, and the desktop app running from a checkout on Apple Silicon. Keep this milestone focused; no launch-at-login integration is required yet.
 
 ### Milestone 2
 
@@ -188,11 +187,11 @@ Background collector and launchd integration work on Mac.
 
 ### Milestone 3
 
-Game-data extraction works on Mac and full replay ingest is verified.
+The native read-only game-data extractor works on Mac and full replay ingest, simulation, and report generation are verified.
 
 ### Milestone 4
 
-Package a signed/notarized macOS build for user download.
+Package an unsigned, not-notarized macOS build for user download, with the first-run security steps documented. Signing/notarization can follow if the project obtains an Apple Developer account.
 
 ## Summary
 
