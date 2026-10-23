@@ -7,7 +7,7 @@ statistics (`data/`).
 
 ## Unreleased (next version)
 
-Nothing yet.
+- Findings show large numbers rounded (a pros median of 1160.5 XP now reads 1161).
 
 ## 0.2.0 (2026-10-23)
 
