@@ -2,7 +2,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ingestFile, reingestAll, loadConfig, markCollectorRunning, mmss, openDb, paths, replayDirs, resolveLanguage, setLanguage, tr, warcraftFolders, type GameRecord } from "@replay-altar/core";
-import { syncMapCache } from "@replay-altar/sim";
+import { simNotReady, syncMapCache } from "@replay-altar/sim";
 import { OfficialQueue } from "./officialqueue.ts";
 import { SimQueue } from "./simqueue.ts";
 import { notify, openDesktop, watchWarcraft } from "./system.ts";
@@ -81,14 +81,14 @@ export async function runCollector() {
   watcher.start();
   watcher.scanAll(); // backfill + anything played while we were down
   sims.backfill();
-  // A new version may have fixed what made simulations fail outside the replay itself (the 0.1
-  // Windows builds couldn't prepare any map): those games are simulated again, once per version.
+  // Games that failed for a reason outside the replay are simulated again: missing game data
+  // whenever it's there now (it appears once the game is installed), and map failures once per
+  // version, which may have fixed them (the 0.1 Windows builds couldn't prepare any map).
   const version = process.env.REPLAY_ALTAR_VERSION;
   const retried = join(p.root, "sims-retried.txt");
-  if (version && (!existsSync(retried) || readFileSync(retried, "utf8") !== version)) {
-    sims.retryFailed(/^(map |game data|WC3V)/);
-    writeFileSync(retried, version);
-  }
+  const newVersion = !!version && (!existsSync(retried) || readFileSync(retried, "utf8") !== version);
+  if (!simNotReady(p.root)) sims.retryFailed(newVersion ? /^(map |game data|WC3V)/ : /^(game data|WC3V)/);
+  if (newVersion) writeFileSync(retried, version);
 
   // Progress for the window: the replays found at start (later rescans find known files and
   // would only flash a bar), then the simulations.
