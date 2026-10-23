@@ -1,6 +1,7 @@
 // The always-on service: archive + analyze new replays, react to Warcraft III starting.
-import { mkdirSync } from "node:fs";
-import { ingestFile, loadConfig, markCollectorRunning, mmss, openDb, paths, replayDirs, resolveLanguage, setLanguage, tr, warcraftFolders, type GameRecord } from "@replay-altar/core";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { ingestFile, reingestAll, loadConfig, markCollectorRunning, mmss, openDb, paths, replayDirs, resolveLanguage, setLanguage, tr, warcraftFolders, type GameRecord } from "@replay-altar/core";
 import { syncMapCache } from "@replay-altar/sim";
 import { OfficialQueue } from "./officialqueue.ts";
 import { SimQueue } from "./simqueue.ts";
@@ -32,6 +33,17 @@ export async function runCollector() {
   const db = openDb(p.db);
   markCollectorRunning();
   const ctx = { db, config, paths: p };
+  // Your battletags changed (confirmed or edited in Settings, which restarts the collector): sort
+  // the archived games again, so the ones you played count as yours.
+  const applied = join(p.root, "accounts-applied.json");
+  const accountsKey = JSON.stringify([...config.accounts].sort());
+  if (!existsSync(applied) || readFileSync(applied, "utf8") !== accountsKey) {
+    writeProgress({ setup: "accounts", import: null, sims: null });
+    const out = await reingestAll(ctx);
+    log(`battletags ${config.accounts.join(", ") || "(none)"}: re-sorted ${out.games} archived games`);
+    writeFileSync(applied, accountsKey);
+    writeProgress({ setup: null, import: null, sims: null });
+  }
   const sims = new SimQueue(ctx, log);
   const officials = new OfficialQueue(ctx, log);
   const dirs = replayDirs(config);

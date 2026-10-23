@@ -8,6 +8,7 @@ import { Settings } from "./pages/Other.tsx";
 import { Analyzer } from "./pages/Analyzer.tsx";
 import { Performance } from "./pages/Performance.tsx";
 import { TipLayer } from "./Tip.tsx";
+import { AccountPrompt } from "./AccountPrompt.tsx";
 import { CollectorProgress } from "./CollectorProgress.tsx";
 import { openIssue } from "./feedback.ts";
 import { applyTextScale } from "./textSize.ts";
@@ -106,6 +107,12 @@ function App() {
         </span>
       </header>
       <main>
+        <AccountPrompt
+          onOpenSettings={() => {
+            setGame(null);
+            setPage("settings");
+          }}
+        />
         <CollectorProgress onDone={load} />
         {game ? (
           <Match key={`${game}:${version}`} gameKey={game} metrics={perf.metrics} refs={refs} onBack={() => setGame(null)} />

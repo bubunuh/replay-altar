@@ -44,6 +44,11 @@ export function CollectorProgress({ onDone }: { onDone: () => void }) {
           {tr("Setting up: reading the data it needs from your Warcraft III installation (a few minutes, only once)…", "Preparando: lendo os dados de que precisa da sua instalação do Warcraft III (alguns minutos, só uma vez)…", "Preparando: leyendo los datos que necesita de tu instalación de Warcraft III (unos minutos, solo una vez)…", "Préparation : lecture des données nécessaires depuis votre installation de Warcraft III (quelques minutes, une seule fois)…")}
         </p>
       )}
+      {p.setup === "accounts" && (
+        <p style={{ margin: 0 }}>
+          {tr("Sorting your games with your battletag…", "Separando as suas partidas pela sua battletag…", "Ordenando tus partidas según tu battletag…", "Tri de vos parties d'après votre battletag…")}
+        </p>
+      )}
       {p.import && (
         <div>
           {tr(`Importing your replays: ${p.import.done} of ${p.import.total}`, `Importando os seus replays: ${p.import.done} de ${p.import.total}`, `Importando tus replays: ${p.import.done} de ${p.import.total}`, `Importation de vos replays : ${p.import.done} sur ${p.import.total}`)}

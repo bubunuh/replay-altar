@@ -350,7 +350,8 @@ if (cliAt >= 0) {
   ipcMain.handle("config:get", () => ({ config: loadConfig(), configPath: configPath(), paths: p }));
   ipcMain.handle("config:set", (_e, config: Config) => {
     const before = loadConfig().language;
-    saveConfig(config);
+    // Once you have a battletag, the first run's suggestions are done with.
+    saveConfig(config.accounts.length ? { ...config, suggestedAccounts: undefined } : config);
     // The page reloads after a theme change (charts take their colours when drawn).
     if (!arg(process.argv, "theme")) nativeTheme.themeSource = config.theme === "light" || config.theme === "dark" ? config.theme : "system";
     if (config.language !== before) {

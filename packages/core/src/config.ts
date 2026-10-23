@@ -24,6 +24,11 @@ export type Config = {
   /** Battletags that are you. Games where none of them played are archived as "observed". */
   accounts: string[];
   /**
+   * Battletags found in most of your replays on the first run, waiting for you to confirm one
+   * (the window asks); never used as yours until then. Cleared once accounts are set.
+   */
+  suggestedAccounts?: { name: string; games: number; of: number }[];
+  /**
    * Folders you added on top of the ones found by themselves (warcraftFolders): a
    * "Documents/Warcraft III" folder (replays under BattleNet/<account>/Replays), or any folder of replays.
    */
@@ -178,7 +183,7 @@ export function folderToAdd(picked: string): string {
 }
 
 export const DEFAULT_CONFIG: Config = {
-  // Found from your replays on the first run (apps/collector/src/firstrun.ts), or set in Settings.
+  // Never guessed: you confirm the one found in your replays (apps/collector/src/firstrun.ts) or type it in Settings.
   accounts: [],
   warcraftDocuments: [],
   openWindowOnGameStart: true,
@@ -225,7 +230,7 @@ export const proDataDir = (groupId: string) => join(projectRoot(), "data", "refe
  */
 export type Progress = {
   at: string;
-  setup: "gamedata" | null;
+  setup: "gamedata" | "accounts" | null;
   import: { done: number; total: number } | null;
   sims: { done: number; total: number; avgMs: number | null } | null;
 };

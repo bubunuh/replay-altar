@@ -301,9 +301,12 @@ export function Settings({ refs, update }: { refs: RefGroupInfo[]; update: Updat
       <div className="card">
         <h2>{tr("You", "Você", "Tú", "Vous")}</h2>
         <p className="sub">
-          {tr('Your battletags, comma separated. Games where none of them played are archived as "observed". Run ', 'Suas battletags, separadas por vírgula. Partidas em que nenhuma delas jogou são arquivadas como "assistidas". Rode ', "Tus battletags, separadas por comas. Las partidas en las que no jugó ninguna se archivan como \"observadas\". Ejecuta ", "Vos battletags, séparés par des virgules. Les parties où aucun d'eux n'a joué sont archivées comme « observées ». Lancez ")}
-          <code>replay-altar reingest</code>
-          {tr(" after changing this to reclassify old games.", " depois de mudar isto para reclassificar as partidas antigas.", " después de cambiar esto para reclasificar las partidas antiguas.", " après avoir modifié ceci pour reclasser les anciennes parties.")}
+          {tr(
+            'Your battletags, comma separated, exactly as in the game (name#1234). Games where none of them played are kept as "observed". After you save, your games are sorted again.',
+            'Suas battletags, separadas por vírgula, exatamente como no jogo (nome#1234). Partidas em que nenhuma delas jogou ficam como "assistidas". Depois de salvar, as suas partidas são separadas de novo.',
+            'Tus battletags, separadas por comas, exactamente como en el juego (nombre#1234). Las partidas en las que no jugó ninguna se guardan como "observadas". Al guardar, tus partidas se ordenan de nuevo.',
+            "Vos battletags, séparés par des virgules, exactement comme dans le jeu (nom#1234). Les parties où aucun d'eux n'a joué sont gardées comme « observées ». Après l'enregistrement, vos parties sont triées à nouveau.",
+          )}
         </p>
         <div className="filters">
           <input type="text" style={{ flex: 1 }} value={accounts} onChange={(e) => setAccounts(e.target.value)} />

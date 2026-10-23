@@ -1,6 +1,6 @@
 // What the collector sets up by itself the first time it runs (an installed copy has no one at a
-// terminal to run setup commands): who you are and the game data the simulation needs. Each
-// step only runs when its result is missing.
+// terminal to run setup commands): a guess at who you are, for you to confirm in the window, and
+// the game data the simulation needs. Each step only runs when its result is missing.
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { dataDir, loadConfig, parseReplay, saveConfig, seatsOf, type Config } from "@replay-altar/core";
@@ -12,10 +12,19 @@ import { isReplayFile } from "./watcher.ts";
 const SAMPLE = 20;
 
 /**
- * Your battletag(s) when the settings have none: the name in most of your own replays (whoever
- * saved a replay played in it). Ladder hosts in observer slots are skipped with the observers.
+ * Battletags in at least 60% of the replays looked at, most frequent first: whoever saved a replay
+ * played in it, but a frequent opponent can pass too, so these are only suggestions.
  */
-export async function detectAccounts(dirs: string[], log: (msg: string) => void): Promise<string[]> {
+export function accountCandidates(count: Map<string, number>, games: number): { name: string; games: number; of: number }[] {
+  const need = Math.max(2, Math.ceil(games * 0.6));
+  return [...count].filter(([, n]) => n >= need).sort((a, b) => b[1] - a[1]).map(([name, n]) => ({ name, games: n, of: games }));
+}
+
+/**
+ * The battletags most of your own replays have in common (newest first; ladder hosts in observer
+ * slots are skipped with the observers), to suggest in the window.
+ */
+export async function detectAccounts(dirs: string[], log: (msg: string) => void): Promise<{ name: string; games: number; of: number }[]> {
   const files = dirs
     .flatMap((d) => readdirSync(d).filter(isReplayFile).map((f) => join(d, f)))
     .map((f) => ({ f, t: statSync(f).mtimeMs }))
@@ -33,9 +42,8 @@ export async function detectAccounts(dirs: string[], log: (msg: string) => void)
       // unreadable replay: skip
     }
   }
-  const need = Math.max(2, Math.ceil(games * 0.6));
-  const found = [...count].filter(([, n]) => n >= need).sort((a, b) => b[1] - a[1]).map(([name]) => name);
-  log(found.length ? `your battletag, from ${games} replays: ${found.join(", ")}` : `could not tell your battletag from ${games} replays; set it in Settings`);
+  const found = accountCandidates(count, games);
+  log(found.length ? `battletag suggestions from ${games} replays (waiting for you to confirm): ${found.map((x) => `${x.name} ${x.games}/${x.of}`).join(", ")}` : `could not tell your battletag from ${games} replays; set it in Settings`);
   return found;
 }
 
@@ -55,11 +63,11 @@ export function ensureGameData(log: (msg: string) => void, onStart: () => void =
 
 /** `onSetup`: a slow step is starting (for the window's progress bar). */
 export async function firstRun(config: Config, dirs: string[], log: (msg: string) => void, onSetup: (step: "gamedata") => void = () => {}): Promise<Config> {
+  // Suggestions first (seconds), so the window can ask while the game data is extracted.
+  if (!config.accounts.length && !config.suggestedAccounts?.length && dirs.length) {
+    const suggestedAccounts = await detectAccounts(dirs, log);
+    if (suggestedAccounts.length) saveConfig({ ...loadConfig(), suggestedAccounts });
+  }
   ensureGameData(log, () => onSetup("gamedata"));
-  if (config.accounts.length || !dirs.length) return config;
-  const accounts = await detectAccounts(dirs, log);
-  if (!accounts.length) return config;
-  const next = { ...loadConfig(), accounts };
-  saveConfig(next);
-  return next;
+  return loadConfig();
 }
