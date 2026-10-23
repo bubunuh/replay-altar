@@ -43,7 +43,9 @@ Your games stay on your computer. Replay Altar fetches only two things from the 
 | No expansion in a long game | 7% | 3% |
 | They had more bases than you | 21% | 13% |
 
-11 rules passed and are shown; 18 did not, and stay hidden until they can be tuned for each skill level. On those games, a lost game gets about two findings and a won game about one. One check is shown whatever the result: playing without control groups or hotkeys, which 99 in 100 tournament players never do (measured on 8,294 player-games) <kbd>upcoming</kbd>.
+11 rules passed and are shown. On those games, a lost game gets about two findings and a won game about one. One check is shown whatever the result: playing without control groups or hotkeys. <kbd>upcoming</kbd>
+
+In the future, suggestions will be skill based: during the analysis, the app will estimate your skill level and these suggestions will be more personal. <kbd>upcoming</kbd>
 
 **4. What to do about it.** Each finding comes with the facts behind it, the likely reason found elsewhere in the game, and one concrete thing to do next time. Games of every race and level were also read by hand and compared with the report ([docs/REVIEWS.md](docs/REVIEWS.md)).
 
