@@ -73,7 +73,7 @@ How well does it work? It was tested on 2,998 tournament games from 2022 to 2026
 2. Run it. Windows will probably warn that it protected your PC, because the installer isn't digitally signed yet: click **More info**, then **Run anyway**.
 3. The installer first shows what Replay Altar does on your computer (privacy, starting at login); click **I Agree**. It needs no administrator rights, installs for your user, adds a Start menu and desktop shortcut, and opens the app.
 
-On the first start, in the background, Replay Altar reads the data it needs from your Warcraft III installation, finds your battletag from your replays and imports the replays you already have. The list of games fills in by itself after a few minutes. From then on it starts with Windows and picks up each game as it ends.
+On the first start, in the background, Replay Altar reads the data it needs from your Warcraft III installation and imports the replays you already have. It looks for the battletag that appears in most of your replays and asks you to confirm it <kbd>upcoming</kbd> (or type yours in Settings); until you do, nothing counts as yours. The list of games fills in by itself after a few minutes. From then on it starts with Windows and picks up each game as it ends.
 
 - **Replays somewhere else?** It finds the game's `Documents\Warcraft III` folder by itself, OneDrive included. If yours is elsewhere, use **Settings → Replay folders → Choose folder…**.
 - **Something wrong?** The log is in `%LOCALAPPDATA%\replay-altar\logs\collector.log`.
