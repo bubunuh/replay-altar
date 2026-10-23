@@ -30,12 +30,14 @@ function runDriver(replay: string, out: string): Promise<DriverResult> {
     // Lowest priority: the game may be running; the simulation can wait. Linux uses nice (it also
     // covers the threads node starts); Windows sets the priority class once the process exists.
     const [cmd, args] = process.platform === "win32" ? [process.execPath, [DRIVER, replay, out]] : ["nice", ["-n", "19", process.execPath, DRIVER, replay, out]];
-    const child = execFile(cmd, args, { timeout: RUN_TIMEOUT_MS, maxBuffer: 16 << 20, windowsHide: true }, (err, stdout) => {
+    const child = execFile(cmd, args, { timeout: RUN_TIMEOUT_MS, maxBuffer: 16 << 20, windowsHide: true }, (err, stdout, stderr) => {
       const line = stdout.trim().split("\n").at(-1) ?? "";
       try {
         resolve(JSON.parse(line) as DriverResult);
       } catch {
-        resolve({ ok: false, ms: 0, error: err ? `${err.message}`.slice(0, 500) : `unexpected driver output: ${line.slice(0, 200)}` });
+        // The driver's error line says why; the message itself starts with the long command line.
+        const why = stderr.split(/\r?\n/).map((l) => l.trim()).find((l) => /Error\b/.test(l));
+        resolve({ ok: false, ms: 0, error: err ? (why ?? err.message).slice(0, 500) : `unexpected driver output: ${line.slice(0, 200)}` });
       }
     });
     if (process.platform === "win32" && child.pid) {

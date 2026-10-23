@@ -17,8 +17,8 @@ export const app = join(stage, "app");
 export const res = join(stage, "resources");
 export const version = JSON.parse(readFileSync(join(desktop, "package.json"), "utf8")).version as string;
 
-/** Stages everything; `extractor` is that system's built casc-extract (scripts/casc/bin). */
-export async function stageApp(extractor: string) {
+/** Stages everything for `platform`; `extractor` is that system's built casc-extract (scripts/casc/bin). */
+export async function stageApp(extractor: string, platform: "win32" | "linux") {
   rmSync(stage, { recursive: true, force: true });
   // Replay Altar's fixes to WC3V (patches/wc3v), so this build simulates like every other copy.
   execFileSync(process.execPath, [join(root, "scripts/patch-wc3v.ts")], { stdio: "inherit" });
@@ -38,7 +38,10 @@ export async function stageApp(extractor: string) {
     format: "esm",
     target: "node24",
     banner: { js: 'import { createRequire as __cr } from "node:module"; const require = __cr(import.meta.url);' },
-    define: { "process.env.REPLAY_ALTAR_W3GJS_VERSION": JSON.stringify(JSON.parse(readFileSync(join(root, "node_modules/w3gjs/package.json"), "utf8")).version) },
+    define: {
+      "process.env.REPLAY_ALTAR_W3GJS_VERSION": JSON.stringify(JSON.parse(readFileSync(join(root, "node_modules/w3gjs/package.json"), "utf8")).version),
+      "process.env.REPLAY_ALTAR_VERSION": JSON.stringify(version),
+    },
     logLevel: "warning",
   });
 
@@ -56,6 +59,14 @@ export async function stageApp(extractor: string) {
   // Files the map extraction adds this PC's maps to: shipped as they are in WC3V's repository.
   for (const f of ["client/js/gameData.js", "client/js/gameData.json", "helpers/mapConfiguration.json"]) {
     writeFileSync(join(res, "vendor/wc3v", f), execFileSync("git", ["-C", wc3v, "show", `HEAD:${f}`], { maxBuffer: 64 * 1024 * 1024 }));
+  }
+  // canvas (WC3V's map pictures) is native code, and the copy npm installed is for this PC's
+  // system: a Windows build gets canvas's own Windows prebuild instead (Node-API, so it loads in
+  // any Node or Electron). Without it every map extraction, and so every simulation, fails.
+  if (platform !== process.platform) {
+    const canvas = join(res, "vendor/wc3v/node_modules/canvas");
+    rmSync(join(canvas, "build"), { recursive: true, force: true });
+    execFileSync(process.execPath, [join(wc3v, "node_modules/prebuild-install/bin.js"), "--runtime", "napi", "--platform", platform, "--arch", "x64"], { cwd: canvas, stdio: "inherit" });
   }
   cpSync(join(root, "packages/sim/driver"), join(res, "packages/sim/driver"), { recursive: true });
   cpSync(extractor, join(res, "scripts/casc/bin", basename(extractor)));

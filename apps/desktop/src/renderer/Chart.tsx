@@ -135,10 +135,14 @@ const clock = (ms: number) => {
 };
 
 /** Lines over game time; one tooltip lists every series at the hovered time. */
-export function timeLines(series: (t: Tokens) => TimeSeries[], format: (v: number) => string = (v) => String(Math.round(v)), band?: Band | null) {
+export function timeLines(series: (t: Tokens) => TimeSeries[], format: (v: number) => string = (v) => String(Math.round(v)), fullBand?: Band | null) {
   return (t: Tokens): echarts.EChartsOption => {
     const b = base(t);
     const list = series(t);
+    // The pros' band only as far as the game went: a short game would otherwise sit squeezed at
+    // the left of a 40-minute axis.
+    const end = Math.max(0, ...list.flatMap((s) => s.points.map(([x]) => x)));
+    const band = fullBand && end > 0 ? { ...fullBand, points: fullBand.points.filter(([x]) => x <= end) } : fullBand;
     const medianName = band ? tr(`${band.label} median`, `mediana dos ${band.label}`, `mediana de ${band.label}`, `médiane : ${band.label}`) : "";
     const bandSeries = band && band.points.length
       ? [

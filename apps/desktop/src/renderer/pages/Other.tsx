@@ -367,9 +367,16 @@ export function Settings({ refs, update }: { refs: RefGroupInfo[]; update: Updat
             <tr><td>{tr("Settings file", "Arquivo de configurações", "Archivo de configuración", "Fichier des paramètres")}</td><td><code>{state.configPath}</code></td><td /></tr>
           </tbody>
         </table>
-        <p className="sub" style={{ marginTop: 12 }}>
-          {tr("Pause", "Pausar", "Pausar", "Pause")}: <code>replay-altar suspend</code> · {tr("resume", "retomar", "reanudar", "reprendre")}: <code>replay-altar resume</code> · {tr("remove", "remover", "quitar", "désinstaller")}: <code>replay-altar uninstall</code> ({tr("add", "adicione", "añade", "ajoutez")} <code>--purge</code> {tr("to also delete your archive and stats", "para apagar também o seu arquivo e estatísticas", "para borrar también tu archivo y tus estadísticas", "pour supprimer aussi votre archive et vos statistiques")}).
-        </p>
+        {/* Windows has no replay-altar command: the app is removed like any other. */}
+        {navigator.userAgent.includes("Windows") ? (
+          <p className="sub" style={{ marginTop: 12 }}>
+            {tr("To remove Replay Altar, uninstall it in Windows Settings → Apps. Your archive and stats above are kept unless you delete those folders.", "Para remover o Replay Altar, desinstale-o em Configurações do Windows → Aplicativos. Seu arquivo e suas estatísticas acima são mantidos, a menos que você apague essas pastas.", "Para quitar Replay Altar, desinstálalo en Configuración de Windows → Aplicaciones. Tu archivo y tus estadísticas de arriba se conservan salvo que borres esas carpetas.", "Pour supprimer Replay Altar, désinstallez-le dans Paramètres Windows → Applications. Votre archive et vos statistiques ci-dessus sont conservées, sauf si vous supprimez ces dossiers.")}
+          </p>
+        ) : (
+          <p className="sub" style={{ marginTop: 12 }}>
+            {tr("Pause", "Pausar", "Pausar", "Pause")}: <code>replay-altar suspend</code> · {tr("resume", "retomar", "reanudar", "reprendre")}: <code>replay-altar resume</code> · {tr("remove", "remover", "quitar", "désinstaller")}: <code>replay-altar uninstall</code> ({tr("add", "adicione", "añade", "ajoutez")} <code>--purge</code> {tr("to also delete your archive and stats", "para apagar também o seu arquivo e estatísticas", "para borrar también tu archivo y tus estadísticas", "pour supprimer aussi votre archive et vos statistiques")}).
+          </p>
+        )}
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { dataDir, loadConfig, parseReplay, saveConfig, seatsOf, type Config } from "@replay-altar/core";
 import { simNotReady } from "@replay-altar/sim";
-import { defaultWarcraftDir, extractGameData } from "./gamedata.ts";
+import { defaultWarcraftDir, extractGameData, restoreUnitBalance } from "./gamedata.ts";
 import { isReplayFile } from "./watcher.ts";
 
 /** Replays looked at to find your battletag, newest first. */
@@ -51,6 +51,7 @@ export async function detectAccounts(dirs: string[], log: (msg: string) => void)
 export function ensureGameData(log: (msg: string) => void, onStart: () => void = () => {}) {
   const problem = simNotReady(dataDir());
   if (!problem || !/game data/.test(problem)) return;
+  if (restoreUnitBalance() && !simNotReady(dataDir())) return log("game data: unit table put back from the data folder");
   const wc3 = defaultWarcraftDir();
   if (!existsSync(join(wc3, ".build.info"))) return log(`game data: no Warcraft III install found at ${wc3}`);
   onStart();

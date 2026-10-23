@@ -15,7 +15,7 @@ import { app, desktop, res, root, stageApp } from "./stage.ts";
 const casc = join(root, "scripts/casc/bin/casc-extract");
 if (!existsSync(casc)) execFileSync(join(root, "scripts/casc/build-linux.sh"), { stdio: "inherit" });
 
-await stageApp(casc);
+await stageApp(casc, "linux");
 
 await build({
   projectDir: app,

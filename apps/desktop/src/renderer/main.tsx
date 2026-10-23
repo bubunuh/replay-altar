@@ -1,4 +1,4 @@
-import { StrictMode, useCallback, useEffect, useState } from "react";
+import { StrictMode, useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import type { GameRow, MetricDef, PerfGame } from "@replay-altar/core/ui";
 import { api, type RefGroupInfo, type UpdateState } from "./api.ts";
@@ -41,6 +41,11 @@ function App() {
   const [version, setVersion] = useState(0); // bumps when the collector adds a game
   const [refs, setRefs] = useState<RefGroupInfo[]>([]);
   const [update, setUpdate] = useState<UpdateState | null>(null);
+  // Each page (and each report) opens at its top, not at the last one's scroll position.
+  const mainRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    mainRef.current?.scrollTo(0, 0);
+  }, [page, game]);
 
   const load = useCallback(() => {
     api.listGames().then(setGames);
@@ -102,11 +107,11 @@ function App() {
           {tr("Report a bug", "Relatar um problema", "Informar de un problema", "Signaler un bug")}
         </button>
         <span className="status">
-          {tr(`${analyzed} games analyzed`, `${analyzed} partidas analisadas`, `${analyzed} partidas analizadas`, `${analyzed} parties analysées`)}
+          {analyzed === 1 ? tr("1 game analyzed", "1 partida analisada", "1 partida analizada", "1 partie analysée") : tr(`${analyzed} games analyzed`, `${analyzed} partidas analisadas`, `${analyzed} partidas analizadas`, `${analyzed} parties analysées`)}
           {simulating ? tr(` · ${simulating} waiting for simulation`, ` · ${simulating} aguardando simulação`, ` · ${simulating} esperando la simulación`, ` · ${simulating} en attente de simulation`) : ""}
         </span>
       </header>
-      <main>
+      <main ref={mainRef}>
         <AccountPrompt
           onOpenSettings={() => {
             setGame(null);

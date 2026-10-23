@@ -152,6 +152,8 @@ export async function reingestAll(ctx: IngestContext): Promise<{ games: number; 
       errors.push(`${f}: ${(e as Error).message}`);
     }
   }
+  // The window keeps each game's findings until an event says the games changed.
+  logEvent(paths, { type: "reingested", games });
   return { games, errors };
 }
 

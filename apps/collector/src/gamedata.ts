@@ -45,7 +45,7 @@ export function defaultWarcraftDir(): string {
     return dirs.find((d) => existsSync(join(d, ".build.info"))) ?? dirs[0];
   }
   try {
-    const out = execFileSync("reg", ["query", "HKLM\\SOFTWARE\\WOW6432Node\\Blizzard Entertainment\\Warcraft III", "/v", "InstallPath"], { encoding: "utf8", windowsHide: true });
+    const out = execFileSync("reg", ["query", "HKLM\\SOFTWARE\\WOW6432Node\\Blizzard Entertainment\\Warcraft III", "/v", "InstallPath"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], windowsHide: true });
     const path = out.match(/InstallPath\s+REG_SZ\s+(.+)/)?.[1]?.trim();
     if (path && existsSync(join(path, ".build.info"))) return path;
   } catch {
@@ -127,6 +127,19 @@ function pointCurrent(dir: string, version: string) {
   else if (st) rmSync(current, { recursive: true, force: true }); // an earlier copy
   if (windows) cpSync(join(dir, version), current, { recursive: true });
   else symlinkSync(version, current);
+}
+
+/**
+ * An update replaces the program folder and with it WC3V's unit table; the copy kept with the
+ * extracted game data (data folder) goes back instead of extracting everything again. True when
+ * it was put back.
+ */
+export function restoreUnitBalance(): boolean {
+  const kept = join(dataDir(), "sim/gamedata/current/UnitBalance.json");
+  const target = join(ROOT, "vendor/wc3v/helpers/UnitBalance.json");
+  if (existsSync(target) || !existsSync(kept)) return false;
+  copyFileSync(kept, target);
+  return true;
 }
 
 export function extractGameData(wc3 = defaultWarcraftDir()) {

@@ -118,7 +118,8 @@ export function heroStall(c: Ctx) {
 const STALL_MS = 6 * 60_000;
 
 export function heroFinding(c: Ctx): Finding | null {
-  const gap = proGap(c, "hero_xp_10m") ?? proGap(c, "hero_xp_6m");
+  const gapKey = proGap(c, "hero_xp_10m") ? "hero_xp_10m" : "hero_xp_6m";
+  const gap = proGap(c, gapKey);
   const share = c.me.metrics.hero_xp_share;
   // A low share of both players' XP goes with losing even when your own pace was like pros'
   // (holdout: 68% of pro losses vs 30% of wins; requiring a slow pace too dropped it to 47%).
@@ -128,13 +129,17 @@ export function heroFinding(c: Ctx): Finding | null {
   const ownPaceFine = (gap?.worseThan ?? 1) < 0.5;
   const m = c.me.metrics;
   const end = c.r.game.durationMs;
+  // "Faster than theirs" only when you were ahead at the time the pros are compared at as well
+  // as over the whole game; the evidence below shows both.
+  const [mine, theirs] = [m[gapKey], c.opp.metrics[gapKey]];
+  const aheadOfThem = (share ?? 0) >= 0.5 && (mine === null || mine === undefined || theirs === null || theirs === undefined || mine >= theirs);
   return {
     id: "heroes",
     severity: Math.max(gap?.worseThan ?? 0, losingShare ? 0.6 + (0.45 - share!) : 0),
     // Ahead of the opponent but slow by pro standards: say so, not "fell behind" (scan-reports).
     headline: ownPaceFine
       ? tr("Their heroes out-levelled yours", "Os heróis deles upparam mais que os seus", "Sus héroes superaron a los tuyos en nivel", "Ses héros ont pris plus de niveaux que les vôtres")
-      : (share ?? 0) >= 0.5 ? tr("Your heroes levelled slower than pros, though faster than theirs", "Seus heróis upparam mais devagar que os dos pros, mas mais rápido que os deles", "Tus héroes subieron de nivel más despacio que los pros, aunque más rápido que los suyos", "Vos héros ont monté de niveau moins vite que les pros, mais plus vite que les siens") : tr("Your heroes fell behind", "Seus heróis ficaram para trás", "Tus héroes se quedaron atrás", "Vos héros ont pris du retard"),
+      : aheadOfThem ? tr("Your heroes levelled slower than pros, though faster than theirs", "Seus heróis upparam mais devagar que os dos pros, mas mais rápido que os deles", "Tus héroes subieron de nivel más despacio que los pros, aunque más rápido que los suyos", "Vos héros ont monté de niveau moins vite que les pros, mais plus vite que les siens") : tr("Your heroes fell behind", "Seus heróis ficaram para trás", "Tus héroes se quedaron atrás", "Vos héros ont pris du retard"),
     // Your own pace was the problem (the links then look at your creeping).
     variant: ownPaceFine ? "theirs" : "slow",
     ...(ownPaceFine

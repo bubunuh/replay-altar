@@ -81,6 +81,14 @@ export async function runCollector() {
   watcher.start();
   watcher.scanAll(); // backfill + anything played while we were down
   sims.backfill();
+  // A new version may have fixed what made simulations fail outside the replay itself (the 0.1
+  // Windows builds couldn't prepare any map): those games are simulated again, once per version.
+  const version = process.env.REPLAY_ALTAR_VERSION;
+  const retried = join(p.root, "sims-retried.txt");
+  if (version && (!existsSync(retried) || readFileSync(retried, "utf8") !== version)) {
+    sims.retryFailed(/^(map |game data|WC3V)/);
+    writeFileSync(retried, version);
+  }
 
   // Progress for the window: the replays found at start (later rescans find known files and
   // would only flash a bar), then the simulations.

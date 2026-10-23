@@ -29,6 +29,14 @@ export class SimQueue {
     if (rows.length) this.log(`queued ${rows.length} game(s) for simulation`);
   }
 
+  /** Games whose simulation failed with a reason matching `reason`, simulated again. */
+  retryFailed(reason: RegExp) {
+    const rows = this.ctx.db.prepare("SELECT game_key, sim_reason FROM games WHERE analyzed = 1 AND sim_status = 'failed' ORDER BY played_at DESC").all() as { game_key: string; sim_reason: string | null }[];
+    const again = rows.filter((r) => reason.test(r.sim_reason ?? ""));
+    for (const r of again) this.add(r.game_key);
+    if (again.length) this.log(`simulating ${again.length} failed game(s) again`);
+  }
+
   get pending() {
     return this.queue.length + (this.running ? 1 : 0);
   }

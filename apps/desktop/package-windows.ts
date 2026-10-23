@@ -13,7 +13,7 @@ import { app, desktop, res, root, stageApp } from "./stage.ts";
 const casc = join(root, "scripts/casc/bin/casc-extract.exe");
 if (!existsSync(casc)) execFileSync(join(root, "scripts/casc/build-windows.sh"), { stdio: "inherit" });
 
-await stageApp(casc);
+await stageApp(casc, "win32");
 
 await build({
   projectDir: app,

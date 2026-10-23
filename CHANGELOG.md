@@ -8,6 +8,10 @@ statistics (`data/`).
 ## Unreleased (next version)
 
 **Ready on `dev`:**
+- **Windows: games are simulated again.** The Windows builds up to 0.1.3 shipped a Linux part of the map reader, so no map could be prepared and every simulation failed (no army, fights, map picture or evaluation curve). Games that failed this way are simulated again by themselves after the update.
+- **Updates keep the game data:** after an update Replay Altar puts back the unit table it had already read from your game, instead of reading the game again.
+- **Clearer failures:** a simulation that fails now records the actual error, not the command that was run.
+- **Small fixes:** after you change your battletag, reports no longer show the old side's findings until reopened; "your heroes levelled faster than theirs" is only said when the timed numbers agree; the pros' band on time charts stops where your game ended (short games are no longer squeezed into a 40-minute axis); each page opens at its top; "1 game analyzed"; on Windows, Settings explains how to uninstall instead of showing commands.
 - **More accurate army value and losses.** A replay records no deaths, so they are reconstructed. They now also use what the replay does record: whenever a player switches selection, the game writes down which units were really selected, and dead units are already missing. Before, the opponent's new units could count as lost the moment they were trained, and units lost in a fight could stay alive. Checked against Warcraft III's own unit counts on 50 recorded player-games, the army value error fell by about 29% (by far the most for players the simulation followed poorly). Losses, trades and fight results in the report and on the map use the same counting, and so does the pro comparison.
 - **Undead:** an Obsidian Statue is no longer valued as a Destroyer before it transforms.
 - **More games simulate to the end:** two fixes to WC3V (reviving a hero that used a Town Portal; training from a building WC3V hadn't seen being built). On the pro games, 16 of 518 were cut short before. The pro comparison now uses 513 games.

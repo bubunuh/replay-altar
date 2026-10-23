@@ -74,7 +74,7 @@ const OLD_DEFAULTS = windows
 /** Windows' own Documents folder from the registry: it may be moved (D:\Documentos) or kept by OneDrive. */
 function windowsDocuments(): string | null {
   try {
-    const out = execFileSync("reg", ["query", "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders", "/v", "Personal"], { encoding: "utf8", windowsHide: true });
+    const out = execFileSync("reg", ["query", "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders", "/v", "Personal"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], windowsHide: true });
     const raw = out.match(/Personal\s+REG_(?:EXPAND_)?SZ\s+(.+)/)?.[1]?.trim();
     return raw ? raw.replace(/%([^%]+)%/g, (m, name: string) => process.env[name] ?? m) : null;
   } catch {
