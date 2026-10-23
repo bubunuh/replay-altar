@@ -185,8 +185,15 @@ if (cliAt >= 0) {
           await win!.webContents.executeJavaScript(`document.querySelector(${JSON.stringify(click)})?.click()`);
           await new Promise((r) => setTimeout(r, 1500));
         }
+        // Dev/test: zoom in (e.g. 1.4) so text reads on a phone when the picture is shrunk to fit;
+        // the page then lays out about 1280 / zoom pixels wide.
+        const zoom = Number(process.env.REPLAY_ALTAR_SHOT_ZOOM) || 1;
+        if (zoom !== 1) {
+          win!.webContents.setZoomFactor(zoom);
+          await new Promise((r) => setTimeout(r, 800));
+        }
         const height = await win!.webContents.executeJavaScript("document.querySelector('main').scrollHeight + 52");
-        win!.setContentSize(1280, Math.min(Math.max(860, height), 6000));
+        win!.setContentSize(1280, Math.min(Math.max(860, Math.ceil(height * zoom)), 8000));
         await new Promise((r) => setTimeout(r, 800));
         // Dev/test: a script run on the page just before the capture, e.g. to hide player names.
         const script = process.env.REPLAY_ALTAR_SHOT_JS;
