@@ -173,7 +173,7 @@ function ProGames({ refs }: { refs: RefGroupInfo[] }) {
 const plainNotes = (md: string) => md.replace(/\r/g, "").replace(/\*\*|`/g, "").replace(/^#+\s*/gm, "").trim();
 
 /** This version, and the newer one when there is one: what's new, and the Update button. */
-function Version({ update }: { update: UpdateState | null }) {
+function Version({ update, onInstall }: { update: UpdateState | null; onInstall: () => void }) {
   const [notes, setNotes] = useState(false);
   const [checking, setChecking] = useState(false);
   if (!update) return null;
@@ -208,7 +208,7 @@ function Version({ update }: { update: UpdateState | null }) {
             <button className="btn" onClick={() => setNotes(!notes)}>{tr("What's new", "O que há de novo", "Novedades", "Nouveautés")}</button>
             {update.installable && update.download === "idle" && <button className="btn" onClick={() => api.downloadUpdate()}>{tr("Update", "Atualizar", "Actualizar", "Mettre à jour")}</button>}
             {update.installable && update.download === "failed" && <button className="btn" onClick={() => api.downloadUpdate()}>{tr("Try again", "Tentar de novo", "Reintentar", "Réessayer")}</button>}
-            {update.download === "ready" && <button className="btn" onClick={() => api.installUpdate()}>{tr("Restart and install", "Reiniciar e instalar", "Reiniciar e instalar", "Redémarrer et installer")}</button>}
+            {update.download === "ready" && <button className="btn" onClick={onInstall}>{tr("Restart and install", "Reiniciar e instalar", "Reiniciar e instalar", "Redémarrer et installer")}</button>}
           </div>
           {update.download === "downloading" && (
             <div style={{ marginTop: 10 }}>
@@ -259,7 +259,7 @@ function Help({ info }: { info: AppInfo | null }) {
   );
 }
 
-export function Settings({ refs, update }: { refs: RefGroupInfo[]; update: UpdateState | null }) {
+export function Settings({ refs, update, onInstall }: { refs: RefGroupInfo[]; update: UpdateState | null; onInstall: () => void }) {
   const [state, setState] = useState<{ config: Config; configPath: string; paths: Paths } | null>(null);
   const [accounts, setAccounts] = useState("");
   const [saved, setSaved] = useState(false);
@@ -286,6 +286,7 @@ export function Settings({ refs, update }: { refs: RefGroupInfo[]; update: Updat
     setTimeout(() => setSaved(false), 2000);
   };
   const config = state.config;
+  const saveAccounts = () => save({ accounts: accounts.split(",").map((a) => a.trim()).filter(Boolean) });
   const setLanguage = async (l: Language) => {
     await save({ language: l });
     window.location.reload();
@@ -297,7 +298,7 @@ export function Settings({ refs, update }: { refs: RefGroupInfo[]; update: Updat
 
   return (
     <div className="page" style={{ maxWidth: 820 }}>
-      <Version update={update} />
+      <Version update={update} onInstall={onInstall} />
       <div className="card">
         <h2>{tr("You", "Você", "Tú", "Vous")}</h2>
         <p className="sub">
@@ -309,8 +310,17 @@ export function Settings({ refs, update }: { refs: RefGroupInfo[]; update: Updat
           )}
         </p>
         <div className="filters">
-          <input type="text" style={{ flex: 1 }} value={accounts} onChange={(e) => setAccounts(e.target.value)} />
-          <button className="btn" onClick={() => save({ accounts: accounts.split(",").map((a) => a.trim()).filter(Boolean) })}>{tr("Save", "Salvar", "Guardar", "Enregistrer")}</button>
+          {/* Ready to type when you have no battletag yet (e.g. after "No, I'll type mine"). */}
+          <input
+            type="text"
+            style={{ flex: 1 }}
+            value={accounts}
+            placeholder="name#1234"
+            autoFocus={config.accounts.length === 0}
+            onChange={(e) => setAccounts(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && saveAccounts()}
+          />
+          <button className="btn" onClick={saveAccounts}>{tr("Save", "Salvar", "Guardar", "Enregistrer")}</button>
           {saved && <span className="muted small">{tr("Saved", "Salvo", "Guardado", "Enregistré")}</span>}
         </div>
       </div>

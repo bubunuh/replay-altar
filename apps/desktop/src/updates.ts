@@ -83,9 +83,13 @@ export function updater(opts: { installable: boolean; enabled: () => boolean; on
     }
   }
 
-  /** Quits, runs the new installer silently (it stops the collector) and starts the new version. */
+  /**
+   * Quits, runs the new installer (it stops the collector) and starts the new version. Not
+   * silently: its small progress window is what you see while nothing else is on screen (an
+   * update skips the installer's notice page).
+   */
   function install() {
-    if (state.download === "ready") autoUpdater.quitAndInstall(true, true);
+    if (state.download === "ready") autoUpdater.quitAndInstall(false, true);
   }
 
   setTimeout(() => void check(), process.env.REPLAY_ALTAR_RELEASES_URL ? 0 : 10_000);
