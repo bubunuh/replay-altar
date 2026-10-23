@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import * as echarts from "echarts";
 import { tr } from "@replay-altar/core/i18n";
 
-export type Tokens = Record<"surface" | "ink" | "ink2" | "muted" | "grid" | "axis" | "series1" | "series2" | "border", string>;
+export type Tokens = Record<"surface" | "ink" | "ink2" | "muted" | "grid" | "axis" | "series1" | "series2" | "border" | "critical", string>;
 
 function readTokens(): Tokens {
   const s = getComputedStyle(document.documentElement);
@@ -18,6 +18,7 @@ function readTokens(): Tokens {
     series1: v("--series-1"),
     series2: v("--series-2"),
     border: v("--border"),
+    critical: v("--critical"),
   };
 }
 

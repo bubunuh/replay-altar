@@ -85,7 +85,7 @@ Measured against Warcraft III's own unit counts, read from the game's observer d
 - **Who has the bigger army:** the estimated difference between the two players correlates 0.70 with the real one, so the direction is usually right and the size is rough.
 - **Why it is off:** a death only shows in the selection lists once the player selects that group again, so its time is known within a window; units the simulation never tied to their orders get their deaths only from the lists; Undead ghouls are left to the simulation alone (they leave the army to gather lumber, which looks like dying).
 
-The win-chance curve (`docs/win-chance/`) uses the army value as one input among seven; perfecting it would change the curve little (the report has the test).
+The evaluation curve (`docs/win-chance/`) uses the army value as one input among seven; perfecting it would change the curve little (the report has the test).
 
 ## Official end-of-game stats (`record.official`)
 

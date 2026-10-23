@@ -113,7 +113,7 @@ const knotsText = best.basis === "curve" ? "1, 5, 10, 15, 22 and 30 minutes" : "
 const date = R.generatedAt.slice(0, 10);
 
 const html = `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>Replay Altar: the win-chance curve</title>
+<html lang="en"><head><meta charset="utf-8"><title>Replay Altar: the evaluation curve</title>
 <style>
   @page { size: A4; }
   body { font-family: "Inter", "Helvetica Neue", Arial, sans-serif; color: ${COLORS.ink}; font-size: 10.5pt; line-height: 1.5; max-width: 760px; margin: 0 auto; }
@@ -130,10 +130,10 @@ const html = `<!doctype html>
   .eq { text-align: center; margin: 8px 0; font-family: "Cambria Math", "STIX Two Math", Georgia, serif; font-size: 11pt; }
   .best { font-weight: 600; }
 </style></head><body>
-<h1>The win-chance curve</h1>
+<h1>The evaluation curve</h1>
 <p class="sub">Replay Altar technical report · ${date} · results from commit <code>${R.commit}</code> · GPL-3.0</p>
 
-<div class="abstract"><p><b>Summary.</b> For any 1v1 Warcraft III game, Replay Altar draws a curve of <i>how often professional players in the same position went on to win</i>, moment by moment, and explains its three biggest swings. The position is described by differences between the two players that can be reconstructed from the replay: army, workers, hero experience, heroes alive, expansions, resources lost and upgrades. A logistic regression whose weights change smoothly with game time was fitted on ${R.calibration.games} curated pro games of the current patch and scored, without any refitting, on ${R.validation.scored} tournament games from 2022 to 2026 that it never saw. Its log loss is ${f4(best.validation)} on those games (a coin flip scores 0.6931), it picks the eventual winner of ${pct(R.favourite.find((f) => f.minute === 10)!.acc)} of games at 10 minutes and ${pct(R.favourite.find((f) => f.minute === 20)!.acc)} at 20, and its confidence is honest on unseen pro games (calibration slope ${R.slope.cv.toFixed(2)}). This report describes the data, the model, how it was chosen and tested, and how to reproduce every number.</p></div>
+<div class="abstract"><p><b>Summary.</b> For any 1v1 Warcraft III game, Replay Altar draws an evaluation curve, like the graph chess sites draw under a game: at every moment, <i>how often professional players in the same position went on to win</i> (50% is even; in the app, blue while the player is ahead and red while the opponent is), and it explains the curve's three biggest swings. The position is described by differences between the two players that can be reconstructed from the replay: army, workers, hero experience, heroes alive, expansions, resources lost and upgrades. A logistic regression whose weights change smoothly with game time was fitted on ${R.calibration.games} curated pro games of the current patch and scored, without any refitting, on ${R.validation.scored} tournament games from 2022 to 2026 that it never saw. Its log loss is ${f4(best.validation)} on those games (a coin flip scores 0.6931), it picks the eventual winner of ${pct(R.favourite.find((f) => f.minute === 10)!.acc)} of games at 10 minutes and ${pct(R.favourite.find((f) => f.minute === 20)!.acc)} at 20, and its confidence is honest on unseen pro games (calibration slope ${R.slope.cv.toFixed(2)}). This report describes the data, the model, how it was chosen and tested, and how to reproduce every number.</p></div>
 
 <h2>1. What the curve means, and what it does not</h2>
 <p>The number at minute <i>t</i> answers one question: <i>among pro games, how often did a player with these leads and deficits at minute t go on to win?</i> It is a measure of <b>position</b>, learned from players who rarely throw a lead away. It is <b>not</b> a forecast of the game being analyzed: between players who miss more chances, leads are lost more often, so the curve is too sure for them, and that is intended. A player who sees the curve fall from 60% to 20% in one minute learns that a pro in that spot would have lost ground there; that is the use the curve is built for. The two players' chances always add up to 100%.</p>

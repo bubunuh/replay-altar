@@ -1,5 +1,6 @@
-// "Chance to win": how often pros in your position went on to win, over the game, with the moments
-// that swung it most and what moved them (packages/rules/src/winchance.ts).
+// "Evaluation": your chance to win over the game (how often pros in that position went on to win),
+// drawn like a chess evaluation graph (blue above 50%, red below), with the moments that swung it
+// most and what moved them (packages/rules/src/winchance.ts).
 import { useEffect, useMemo, useState } from "react";
 import type * as echarts from "echarts";
 import type { GameRecord, PlayerRecord } from "@replay-altar/core/ui";
@@ -84,6 +85,13 @@ export function WinChance({ record, me, opp }: { record: GameRecord; me: PlayerR
       (t: Tokens): echarts.EChartsOption => {
         const b = base(t);
         const points = curve?.points ?? [];
+        // The curve in percent, with a point added wherever it crosses 50%.
+        const crossed: [number, number][] = [];
+        points.forEach((p, i) => {
+          const prev = points[i - 1];
+          if (prev && (prev.p - 0.5) * (p.p - 0.5) < 0) crossed.push([prev.t + ((0.5 - prev.p) / (p.p - prev.p)) * (p.t - prev.t), 50]);
+          crossed.push([p.t, p.p * 100]);
+        });
         return {
           ...b,
           grid: { left: 8, right: 16, top: 16, bottom: 8, containLabel: true },
@@ -92,23 +100,42 @@ export function WinChance({ record, me, opp }: { record: GameRecord; me: PlayerR
             trigger: "axis",
             axisPointer: { type: "line", lineStyle: { color: t.axis } },
             formatter: (ps: unknown) => {
-              const p = (ps as { value: [number, number] }[])[0];
+              const p = (ps as { value: [number, number | null] }[]).find((x) => x.value[1] !== null);
               if (!p) return "";
-              return `<span style="color:${t.ink2}">${mmss(p.value[0])}</span><br/><b>${Math.round(p.value[1])}%</b> <span style="color:${t.ink2}">${esc(tr("chance to win", "chance de vitória", "probabilidad de ganar", "chance de victoire"))}</span>`;
+              return `<span style="color:${t.ink2}">${mmss(p.value[0])}</span><br/><b>${Math.round(p.value[1]!)}%</b> <span style="color:${t.ink2}">${esc(tr("chance to win", "chance de vitória", "probabilidad de ganar", "chance de victoire"))}</span>`;
             },
           },
           xAxis: { ...(b.xAxis as object), type: "value", min: 0, max: record.game.durationMs, splitLine: { show: false }, axisLabel: { color: t.muted, fontSize: 11, formatter: (v: number) => mmss(v) } },
-          yAxis: { ...(b.yAxis as object), type: "value", min: 0, max: 100, interval: 25, axisLabel: { color: t.muted, fontSize: 11, formatter: (v: number) => `${v}%` } },
+          yAxis: {
+            ...(b.yAxis as object),
+            type: "value",
+            min: 0,
+            max: 100,
+            interval: 25,
+            axisLabel: { color: t.muted, fontSize: 11, formatter: (v: number) => `${v}%` },
+          },
+          // Like a chess evaluation graph: above the 50% line you are ahead (blue), below it your
+          // opponent (red). Two series, each filled from the line, meeting where the curve crosses 50%.
           series: [
-            {
-              type: "line",
-              name: tr("Your chance", "Sua chance", "Tu probabilidad", "Votre chance"),
-              data: points.map((p) => [p.t, p.p * 100]),
+            ...([
+              [t.series1, (v: number) => v >= 50],
+              [t.critical, (v: number) => v <= 50],
+            ] as const).map(([color, side]) => ({
+              type: "line" as const,
+              name: tr("Evaluation", "Avaliação", "Evaluación", "Évaluation"),
+              data: crossed.map(([x, v]) => [x, side(v) ? v : null]),
+              connectNulls: false,
               showSymbol: false,
-              color: t.series1,
-              lineStyle: { width: 2, cap: "round", join: "round" },
-              markLine: { silent: true, symbol: "none", lineStyle: { color: t.axis, type: "dashed", width: 1 }, label: { show: false }, data: [{ yAxis: 50 }] },
-              // The swings listed below, numbered.
+              color,
+              lineStyle: { width: 2, cap: "round" as const, join: "round" as const },
+              areaStyle: { origin: 50, opacity: 0.3 },
+            })),
+            {
+              // The 50% line and the swings listed below, numbered.
+              type: "line",
+              data: [],
+              silent: true,
+              markLine: { silent: true, symbol: "none", lineStyle: { color: t.axis, width: 1 }, label: { show: false }, data: [{ yAxis: 50 }] },
               markArea: {
                 silent: true,
                 itemStyle: { color: t.ink2, opacity: 0.08 },
@@ -126,7 +153,7 @@ export function WinChance({ record, me, opp }: { record: GameRecord; me: PlayerR
   return (
     <div className="card win-chance">
       <h2>
-        {tr("Chance to win", "Chance de vitória", "Probabilidad de ganar", "Chance de victoire")}{" "}
+        {tr("Evaluation", "Avaliação", "Evaluación", "Évaluation")}{" "}
         <Tip
           text={tr(
             `Every 30 seconds, your ${used} are compared with your opponent's, and the differences are weighed the way they decided ${model.about.games} pro games (patch ${model.about.patch}). Among weaker players leads are thrown away more often, so read it as how good your position was, not as a forecast. Army value and losses are estimates.`,
@@ -138,16 +165,16 @@ export function WinChance({ record, me, opp }: { record: GameRecord; me: PlayerR
       </h2>
       <p className="sub">
         {tr(
-          "How often a pro in your position went on to win, moment by moment. It measures your position, not your odds against this opponent. ",
-          "Com que frequência um pro na sua posição acabou vencendo, momento a momento. Mede a sua posição, não as suas chances contra este oponente. ",
-          "Con qué frecuencia un pro en tu posición acabó ganando, momento a momento. Mide tu posición, no tus probabilidades contra este rival. ",
-          "À quelle fréquence un pro dans votre position a fini par gagner, moment par moment. Elle mesure votre position, pas vos chances contre cet adversaire. ",
+          "Your position, moment by moment, as how often a pro in it went on to win: above 50% you were ahead, below it your opponent was. It judges the position, not your odds against this opponent. ",
+          "A sua posição, momento a momento, como a frequência com que um pro nela acabou vencendo: acima de 50% você estava na frente, abaixo o oponente. Avalia a posição, não as suas chances contra este oponente. ",
+          "Tu posición, momento a momento, como la frecuencia con que un pro en ella acabó ganando: por encima del 50% ibas por delante, por debajo el rival. Juzga la posición, no tus probabilidades contra este rival. ",
+          "Votre position, moment par moment, comme la fréquence à laquelle un pro dans cette position a fini par gagner : au-dessus de 50 % vous meniez, en dessous l'adversaire. Elle juge la position, pas vos chances contre cet adversaire. ",
         )}
         <button className="linklike" onClick={() => api.openUrl(REPORT_URL)}>
           {tr("How it works", "Como funciona", "Cómo funciona", "Comment ça marche")}
         </button>
       </p>
-      <Chart option={option} height={200} label={tr("Your chance to win over the game", "Sua chance de vitória ao longo da partida", "Tu probabilidad de ganar a lo largo de la partida", "Votre chance de victoire au fil de la partie")} />
+      <Chart option={option} height={200} label={tr("Evaluation over the game: your chance to win, blue above 50%, red below", "Avaliação ao longo da partida: sua chance de vitória, azul acima de 50%, vermelho abaixo", "Evaluación a lo largo de la partida: tu probabilidad de ganar, azul por encima del 50%, rojo por debajo", "Évaluation au fil de la partie : votre chance de victoire, bleu au-dessus de 50 %, rouge en dessous")} />
       {curve.swings.length > 0 && (
         <ol className="swings">
           {curve.swings.map((s, i) => (
