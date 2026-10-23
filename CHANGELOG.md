@@ -20,6 +20,7 @@ statistics (`data/`).
 
 ## Later
 
+- **Findings by skill level:** download ladder games across skill levels (W3Champions, by MMR) and choose and tune the findings for the level detected for each player, so beginner checks (upkeep, supply, towers…) show where they matter and stay hidden for strong players.
 - **More languages:** German, Ukrainian, Russian, Chinese and Korean (needs a text format that scales past four languages, and fonts for Cyrillic, Chinese and Korean).
 - **Code signing:** SignPath turned the project down for now (too new, no reputation); try again later.
 

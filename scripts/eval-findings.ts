@@ -29,7 +29,7 @@ const refFor = (r: GameRecord, pid: number) => {
   return refForPlayers(groups, me, r.players.find((p) => p.playerId !== pid)!);
 };
 
-type Row = { race: string; win: boolean; ids: string[]; top: string[] };
+type Row = { game: string; race: string; win: boolean; ids: string[]; top: string[] };
 const rows: Row[] = [];
 // --validation: every player of every validation game, against the pros of their race.
 const VALIDATION = process.argv.includes("--validation");
@@ -45,7 +45,7 @@ if (VALIDATION || POOL) {
       } catch {
         continue; // a broken simulation
       }
-      rows.push({ race: p.race, win: p.result === "win", ids: found.map((x) => x.id), top: found.slice(0, 3).map((x) => x.id) });
+      rows.push({ game: r.gameKey, race: p.race, win: p.result === "win", ids: found.map((x) => x.id), top: found.slice(0, 3).map((x) => x.id) });
     }
   }
 }
@@ -58,7 +58,7 @@ for (const { group, profile } of VALIDATION ? [] : groups) {
     // Both players of the group's race (the profile is for that race).
     for (const p of r.players.filter((x) => x.race === group.race && (x.result === "win" || x.result === "loss"))) {
       const found = allFindings(r, refFor(r, p.playerId), p.playerId);
-      rows.push({ race: p.race, win: p.result === "win", ids: found.map((x) => x.id), top: found.slice(0, 3).map((x) => x.id) });
+      rows.push({ game: r.gameKey, race: p.race, win: p.result === "win", ids: found.map((x) => x.id), top: found.slice(0, 3).map((x) => x.id) });
     }
   }
 }
@@ -69,11 +69,23 @@ const rate = (set: Row[], id: string) => set.filter((r) => r.ids.includes(id)).l
 const pct = (x: number) => `${Math.round(x * 100)}%`.padStart(4);
 const lift = (w: number, l: number) => (w > 0 ? (l / w).toFixed(1) : l > 0 ? "inf" : "-");
 const races = [...new Set(rows.map((r) => r.race))];
-console.log("rule".padEnd(22), "| wins  losses | lift | lift by race (" + races.join(" ") + ")");
+// 95% range of each lift, resampling whole games (both players of a game stay together).
+const byGame = [...Map.groupBy(rows, (r) => r.game).values()];
+let seed = 11;
+const rand = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0), seed / 4294967296);
+const resamples = Array.from({ length: 400 }, () => Array.from({ length: byGame.length }, () => byGame[Math.floor(rand() * byGame.length)]).flat());
+const liftRange = (id: string) => {
+  const ls = resamples.map((rs) => {
+    const w = rate(rs.filter((r) => r.win), id), l = rate(rs.filter((r) => !r.win), id);
+    return w > 0 ? l / w : l > 0 ? Infinity : 1;
+  }).sort((a, b) => a - b);
+  return `${ls[10].toFixed(1)}–${Number.isFinite(ls[389]) ? ls[389].toFixed(1) : "inf"}`;
+};
+console.log("rule".padEnd(22), "| wins  losses | lift | 95% range | lift by race (" + races.join(" ") + ")");
 for (const id of ids) {
   const [w, l] = [rate(wins, id), rate(losses, id)];
   const byRace = races.map((race) => lift(rate(wins.filter((r) => r.race === race), id), rate(losses.filter((r) => r.race === race), id)).padStart(4));
-  console.log(id.padEnd(22), `| ${pct(w)}   ${pct(l)}  | ${lift(w, l).padStart(4)} | ${byRace.join(" ")}`);
+  console.log(id.padEnd(22), `| ${pct(w)}   ${pct(l)}  | ${lift(w, l).padStart(4)} | ${liftRange(id).padStart(9)} | ${byRace.join(" ")}`);
 }
 const avg = (set: Row[]) => (set.reduce((n, r) => n + r.top.length, 0) / Math.max(1, set.length)).toFixed(2);
 console.log(`\nshown findings per game (top 3): wins ${avg(wins)}, losses ${avg(losses)}`);
