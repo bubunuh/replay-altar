@@ -38,6 +38,9 @@ def recordings(batch, manifest, skip):
         entry = min(matches, key=lambda e: abs(e["dur"] * 60_000 - samples[-1]["game"]["t"]))
         if entry["file"][:2] in skip:
             continue
+        # A player who left (the last seconds of most games) or a glitched snapshot shows no units and
+        # no heroes at all; those snapshots aren't the game's state. The first ones are the game start.
+        samples = [s for i, s in enumerate(samples) if i < 5 or all(p["units"] or p["heroes"] for p in s["players"])]
         if entry["file"] not in best or len(samples) > len(best[entry["file"]][1]):
             best[entry["file"]] = (entry, samples)
     return sorted(best.values(), key=lambda x: x[0]["file"])
