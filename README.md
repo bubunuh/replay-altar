@@ -217,11 +217,11 @@ Then commit `data/reference/` and build a new installer. `replay-altar ref` show
 
 ## Code signing policy
 
-Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org) (applied for and turned down for now, because the project is too new; we will apply again. Until then the installers are unsigned).
+**The installers are currently unsigned.** Replay Altar applied for free code signing from [SignPath Foundation](https://signpath.org) and was turned down for now, because the project is too new. It will apply again; the policy below is the one that will apply once the installers are signed.
 
-- **What is signed:** only the Windows installer `ReplayAltar-Setup-<version>.exe` and the program in it, built by GitHub Actions ([workflows](.github/workflows)) from a version tag of this repository. Nothing built elsewhere is signed.
+- **What will be signed:** only the Windows installer `ReplayAltar-Setup-<version>.exe` and the program in it, built by GitHub Actions ([workflows](.github/workflows)) from a version tag of this repository. Nothing built elsewhere will be signed.
 - **Third-party components** in the installer are signed by their makers or not at all: Electron, and CascLib (MIT) inside `casc-extract.exe`, which the same workflow builds from a fixed version of its source code.
-- **Team and roles:** [bubunuh](https://github.com/bubunuh) is the only author (commits to the repository), reviewer (reviews contributions from others) and approver (approves each signing request). Everyone with write access uses two-factor authentication on GitHub and SignPath.
+- **Team and roles:** [bubunuh](https://github.com/bubunuh) is the only author (commits to the repository), reviewer (reviews contributions from others) and approver (will approve each signing request). Everyone with write access uses two-factor authentication on GitHub.
 - **Privacy:** see the [privacy policy](PRIVACY.md). Replay Altar sends nothing to other computers except the two requests it describes, both of which can be turned off in Settings.
 
 ## Credits and sources
