@@ -27,11 +27,9 @@ Your games stay on your computer. Replay Altar fetches only two things from the 
 
 ## How the report is made
 
-**1. Reading the game.** A replay only records the players' orders, so Replay Altar rebuilds the game from them with the [WC3V](https://github.com/jblanchette/wc3v) simulation: workers, army, supply, creep camps, heroes and fights, every few seconds. Some of this can be checked against the game itself, and was:
-- **Hero experience** matches W3Champions' official numbers closely (correlation 0.96 on 56 pro player-games).
-- **Army value** was compared with Warcraft III's own unit counts on 50 recorded player-games: it is typically off by about 30%, so it is marked ≈ wherever it appears. A correction from the replay's selection lists cut that error by 29%.
+**1. Reading the game.** A replay only records the players' orders, so Replay Altar rebuilds the game from them with the [WC3V](https://github.com/jblanchette/wc3v) simulation: workers, army, supply, creep camps, heroes and fights, every few seconds.
 
-**2. Comparing with tournament players.** Every number is placed among about 1,700 player-games of your race: recent pro games on the current patch plus tournament games from 2022 to 2026, analyzed exactly like yours. "Better than 86% of pro games" means just that: 86% of those games had a worse number.
+**2. comparing with tournament players.** Every number is placed among about 1,700 player-games of your race: recent pro games on the current patch plus tournament games from 2022 to 2026, analyzed exactly like yours. "Better than 86% of pro games" means just that: 86% of those games had a worse number.
 
 **3. Deciding what mattered.** Each rule comes from a guide or from the pro data, and has to prove itself before it is shown. Every rule was run on 3,388 player-games whose results it had not been tuned on, from both players' side. A rule is shown only if it fires clearly more often in losses than in wins (the whole 95% confidence range above "no difference"). For example:
 
@@ -43,7 +41,7 @@ Your games stay on your computer. Replay Altar fetches only two things from the 
 | No expansion in a long game | 7% | 3% |
 | They had more bases than you | 21% | 13% |
 
-11 rules passed and are shown. On those games, a lost game gets about two findings and a won game about one. One check is shown whatever the result: playing without control groups or hotkeys.
+11 rules passed and are shown. One check is shown whatever the result: playing without control groups or hotkeys.
 
 In the future, suggestions will be skill based: during the analysis, the app will estimate your skill level and these suggestions will be more personal. <kbd>planned</kbd>
 
@@ -57,9 +55,7 @@ Every rule, its source and its scores: [docs/RULES.md](docs/RULES.md). The miles
 
 Each game's page shows an **evaluation curve**, like the ones chess sites draw under a game: blue while you were ahead, red while your opponent was, from the first minute to the last. At every moment, Replay Altar compares your position with your opponent's: army, workers, hero experience, heroes alive, expansions, units lost and upgrades. Its height answers one question: **how often did professional players in that same position go on to win?** 50% is even. It learned the answer from 513 recent pro games.
 
-Read it as a measure of how good your position was, not as a prediction of your game. Pros rarely throw a lead away, so the curve is more precise in games of players of higher skill level. That is on purpose: when the curve drops from 60% to 20% in a minute, that is a moment where you lost an advantage that a pro probably would not have lost it, and worth rewatching. The three biggest swings are marked on the chart, with the differences that moved them (for example "losses: you lost more", "hero experience: in their favour") and what happened around then (a fight and what each side lost, a hero dying, an expansion falling, a tier finishing).
-
-How the graph works: every 30 seconds it compares you and your opponent on 7 things: army size, workers, hero XP, heroes alive, bases, upgrades, and how much each side has lost so far. Then it asks “when pros had this kind of lead or deficit at this minute, how often did they win?” The model is a logistic regression (basically a weighted score turned into a percentage), where the weights change over the game, since a worker lead matters differently at minute 5 than at minute 20. I fit it on 513 pro games and then tested it, without touching it, on 2,998 tournament games from 2022-2026 it had never seen. It picks the eventual winner 63% of the time at 10 minutes and 69% at 20, and on unseen pro games its confidence is honest: when it says 70%, that side wins about 70% of the time. One thing to keep in mind: it shows how a pro would usually convert your position, so for regular ladder games it’ll look a bit overconfident. That’s on purpose, since a big drop means “a pro wouldn’t have lost this,” which is the point. Full write-up in docs/win-chance/report.pdf. 
+How the graph works: every 30 seconds it compares you and your opponent on 7 things: army size, workers, hero XP, heroes alive, bases, upgrades, and how much each side has lost so far. Then it asks “when pros had this kind of lead or deficit at this minute, how often did they win?” The model is a logistic regression (basically a weighted score turned into a percentage), where the weights change over the game, since a worker lead matters differently at minute 5 than at minute 20. I fit it on 513 pro games and then tested it, without touching it, on 2,998 tournament games from 2022-2026 it had never seen. It picks the eventual winner 63% of the time at 10 minutes and 69% at 20. On unseen pro games its confidence is honest: when it says 70%, that side wins about 70% of the time. One thing to keep in mind: it shows how a pro would usually convert your position, so for regular ladder games it’ll look a bit overconfident. That’s on purpose, since a big drop means “a pro wouldn’t have lost this,” which is the point. Full write-up in docs/win-chance/report.pdf. 
 
 **How it was made:** the [technical report (PDF)](docs/win-chance/report.pdf) describes the data, the model, how it was chosen and tested, its limits, and how to reproduce every number. The code, the fitted model and the list of games are all in this repository.
 
