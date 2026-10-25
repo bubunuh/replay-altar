@@ -5,9 +5,26 @@ What changes for players in each version. Work happens on `dev`; a version is ma
 part of a version: an installer ships only the app, the simulation engine and the published pro
 statistics (`data/`).
 
-## Unreleased (next version)
+## Unreleased (next version, 0.2.2)
 
-Nothing yet.
+Nothing done yet. Planned:
+
+- **More accurate simulation (our improved WC3V):** WC3V now reads the replay's own selection lists,
+  so it knows which units really exist and when they die; a train click with several buildings
+  selected trains in each of them. Measured against Warcraft III's own unit counts on 15 games it
+  was not developed on, the army value error fell from 181 to 103 (Replay Altar today: 158). Comes
+  with re-simulating every game (yours on the update, the pro and tournament games before the
+  release), republishing the pro statistics, and refitting the evaluation curve's model on the new
+  numbers so the curve and your games are measured the same way (the full review is for 0.2.3).
+  Before merging: check whether Replay Altar's own death correction (`deaths.ts`) still helps on
+  top, and look at the two hidden games that got worse (batch3-11, batch3-06 Ventus).
+- **Nothing is imported until you ask** (tester feedback after 0.2.1): on the first start, if
+  replays are found, the match list offers *Import 50 replays* and *Import all replays (N)*, and
+  nothing loads by itself.
+- **Choose whether Replay Altar keeps running after you close it** (tester feedback): a setting,
+  off by default. When off, closing the window stops the background collector, and new games are
+  picked up the next time you open the app (the game keeps them in Replays and Replays/Autosaved;
+  only an overwritten `LastReplay.w3g` is missed).
 
 ### To check for 0.2.2 (untested)
 
@@ -68,7 +85,23 @@ it matters.
 - **Linux AppImage**, alongside the Windows installer: one file, no Node, git or podman needed. On first start it sets up the background collector (a systemd user service), the `replay-altar` command and a menu entry, reads the game data with a built-in read-only extractor, and updates itself in place like the Windows version.
 - **Linux: Battle.net is found in more places:** Lutris folders under `~/Games`, `~/.wine`, Steam's Proton prefixes and Bottles, for both the replays and the game data.
 
+## Planned for 0.2.3
+
+- **Gold and lumber in WC3V:** the biggest error left in the new WC3V is train orders the game
+  refused for lack of gold, lumber or food, which WC3V still turns into units (worst with Night Elf
+  Druid spam). A gold and lumber model inside the simulation would tell them apart. The observer
+  recordings already hold gold, lumber, gold mined and lumber harvested at every snapshot, so they
+  serve as ground truth; more recordings (more races, expansions, long games) as needed.
+- **Review the evaluation curve and the coaching rules on the better data:** refit the win-chance
+  model on the ~500 current-patch pro games and validate it on the ~3,000 tournament games, as for
+  0.2.0; re-score every rule held out (docs/RULES.md) and revisit which are shown.
+
 ## Later
+
+- **macOS:** woodmanhu's plan (PR #2) and first code step (PR #3, data folders and replay
+  discovery) can go into `dev` once reviewed, since they change nothing on Windows or Linux. A Mac
+  build needs the rest of the plan (game process detection, start at login, a macOS game data
+  extractor, packaging, unsigned) and someone with a Mac to test each step.
 
 - **Re-simulate every game with WC3V's merged fixes:** once the WC3V author has merged the revised fixes (#19, #21), switch Replay Altar's patches to the merged code and simulate all pro, tournament and your games again (about half an hour at full CPU). Measured beforehand: findings unchanged, the evaluation curve moves by more than half a point in 4% of games (6 points at most).
 - **Findings by skill level:** download ladder games across skill levels (W3Champions, by MMR) and choose and tune the findings for the level detected for each player, so beginner checks (upkeep, supply, towers…) show where they matter and stay hidden for strong players.
