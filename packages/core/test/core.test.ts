@@ -1,10 +1,11 @@
 // Runs against the real replays in fixtures/replays: replay1 is a W3Champions game, the others
 // Battle.net ladder games; replay2 and replay4 are wins, replay3 a loss.
 import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, utimesSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { beforeAll, describe, expect, test } from "vitest";
 import {
+  appDirs,
   researchLevels,
   heroXpAt,
   levelUpTimes,
@@ -192,6 +193,16 @@ describe("time of game", () => {
   test("LastReplay mtime is the end of the game; other names are saved copies", () => {
     expect(endTimeOf("/x/LastReplay.w3g", 0).timeSource).toBe("lastreplay_mtime");
     expect(endTimeOf("/x/Macro_loss.w3g", 0).timeSource).toBe("saved_file_mtime");
+  });
+});
+
+describe("platform defaults", () => {
+  test("macOS uses Application Support for app data and config", () => {
+    if (process.platform !== "darwin") return;
+    expect(appDirs()).toEqual({
+      data: join(homedir(), "Library/Application Support"),
+      config: join(homedir(), "Library/Application Support"),
+    });
   });
 });
 
