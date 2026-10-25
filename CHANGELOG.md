@@ -9,6 +9,36 @@ statistics (`data/`).
 
 Nothing yet.
 
+### To check for 0.2.2 (untested)
+
+Suggestions from SaulApeMan's replay project (via Discord, 2026-10-25). None of these is verified
+in Replay Altar yet except where noted; each goes into 0.2.2 only if a test on our replays shows
+it matters.
+
+- **Broken W3Champions/FLO replays:** since the 19 Oct 2026 patch some FLO replays lack the players'
+  first selections (the first orders come before any selection) and desync in the game from the
+  start, so every number from them is wrong. Proposed check: a player's first order before their
+  first selection → mark the game broken and skip it; also W3C files with header build 7000 dated
+  after 19 Oct 2026. *Partly checked:* on 30 ladder/tournament replays the check flagged exactly the
+  2 that played broken in the game, and no others.
+- **Hero levels after a Tome of Retraining:** `heroxp.ts` may drop real skill picks (players
+  re-spend 4–6 points within a second, sometimes the same skill twice). Proposed: picks between two
+  openings of the skill menu are one session.
+- **Units per selected building:** one train click queues a unit in every selected building of
+  that type, so units ordered, production and the spending priced from orders may be undercounted.
+  The WC3V lab found and fixed the same thing inside WC3V; Replay Altar's own counts from w3gjs
+  orders still count one per click. Also merge variant codes of one unit (hmtt/hrtt, ohun/otbk,
+  hpea/hmil, edoc/edcm, edot/edtm, ucry/ucrm, ugar/ugrm, ospw/ospm, Nalc/Nalm/Nal2, Edem/Edmm).
+- **Cancelled altar orders:** a hero ordered and cancelled within its training time never existed,
+  but may shift hero timings, the hero count and the one-hero rule.
+- **Lobby password:** tournament replays may carry a password after the game name, which could
+  misalign the lobby records if w3gjs doesn't read it.
+- **Truncated last record** (FloTV recordings end mid-record): tolerate it instead of failing the
+  import.
+- Already fine, nothing to do: hero revives (the hero timelines already use the revive order);
+  "selections via hotkey" already compares group recalls with mouse selections, the only
+  distinction the replay allows.
+
 ## 0.2.1 (2026-10-23)
 
 - **Big replay folders:** the first start imports only your newest 50 replays, so your latest games show up within seconds. At the end of the match list, *Import 50 more replays* and *Import all replays* bring in the older ones. Replays are read one at a time (they were all read at once, which filled the memory), and a scan no longer reads replays it already imported.
