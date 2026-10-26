@@ -14,6 +14,8 @@ statistics (`data/`).
 - **Second and third heroes count in the resources spent:** the gold and lumber spent left out every hero, so it read about 7% low against the game's own numbers; now 2% (on 176 W3Champions player-games). This also moves the gold collected estimated for Battle.net games.
 - **Army losses:** a unit seen in another form (a Druid of the Claw in bear form, a burrowed Crypt Fiend, a Berserker) is now matched to the unit trained, so its death counts in the army value and the losses (3.8% of pro player-games had such a death missed).
 
+- **Hero timelines:** a hero cancelled at the altar and ordered again later no longer appears on the charts and in the build order at the time of the cancelled order (and a Demon Hunter or Alchemist the simulation last saw transformed is found again).
+
 Planned:
 
 - **More accurate simulation (our improved WC3V):** WC3V now reads the replay's own selection lists,
@@ -61,8 +63,12 @@ it matters.
   that heroes were missing from the spending (*done*, above). Variant codes: in Replay Altar's own
   counts only hrtt, otbk and ospm appear in orders, priced and named like their base unit; the
   others come from in-game transformations, which mattered in the death matching (*done*, above).
-- **Cancelled altar orders:** a hero ordered and cancelled within its training time never existed,
-  but may shift hero timings, the hero count and the one-hero rule.
+- **Cancelled altar orders:** the hero count, hero timings and the one-hero rule were never
+  affected: they come from skill picks, which a cancelled hero never makes (60 cancels in 47 of
+  8,049 player-games, none counted). WC3V, though, makes a hero for every cancelled order (all 44
+  checked), and Replay Altar took the first one as the hero: 56 heroes appeared too early, by up
+  to 9 minutes (*fixed*, above, with 43 heroes it couldn't find in a transformed form). For the
+  WC3V lab: those phantom heroes may also hold 5 food each in WC3V's supply.
 - **Lobby password:** tournament replays may carry a password after the game name, which could
   misalign the lobby records if w3gjs doesn't read it.
 - **Truncated last record** (FloTV recordings end mid-record): tolerate it instead of failing the

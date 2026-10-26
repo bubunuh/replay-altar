@@ -70,7 +70,7 @@ Each metric's `source` says how much to trust it:
 - **Army food:** food used minus workers minus heroes (5 each), from the simulated supply. The game's "largest army" is counted in food: our maximum, heroes included, matched it at 0.95× (correlation 0.90).
 - **Army value (estimate):** what the army units alive at that moment cost (gold + lumber), a unit valued as the form it had then (an Obsidian Statue before it became a Destroyer). Alive means finished training and not yet dead by the losses rule below. Stored as `series[].armyValue`; the pro curve is `armyValue`.
 - **Hero timelines** (`sim.players[].heroes`):
-  - **Appearance:** WC3V's training-finished time.
+  - **Appearance:** WC3V's training-finished time. WC3V makes a hero for every train order, also one cancelled at the altar, so the hero's unit is the last one trained before its first skill (before 0.2.2 the first one: a hero cancelled and ordered again later appeared at the cancelled order's time). Heroes themselves, their number and their timings come from skill picks, which a cancelled hero never makes (0.6% of player-games cancel a hero; none of them was counted).
   - **Levels:** from the replay (exact).
   - **Deaths (approximate):** the last movement before each revive order. A dead hero can't be ordered around.
   - **Revives:** the revive order plus the game's revive time, `min(150 s, build × level × 0.6, build × 2)`. This was checked against a hero's path: it moved again within 1 s of the formula.

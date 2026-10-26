@@ -6,6 +6,7 @@ import { buildRecord, endTimeOf, paths, parseReplay, type BuildEvent, type SimSu
 import { CONSTANTS, gamedataDir, loadCosts, simNotReady, simulateGame } from "../src/index.ts";
 import { runIncome, spendFromOrders, type Timeline } from "../src/economy.ts";
 import { unitDeaths } from "../src/deaths.ts";
+import { heroUnit } from "../src/army.ts";
 import type { CostTables } from "../src/costs.ts";
 
 const realData = paths().root;
@@ -48,6 +49,19 @@ describe("heroes in the spending", () => {
   });
   test("without the order time (older records), a hero is priced its training time before its first skill", () => {
     expect(spendFromOrders([], FAKE, [hero("Hamg", 120_000), hero("Npal", 500_000, null)])).toEqual([{ t: 445_000, gold: 425, lumber: 100 }]);
+  });
+});
+
+describe("the simulation's unit for a hero", () => {
+  test("a hero cancelled at the altar and ordered again later: the one trained before its first skill", () => {
+    // Death Knight ordered at 1:49, cancelled at 2:16, ordered again at 6:06; first skill at 7:14.
+    const phantom = { itemId: "Udea", trainedTime: 163_410 };
+    const real = { itemId: "Udea", trainedTime: 421_000 };
+    expect(heroUnit([phantom, real], "Udea", 434_000)).toBe(real);
+  });
+  test("a hero in another form (Metamorphosis) is still its unit", () => {
+    const dh = { itemId: "Edmm", trainedTime: 123_000 };
+    expect(heroUnit([dh], "Edem", 130_000)).toBe(dh);
   });
 });
 
