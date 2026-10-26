@@ -45,11 +45,19 @@ export type PlayerActions = {
   firstOrderMs: number | null;
   /** Orders the player issued before their first selection. */
   ordersBeforeSelection: number;
+  /** Each time the player opened a hero's skill menu (action 0x66): skill picks come in these sessions. */
+  skillMenuMs: number[];
+  /** Tomes of Retraining bought (the order w3gjs also reads as a retraining). */
+  tomeMs: number[];
 };
 
 const ORDER_ACTIONS = new Set([0x10, 0x11, 0x12, 0x13, 0x14]);
 
-type DataBlock = { id: number; timeIncrement?: number; commandBlocks?: { playerId: number; actions: { id: number }[] }[] };
+type DataBlock = { id: number; timeIncrement?: number; commandBlocks?: { playerId: number; actions: { id: number; orderId?: number[] }[] }[] };
+
+/** An order id as w3gjs's objectIdFormatter reads it: four characters, last byte first. */
+const fourCC = (b: number[] | undefined) => (b ? String.fromCharCode(...[...b].reverse()) : "");
+const TOMES = new Set(["tret", "tert"]);
 
 /** Collects PlayerActions from w3gjs's raw game data blocks, keeping time the way w3gjs does. */
 function actionCollector() {
@@ -58,10 +66,12 @@ function actionCollector() {
   const onBlock = (block: DataBlock) => {
     if (block.id === 0x1f || block.id === 0x1e) t += block.timeIncrement ?? 0;
     for (const cb of block.commandBlocks ?? []) {
-      const p = (out[String(cb.playerId)] ??= { firstSelectionMs: null, firstOrderMs: null, ordersBeforeSelection: 0 });
+      const p = (out[String(cb.playerId)] ??= { firstSelectionMs: null, firstOrderMs: null, ordersBeforeSelection: 0, skillMenuMs: [], tomeMs: [] });
       for (const a of cb.actions) {
         if (a.id === 0x16) p.firstSelectionMs ??= t;
+        else if (a.id === 0x66) p.skillMenuMs.push(t);
         else if (ORDER_ACTIONS.has(a.id)) {
+          if (a.id === 0x10 && TOMES.has(fourCC(a.orderId))) p.tomeMs.push(t);
           p.firstOrderMs ??= t;
           if (p.firstSelectionMs === null) p.ordersBeforeSelection++;
         }

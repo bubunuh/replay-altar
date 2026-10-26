@@ -9,6 +9,8 @@ statistics (`data/`).
 
 - **Damaged W3Champions replays are pointed out:** some W3Champions (FLO) replays lack the players' first selection at the start of the game, and Warcraft III plays them back wrong from the start, so rewatching one shows a different game. The report of such a game now says so. Its numbers stay: Replay Altar reads the players' orders, which are all there (on the two such games with W3Champions' own end-of-game numbers, hero levels matched exactly and the estimates were as close as usual).
 
+- **Hero levels after a Tome of Retraining:** a hero retrained with a tome could end up to four levels too high or too low (30% of the games with a tome), which threw off hero levels, hero experience and the findings about them. Replay Altar now reads the retraining from when the skill menu was opened and the tome bought: on games with W3Champions' own hero levels, 27 of 28 retrained players' heroes now match (25 before).
+
 Planned:
 
 - **More accurate simulation (our improved WC3V):** WC3V now reads the replay's own selection lists,
@@ -43,9 +45,10 @@ it matters.
   not hold for Replay Altar: the orders are complete, so such games stay analyzed, with a note. The
   second check (W3Champions files with header build 7000 dated after 19 Oct 2026) matched no
   replay we have (the 4 broken ones are build 7003), so it wasn't added.
-- **Hero levels after a Tome of Retraining:** `heroxp.ts` may drop real skill picks (players
-  re-spend 4–6 points within a second, sometimes the same skill twice). Proposed: picks between two
-  openings of the skill menu are one session.
+- **Hero levels after a Tome of Retraining:** *done* (above). The problem was w3gjs's retraining
+  mark (levels changed in 30% of the 587 player-games with a tome), plus refused extra clicks in
+  the re-spend; "the same skill twice" was already handled by the rank rules. The skill menu's
+  openings (action 0x66) do bound the sessions, as suggested.
 - **Units per selected building:** one train click queues a unit in every selected building of
   that type, so units ordered, production and the spending priced from orders may be undercounted.
   The WC3V lab found and fixed the same thing inside WC3V; Replay Altar's own counts from w3gjs

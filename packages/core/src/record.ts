@@ -3,7 +3,7 @@
 import { basename } from "node:path";
 import { classify, type Classification } from "./classify.ts";
 import { computeMetrics, METRICS_VERSION, SIM_METRICS, type Metrics } from "./metrics.ts";
-import { levelUpTimes } from "./heroxp.ts";
+import { playerLevelUps } from "./heroxp.ts";
 import { dropRepeatedBuildOrders } from "./gamedata.ts";
 import { abilityName, nameOf, NAMES_SOURCE } from "./names.ts";
 import type { RawReplay } from "./parse.ts";
@@ -159,6 +159,8 @@ export function buildRecord(input: {
     .filter((s) => !s.isObserver && !s.isComputer)
     .map((seat): PlayerRecord => {
       const p = out.players.find((x) => x.id === seat.playerId)!;
+      const heroes = p.heroes ?? [];
+      const levelUps = playerLevelUps(heroes as { abilityOrder: { type: "ability" | "retraining"; time: number; value?: string }[] }[], raw.actions?.[String(seat.playerId)]);
       return {
         playerId: seat.playerId,
         name: seat.name,
@@ -169,14 +171,15 @@ export function buildRecord(input: {
         result:
           result.winnerTeamId === null ? "unknown" : seat.teamId === result.winnerTeamId ? "win" : "loss",
         apmPerMinute: p.actions!.timed,
-        heroes: (p.heroes ?? [])
+        heroes: heroes
+          .map((h, i) => ({ h, levelUps: levelUps[i] }))
           // w3gjs sometimes adds a level-1 hero with no id (seen in 3.0 tournament replays); nothing to show
-          .filter((h) => h.id)
-          .map((h) => ({
+          .filter(({ h }) => h.id)
+          .map(({ h, levelUps }) => ({
             code: h.id,
             name: nameOf(h.id, "heroes"),
             level: h.level,
-            levelUps: levelUpTimes(h.abilityOrder as { type: "ability" | "retraining"; time: number; value?: string }[]),
+            levelUps,
             skills: h.abilityOrder
               .filter((x) => x.type === "ability")
               .map((x) => ({ ms: x.time, code: (x as { value: string }).value, name: abilityName((x as { value: string }).value) })),

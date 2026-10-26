@@ -8,6 +8,7 @@ import {
   researchLevels,
   heroXpAt,
   levelUpTimes,
+  playerLevelUps,
   classify,
   computeMetrics,
   DEFAULT_CONFIG,
@@ -133,14 +134,14 @@ describe.skipIf(files.length === 0)("damaged replays (missing first selections)"
   });
   test("orders at the very start before any selection mark the replay damaged, and it stays analyzed", () => {
     const [a, b] = ids();
-    const c = classify(withActions({ [a]: { firstSelectionMs: 8911, firstOrderMs: 30, ordersBeforeSelection: 15 }, [b]: { firstSelectionMs: 61, firstOrderMs: 900, ordersBeforeSelection: 0 } }), ME);
+    const c = classify(withActions({ [a]: { firstSelectionMs: 8911, firstOrderMs: 30, ordersBeforeSelection: 15, skillMenuMs: [], tomeMs: [] }, [b]: { firstSelectionMs: 61, firstOrderMs: 900, ordersBeforeSelection: 0, skillMenuMs: [], tomeMs: [] } }), ME);
     expect(c.replayProblem).toBe("missing_first_selections");
     expect(c.analyzed).toBe(true);
     expect(c.rules.find((x) => x.rule === "replay.first_selections")).toMatchObject({ passed: false });
   });
   test("a worker trained from the hall selected at the start, before the first selection, is normal", () => {
     const [a, b] = ids();
-    const c = classify(withActions({ [a]: { firstSelectionMs: 1681, firstOrderMs: 1410, ordersBeforeSelection: 1 }, [b]: { firstSelectionMs: 61, firstOrderMs: 900, ordersBeforeSelection: 0 } }), ME);
+    const c = classify(withActions({ [a]: { firstSelectionMs: 1681, firstOrderMs: 1410, ordersBeforeSelection: 1, skillMenuMs: [], tomeMs: [] }, [b]: { firstSelectionMs: 61, firstOrderMs: 900, ordersBeforeSelection: 0, skillMenuMs: [], tomeMs: [] } }), ME);
     expect(c.replayProblem).toBeNull();
   });
   test("raw files from before the check are not judged", () => {
@@ -182,6 +183,38 @@ describe("hero experience", () => {
     // ultimate only from level 6.
     const seq = [pick(1, "AHhb"), pick(2, "AHad"), pick(3, "AHhb"), pick(4, "AHre"), pick(5, "AHad"), pick(6, "AHhb"), pick(7, "AHhb"), pick(8, "AHre")];
     expect(levelUpTimes(seq)).toEqual([1, 2, 3, 5, 6, 8]);
+  });
+  // Retraining cases from real replays (times in seconds; official levels from W3Champions).
+  const pick = (s: number, value: string) => ({ type: "ability" as const, time: s * 1000, value });
+  const retrain = (s: number) => ({ type: "retraining" as const, time: s * 1000 });
+  const ms = (...s: number[]) => s.map((x) => x * 1000);
+  test("w3gjs's retraining mark inserted before a real level-up: placed by its time, the level-up counts", () => {
+    // Archmage: levels at 125, 179, 632, 797; Tome bought at 839 and 4 points re-spent. Official: level 4.
+    const order = [pick(125.5, "AHwe"), pick(178.6, "AHab"), pick(632.4, "AHwe"), retrain(839.4), pick(797.2, "AHab"), pick(840.2, "AHbz"), pick(840.3, "AHbz"), pick(840.5, "AHab"), pick(840.7, "AHab")];
+    expect(levelUpTimes(order)).toHaveLength(4);
+    expect(playerLevelUps([{ abilityOrder: order }], { skillMenuMs: ms(125.4, 178.5, 632.3, 797.1, 840.1), tomeMs: ms(839.4) })[0]).toEqual(ms(125.5, 178.6, 632.4, 797.2));
+  });
+  test("clicks beyond the refunded points in the re-spend session were refused", () => {
+    // Archmage level 5, Tome at 1183.7, six clicks for five points, Mass Teleport at 1308. Official: level 6.
+    const order = [pick(125.9, "AHwe"), pick(157, "AHab"), pick(210.2, "AHwe"), pick(505.2, "AHab"), pick(824.5, "AHwe"), pick(824.7, "AHwe"), retrain(1183.7), pick(1186, "AHbz"), pick(1186.1, "AHbz"), pick(1186.2, "AHbz"), pick(1186.6, "AHab"), pick(1186.7, "AHab"), pick(1186.9, "AHab"), pick(1308.3, "AHmt")];
+    expect(levelUpTimes(order)).toHaveLength(7); // the fallback counts the refused click
+    expect(playerLevelUps([{ abilityOrder: order }], { skillMenuMs: ms(125.8, 156.9, 210.1, 505.1, 824.4, 1185.9, 1308.2), tomeMs: ms(1183.7) })[0]).toHaveLength(6);
+  });
+  test("a retraining w3gjs didn't mark is found from the tome and the re-spend session", () => {
+    // Tome bought at 890, used at 1031: five points re-spent within a second.
+    const order = [pick(125.6, "AHwe"), pick(167, "AHab"), pick(278.2, "AHwe"), pick(481.1, "AHab"), pick(1016.7, "AHwe"), pick(1031.5, "AHbz"), pick(1031.6, "AHbz"), pick(1031.8, "AHbz"), pick(1032, "AHab"), pick(1032.2, "AHab")];
+    expect(levelUpTimes(order)).toHaveLength(9);
+    expect(playerLevelUps([{ abilityOrder: order }], { skillMenuMs: ms(125.5, 166.9, 277.5, 480.8, 1016, 1031.4), tomeMs: ms(890) })[0]).toHaveLength(5);
+  });
+  test("re-spent points over two openings of the menu within a minute are re-picks; the ultimate after them is level 6", () => {
+    const order = [pick(165.2, "AEsh"), pick(237.8, "AEbl"), pick(426.8, "AEsh"), pick(520.1, "AEbl"), pick(729.1, "AEsh"), pick(1067.1, "AEfk"), pick(1067.3, "AEfk"), pick(1067.4, "AEfk"), pick(1105.5, "AEbl"), pick(1533.5, "AEsv")];
+    const levels = playerLevelUps([{ abilityOrder: order }], { skillMenuMs: ms(165.1, 237.8, 426.4, 519.3, 728.8, 1067, 1105, 1533.4), tomeMs: ms(1066.2) })[0];
+    expect(levels).toEqual(ms(165.2, 237.8, 426.8, 520.1, 729.1, 1533.5));
+  });
+  test("a tome bought before a single level-up isn't a retraining, and other heroes are untouched", () => {
+    const am = [pick(120, "AHwe"), pick(200, "AHab"), pick(400, "AHwe")];
+    const mk = [pick(300, "AHtb"), pick(500, "AHbh")];
+    expect(playerLevelUps([{ abilityOrder: am }, { abilityOrder: mk }], { skillMenuMs: ms(119, 199, 299, 399, 499), tomeMs: ms(390) })).toEqual([ms(120, 200, 400), ms(300, 500)]);
   });
   test("exact at level-ups, linear in between", () => {
     const levels = [60_000, 200_000, 400_000]; // level 1, 2, 3
