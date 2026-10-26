@@ -134,14 +134,14 @@ describe.skipIf(files.length === 0)("damaged replays (missing first selections)"
   });
   test("orders at the very start before any selection mark the replay damaged, and it stays analyzed", () => {
     const [a, b] = ids();
-    const c = classify(withActions({ [a]: { firstSelectionMs: 8911, firstOrderMs: 30, ordersBeforeSelection: 15, skillMenuMs: [], tomeMs: [] }, [b]: { firstSelectionMs: 61, firstOrderMs: 900, ordersBeforeSelection: 0, skillMenuMs: [], tomeMs: [] } }), ME);
+    const c = classify(withActions({ [a]: { firstSelectionMs: 8911, firstOrderMs: 30, ordersBeforeSelection: 15, skillMenuMs: [], tomeMs: [], heroOrders: [] }, [b]: { firstSelectionMs: 61, firstOrderMs: 900, ordersBeforeSelection: 0, skillMenuMs: [], tomeMs: [], heroOrders: [] } }), ME);
     expect(c.replayProblem).toBe("missing_first_selections");
     expect(c.analyzed).toBe(true);
     expect(c.rules.find((x) => x.rule === "replay.first_selections")).toMatchObject({ passed: false });
   });
   test("a worker trained from the hall selected at the start, before the first selection, is normal", () => {
     const [a, b] = ids();
-    const c = classify(withActions({ [a]: { firstSelectionMs: 1681, firstOrderMs: 1410, ordersBeforeSelection: 1, skillMenuMs: [], tomeMs: [] }, [b]: { firstSelectionMs: 61, firstOrderMs: 900, ordersBeforeSelection: 0, skillMenuMs: [], tomeMs: [] } }), ME);
+    const c = classify(withActions({ [a]: { firstSelectionMs: 1681, firstOrderMs: 1410, ordersBeforeSelection: 1, skillMenuMs: [], tomeMs: [], heroOrders: [] }, [b]: { firstSelectionMs: 61, firstOrderMs: 900, ordersBeforeSelection: 0, skillMenuMs: [], tomeMs: [], heroOrders: [] } }), ME);
     expect(c.replayProblem).toBeNull();
   });
   test("raw files from before the check are not judged", () => {
@@ -291,6 +291,18 @@ describe.skipIf(files.length === 0)("ingest", () => {
     for (const f of files) expect((await ingestFile(ctx, join(inbox, f))).status, f).toBe("new");
     expect(db.prepare("SELECT COUNT(*) n FROM games").get()).toEqual({ n: files.length });
     expect(readdirSync(join(paths.archive, "2026/10")).length).toBe(files.length);
+  });
+
+  test("every hero has its train order, before it learned its first skill (altar heroes a training time before)", () => {
+    for (const f of readdirSync(paths.games)) {
+      const r = JSON.parse(readFileSync(join(paths.games, f), "utf8")) as { players: { heroes: { code: string; orderedMs?: number | null; levelUps: number[] }[] }[] };
+      for (const h of r.players.flatMap((p) => p.heroes)) {
+        expect(h.orderedMs, `${f} ${h.code}`).toBeTypeOf("number");
+        const wait = h.levelUps[0] - h.orderedMs!;
+        expect(wait, `${f} ${h.code}`).toBeGreaterThanOrEqual(0);
+        if (!h.code.startsWith("N")) expect(wait, `${f} ${h.code}`).toBeGreaterThanOrEqual(55_000);
+      }
+    }
   });
 
   test("ingesting the same file again does nothing", async () => {

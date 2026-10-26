@@ -111,11 +111,24 @@ const UPGRADED_FROM: Record<string, string> = {
  * purchase. WC3V's unit list is not used for this: it only knows units someone selected, so it
  * misses most farms, and in some replays it places the starting hall and workers late enough
  * to look like purchases. Caveat: cancelled orders are still counted.
+ *
+ * Heroes: w3gjs leaves hero train orders out of its lists, so `heroes` are the heroes the player
+ * had (they learned a skill), at the time each was ordered (else its training time before it
+ * learned its first skill); a cancelled hero never learns one. The first is free. Against
+ * W3Champions' gold collected on 176 player-games, spending - 500 went from 7.5% to 2.3% below it
+ * on median (mean error 11.7% → 9.5%).
  */
-export function spendFromOrders(build: GameRecord["players"][number]["build"], costs: CostTables): Amount[] {
+export function spendFromOrders(build: GameRecord["players"][number]["build"], costs: CostTables, heroes: GameRecord["players"][number]["heroes"] = []): Amount[] {
   const spend: Amount[] = [];
   const researchLevel = new Map<string, number>();
-  let heroes = 0;
+  const ordered = heroes
+    .map((h) => ({ code: h.code, t: h.orderedMs ?? Math.max(0, (h.levelUps?.[0] ?? 0) - (costOf(costs, h.code).buildMs || 55_000)) }))
+    .sort((a, b) => a.t - b.t);
+  for (const h of ordered.slice(1)) {
+    const c = costOf(costs, h.code);
+    spend.push({ t: h.t, gold: c.gold, lumber: c.lumber });
+  }
+  let heroCount = 0;
   for (const b of build) {
     if (b.kind === "upgrade") {
       const u = costs.upgrades[b.code];
@@ -129,8 +142,8 @@ export function spendFromOrders(build: GameRecord["players"][number]["build"], c
     } else {
       const c = costOf(costs, b.code);
       if (c.isHero) {
-        heroes++;
-        if (heroes === 1) continue; // the first hero is free
+        // Hero orders in the build list (not from w3gjs): only when no heroes were passed.
+        if (ordered.length || ++heroCount === 1) continue; // the first hero is free
       }
       const parent = UPGRADED_FROM[b.code];
       if (parent) {
@@ -141,7 +154,7 @@ export function spendFromOrders(build: GameRecord["players"][number]["build"], c
       }
     }
   }
-  return spend;
+  return spend.sort((a, b) => a.t - b.t);
 }
 
 /** `deathsOf`: when each of a player's units died (deaths.ts); without it, WC3V's own guess. */
@@ -161,7 +174,7 @@ export function buildTimelines(o: WOutput, record: GameRecord, costs: CostTables
     const firstSpawn = Math.min(...units.map((u) => u.spawnTime ?? Infinity));
     const isStarting = (u: WUnit) => (u.spawnTime ?? Infinity) <= firstSpawn + 1000;
 
-    const spend = spendFromOrders(rp.build, costs);
+    const spend = spendFromOrders(rp.build, costs, rp.heroes);
     const losses: Amount[] = [];
     // WC3V infers deaths; most come back as "possiblyLost" rather than "lost". Like WC3V's own
     // charts we count both, so losses (and trades) are estimates; deaths.ts corrects them with the

@@ -34,6 +34,8 @@ export type HeroRecord = {
   level: number;
   /** When it reached level 1 (acquired), 2, 3, ... (retraining re-picks excluded). */
   levelUps: number[];
+  /** When it was ordered: the last train order of this hero before it learned its first skill (absent in older records). */
+  orderedMs?: number | null;
   skills: { ms: number; code: string; name: string }[];
   retrainings: number;
 };
@@ -160,7 +162,10 @@ export function buildRecord(input: {
     .map((seat): PlayerRecord => {
       const p = out.players.find((x) => x.id === seat.playerId)!;
       const heroes = p.heroes ?? [];
-      const levelUps = playerLevelUps(heroes as { abilityOrder: { type: "ability" | "retraining"; time: number; value?: string }[] }[], raw.actions?.[String(seat.playerId)]);
+      const actions = raw.actions?.[String(seat.playerId)];
+      const levelUps = playerLevelUps(heroes as { abilityOrder: { type: "ability" | "retraining"; time: number; value?: string }[] }[], actions);
+      const orderedAt = (code: string, firstPick: number | undefined) =>
+        actions ? (actions.heroOrders.filter((o) => o.code === code && o.ms <= (firstPick ?? Infinity)).at(-1)?.ms ?? null) : undefined;
       return {
         playerId: seat.playerId,
         name: seat.name,
@@ -180,6 +185,7 @@ export function buildRecord(input: {
             name: nameOf(h.id, "heroes"),
             level: h.level,
             levelUps,
+            orderedMs: orderedAt(h.id, levelUps[0]),
             skills: h.abilityOrder
               .filter((x) => x.type === "ability")
               .map((x) => ({ ms: x.time, code: (x as { value: string }).value, name: abilityName((x as { value: string }).value) })),

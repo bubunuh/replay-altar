@@ -5,6 +5,8 @@ import { describe, expect, test } from "vitest";
 import { buildRecord, endTimeOf, paths, parseReplay, type BuildEvent, type SimSummary } from "@replay-altar/core";
 import { CONSTANTS, gamedataDir, loadCosts, simNotReady, simulateGame } from "../src/index.ts";
 import { runIncome, spendFromOrders, type Timeline } from "../src/economy.ts";
+import { unitDeaths } from "../src/deaths.ts";
+import type { CostTables } from "../src/costs.ts";
 
 const realData = paths().root;
 const ready = simNotReady(realData) === null;
@@ -28,6 +30,39 @@ describe.skipIf(!ready)("spending from orders", () => {
     const u = costs!.upgrades.Rhra;
     expect(l1).toMatchObject({ gold: u.goldBase, lumber: u.lumberBase });
     expect(l2).toMatchObject({ gold: u.goldBase + u.goldMod, lumber: u.lumberBase + u.lumberMod });
+  });
+});
+
+// Game data for the tests below, so they run without an install.
+const unit = (gold: number, lumber: number, food: number, buildS: number, isHero = false) => ({ gold, lumber, food, foodMade: 0, buildMs: buildS * 1000, isHero });
+const FAKE: CostTables = {
+  version: "test", manifestSha256: "", items: {}, upgrades: {},
+  units: { Hamg: unit(425, 100, 5, 55, true), Hmkg: unit(425, 100, 5, 55, true), Npal: unit(425, 100, 5, 55, true), hfoo: unit(135, 0, 2, 20), edoc: unit(255, 80, 4, 35) },
+};
+const hero = (code: string, firstPickMs: number, orderedMs?: number | null) => ({ order: 0, code, name: code, level: 1, levelUps: [firstPickMs], skills: [], retrainings: 0, orderedMs });
+
+describe("heroes in the spending", () => {
+  test("the heroes a player had are priced when ordered, the first one free", () => {
+    const s = spendFromOrders([ev(300_000, "unit", "hfoo")], FAKE, [hero("Hamg", 120_000, 64_000), hero("Hmkg", 480_000, 410_000)]);
+    expect(s).toEqual([{ t: 300_000, gold: 135, lumber: 0 }, { t: 410_000, gold: 425, lumber: 100 }]);
+  });
+  test("without the order time (older records), a hero is priced its training time before its first skill", () => {
+    expect(spendFromOrders([], FAKE, [hero("Hamg", 120_000), hero("Npal", 500_000, null)])).toEqual([{ t: 445_000, gold: 425, lumber: 100 }]);
+  });
+});
+
+describe("deaths from the selection lists", () => {
+  test("a unit the game named by another form (a Druid of the Claw in bear form) is matched to the unit trained", () => {
+    const druids = [1, 2, 3].map(() => ({ itemId: "edoc", trainedTime: 10_000, path: [] }));
+    const tag = (n: number): [number, number] => [n, n];
+    const deaths = unitDeaths(druids, FAKE, [
+      { t: 15_000, kind: "focus", itemId: "edcm", object: tag(1) },
+      { t: 20_000, kind: "deselect", units: [tag(1), tag(2), tag(3)] },
+      { t: 20_000, kind: "select", units: [tag(9)] },
+      { t: 60_000, kind: "deselect", units: [tag(2), tag(3)] },
+      { t: 60_000, kind: "select", units: [tag(9)] },
+    ]);
+    expect([...deaths.values()].filter((t) => t !== null)).toEqual([40_000]);
   });
 });
 

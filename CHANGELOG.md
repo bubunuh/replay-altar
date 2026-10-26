@@ -11,6 +11,9 @@ statistics (`data/`).
 
 - **Hero levels after a Tome of Retraining:** a hero retrained with a tome could end up to four levels too high or too low (30% of the games with a tome), which threw off hero levels, hero experience and the findings about them. Replay Altar now reads the retraining from when the skill menu was opened and the tome bought: on games with W3Champions' own hero levels, 27 of 28 retrained players' heroes now match (25 before).
 
+- **Second and third heroes count in the resources spent:** the gold and lumber spent left out every hero, so it read about 7% low against the game's own numbers; now 2% (on 176 W3Champions player-games). This also moves the gold collected estimated for Battle.net games.
+- **Army losses:** a unit seen in another form (a Druid of the Claw in bear form, a burrowed Crypt Fiend, a Berserker) is now matched to the unit trained, so its death counts in the army value and the losses (3.8% of pro player-games had such a death missed).
+
 Planned:
 
 - **More accurate simulation (our improved WC3V):** WC3V now reads the replay's own selection lists,
@@ -49,11 +52,15 @@ it matters.
   mark (levels changed in 30% of the 587 player-games with a tome), plus refused extra clicks in
   the re-spend; "the same skill twice" was already handled by the rank rules. The skill menu's
   openings (action 0x66) do bound the sessions, as suggested.
-- **Units per selected building:** one train click queues a unit in every selected building of
-  that type, so units ordered, production and the spending priced from orders may be undercounted.
-  The WC3V lab found and fixed the same thing inside WC3V; Replay Altar's own counts from w3gjs
-  orders still count one per click. Also merge variant codes of one unit (hmtt/hrtt, ohun/otbk,
-  hpea/hmil, edoc/edcm, edot/edtm, ucry/ucrm, ugar/ugrm, ospw/ospm, Nalc/Nalm/Nal2, Edem/Edmm).
+- **Units per selected building:** *not applied, moved to the gold and lumber model (0.2.3).* It
+  exists: 9.6% of train clicks (176 W3Champions player-games) had 2 or more buildings of the type
+  selected (types from the replay's own subgroup names). But the game refuses the copies it can't
+  pay for or feed, and the replay doesn't say which: counted in full, spending − 500 went over the
+  official gold collected in 62% of player-games (40% without), up to +54% (21 clicks with 4
+  Workshops selected = 84 Siege Engines); capped at 2 per click, still 62%. Measuring it showed
+  that heroes were missing from the spending (*done*, above). Variant codes: in Replay Altar's own
+  counts only hrtt, otbk and ospm appear in orders, priced and named like their base unit; the
+  others come from in-game transformations, which mattered in the death matching (*done*, above).
 - **Cancelled altar orders:** a hero ordered and cancelled within its training time never existed,
   but may shift hero timings, the hero count and the one-hero rule.
 - **Lobby password:** tournament replays may carry a password after the game name, which could
@@ -99,7 +106,9 @@ it matters.
   refused for lack of gold, lumber or food, which WC3V still turns into units (worst with Night Elf
   Druid spam). A gold and lumber model inside the simulation would tell them apart. The observer
   recordings already hold gold, lumber, gold mined and lumber harvested at every snapshot, so they
-  serve as ground truth; more recordings (more races, expansions, long games) as needed.
+  serve as ground truth; more recordings (more races, expansions, long games) as needed. The same
+  model would let Replay Altar's own counts (units ordered, spending, build order) count a train
+  click once per selected building, which they can't do safely yet (see 0.2.2's checks).
 - **Review the evaluation curve and the coaching rules on the better data:** refit the win-chance
   model on the ~500 current-patch pro games and validate it on the ~3,000 tournament games, as for
   0.2.0; re-score every rule held out (docs/RULES.md) and revisit which are shown.
