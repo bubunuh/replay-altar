@@ -61,20 +61,26 @@ export type Config = {
 
 const home = homedir();
 const windows = process.platform === "win32";
+const darwin = process.platform === "darwin";
 
 /**
  * Where the app keeps its data and settings: XDG folders on Linux; on Windows %LOCALAPPDATA%
- * for data (large, machine-specific) and %APPDATA% for settings.
+ * for data (large, machine-specific) and %APPDATA% for settings; on macOS the shared
+ * Application Support folder.
  */
 export const appDirs = () =>
   windows
     ? { data: process.env.LOCALAPPDATA ?? join(home, "AppData/Local"), config: process.env.APPDATA ?? join(home, "AppData/Roaming") }
-    : { data: process.env.XDG_DATA_HOME ?? join(home, ".local/share"), config: process.env.XDG_CONFIG_HOME ?? join(home, ".config") };
+    : darwin
+      ? { data: join(home, "Library/Application Support"), config: join(home, "Library/Application Support") }
+      : { data: process.env.XDG_DATA_HOME ?? join(home, ".local/share"), config: process.env.XDG_CONFIG_HOME ?? join(home, ".config") };
 
 /** What the settings file got by default before folders were found at run time; dropped on load. */
 const OLD_DEFAULTS = windows
   ? [join(home, "Documents/Warcraft III"), join(home, "OneDrive/Documents/Warcraft III")]
-  : [join(home, "Games/battlenet/drive_c/users/steamuser/Documents/Warcraft III")];
+  : darwin
+    ? [join(home, "Documents/Warcraft III"), join(home, "Library/Application Support/Blizzard/Warcraft III")]
+    : [join(home, "Games/battlenet/drive_c/users/steamuser/Documents/Warcraft III")];
 
 /** Windows' own Documents folder from the registry: it may be moved (D:\Documentos) or kept by OneDrive. */
 function windowsDocuments(): string | null {
@@ -121,13 +127,16 @@ let detected: string[] | null = null;
  * The game's "Documents/Warcraft III" folders that exist on this computer. Windows: the
  * registry's Documents folder, the usual one, and OneDrive's (whose folder name follows the
  * language, e.g. "OneDrive\Documentos"). Linux: every user's Documents in the Wine prefixes
- * Battle.net may be in (winePrefixes).
+ * Battle.net may be in (winePrefixes). macOS: the native Documents folder and Blizzard's
+ * Application Support area.
  */
 export function detectedWarcraftDocuments(): string[] {
   if (detected) return detected;
   const docs = windows
     ? [windowsDocuments(), join(home, "Documents")]
-    : winePrefixes().flatMap((prefix) => safeList(join(prefix, "drive_c/users")).map((user) => join(prefix, "drive_c/users", user, "Documents")));
+    : darwin
+      ? [join(home, "Documents"), join(home, "Library/Application Support/Blizzard")]
+      : winePrefixes().flatMap((prefix) => safeList(join(prefix, "drive_c/users")).map((user) => join(prefix, "drive_c/users", user, "Documents")));
   if (windows) {
     for (const onedrive of safeList(home).filter((d) => d.startsWith("OneDrive"))) {
       for (const name of ["Documents", "Documentos"]) docs.push(join(home, onedrive, name));
