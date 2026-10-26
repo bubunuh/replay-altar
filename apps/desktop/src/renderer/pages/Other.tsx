@@ -260,7 +260,7 @@ function Help({ info }: { info: AppInfo | null }) {
 }
 
 export function Settings({ refs, update, onInstall }: { refs: RefGroupInfo[]; update: UpdateState | null; onInstall: () => void }) {
-  const [state, setState] = useState<{ config: Config; configPath: string; paths: Paths } | null>(null);
+  const [state, setState] = useState<{ config: Config; configPath: string; paths: Paths; keepRunning: boolean } | null>(null);
   const [accounts, setAccounts] = useState("");
   const [saved, setSaved] = useState(false);
   const [status, setStatus] = useState("…");
@@ -359,6 +359,17 @@ export function Settings({ refs, update, onInstall }: { refs: RefGroupInfo[]; up
         <h2>{tr("Behaviour", "Comportamento", "Comportamiento", "Comportement")}</h2>
         <p className="sub">{tr("Collector", "Coletor", "Recolector", "Collecteur")}: <b>{collectorStatus(status)}</b>. {tr("Changes restart it.", "Mudanças reiniciam o coletor.", "Los cambios lo reinician.", "Les changements le redémarrent.")}</p>
         <div className="filters" style={{ flexDirection: "column", alignItems: "flex-start" }}>
+          <div>
+            <label><input type="checkbox" checked={config.keepRunning ?? state.keepRunning} onChange={(e) => save({ keepRunning: e.target.checked })} />{tr("Keep Replay Altar running after closing the window", "Manter o Replay Altar rodando depois de fechar a janela", "Mantener Replay Altar en marcha después de cerrar la ventana", "Laisser Replay Altar tourner après la fermeture de la fenêtre")}</label>
+            <p className="sub" style={{ margin: "2px 0 0 24px" }}>
+              {tr(
+                "Off: closing the window stops Replay Altar, and it doesn't start when you log in. The games you play meanwhile are imported the next time you open it (the game keeps them in its Replays folder and the Autosaved folder inside it); only LastReplay.w3g, which every game overwrites, is missed. On: it keeps running in the background and starts when you log in, so each replay is saved as soon as a game ends.",
+                "Desligado: fechar a janela encerra o Replay Altar, e ele não inicia quando você faz login. As partidas que você jogar nesse meio-tempo são importadas na próxima vez que você abri-lo (o jogo as guarda na pasta Replays e na pasta Autosaved dentro dela); só o LastReplay.w3g, que cada partida sobrescreve, fica de fora. Ligado: ele continua rodando em segundo plano e inicia quando você faz login, então cada replay é guardado assim que a partida acaba.",
+                "Desactivado: al cerrar la ventana Replay Altar se detiene, y no se inicia al iniciar sesión. Las partidas que juegues mientras tanto se importan la próxima vez que lo abras (el juego las guarda en su carpeta Replays y en la carpeta Autosaved que hay dentro); solo se pierde LastReplay.w3g, que cada partida sobrescribe. Activado: sigue en marcha en segundo plano y se inicia al iniciar sesión, así que cada replay se guarda en cuanto termina la partida.",
+                "Désactivé : fermer la fenêtre arrête Replay Altar, qui ne démarre pas à l'ouverture de session. Les parties jouées entre-temps sont importées à sa prochaine ouverture (le jeu les garde dans son dossier Replays et dans le dossier Autosaved qu'il contient) ; seul LastReplay.w3g, écrasé à chaque partie, est perdu. Activé : il continue de tourner en arrière-plan et démarre à l'ouverture de session, donc chaque replay est enregistré dès la fin d'une partie.",
+              )}
+            </p>
+          </div>
           <label><input type="checkbox" checked={config.openWindowOnGameStart} onChange={(e) => save({ openWindowOnGameStart: e.target.checked })} />{tr("Open this window (without taking focus) when Warcraft III starts", "Abrir esta janela (sem tirar o foco) quando o Warcraft III abrir", "Abrir esta ventana (sin quitar el foco) cuando se inicia Warcraft III", "Ouvrir cette fenêtre (sans prendre le focus) au lancement de Warcraft III")}</label>
           <label><input type="checkbox" checked={config.notifyAfterGame} onChange={(e) => save({ notifyAfterGame: e.target.checked })} />{tr("Notify me after each analyzed game", "Me avisar depois de cada partida analisada", "Avisarme después de cada partida analizada", "Me notifier après chaque partie analysée")}</label>
           <label><input type="checkbox" checked={config.fetchOfficialStats !== false} onChange={(e) => save({ fetchOfficialStats: e.target.checked })} />{tr("After each W3Champions game, fetch its end-of-game statistics from W3Champions (sends both battletags to W3Champions)", "Depois de cada partida do W3Champions, buscar as estatísticas de fim de partida no W3Champions (envia as duas battletags ao W3Champions)", "Después de cada partida de W3Champions, obtener sus estadísticas de final de partida de W3Champions (envía las dos battletags a W3Champions)", "Après chaque partie W3Champions, récupérer ses statistiques de fin de partie auprès de W3Champions (envoie les deux battletags à W3Champions)")}</label>

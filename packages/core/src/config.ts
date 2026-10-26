@@ -51,10 +51,18 @@ export type Config = {
    */
   mapFolders?: string[];
   /**
-   * How many of the newest replays in your folders are imported (unset: IMPORT_STEP); "all" for
-   * every one. New games are always imported; the rest wait for "Import more" on the match list.
+   * How many of the replays saved before the first start are imported, newest first; "all" for
+   * every one. Unset: none on a new install, IMPORT_STEP on one updated from 0.2.1 or older
+   * (importLimit() in firststart.ts). New games are always imported; the rest wait for "Import"
+   * on the match list.
    */
   importLimit?: number | "all";
+  /**
+   * Keep the collector running (and starting at login) after the window closes. Off: it runs
+   * only while the window is open, and catches up on the replays saved meanwhile at the next
+   * start. Unset: off on a new install (keepRunning() in firststart.ts).
+   */
+  keepRunning?: boolean;
   /** Pro games (warcraft3.info tournament replays) the shipped statistics come from (maintainers). */
   reference: { groups: ReferenceGroup[] };
 };
@@ -187,7 +195,7 @@ export function folderToAdd(picked: string): string {
   return picked;
 }
 
-/** Replays imported on a first start, and how many more each "Import more" adds. */
+/** How many older replays each "Import 50 replays" on the match list adds. */
 export const IMPORT_STEP = 50;
 
 export const DEFAULT_CONFIG: Config = {

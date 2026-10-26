@@ -22,7 +22,7 @@ function folder(n: number) {
 function scan(dirs: string[], limit: number | null, known: (path: string) => boolean = () => false) {
   const scheduled: string[] = [];
   let result: ScanResult | null = null;
-  const w = new ReplayWatcher(dirs, async () => {}, () => {}, { limit, known: (path) => known(path), onScan: (r) => (result = r) });
+  const w = new ReplayWatcher(dirs, async () => {}, () => {}, { since: null, limit, known: (path) => known(path), onScan: (r) => (result = r) });
   // Count what would be read instead of waiting for files to settle.
   (w as unknown as { schedule: (p: string) => void }).schedule = (p: string) => scheduled.push(p);
   w.scanAll();

@@ -27,7 +27,11 @@ import {
   projectRoot,
   isInstalled,
   collectorFiles,
-  enableCollector,
+  collectorForWindow,
+  collectorInstalled,
+  firstStart,
+  importLimit,
+  keepRunning,
   linuxUnit,
   windowsLauncher,
   language,
@@ -60,11 +64,12 @@ if (cliAt >= 0) {
 }
 
 /**
- * An installed copy on Windows sets up its own collector: started now and at every login, on this
- * executable as Node (the launcher is rewritten when an update moves the executable).
+ * An installed copy on Windows sets up its own collector: started now, on this executable as Node
+ * (the launcher is rewritten when an update moves the executable), and at every login with
+ * `keep` ("Keep Replay Altar running after closing the window"). True when it did.
  */
-function ensureWindowsCollector() {
-  if (process.platform !== "win32" || !isInstalled()) return;
+function ensureWindowsCollector(keep: boolean): boolean {
+  if (process.platform !== "win32" || !isInstalled()) return false;
   const files = collectorFiles();
   const launcher = windowsLauncher([process.execPath, join(projectRoot(), "collector/collector.mjs"), "collector"], { ELECTRON_RUN_AS_NODE: "1" });
   const changed = !existsSync(files.launcher) || readFileSync(files.launcher, "utf8") !== launcher;
@@ -74,7 +79,8 @@ function ensureWindowsCollector() {
     writeFileSync(files.launcher, launcher);
     restartCollectorIfRunning();
   }
-  enableCollector();
+  collectorForWindow("opened", keep);
+  return true;
 }
 
 /** A desktop entry's Exec word: quoted, with ", `, $ and \ escaped. */
@@ -84,13 +90,13 @@ const shWord = (s: string) => `'${s.replaceAll("'", "'\\''")}'`;
 
 /**
  * A Linux AppImage sets up what `replay-altar install` sets up for a checkout: the collector as a
- * systemd user service (started now and at every login) running through this AppImage file, the
- * `replay-altar` command and a menu entry with its icon. Rewritten when the AppImage moves (an
- * update may rename it).
+ * systemd user service (started now, and at every login with `keep`) running through this
+ * AppImage file, the `replay-altar` command and a menu entry with its icon. Rewritten when the
+ * AppImage moves (an update may rename it). True when it did.
  */
-function ensureAppImageCollector() {
+function ensureAppImageCollector(keep: boolean): boolean {
   const appImage = process.env.APPIMAGE;
-  if (process.platform !== "linux" || !appImage) return;
+  if (process.platform !== "linux" || !appImage) return false;
   const home = homedir();
   const headless = "--ozone-platform=headless";
   const files: [string, string, number][] = [
@@ -114,11 +120,22 @@ function ensureAppImageCollector() {
     mkdirSync(dirname(icon), { recursive: true });
     writeFileSync(icon, readFileSync(join(import.meta.dirname, "../assets/replay-altar.svg")));
   }
-  enableCollector();
+  collectorForWindow("opened", keep);
   // A new unit or a new version: the running collector must move to it before old copies go.
   if (unitChanged || freshCopy) restartCollectorIfRunning();
   pruneOldCopies();
-} // window class, so the .desktop entry's StartupWMClass matches
+  return true;
+}
+
+/**
+ * A checkout whose collector `replay-altar install` set up: with `keep` off the window runs it
+ * like an installed copy's; with it on, it is left as install, suspend and resume set it.
+ */
+function ensureCheckoutCollector(keep: boolean): boolean {
+  if (isInstalled() || process.env.APPIMAGE || !collectorInstalled()) return false;
+  if (!keep) collectorForWindow("opened", keep);
+  return true;
+}
 
 /** The window hears about new and changed games at most this often. */
 const REFRESH_MS = 3000;
@@ -157,6 +174,12 @@ if (cliAt >= 0) {
   // The language of the reports and the window (the preload asks for it before the page loads).
   const applyLanguage = () => setLanguage(resolveLanguage(loadConfig().language, app.getLocale()));
   const db = openDb(p.db);
+  // Recorded before the collector imports anything: whether this copy had games already (an update).
+  const start = firstStart(db);
+  /** "Keep Replay Altar running after closing the window", as set now. */
+  const keepNow = () => keepRunning(loadConfig(), start);
+  /** The window started the collector, and stops it when it closes unless it should keep running. */
+  let managesCollector = false;
   // Rules reports by game, kept until the data or a result changes.
   // An analyzed replay's own database (the Analyzer page), opened on first use.
   const storeDbs = new Map<string, ReturnType<typeof openDb>>();
@@ -237,8 +260,8 @@ if (cliAt >= 0) {
     applyLanguage();
     const launch = parseArgs(process.argv);
     if (!launch.screenshot) {
-      ensureWindowsCollector();
-      ensureAppImageCollector();
+      const keep = keepNow();
+      managesCollector = ensureWindowsCollector(keep) || ensureAppImageCollector(keep) || ensureCheckoutCollector(keep);
     }
     // Screenshot runs stay offline unless pointed at a test list of releases.
     if (!launch.screenshot || process.env.REPLAY_ALTAR_RELEASES_URL) {
@@ -342,6 +365,11 @@ if (cliAt >= 0) {
   });
 
   app.on("window-all-closed", () => app.quit());
+  // Closing the window (or quitting to install an update) stops the collector unless "Keep Replay
+  // Altar running after closing the window" is on; the next start picks up the replays saved meanwhile.
+  app.on("will-quit", () => {
+    if (managesCollector) collectorForWindow("closed", keepNow());
+  });
 
   ipcMain.handle("rules:get", (_e, key: string) => bookOf(key));
   // Every analyzed game's findings, newest first: for recurring problems and the match list.
@@ -413,9 +441,13 @@ if (cliAt >= 0) {
     const at = route(key);
     addAnnotation(at.db, { gameKey: at.key, kind: "result_override", source: "user", author: "desktop", body: { result } });
   });
-  ipcMain.handle("config:get", () => ({ config: loadConfig(), configPath: configPath(), paths: p }));
+  ipcMain.handle("config:get", () => {
+    const config = loadConfig();
+    return { config, configPath: configPath(), paths: p, keepRunning: keepRunning(config, start) };
+  });
   ipcMain.handle("config:set", (_e, config: Config) => {
     const before = loadConfig().language;
+    const keptBefore = keepNow();
     // Once you have a battletag, the first run's suggestions are done with.
     saveConfig(config.accounts.length ? { ...config, suggestedAccounts: undefined } : config);
     // The page reloads after a theme change (charts take their colours when drawn).
@@ -424,21 +456,25 @@ if (cliAt >= 0) {
       applyLanguage();
       books.clear(); // reports are written in the language
     }
+    // Kept running or not: at login only when on; it stops when the window closes when off.
+    if (managesCollector && keepNow() !== keptBefore) collectorForWindow("setting changed", keepNow());
     restartCollectorIfRunning();
   });
-  // Replays in your folders not imported yet (older than the newest IMPORT_STEP, or the limit you
-  // raised), as the collector's last scan counted them; "Import more" raises the limit.
+  // Replays in your folders not imported yet (from before the first start, beyond what you asked
+  // for), as the collector's last scan counted them; "Import" raises the limit. `asked`: some
+  // were imported already (by asking, or by an update's first start), so it offers "more".
   ipcMain.handle("replays:scan", () => {
     try {
-      return JSON.parse(readFileSync(join(p.root, "replays.json"), "utf8")) as { found: number; older: number };
+      const scan = JSON.parse(readFileSync(join(p.root, "replays.json"), "utf8")) as { found: number; older: number };
+      return { ...scan, asked: importLimit(loadConfig(), start) !== 0 };
     } catch {
       return null;
     }
   });
   ipcMain.handle("replays:importMore", (_e, all: boolean) => {
     const config = loadConfig();
-    const now = config.importLimit ?? IMPORT_STEP;
-    if (now === "all") return;
+    const now = importLimit(config, start);
+    if (now === null) return;
     saveConfig({ ...config, importLimit: all ? "all" : now + IMPORT_STEP });
     restartCollectorIfRunning();
   });

@@ -1,8 +1,11 @@
-// The collector as a background service that starts at login. Linux: a systemd user unit.
-// Windows: a hidden launcher script (collector.vbs) in the user's Run key, with the running
-// collector's pid in collector.pid (no admin rights needed for either).
+// The collector as a background service. Linux: a systemd user unit. Windows: a hidden launcher
+// script (collector.vbs), with the running collector's pid in collector.pid (no admin rights
+// needed for either). It starts at login (the unit enabled; the launcher in the user's Run key)
+// only with "Keep Replay Altar running after closing the window"; otherwise the window starts it
+// and stops it when it closes.
 import { execFileSync, spawn } from "node:child_process";
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
 import { join } from "node:path";
 import { dataDir } from "./config.ts";
 
@@ -16,6 +19,12 @@ export const collectorFiles = () => ({
   pid: join(dataDir(), "collector.pid"),
   log: join(dataDir(), "logs/collector.log"),
 });
+
+/** The Linux user unit's file, as install and the AppImage write it. */
+export const linuxUnitFile = () => join(homedir(), ".config/systemd/user", SERVICE);
+
+/** Is the collector set up as a service on this computer (by an install, the AppImage or the Windows app)? */
+export const collectorInstalled = () => existsSync(windows ? collectorFiles().launcher : linuxUnitFile());
 
 // REPLAY_ALTAR_NO_SYSTEMD=1 (tests): write files only, never touch the running user session.
 const dryRun = () => !!process.env.REPLAY_ALTAR_NO_SYSTEMD;
@@ -80,6 +89,7 @@ function stopOnWindows() {
   if (dryRun()) return console.log("  (skipped) stop the collector");
   const pid = runningPid();
   if (!pid) return;
+  // Not its whole process tree (taskkill /T): a window the collector opened is one of its children.
   try {
     process.kill(pid);
   } catch {
@@ -88,21 +98,54 @@ function stopOnWindows() {
   rmSync(collectorFiles().pid, { force: true });
 }
 
+/** The command that makes the collector start at every login, or no longer (`on` false). */
+export function loginCommand(on: boolean, platform: NodeJS.Platform = process.platform): string[] {
+  if (platform !== "win32") return ["systemctl", "--user", on ? "enable" : "disable", SERVICE];
+  return on ? ["reg", "add", RUN_KEY, "/v", RUN_VALUE, "/t", "REG_SZ", "/d", `wscript.exe "${collectorFiles().launcher}"`, "/f"] : ["reg", "delete", RUN_KEY, "/v", RUN_VALUE, "/f"];
+}
+
+function setLogin(on: boolean) {
+  const [cmd, ...args] = loginCommand(on);
+  if (cmd === "systemctl") systemctl(...args.slice(1));
+  else reg(...args.slice(1));
+}
+
+/**
+ * Start the collector now (if it isn't running) and at every login only when `atLogin`; false
+ * also takes it out of the login (Linux: the unit disabled; Windows: no Run entry).
+ */
+export function startCollector(atLogin: boolean) {
+  if (!windows) systemctl("daemon-reload"); // the unit file may have just been (re)written
+  setLogin(atLogin);
+  if (!windows) return systemctl("start", SERVICE);
+  startOnWindows();
+}
+
+/** Stop the collector now (the window closed and it shouldn't keep running); login unchanged. */
+export function stopCollector() {
+  if (!windows) return systemctl("stop", SERVICE);
+  stopOnWindows();
+}
+
 /** Start now and at every login. */
 export function enableCollector() {
-  if (!windows) {
-    systemctl("daemon-reload");
-    return systemctl("enable", "--now", SERVICE);
-  }
-  reg("add", RUN_KEY, "/v", RUN_VALUE, "/t", "REG_SZ", "/d", `wscript.exe "${collectorFiles().launcher}"`, "/f");
-  startOnWindows();
+  startCollector(true);
 }
 
 /** Stop now and not at login. */
 export function disableCollector() {
-  if (!windows) return systemctl("disable", "--now", SERVICE);
-  reg("delete", RUN_KEY, "/v", RUN_VALUE, "/f");
-  stopOnWindows();
+  setLogin(false);
+  stopCollector();
+}
+
+/**
+ * What the window does with the collector, by "Keep Replay Altar running after closing the
+ * window": when it opens or the setting changes, the collector runs, and starts at login only with
+ * the setting on; when the window closes with the setting off, the collector stops.
+ */
+export function collectorForWindow(moment: "opened" | "setting changed" | "closed", keepRunning: boolean) {
+  if (moment !== "closed") return startCollector(keepRunning);
+  if (!keepRunning) stopCollector();
 }
 
 /** After a settings change: the collector reads its settings at start. */

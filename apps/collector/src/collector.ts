@@ -1,7 +1,7 @@
 // The always-on service: archive + analyze new replays, react to Warcraft III starting.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { IMPORT_STEP, ingestFile, reingestAll, loadConfig, markCollectorRunning, mmss, openDb, paths, replayDirs, resolveLanguage, setLanguage, tr, warcraftFolders, type GameRecord } from "@replay-altar/core";
+import { firstStart, importLimit, ingestFile, reingestAll, loadConfig, markCollectorRunning, mmss, openDb, paths, replayDirs, resolveLanguage, setLanguage, tr, warcraftFolders, type GameRecord } from "@replay-altar/core";
 import { simNotReady, syncMapCache } from "@replay-altar/sim";
 import { OfficialQueue } from "./officialqueue.ts";
 import { SimQueue } from "./simqueue.ts";
@@ -31,6 +31,8 @@ export async function runCollector() {
   const config = await firstRun(loadConfig(), found, log, (setup) => writeProgress({ setup, import: null, sims: null }));
   setLanguage(resolveLanguage(config.language));
   const db = openDb(p.db);
+  // Before anything is imported: a database with games already means an update.
+  const start = firstStart(db);
   markCollectorRunning();
   const ctx = { db, config, paths: p };
   // Your battletags changed (confirmed or edited in Settings, which restarts the collector): sort
@@ -71,8 +73,10 @@ export async function runCollector() {
     },
     log,
     {
-      // The newest replays only, until you ask for more on the match list.
-      limit: config.importLimit === "all" ? null : (config.importLimit ?? IMPORT_STEP),
+      // New games always; the replays that were there before the first start only once you ask
+      // on the match list (an update keeps the newest ones it had imported by itself).
+      since: new Date(start.at),
+      limit: importLimit(config, start),
       known: (path, size, mtime) => !!knownFile.get(path, size, mtime),
       onScan: (r) => writeFileSync(join(p.root, "replays.json"), JSON.stringify(r)),
     },

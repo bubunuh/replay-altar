@@ -48,7 +48,8 @@ type W3Api = {
   getGame(key: string): Promise<GameDetail>;
   performance(): Promise<{ games: PerfGame[]; metrics: MetricDef[] }>;
   overrideResult(key: string, result: "win" | "loss" | null): Promise<void>;
-  getConfig(): Promise<{ config: Config; configPath: string; paths: Paths }>;
+  /** `keepRunning`: the setting as it applies now (config.keepRunning, or its default for this copy). */
+  getConfig(): Promise<{ config: Config; configPath: string; paths: Paths; keepRunning: boolean }>;
   setConfig(config: Config): Promise<void>;
   collectorStatus(): Promise<string>;
   folders(): Promise<Folders>;
@@ -103,8 +104,11 @@ type W3Api = {
   findingsSummary(): Promise<GameFindings[]>;
   /** Fights and creep camps cleared, positioned on the map; null without a simulation or map data. */
   mapActivity(key: string): Promise<MapActivity | null>;
-  /** Replays in your folders not imported yet, as the collector's last scan counted them. */
-  replaysScan(): Promise<{ found: number; older: number } | null>;
+  /**
+   * Replays in your folders not imported yet, as the collector's last scan counted them; `asked`:
+   * some of the older ones were imported already (nothing is until you ask on a new install).
+   */
+  replaysScan(): Promise<{ found: number; older: number; asked: boolean } | null>;
   /** Imports the next IMPORT_STEP older replays, or all of them. */
   importMore(all: boolean): Promise<void>;
   logError(message: string): void;
