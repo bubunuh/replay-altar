@@ -28,7 +28,7 @@ The comparison with tournament players uses statistics that come with Replay Alt
 
 ## Changes to your system
 
-On Windows, Replay Altar installs for your user only (no administrator rights) and starts a small background program at login (an entry in your user's Run key, `ReplayAltarCollector`) that saves each replay when a game ends. You can disable it in Task Manager → Startup apps. Uninstalling (Settings → Apps → Replay Altar) removes the program and that entry; your games and statistics in `%LOCALAPPDATA%\replay-altar` are kept until you delete that folder.
+On Windows, Replay Altar installs for your user only (no administrator rights) and, while its window is open, runs a small background program that saves each replay when a game ends. If you turn on Settings → Behaviour → Keep Replay Altar running after closing the window, that program keeps running and starts at login (an entry in your user's Run key, `ReplayAltarCollector`); turning the setting off removes the entry. Uninstalling (Settings → Apps → Replay Altar) removes the program and that entry; your games and statistics in `%LOCALAPPDATA%\replay-altar` are kept until you delete that folder.
 
 ## Contact
 

@@ -7,7 +7,18 @@ statistics (`data/`).
 
 ## Unreleased (next version, 0.2.2)
 
-Nothing done yet. Planned:
+- **Nothing is imported until you ask** (tester feedback after 0.2.1): on the first start, if
+  replays are found, the match list offers *Import 50 replays* and *Import all replays (N)*, and
+  nothing loads by itself. The games you play from then on are added as before. If you already use
+  Replay Altar, your list doesn't change.
+- **Choose whether Replay Altar keeps running after you close it** (tester feedback): Settings →
+  Behaviour → *Keep Replay Altar running after closing the window*, off on a new install. Off:
+  closing the window stops the background collector and it doesn't start when you log in; the
+  games you play meanwhile are picked up the next time you open the app (the game keeps them in
+  Replays and Replays/Autosaved; only an overwritten `LastReplay.w3g` is missed). On: as before,
+  it keeps watching and starts at login. If you already use Replay Altar, it stays on.
+
+Planned:
 
 - **More accurate simulation (our improved WC3V):** WC3V now reads the replay's own selection lists,
   so it knows which units really exist and when they die; a train click with several buildings
@@ -18,13 +29,6 @@ Nothing done yet. Planned:
   numbers so the curve and your games are measured the same way (the full review is for 0.2.3).
   Before merging: check whether Replay Altar's own death correction (`deaths.ts`) still helps on
   top, and look at the two hidden games that got worse (batch3-11, batch3-06 Ventus).
-- **Nothing is imported until you ask** (tester feedback after 0.2.1): on the first start, if
-  replays are found, the match list offers *Import 50 replays* and *Import all replays (N)*, and
-  nothing loads by itself.
-- **Choose whether Replay Altar keeps running after you close it** (tester feedback): a setting,
-  off by default. When off, closing the window stops the background collector, and new games are
-  picked up the next time you open the app (the game keeps them in Replays and Replays/Autosaved;
-  only an overwritten `LastReplay.w3g` is missed).
 
 ### To check for 0.2.2 (untested)
 
