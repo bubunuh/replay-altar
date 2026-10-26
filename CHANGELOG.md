@@ -98,9 +98,9 @@ it matters.
 
 ## Later
 
-- **macOS:** woodmanhu's plan (PR #2) and first code step (PR #3, data folders and replay
-  discovery) can go into `dev` once reviewed, since they change nothing on Windows or Linux. A Mac
-  build needs the rest of the plan (game process detection, start at login, a macOS game data
+- **macOS:** woodmanhu's plan (docs/MACOS_SUPPORT_PLAN.md, PR #2) and first code step (PR #3, data
+  folders and replay discovery) are merged into `dev` (2026-10-26); they change nothing on Windows
+  or Linux and are untested on a Mac. A Mac build needs the rest of the plan (game process detection, start at login, a macOS game data
   extractor, packaging, unsigned) and someone with a Mac to test each step.
 
 - **Re-simulate every game with WC3V's merged fixes:** once the WC3V author has merged the revised fixes (#19, #21), switch Replay Altar's patches to the merged code and simulate all pro, tournament and your games again (about half an hour at full CPU). Measured beforehand: findings unchanged, the evaluation curve moves by more than half a point in 4% of games (6 points at most).
