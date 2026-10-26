@@ -7,7 +7,9 @@ statistics (`data/`).
 
 ## Unreleased (next version, 0.2.2)
 
-Nothing done yet. Planned:
+- **Damaged W3Champions replays are pointed out:** some W3Champions (FLO) replays lack the players' first selection at the start of the game, and Warcraft III plays them back wrong from the start, so rewatching one shows a different game. The report of such a game now says so. Its numbers stay: Replay Altar reads the players' orders, which are all there (on the two such games with W3Champions' own end-of-game numbers, hero levels matched exactly and the estimates were as close as usual).
+
+Planned:
 
 - **More accurate simulation (our improved WC3V):** WC3V now reads the replay's own selection lists,
   so it knows which units really exist and when they die; a train click with several buildings
@@ -32,12 +34,15 @@ Suggestions from SaulApeMan's replay project (via Discord, 2026-10-25). None of 
 in Replay Altar yet except where noted; each goes into 0.2.2 only if a test on our replays shows
 it matters.
 
-- **Broken W3Champions/FLO replays:** since the 19 Oct 2026 patch some FLO replays lack the players'
-  first selections (the first orders come before any selection) and desync in the game from the
-  start, so every number from them is wrong. Proposed check: a player's first order before their
-  first selection → mark the game broken and skip it; also W3C files with header build 7000 dated
-  after 19 Oct 2026. *Partly checked:* on 30 ladder/tournament replays the check flagged exactly the
-  2 that played broken in the game, and no others.
+- **Broken W3Champions/FLO replays:** *done* (above). The check as proposed (any order before the
+  first selection) also flags normal games, where a player trains a worker from the hall that is
+  selected at the start before selecting anything (3 of 518 pro games, 23 tournament
+  games); limited to orders in the first 0.5 s it flagged exactly the 4 of 48 recorded replays that
+  played wrong (batch 2: 10, 12; batch 3: 16, 17), 5 of 3,370 tournament replays (builds 6117 to
+  7003, so not only since the 19 Oct patch), and no pro or review game. "Every number is wrong" does
+  not hold for Replay Altar: the orders are complete, so such games stay analyzed, with a note. The
+  second check (W3Champions files with header build 7000 dated after 19 Oct 2026) matched no
+  replay we have (the 4 broken ones are build 7003), so it wasn't added.
 - **Hero levels after a Tome of Retraining:** `heroxp.ts` may drop real skill picks (players
   re-spend 4–6 points within a second, sometimes the same skill twice). Proposed: picks between two
   openings of the skill menu are one session.

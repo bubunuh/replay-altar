@@ -116,6 +116,40 @@ describe.skipIf(files.length === 0)("classification of edited replays", () => {
   });
 });
 
+describe.skipIf(files.length === 0)("damaged replays (missing first selections)", () => {
+  const withActions = (actions: RawReplay["actions"]) => {
+    const raw = clone(W3C);
+    raw.actions = actions;
+    return raw;
+  };
+  const ids = () => raw1Players().map((p) => String(p.id));
+  const raw1Players = () => raws.get(W3C)!.output.players;
+  test("no fixture is flagged: every player's first orders follow a selection", () => {
+    for (const f of files) {
+      const c = classify(raws.get(f)!, ME);
+      expect(c.replayProblem, f).toBeNull();
+      expect(c.rules.find((x) => x.rule === "replay.first_selections")?.passed, f).toBe(true);
+    }
+  });
+  test("orders at the very start before any selection mark the replay damaged, and it stays analyzed", () => {
+    const [a, b] = ids();
+    const c = classify(withActions({ [a]: { firstSelectionMs: 8911, firstOrderMs: 30, ordersBeforeSelection: 15 }, [b]: { firstSelectionMs: 61, firstOrderMs: 900, ordersBeforeSelection: 0 } }), ME);
+    expect(c.replayProblem).toBe("missing_first_selections");
+    expect(c.analyzed).toBe(true);
+    expect(c.rules.find((x) => x.rule === "replay.first_selections")).toMatchObject({ passed: false });
+  });
+  test("a worker trained from the hall selected at the start, before the first selection, is normal", () => {
+    const [a, b] = ids();
+    const c = classify(withActions({ [a]: { firstSelectionMs: 1681, firstOrderMs: 1410, ordersBeforeSelection: 1 }, [b]: { firstSelectionMs: 61, firstOrderMs: 900, ordersBeforeSelection: 0 } }), ME);
+    expect(c.replayProblem).toBeNull();
+  });
+  test("raw files from before the check are not judged", () => {
+    const c = classify(withActions(undefined), ME);
+    expect(c.replayProblem).toBeNull();
+    expect(c.rules.some((x) => x.rule === "replay.first_selections")).toBe(false);
+  });
+});
+
 describe.skipIf(files.length === 0)("metrics", () => {
   test("replay3: Human timings come from the order stream", () => {
     const raw = raws.get("replay3.w3g")!;

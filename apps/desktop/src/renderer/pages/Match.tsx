@@ -372,6 +372,17 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
                 </button>
               )}
             </div>
+            {r.classification.replayProblem === "missing_first_selections" && (
+              <p className="analyzer-warning">
+                ⚠{" "}
+                {tr(
+                  "This replay file is damaged: it lacks the players' first selection at the start of the game, a fault seen in some W3Champions (FLO) replays. Warcraft III plays it back wrong from the start, so rewatching it shows a different game. Replay Altar reads the players' orders, which are all there, so the numbers here are as accurate as usual (checked against W3Champions' own end-of-game numbers); only the moments to rewatch won't match what Warcraft III shows.",
+                  "Este arquivo de replay está danificado: falta a primeira seleção dos jogadores no início da partida, um defeito visto em alguns replays do W3Champions (FLO). O Warcraft III reproduz ele errado desde o início, então assistir de novo mostra outra partida. O Replay Altar lê as ordens dos jogadores, que estão todas lá, então os números aqui são tão precisos quanto de costume (conferido com os números de fim de partida do próprio W3Champions); só os momentos para rever não vão bater com o que o Warcraft III mostra.",
+                  "Este archivo de replay está dañado: le falta la primera selección de los jugadores al inicio de la partida, un defecto visto en algunos replays de W3Champions (FLO). Warcraft III lo reproduce mal desde el principio, así que al volver a verlo se ve otra partida. Replay Altar lee las órdenes de los jugadores, que están todas, así que los números de aquí son tan precisos como siempre (comprobado con los números de fin de partida del propio W3Champions); solo los momentos para volver a ver no coincidirán con lo que muestra Warcraft III.",
+                  "Ce fichier de replay est abîmé : il lui manque la première sélection des joueurs au début de la partie, un défaut vu dans certains replays W3Champions (FLO). Warcraft III le rejoue mal dès le début, donc le revoir montre une autre partie. Replay Altar lit les ordres des joueurs, qui y sont tous : les chiffres ici sont aussi précis que d'habitude (vérifié avec les chiffres de fin de partie de W3Champions) ; seuls les moments à revoir ne correspondront pas à ce que montre Warcraft III.",
+                )}
+              </p>
+            )}
             {resim.error && (
             <p className="sub no-share">
               {tr("The simulation failed", "A simulação falhou", "La simulación falló", "La simulation a échoué")}: {resim.error}

@@ -34,10 +34,47 @@ export type RawReplay = {
   header: W3GReplay["info"]["header"];
   subheader: W3GReplay["info"]["subheader"];
   leaveEvents: LeaveGameBlock[];
+  /** Per player id: what the raw actions show that w3gjs's summary leaves out. Absent in raw files from before 0.2.2. */
+  actions?: Record<string, PlayerActions>;
 };
+
+/** Facts read from one player's raw actions (times in ms of game time). */
+export type PlayerActions = {
+  /** The player's first selection (action 0x16) and first order (0x10 to 0x14); null when there is none. */
+  firstSelectionMs: number | null;
+  firstOrderMs: number | null;
+  /** Orders the player issued before their first selection. */
+  ordersBeforeSelection: number;
+};
+
+const ORDER_ACTIONS = new Set([0x10, 0x11, 0x12, 0x13, 0x14]);
+
+type DataBlock = { id: number; timeIncrement?: number; commandBlocks?: { playerId: number; actions: { id: number }[] }[] };
+
+/** Collects PlayerActions from w3gjs's raw game data blocks, keeping time the way w3gjs does. */
+function actionCollector() {
+  const out: Record<string, PlayerActions> = {};
+  let t = 0;
+  const onBlock = (block: DataBlock) => {
+    if (block.id === 0x1f || block.id === 0x1e) t += block.timeIncrement ?? 0;
+    for (const cb of block.commandBlocks ?? []) {
+      const p = (out[String(cb.playerId)] ??= { firstSelectionMs: null, firstOrderMs: null, ordersBeforeSelection: 0 });
+      for (const a of cb.actions) {
+        if (a.id === 0x16) p.firstSelectionMs ??= t;
+        else if (ORDER_ACTIONS.has(a.id)) {
+          p.firstOrderMs ??= t;
+          if (p.firstSelectionMs === null) p.ordersBeforeSelection++;
+        }
+      }
+    }
+  };
+  return { out, onBlock };
+}
 
 export async function parseReplay(buffer: Buffer): Promise<RawReplay> {
   const replay = new W3GReplay();
+  const actions = actionCollector();
+  replay.on("gamedatablock", actions.onBlock);
   const output = await replay.parse(buffer);
   const m = replay.meta;
   return JSON.parse(
@@ -59,6 +96,7 @@ export async function parseReplay(buffer: Buffer): Promise<RawReplay> {
       header: replay.info.header,
       subheader: replay.info.subheader,
       leaveEvents: replay.leaveEvents,
+      actions: actions.out,
     }),
   );
 }

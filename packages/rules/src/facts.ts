@@ -184,6 +184,9 @@ export function gameFacts(r: GameRecord, opts: { result: string; ref: FactsRef |
     `# Game facts`,
     `Result: you ${opts.result === "win" ? "WON" : opts.result === "loss" ? "LOST" : opts.result}. You: ${name(me)} (${RACE_NAMES[me.race]}). Opponent ("opp"): ${name(opp)} (${RACE_NAMES[opp.race]}). Map: ${r.game.map.file.replace(/^.*[\\/]/, "").replace(/\.w3x$/i, "")}. Length ${mmss(r.game.durationMs)}. Source: ${r.classification.source}.${ended}`,
     `Times are game time (m:ss). Build times are when the order was given (cancelled orders included). ≈ marks estimates; hero death times are approximate. Army value = resources in living army units, heroes excluded.`,
+    ...(r.classification.replayProblem === "missing_first_selections"
+      ? [`Damaged replay: it lacks the players' first selection (a W3Champions/FLO fault), so Warcraft III plays it back differently from the real game. The numbers come from the orders, which are complete.`]
+      : []),
     ``,
     `## Heroes`,
     ...heroLines(r, me, "you"),

@@ -17,7 +17,8 @@ Each layer can be rebuilt from the one above it with `replay-altar reingest`. Th
 - **`game`:**
   - `playedAt`, `endedAt` and `timeSource`. Replays carry no timestamp. `w3c_filename` is exact (UTC). `lastreplay_mtime` is the game's end time. `saved_file_mtime` is when you saved the copy, which can be later.
   - Also: `durationMs`, map, version and lobby settings.
-- **`classification`:** `source`, `category`, `analyzed`, `skipReason`, the seats, and `rules[]`. Each rule records the check, whether it passed, and the evidence it used.
+- **`classification`:** `source`, `category`, `analyzed`, `skipReason`, the seats, `replayProblem` and `rules[]`. Each rule records the check, whether it passed, and the evidence it used.
+  - **`replayProblem`:** `missing_first_selections` when a player's orders at the very start (first 0.5 s) come before any selection of theirs. Each client selects its units at the start and sends them their first orders; some W3Champions/FLO replays lost the selection and kept the orders, and Warcraft III then plays them back wrong from the start. Of 48 recorded replays (observer batches 2 and 3) it flagged exactly the 4 that played wrong; it also flags 5 of 3,370 tournament replays and none of 518 pro games or 55 review games. The orders themselves are complete: on the two with official stats, hero levels matched exactly and gold, largest army and units killed were off by no more than on other games, so the game stays analyzed and the report says the replay is damaged. A player whose first order (a worker from the hall that is selected at the start) comes before their first selection, but later than 0.5 s, is normal.
 - **`result`:** the winning team and your result. `method` is one of:
   - `leave_victory` (high confidence)
   - `leave_game_over` (high)
