@@ -22,9 +22,10 @@ export type Rule = { rule: string; passed: boolean; evidence: string };
 /**
  * A fault in the replay file itself. missing_first_selections: the game's own start-of-game
  * selection is missing, so Warcraft III plays the replay back differently from the game that was
- * played (seen in W3Champions/FLO replays, see missingFirstSelections).
+ * played (seen in W3Champions/FLO replays, see missingFirstSelections). truncated: the file ends in
+ * the middle of a record (FloTV recordings), so the rest of the game is missing.
  */
-export type ReplayProblem = "missing_first_selections";
+export type ReplayProblem = "missing_first_selections" | "truncated";
 
 export type Classification = {
   version: number;
@@ -164,6 +165,11 @@ export function classify(raw: RawReplay, myAccounts: string[]): Classification {
         : "every player's first orders follow a selection",
     );
     if (missing.length) replayProblem = "missing_first_selections";
+  }
+  if (raw.truncated) {
+    const at = (ms: number) => `${Math.floor(ms / 60000)}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, "0")}`;
+    rule("replay.complete", false, `the file is cut short: its data ends at ${at(raw.truncated.atMs)}, its header says the game lasted ${at(raw.truncated.headerDurationMs)}`);
+    replayProblem = "truncated";
   }
 
   return {

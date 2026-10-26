@@ -151,6 +151,33 @@ describe.skipIf(files.length === 0)("damaged replays (missing first selections)"
   });
 });
 
+describe.skipIf(files.length === 0)("cut-short replays (FloTV recordings)", () => {
+  test("a file cut anywhere still parses, up to its last complete record", async () => {
+    const buf = readFileSync(join(FIXTURES, W3C));
+    const quiet = console.error;
+    console.error = () => {}; // w3gjs logs the actions it can't read in the last, partial record
+    try {
+      for (let cut = 50; cut < buf.length - 2000; cut += 211) {
+        const raw = await parseReplay(buf.subarray(0, buf.length - cut));
+        expect(raw.truncated, `cut ${cut}`).toBeTruthy();
+        expect(raw.output.duration).toBe(raw.truncated!.atMs);
+      }
+    } finally {
+      console.error = quiet;
+    }
+  });
+  test("a cut-short replay says where it ends and stays analyzed; complete ones aren't flagged", async () => {
+    const buf = readFileSync(join(FIXTURES, "replay3.w3g"));
+    const raw = await parseReplay(buf.subarray(0, buf.length - 200_000));
+    expect(raw.truncated).toEqual({ atMs: raw.output.duration, headerDurationMs: raws.get("replay3.w3g")!.output.duration });
+    expect(raw.output.duration).toBeLessThan(raws.get("replay3.w3g")!.output.duration - 300_000);
+    const c = classify(raw, ME);
+    expect(c.replayProblem).toBe("truncated");
+    expect(c.analyzed).toBe(true);
+    for (const f of files) expect(raws.get(f)!.truncated, f).toBeNull();
+  });
+});
+
 describe.skipIf(files.length === 0)("metrics", () => {
   test("replay3: Human timings come from the order stream", () => {
     const raw = raws.get("replay3.w3g")!;

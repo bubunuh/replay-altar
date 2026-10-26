@@ -186,7 +186,9 @@ export function gameFacts(r: GameRecord, opts: { result: string; ref: FactsRef |
     `Times are game time (m:ss). Build times are when the order was given (cancelled orders included). ≈ marks estimates; hero death times are approximate. Army value = resources in living army units, heroes excluded.`,
     ...(r.classification.replayProblem === "missing_first_selections"
       ? [`Damaged replay: it lacks the players' first selection (a W3Champions/FLO fault), so Warcraft III plays it back differently from the real game. The numbers come from the orders, which are complete.`]
-      : []),
+      : r.classification.replayProblem === "truncated"
+        ? [`Cut-short replay: the file ends at ${mmss(r.game.durationMs)}, in the middle of the game; everything after that is missing.`]
+        : []),
     ``,
     `## Heroes`,
     ...heroLines(r, me, "you"),

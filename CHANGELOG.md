@@ -16,6 +16,8 @@ statistics (`data/`).
 
 - **Hero timelines:** a hero cancelled at the altar and ordered again later no longer appears on the charts and in the build order at the time of the cancelled order (and a Demon Hunter or Alchemist the simulation last saw transformed is found again).
 
+- **Cut-short replays can be imported:** a replay file that ends in the middle of the game (FloTV recordings, or a copy made while the game was still running) often couldn't be imported at all. It now is, up to where it ends, and its report says the rest is missing.
+
 Planned:
 
 - **More accurate simulation (our improved WC3V):** WC3V now reads the replay's own selection lists,
@@ -71,8 +73,12 @@ it matters.
   WC3V lab: those phantom heroes may also hold 5 food each in WC3V's supply.
 - **Lobby password:** tournament replays may carry a password after the game name, which could
   misalign the lobby records if w3gjs doesn't read it.
-- **Truncated last record** (FloTV recordings end mid-record): tolerate it instead of failing the
-  import.
+- **Truncated last record** (FloTV recordings end mid-record): *done* (above). w3gjs failed on 15%
+  of cut points (294 of 1,993 cuts of our 5 test replays), in its last game data record or a block
+  header; the others parsed but kept the header's full length. None of our 4,024 replays is cut.
+  Unrelated but found on the way: WC3V reports "parse truncated" for 105 complete replays (97
+  tournament, 8 review), which is why they have no simulation; w3gjs reads all of them to the end,
+  so it's WC3V's own parser (for the WC3V lab).
 - Already fine, nothing to do: hero revives (the hero timelines already use the revive order);
   "selections via hotkey" already compares group recalls with mouse selections, the only
   distinction the replay allows.

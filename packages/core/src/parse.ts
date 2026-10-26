@@ -36,6 +36,8 @@ export type RawReplay = {
   leaveEvents: LeaveGameBlock[];
   /** Per player id: what the raw actions show that w3gjs's summary leaves out. Absent in raw files from before 0.2.2. */
   actions?: Record<string, PlayerActions>;
+  /** The file is cut short (see tolerateTruncation); `output.duration` is then where the data ends. */
+  truncated?: { atMs: number; headerDurationMs: number } | null;
 };
 
 /** Facts read from one player's raw actions (times in ms of game time). */
@@ -85,14 +87,52 @@ function actionCollector() {
       }
     }
   };
-  return { out, onBlock };
+  return { out, onBlock, endMs: () => t };
+}
+
+type Guarded = { parseBlock: () => unknown };
+type BufferState = { buffer: Buffer; offset: number };
+
+/**
+ * A recording cut off in the middle of a record (FloTV recordings end that way, and so does a copy
+ * made while the game was still writing it): w3gjs reads past the end of the data and throws, in
+ * its last game data record or a block header. Stop at the last complete record instead.
+ */
+function tolerateTruncation(replay: W3GReplay): { cut: boolean } {
+  const internals = replay.parser as unknown as { rawParser: Guarded & BufferState; gameDataParser: Guarded & { parser: BufferState } };
+  const state = { cut: false };
+  const guard = (p: Guarded, stop: () => void, nothing: unknown) => {
+    const parseBlock = p.parseBlock.bind(p);
+    p.parseBlock = () => {
+      try {
+        return parseBlock();
+      } catch (e) {
+        if ((e as { code?: string }).code !== "ERR_OUT_OF_RANGE") throw e;
+        state.cut = true;
+        stop();
+        return nothing;
+      }
+    };
+  };
+  const raw = internals.rawParser;
+  guard(raw, () => (raw.offset = raw.buffer.length), { blockSize: 0, blockDecompressedSize: 0, blockContent: Buffer.alloc(0) });
+  const data = internals.gameDataParser.parser;
+  guard(internals.gameDataParser, () => (data.offset = data.buffer.length), null);
+  return state;
 }
 
 export async function parseReplay(buffer: Buffer): Promise<RawReplay> {
   const replay = new W3GReplay();
   const actions = actionCollector();
   replay.on("gamedatablock", actions.onBlock);
+  const truncation = tolerateTruncation(replay);
   const output = await replay.parse(buffer);
+  // The header's length is the whole game's; a cut file has data only up to the cut. In complete
+  // replays the data never ends before the header's length (4,024 of our replays), so data ending
+  // earlier is a cut too, also when it fell between two records.
+  const endMs = actions.endMs();
+  const truncated = truncation.cut || endMs < output.duration - 1000 ? { atMs: endMs, headerDurationMs: output.duration } : null;
+  if (truncated && endMs < output.duration) output.duration = endMs;
   const m = replay.meta;
   return JSON.parse(
     JSON.stringify({
@@ -114,6 +154,7 @@ export async function parseReplay(buffer: Buffer): Promise<RawReplay> {
       subheader: replay.info.subheader,
       leaveEvents: replay.leaveEvents,
       actions: actions.out,
+      truncated,
     }),
   );
 }

@@ -383,6 +383,17 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
                 )}
               </p>
             )}
+            {r.classification.replayProblem === "truncated" && (
+              <p className="analyzer-warning">
+                ⚠{" "}
+                {tr(
+                  `This replay file is cut short: it ends at ${mmss(r.game.durationMs)}, in the middle of the game (FloTV recordings and copies made while the game was still running end this way). Everything after that is missing, so the result may be unknown and the numbers cover the game only up to there.`,
+                  `Este arquivo de replay está cortado: ele acaba em ${mmss(r.game.durationMs)}, no meio da partida (gravações do FloTV e cópias feitas com a partida ainda rodando acabam assim). Tudo depois disso está faltando, então o resultado pode ser desconhecido e os números cobrem a partida só até ali.`,
+                  `Este archivo de replay está cortado: termina en ${mmss(r.game.durationMs)}, en mitad de la partida (las grabaciones de FloTV y las copias hechas con la partida aún en curso terminan así). Todo lo posterior falta, así que el resultado puede ser desconocido y los números cubren la partida solo hasta ahí.`,
+                  `Ce fichier de replay est coupé : il s'arrête à ${mmss(r.game.durationMs)}, au milieu de la partie (les enregistrements FloTV et les copies faites pendant la partie s'arrêtent ainsi). Tout ce qui suit manque : le résultat peut être inconnu et les chiffres ne couvrent la partie que jusque-là.`,
+                )}
+              </p>
+            )}
             {resim.error && (
             <p className="sub no-share">
               {tr("The simulation failed", "A simulação falhou", "La simulación falló", "La simulation a échoué")}: {resim.error}
