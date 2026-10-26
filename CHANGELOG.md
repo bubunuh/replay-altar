@@ -8,14 +8,10 @@ statistics (`data/`).
 ## Unreleased (next version, 0.2.2)
 
 - **Damaged W3Champions replays are pointed out:** some W3Champions (FLO) replays lack the players' first selection at the start of the game, and Warcraft III plays them back wrong from the start, so rewatching one shows a different game. The report of such a game now says so. Its numbers stay: Replay Altar reads the players' orders, which are all there (on the two such games with W3Champions' own end-of-game numbers, hero levels matched exactly and the estimates were as close as usual).
-
 - **Hero levels after a Tome of Retraining:** a hero retrained with a tome could end up to four levels too high or too low (30% of the games with a tome), which threw off hero levels, hero experience and the findings about them. Replay Altar now reads the retraining from when the skill menu was opened and the tome bought: on games with W3Champions' own hero levels, 27 of 28 retrained players' heroes now match (25 before).
-
-- **Second and third heroes count in the resources spent:** the gold and lumber spent left out every hero, so it read about 7% low against the game's own numbers; now 2% (on 176 W3Champions player-games). This also moves the gold collected estimated for Battle.net games.
-- **Army losses:** a unit seen in another form (a Druid of the Claw in bear form, a burrowed Crypt Fiend, a Berserker) is now matched to the unit trained, so its death counts in the army value and the losses (3.8% of pro player-games had such a death missed).
-
-- **Hero timelines:** a hero cancelled at the altar and ordered again later no longer appears on the charts and in the build order at the time of the cancelled order (and a Demon Hunter or Alchemist the simulation last saw transformed is found again).
-
+- **Second and third heroes count in the resources spent:** the gold and lumber spent left out every hero after the first (which is free), so it read about 7% low against the game's own numbers; now 2% (on 176 W3Champions player-games). This also moves the gold collected estimated for Battle.net games.
+- **Army losses:** a unit seen in another form (a Druid of the Claw in bear form, a burrowed Crypt Fiend, a Berserker) is now matched to the unit trained, so its death counts in the army value and the losses (3.8% of the pro player-games checked had such a death missed).
+- **Hero timelines:** a hero cancelled at the altar and ordered again later no longer appears on the hero chart, and in the build-order comparison, at the time of the cancelled order (and a Demon Hunter or Alchemist the simulation last saw transformed is found again).
 - **Cut-short replays can be imported:** a replay file that ends in the middle of the game (FloTV recordings, or a copy made while the game was still running) often couldn't be imported at all. It now is, up to where it ends, and its report says the rest is missing.
 
 Planned:
@@ -37,11 +33,11 @@ Planned:
   picked up the next time you open the app (the game keeps them in Replays and Replays/Autosaved;
   only an overwritten `LastReplay.w3g` is missed).
 
-### To check for 0.2.2 (untested)
+### Checked for 0.2.2
 
-Suggestions from SaulApeMan's replay project (via Discord, 2026-10-25). None of these is verified
-in Replay Altar yet except where noted; each goes into 0.2.2 only if a test on our replays shows
-it matters.
+Suggestions from SaulApeMan's replay project (via Discord, 2026-10-25), each tested on our replays
+(518 pro, 3,370 tournament, 55 review and 101 of your games, and the 176 player-games with
+W3Champions' official numbers); what helped is in the list above.
 
 - **Broken W3Champions/FLO replays:** *done* (above). The check as proposed (any order before the
   first selection) also flags normal games, where a player trains a worker from the hall that is
@@ -71,8 +67,10 @@ it matters.
   checked), and Replay Altar took the first one as the hero: 56 heroes appeared too early, by up
   to 9 minutes (*fixed*, above, with 43 heroes it couldn't find in a transformed form). For the
   WC3V lab: those phantom heroes may also hold 5 food each in WC3V's supply.
-- **Lobby password:** tournament replays may carry a password after the game name, which could
-  misalign the lobby records if w3gjs doesn't read it.
+- **Lobby password:** *doesn't apply.* w3gjs reads the string after the game name (its
+  `privateString`) and skips it. 58 of our 4,024 replays carry one (all "wuyue" tournament lobbies,
+  passwords 1011 to 1018), and all 58 read correctly: no metadata warning, both players named,
+  map and checksum read, and 56 simulated (one lacks its map, one was never simulated).
 - **Truncated last record** (FloTV recordings end mid-record): *done* (above). w3gjs failed on 15%
   of cut points (294 of 1,993 cuts of our 5 test replays), in its last game data record or a block
   header; the others parsed but kept the header's full length. None of our 4,024 replays is cut.
