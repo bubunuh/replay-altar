@@ -1,0 +1,129 @@
+From 48727519ae1222f5d57493e1d1d4248fbc074b76 Mon Sep 17 00:00:00 2001
+From: bubunuh <76405364+bubunuh@users.noreply.github.com>
+Date: Tue, 27 Oct 2026 22:02:07 +0100
+Subject: [PATCH] Train in each selected building: not for Night Elf
+
+4002df0 queues a train order in every selected building of the same
+type. For Night Elf the copies the game refused for lack of gold
+became units: with several Ancients selected (most often Ancients of
+Lore spamming Druids of the Claw), every refused click left phantoms,
+and HandleBinder gave them the handles of units trained later, so the
+whole chain shifted. Measured on 51 recorded games through Replay
+Altar, Night Elf army value error 97 without the extra copies and 113
+with them, while Undead gains from them (103 -> 90) and Human and Orc
+are about even. Night Elf now trains in the first building only.
+
+Dev (36 games): army value error 76.3 -> 70.9, Night Elf 100.5 -> 82.4,
+type count error 0.685 -> 0.637, worker error 1.419 -> 1.410.
+
+tests/multi-building-train.test.js covers which orders train in each
+building, on hand-built players.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ lib/Player.js                      |  8 ++++
+ tests/multi-building-train.test.js | 72 ++++++++++++++++++++++++++++++
+ 2 files changed, 80 insertions(+)
+ create mode 100644 tests/multi-building-train.test.js
+
+diff --git a/lib/Player.js b/lib/Player.js
+index 6eb5982..ca471bb 100644
+--- a/lib/Player.js
++++ b/lib/Player.js
+@@ -2937,7 +2937,15 @@ const Player = class {
+   //
+   // A plain unit (not a hero, research or building upgrade) trained from a
+   // building's command card.
++  //
++  // Not for Night Elf: with several Ancients selected, the copies the game
++  // refused for lack of gold became units, and HandleBinder gave them the
++  // handles of units trained later (mostly Druids of the Claw from several
++  // Ancients of Lore). Measured on 51 recorded games through Replay Altar,
++  // Night Elf army value error 97 without the extra copies, 113 with them;
++  // the other races keep them (Undead 103 -> 90).
+   _trainsInEachBuilding (itemId, abilityFlags) {
++    if (this.race === 'E') return false;
+     if (abilityFlags !== abilityFlagNames.LearnSkillOrTrain &&
+         abilityFlags !== abilityFlagNames.TrainUnit) return false;
+     if (researchMeta[itemId]) return false;
+diff --git a/tests/multi-building-train.test.js b/tests/multi-building-train.test.js
+new file mode 100644
+index 0000000..5f54a3a
+--- /dev/null
++++ b/tests/multi-building-train.test.js
+@@ -0,0 +1,72 @@
++/*
++ * multi-building-train.test.js — which train orders Player queues in every
++ * selected building of the same type (Player._trainsInEachBuilding), on
++ * hand-built players (no replay needed).
++ *
++ * Covers:
++ *   1. a plain unit is trained in each selected building
++ *   2. heroes, researches and building upgrades are not
++ *   3. Night Elf trains in the first building only
++ *
++ * Run: `node tests/multi-building-train.test.js`
++ */
++
++const assert = require('assert');
++const logManager = require('../helpers/logManager');
++logManager.setTestMode(true);
++logManager.setProductionMode(true);
++logManager.setLogger('multi-building-train-test');
++
++const EventTimer = require('../lib/EventTimer');
++const Player = require('../lib/Player');
++const { abilityFlagNames } = require('../helpers/mappings');
++
++let failures = 0;
++function check (label, fn) {
++  try {
++    fn();
++    console.log(`  ✓ ${label}`);
++  } catch (err) {
++    failures++;
++    console.log(`  ✗ ${label}`);
++    console.log(`    ${err.stack.split('\n').slice(0, 3).join('\n    ')}`);
++  }
++}
++
++// race flags as the replay's player slots give them
++const HUMAN = 65, ORC = 66, NIGHT_ELF = 68, UNDEAD = 72;
++
++const makePlayer = (raceFlag) =>
++  new Player(1, { teamId: 0, raceFlag }, { map: {} }, new EventTimer(), {}, false);
++
++const TRAIN = abilityFlagNames.TrainUnit;
++
++console.log('[_trainsInEachBuilding]');
++
++check('a plain unit is trained in each selected building', () => {
++  assert.strictEqual(makePlayer(HUMAN)._trainsInEachBuilding('hrif', TRAIN), true);
++  assert.strictEqual(makePlayer(ORC)._trainsInEachBuilding('ogru', TRAIN), true);
++  assert.strictEqual(makePlayer(UNDEAD)._trainsInEachBuilding('ugho', TRAIN), true);
++});
++
++check('heroes, researches and upgrades are not', () => {
++  const human = makePlayer(HUMAN);
++  assert.strictEqual(human._trainsInEachBuilding('Hamg', TRAIN), false);   // Archmage
++  assert.strictEqual(human._trainsInEachBuilding('Rhde', TRAIN), false);   // Defend
++  assert.strictEqual(human._trainsInEachBuilding('hkee', TRAIN), false);   // Keep
++});
++
++check('Night Elf trains in the first building only', () => {
++  const elf = makePlayer(NIGHT_ELF);
++  assert.strictEqual(elf.race, 'E');
++  assert.strictEqual(elf._trainsInEachBuilding('edoc', TRAIN), false);
++  assert.strictEqual(elf._trainsInEachBuilding('earc', TRAIN), false);
++});
++
++console.log('');
++if (failures) {
++  console.log(`FAILED — ${failures} check(s)`);
++  process.exit(1);
++} else {
++  console.log('OK — all checks passed');
++}
+-- 
+2.56.0
+
