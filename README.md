@@ -9,7 +9,7 @@ Replay Altar is a Warcraft III: Reforged replay analyzer for 1v1 players. It run
 - **Every replay kept, automatically.** A small background program saves each replay the moment a game ends, before the game overwrites `LastReplay.w3g`. It starts with your computer but only wakes up while Warcraft III runs (Settings can make it always on, or off). Battle.net ladder, W3Champions and custom melee games are all picked up, with nothing to upload or click.
 - **The game reconstructed.** Each 1v1 is simulated from its replay with the [WC3V](https://github.com/jblanchette/wc3v) engine: workers, army value, supply, creep camps, hero levels and fights over time.
 - **A coach's report after every game.** Rules drawn from well-known guides (Grubby, Liquipedia, Warcraft 3 Gym, Vortix and others) name the problems that cost you the game, show the facts behind each one, explain why it happened and say what to do next time. Only rules that proved themselves on 3,388 tournament player-games are shown: each one appears clearly more often in lost games than in won ones. The report also points out the fight that turned the game (with the moment to rewatch), your strengths and the opponent's plan. [More below](#how-the-report-is-made).
-- **An evaluation curve, like in chess.** Who was ahead at every moment of the game, as how often a pro player in your position went on to win, with the three moments that swung it most and what moved them. Learned from 513 pro games and tested on 2,998 tournament games it had never seen. [More below](#the-evaluation-curve).
+- **An evaluation curve, like in chess.** Who was ahead at every moment of the game, as how often a pro player in your position went on to win, with the three moments that swung it most and what moved them. Learned from 513 pro games and tested on 3,138 tournament games it had never seen. [More below](#the-evaluation-curve).
 - **One thing to work on.** Each report ends with the single most useful habit for your next game. Across your recent games, the Performance page picks the problem that keeps coming back and shows whether it is getting better.
 - **Every number in context.** Your numbers are placed among about 1,700 tournament games of your race and matchup ("better than 86% of pro games"), with a green, yellow or red verdict: at pro level, at least as good as your opponent, or behind both.
 - **Knows your build.** It recognises the build order each player went for, from guide builds and builds mined from pro games, and shows where your timings drifted from the pros who play it.
@@ -31,17 +31,17 @@ Your games stay on your computer. Replay Altar fetches only two things from the 
 
 **2. comparing with tournament players.** Every number is placed among about 1,700 player-games of your race: recent pro games on the current patch plus tournament games from 2022 to 2026, analyzed exactly like yours. "Better than 86% of pro games" means just that: 86% of those games had a worse number.
 
-**3. Deciding what mattered.** Each rule comes from a guide or from the pro data, and has to prove itself before it is shown. Every rule was run on 3,388 player-games whose results it had not been tuned on, from both players' side. A rule is shown only if it fires clearly more often in losses than in wins (the whole 95% confidence range above "no difference"). For example:
+**3. Deciding what mattered.** Each rule comes from a guide or from the pro data, and has to prove itself before it is shown. Every rule was run on 3,532 player-games whose results it had not been tuned on, from both players' side. A rule is shown only if it fires clearly more often in losses than in wins (the whole 95% confidence range above "no difference"). For example:
 
 | Finding | Appears in lost games | Appears in won games |
 |---|---|---|
-| Your fights cost far more than theirs | 39% | 13% |
+| Your fights cost far more than theirs | 37% | 18% |
 | Your heroes fell behind | 67% | 24% |
 | You lost your heroes too often | 14% | 6% |
 | No expansion in a long game | 7% | 3% |
 | They had more bases than you | 21% | 13% |
 
-11 rules passed and are shown. One check is shown whatever the result: playing without control groups or hotkeys.
+11 rules passed and are shown (chosen on 0.2.1's simulation; how each scores on 0.2.2's is in [docs/RULES.md](docs/RULES.md)). One check is shown whatever the result: playing without control groups or hotkeys.
 
 In the future, suggestions will be skill based: during the analysis, the app will estimate your skill level and these suggestions will be more personal. <kbd>planned</kbd>
 
@@ -55,7 +55,7 @@ Every rule, its source and its scores: [docs/RULES.md](docs/RULES.md). The miles
 
 Each game's page shows an **evaluation curve**, like the ones chess sites draw under a game: blue while you were ahead, red while your opponent was, from the first minute to the last. At every moment, Replay Altar compares your position with your opponent's: army, workers, hero experience, heroes alive, expansions, units lost and upgrades. Its height answers one question: **how often did professional players in that same position go on to win?** 50% is even. It learned the answer from 513 recent pro games.
 
-How the graph works: every 30 seconds it compares you and your opponent on 7 things: army size, workers, hero XP, heroes alive, bases, upgrades, and how much each side has lost so far. Then it asks “when pros had this kind of lead or deficit at this minute, how often did they win?” The model is a logistic regression (basically a weighted score turned into a percentage), where the weights change over the game, since a worker lead matters differently at minute 5 than at minute 20. I fit it on 513 pro games and then tested it, without touching it, on 2,998 tournament games from 2022-2026 it had never seen. It picks the eventual winner 63% of the time at 10 minutes and 69% at 20. On unseen pro games its confidence is honest: when it says 70%, that side wins about 70% of the time. One thing to keep in mind: it shows how a pro would usually convert your position, so for regular ladder games it’ll look a bit overconfident. That’s on purpose, since a big drop means “a pro wouldn’t have lost this,” which is the point. Full write-up in docs/win-chance/report.pdf. 
+How the graph works: every 30 seconds it compares you and your opponent on 7 things: army size, workers, hero XP, heroes alive, bases, upgrades, and how much each side has lost so far. Then it asks “when pros had this kind of lead or deficit at this minute, how often did they win?” The model is a logistic regression (basically a weighted score turned into a percentage), where the weights change over the game, since a worker lead matters differently at minute 5 than at minute 20. I fit it on 513 pro games and then tested it, without touching it, on 3,138 tournament games from 2022-2026 it had never seen. It picks the eventual winner 63% of the time at 10 minutes and 68% at 20. On unseen pro games its confidence is honest: when it says 70%, that side wins about 70% of the time. One thing to keep in mind: it shows how a pro would usually convert your position, so for regular ladder games it’ll look a bit overconfident. That’s on purpose, since a big drop means “a pro wouldn’t have lost this,” which is the point. Full write-up in docs/win-chance/report.pdf. 
 
 **How it was made:** the [technical report (PDF)](docs/win-chance/report.pdf) describes the data, the model, how it was chosen and tested, its limits, and how to reproduce every number. The code, the fitted model and the list of games are all in this repository.
 
