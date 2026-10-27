@@ -1,0 +1,39 @@
+From 1979fc6665c894a0b7849bf5a2b9857495989cd5 Mon Sep 17 00:00:00 2001
+From: bubunuh <76405364+bubunuh@users.noreply.github.com>
+Date: Sun, 25 Oct 2026 00:12:07 +0200
+Subject: [PATCH 04/21] DeathInference: a unit sent to harvest is not lost to
+ path silence
+
+Ghouls on the trees get no orders and no path samples while they work, so
+path silence called them possiblyLost after two minutes, the same way it used
+to call idle workers lost before workers were exempted. A unit whose last order
+(SelectionLedger: a right-click on a tree, or a harvest order) sent it to
+harvest now gets the worker exemption too.
+
+Dev games: Undead army value error 201 -> 176, all 127 -> 122.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ lib/DeathInference.js | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/lib/DeathInference.js b/lib/DeathInference.js
+index ca6faf4..4bad28d 100644
+--- a/lib/DeathInference.js
++++ b/lib/DeathInference.js
+@@ -124,7 +124,11 @@ class DeathInference {
+     if (isHero && !explicitDeath && (ls.state === 'possiblyLost' || ls.state === 'lost')) {
+       return { ...ls, state: 'idle', confidence: 0, xpAwarded: null, _downgradedFrom: ls.state };
+     }
+-    if (isWorker && ls.state === 'possiblyLost' && ls.source === 'pathSilence') {
++    // A unit whose last order sent it to harvest (a ghoul on the trees) works
++    // out of sight like a worker does.
++    const life = unit.selectionLife;
++    const working = isWorker || !!(life && life.lastOrder && life.lastOrder.work);
++    if (working && ls.state === 'possiblyLost' && ls.source === 'pathSilence') {
+       return { ...ls, state: 'idle', confidence: 0, xpAwarded: null, _downgradedFrom: ls.state };
+     }
+     return ls;
+-- 
+2.56.0
+

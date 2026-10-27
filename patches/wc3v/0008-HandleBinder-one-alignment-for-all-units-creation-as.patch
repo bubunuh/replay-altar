@@ -1,0 +1,392 @@
+From fd2aff2ab6400ccadd61b01fbb4b7086a3231796 Mon Sep 17 00:00:00 2001
+From: bubunuh <76405364+bubunuh@users.noreply.github.com>
+Date: Sun, 25 Oct 2026 00:51:21 +0200
+Subject: [PATCH 08/21] HandleBinder: one alignment for all units, creation as
+ a window
+
+Three changes to how units are tied to handles, and what an untied unit means:
+
+- WC3V's own ties are a small bonus inside the alignment, no longer kept
+  outright. Kept, the ones it made out of creation order (e.g. the Rifleman
+  trained first tied to the later handle) block the alignment of every unit
+  around them.
+- A unit's creation is a window: from its queue time + build time up to WC3V's
+  training time. WC3V's queues also hold orders the game refused (no gold, no
+  food), so its training time is often late.
+- A handle can't be a unit made after the first sighting of any handle the
+  game allocated after it (any player's): madeBy(counter), a much tighter
+  bound than the handle's own first sighting.
+- Only handles the player gave orders to, grouped or box-selected with other
+  units are candidates; one only ever clicked on alone is an enemy's, a
+  creep, a shop.
+
+A trained unit the binder could not tie is never shown by the lists; two
+minutes after its training DeathInference counts it as never made (source
+'unlisted'): its path, if any, came from orders to a handle that is another
+unit's.
+
+Dev games: army value error 115 -> 114 (Human 102 -> 88, Orc 97 -> 72;
+Undead 143 -> 159, Night Elf 120 -> 136).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ lib/DeathInference.js       | 14 ++++++++
+ lib/HandleBinder.js         | 71 ++++++++++++++++++++-----------------
+ lib/SelectionEvidence.js    | 48 +++++++++++++++++++++++--
+ lib/SelectionLedger.js      | 16 ++++++---
+ tests/handle-binder.test.js | 34 +++++++++++++++---
+ 5 files changed, 137 insertions(+), 46 deletions(-)
+
+diff --git a/lib/DeathInference.js b/lib/DeathInference.js
+index 399f1c2..adbc0a0 100644
+--- a/lib/DeathInference.js
++++ b/lib/DeathInference.js
+@@ -237,6 +237,20 @@ class DeathInference {
+       // Got away — still moving after.
+     }
+ 
++    // 3b. A trained unit the player's selection lists never show, long after
++    //     it was due: most likely an order the game refused (no gold, no food)
++    //     or a cancelled one. Whatever path it has belongs to another unit.
++    if (unit.selectionUnlisted && !isWorker && unit.trainedTime != null &&
++        gameEnd - unit.trainedTime >= LOST_MS) {
++      return {
++        state: 'possiblyLost',
++        since: unit.trainedTime,
++        confidence: 40,
++        source: 'unlisted',
++        killedInBattleId: null, killerPlayerIds: null, xpAwarded: null
++      };
++    }
++
+     // 4. No battle context — pure path-silence heuristic.
+     if (silentFor >= LOST_MS) {
+       return {
+diff --git a/lib/HandleBinder.js b/lib/HandleBinder.js
+index a16ee20..a4e8cf3 100644
+--- a/lib/HandleBinder.js
++++ b/lib/HandleBinder.js
+@@ -5,11 +5,14 @@
+  * handles the player had and how long each lived, but rarely which unit type a handle is (only
+  * the first unit of a selected subgroup gets its type written). The handle's second number is
+  * the game's object allocation counter, so handles sort by creation. Both sides are ordered by
+- * creation, so the units WC3V could not tie to a handle are aligned to the handles nobody claimed
+- * with an order-preserving alignment (like a diff): a handle whose type is known only takes a
+- * unit of that type (or a form it morphs to/from), a unit is never tied to a handle the game
+- * listed before the unit existed, and among alignments with as many pairs, the one whose
+- * creation times fit the counters best wins.
++ * creation, so units are aligned to handles with an order-preserving alignment (like a diff):
++ *   - a handle whose type is known only takes a unit of that type (or a form it morphs to/from);
++ *   - a unit is never tied to a handle that existed before the unit could have come out;
++ *   - among alignments with as many pairs, the one whose creation times best fit a monotone
++ *     counter -> time fit wins, and the ties the simulation made itself get a small bonus.
++ * WC3V's training time is late as often as not (its queues also hold orders the game refused
++ * for want of gold or food), so a unit's creation is a window: from queue time + build time
++ * up to WC3V's training time.
+  */
+ 
+ // Forms of one unit that keep its handle: toggled forms (Bear / Crow Form,
+@@ -23,50 +26,52 @@ const formClassOf = new Map();
+ for (const cls of FORM_CLASSES) for (const id of cls) formClassOf.set(id, cls[0]);
+ const formClass = (id) => formClassOf.get(id) || id;
+ 
+-// A unit may be listed a little before WC3V thinks it finished training (WC3V's training clock
+-// is an estimate); beyond this, the handle cannot be that unit.
++// WC3V's training clock is an estimate: a unit may be listed a little before
++// the earliest it could have come out; beyond this, the handle cannot be it.
+ const LISTED_BEFORE_TRAINED_SLACK_MS = 20 * 1000;
+-// Weight of the creation-time misfit (per second) against one more pair.
++// Weight of the creation-time misfit (per second) against one more pair, capped
++// so that a misfit alone never outweighs a pair.
+ const TIME_COST_PER_S = 0.002;
++const TIME_COST_CAP = 0.9;
++// A handle whose type the lists name, taken by a unit of that type.
+ const TYPED_BONUS = 0.5;
++// The tie the simulation made itself: a hint, not a given. Kept outright, the
++// ties it got out of creation order block the alignment of everything else.
++const SIMULATION_TIE_BONUS = 0.2;
+ 
+ class HandleBinder {
+-  // units: [{ id, type, forms:Set, born, handle (key or null) }]
+-  // handles: Map key -> ledger handle ({ key, counter, first, types:[{type}] })
+-  // anchors: [{ counter, born }] (optional) for the counter -> creation time fit
+-  static bind (units, handles, anchors = []) {
++  // units:   [{ id, forms: Set, earliest, born, handle }] — a unit came out in
++  //          [earliest, born] (born: WC3V's training time, or the summon time);
++  //          handle: the key WC3V tied it to during the simulation, or null
++  // handles: Map key -> ledger handle ({ key, counter, first, types: [{ type }] })
++  // anchors: [{ counter, born }] for the counter -> creation time fit
++  // madeBy:  counter -> latest time a handle with that counter can have been
++  //          made (optional; else its own first sighting)
++  // Returns Map unit id -> handle key.
++  static bind (units, handles, anchors = [], madeBy = null) {
+     const fit = HandleBinder.counterClock(anchors);
+-    const result = new Map();       // unit id -> handle key
+-    const taken = new Set();
++    const result = new Map();
+ 
+-    // 1. keep the ties WC3V made when they agree with what the lists say
+-    for (const u of units) {
+-      if (!u.handle) continue;
+-      const h = handles.get(u.handle);
+-      if (!h) continue;
+-      if (h.types.length && !h.types.some(x => HandleBinder.formMatches(u, x.type))) continue;
+-      if (taken.has(u.handle)) continue;
+-      result.set(u.id, u.handle);
+-      taken.add(u.handle);
+-    }
+-
+-    // 2. align the rest by creation order
+-    const us = units.filter(u => !result.has(u.id)).sort((a, b) => a.born - b.born);
+-    const hs = [...handles.values()].filter(h => !taken.has(h.key)).sort((a, b) => a.counter - b.counter);
++    // creation order on both sides
++    const us = [...units].sort((a, b) => a.born - b.born);
++    const hs = [...handles.values()].sort((a, b) => a.counter - b.counter);
+     const n = us.length, m = hs.length;
+     if (!n || !m) return result;
+ 
+     const gain = (u, h) => {
+-      if (u.born > h.first + LISTED_BEFORE_TRAINED_SLACK_MS) return null;
+-      let g = 1;
++      const simulated = u.handle === h.key;
++      const latest = Math.min(h.first, madeBy ? madeBy(h.counter) : Infinity);
++      if (!simulated && u.earliest > latest + LISTED_BEFORE_TRAINED_SLACK_MS) return null;
++      let g = 1 + (simulated ? SIMULATION_TIE_BONUS : 0);
+       if (h.types.length) {
+         if (!h.types.some(x => HandleBinder.formMatches(u, x.type))) return null;
+         g += TYPED_BONUS;
+-      } else if (u.typedOnly) {
+-        return null;
+       }
+       const est = fit ? fit(h.counter) : null;
+-      if (est != null) g -= Math.min(0.9, TIME_COST_PER_S * Math.abs(u.born - est) / 1000);
++      if (est != null) {
++        const misfit = est < u.earliest ? u.earliest - est : est > u.born ? est - u.born : 0;
++        g -= Math.min(TIME_COST_CAP, TIME_COST_PER_S * misfit / 1000);
++      }
+       return g;
+     };
+ 
+diff --git a/lib/SelectionEvidence.js b/lib/SelectionEvidence.js
+index 0f348e0..7b1d1cc 100644
+--- a/lib/SelectionEvidence.js
++++ b/lib/SelectionEvidence.js
+@@ -16,7 +16,7 @@
+  */
+ 
+ const HandleBinder = require('./HandleBinder');
+-const { getUnitInfo } = require('../helpers/mappings');
++const { getUnitInfo, getBuildTime } = require('../helpers/mappings');
+ 
+ const isPlayerId = (id) => Number(id) >= 0 && Number(id) < 24;
+ 
+@@ -35,6 +35,7 @@ class SelectionEvidence {
+       .filter(p => p && !p.isNeutralPlayer && isPlayerId(p.id));
+ 
+     const anchors = this._anchors(players, resolved);
++    this.madeBy = this._madeBy(resolved);
+ 
+     for (const player of players) {
+       const pl = resolved.get(Number(player.id));
+@@ -60,6 +61,14 @@ class SelectionEvidence {
+     return unit.spawnTime || 0;
+   }
+ 
++  // A trained unit came out no earlier than its training time after the order
++  // (the queue may have held it longer, or held orders the game refused).
++  _earliest (unit) {
++    if (unit.trainedTime == null) return unit.spawnTime || 0;
++    const queued = unit.spawnTime != null ? unit.spawnTime + getBuildTime(unit.itemId) * 1000 : unit.trainedTime;
++    return Math.min(queued, unit.trainedTime);
++  }
++
+   _forms (unit) {
+     const forms = new Set([unit.itemId]);
+     for (const m of (unit.morphHistory || [])) {
+@@ -88,11 +97,38 @@ class SelectionEvidence {
+     return anchors;
+   }
+ 
++  // Latest time a handle can have been made: handles are allocated in order, so
++  // before the first sighting of any handle allocated after it (any player's).
++  _madeBy (resolved) {
++    const hs = [];
++    for (const pl of resolved.values()) for (const h of pl.handles.values()) hs.push(h);
++    hs.sort((a, b) => a.counter - b.counter);
++    const counters = hs.map(h => h.counter);
++    const by = new Array(hs.length);
++    let m = Infinity;
++    for (let i = hs.length - 1; i >= 0; i--) {
++      m = Math.min(m, hs[i].first);
++      by[i] = m;
++    }
++    return (counter) => {
++      let lo = 0, hi = counters.length;
++      while (lo < hi) {
++        const mid = (lo + hi) >> 1;
++        if (counters[mid] >= counter) hi = mid; else lo = mid + 1;
++      }
++      return lo < counters.length ? by[lo] : Infinity;
++    };
++  }
++
+   _bindPlayer (player, pl, anchors) {
+     // handles a unit can be: not ones the game named as a building
+     const handles = new Map();
+     for (const [k, h] of pl.handles) {
+       if (h.types.some(x => getUnitInfo(x.type).isBuilding)) continue;
++      // Only the player's own units take orders, join control groups or get
++      // box-selected with others; a unit only ever clicked on alone is someone
++      // else's (an enemy, a creep, a shop).
++      if (!h.orders && !h.grouped && !h.multi) continue;
+       handles.set(k, h);
+     }
+     this.stats.handles += handles.size;
+@@ -104,15 +140,21 @@ class SelectionEvidence {
+       type: unit.itemId,
+       forms: this._forms(unit),
+       born: this._born(unit),
++      earliest: this._earliest(unit),
+       handle: this._unitHandle(unit)
+     }));
+     this.stats.units += entries.length;
+ 
+-    const ties = HandleBinder.bind(entries, handles, anchors);
++    const ties = HandleBinder.bind(entries, handles, anchors, this.madeBy);
+ 
+     for (const e of entries) {
+       const key = ties.get(e.id);
+-      if (!key) continue;
++      if (!key) {
++        // The player's lists never show this unit. Its path, if any, came
++        // from orders to a handle that belongs to another unit.
++        e.unit.selectionUnlisted = true;
++        continue;
++      }
+       const h = handles.get(key);
+       this.stats.tied++;
+       if (key === e.handle) this.stats.kept++;
+diff --git a/lib/SelectionLedger.js b/lib/SelectionLedger.js
+index b65c283..6db4c49 100644
+--- a/lib/SelectionLedger.js
++++ b/lib/SelectionLedger.js
+@@ -32,7 +32,9 @@
+  * replay is read, then resolve() once at the end. resolve() returns
+  * Map<playerId, { handles: Map<key, handle> }>; a handle is
+  *   { key, counter, first, last, lastKind, types: [{ t, type }], lastOrder,
+- *     death: null | { at, from, kind } }
++ *     orders, grouped, multi, death: null | { at, from, kind } }
++ * (orders: orders given while it was selected; grouped: put in a control group;
++ * multi: lists naming it with other units — what only a player's own units get)
+  * where a death happened in (from, at], from === at when it is exact.
+  */
+ 
+@@ -151,7 +153,7 @@ class SelectionLedger {
+         key: k, objectId1, counter,
+         first: t, last: t, lastKind: null,
+         types: [], lastOrder: null,
+-        seen: 0, multi: 0, listed: [],
++        seen: 0, multi: 0, orders: 0, grouped: false, listed: [],
+         death: null
+       };
+       pl.handles.set(k, h);
+@@ -247,7 +249,7 @@ class SelectionLedger {
+         }
+ 
+         case 'assign': {
+-          for (const k of e.keys) this._see(pl, k, t, 'assign');
++          for (const k of e.keys) this._see(pl, k, t, 'assign').grouped = true;
+           if (pl.selKnown) {
+             const listed = new Set(e.keys);
+             this._miss(pl, [...pl.sel].filter(k => !listed.has(k)), t, 'assign');
+@@ -291,7 +293,10 @@ class SelectionLedger {
+         case 'order': {
+           for (const k of pl.sel) {
+             const h = pl.handles.get(k);
+-            if (h) h.lastOrder = { t, order: e.order, target: e.target, work: e.work };
++            if (h) {
++              h.lastOrder = { t, order: e.order, target: e.target, work: e.work };
++              h.orders++;
++            }
+           }
+           if (e.target && e.aimedAtUnit) pl.targets.push({ t, k: e.target });
+           break;
+@@ -318,7 +323,8 @@ class SelectionLedger {
+     // The owner lists it in multi-unit lists; others only ever click on it.
+     const owned = new Map();
+     for (const [k, list] of holders) {
+-      list.sort((a, b) => (b.h.multi - a.h.multi) || (b.h.seen - a.h.seen) || (a.h.first - b.h.first));
++      list.sort((a, b) => (b.h.orders - a.h.orders) || (b.h.multi - a.h.multi) ||
++        (b.h.seen - a.h.seen) || (a.h.first - b.h.first));
+       const own = list[0].h;
+       owned.set(k, own);
+       for (const other of list.slice(1)) {
+diff --git a/tests/handle-binder.test.js b/tests/handle-binder.test.js
+index 582b103..7f70f3f 100644
+--- a/tests/handle-binder.test.js
++++ b/tests/handle-binder.test.js
+@@ -3,10 +3,11 @@
+  *
+  * Covers:
+  *   1. ties the simulation made are kept when the lists agree, dropped when
+- *      the lists name another type
+- *   2. untied units are aligned to unclaimed handles in creation order,
+- *      typed handles only take their type (or a form of it)
+- *   3. no unit is tied to a handle the game listed before the unit existed
++ *      the lists name another type, and give way to the creation order
++ *   2. units are aligned to handles in creation order, typed handles only
++ *      take their type (or a form of it)
++ *   3. no unit is tied to a handle that existed before the unit could have,
++ *      by its own first sighting or by a later-allocated handle's (madeBy)
+  *   4. the counter → creation time fit is monotone
+  *
+  * Run: `node tests/handle-binder.test.js`
+@@ -27,7 +28,8 @@ function check (label, fn) {
+   }
+ }
+ 
+-const unit = (id, type, born, handle = null, forms = [type]) => ({ id, type, born, handle, forms: new Set(forms) });
++const unit = (id, type, born, handle = null, forms = [type], earliest = born) =>
++  ({ id, type, born, earliest, handle, forms: new Set(forms) });
+ const handle = (key, first, types = []) => ({
+   key, counter: Number(key.split('/')[1]), first, types: types.map(type => ({ t: first, type }))
+ });
+@@ -52,6 +54,15 @@ check('a form of the unit counts as its type', () => {
+   assert.strictEqual(ties.get(1), '5/500');
+ });
+ 
++check('a simulation tie out of creation order gives way to two in order', () => {
++  // WC3V tied the unit trained first to the later handle
++  const us = [unit(1, 'hrif', 10000, '2/200'), unit(2, 'hrif', 30000, '1/100')];
++  const hs = handles(handle('1/100', 40000, ['hrif']), handle('2/200', 40000, ['hrif']));
++  const ties = HandleBinder.bind(us, hs);
++  assert.strictEqual(ties.get(1), '1/100');
++  assert.strictEqual(ties.get(2), '2/200');
++});
++
+ console.log('[alignment]');
+ 
+ check('untied units take unclaimed handles in creation order', () => {
+@@ -76,6 +87,19 @@ check('no unit is tied to a handle listed long before the unit was trained', ()
+   assert.strictEqual(ties.size, 0);
+ });
+ 
++check('a handle allocated before one already listed cannot be a unit made after that', () => {
++  const madeBy = (counter) => (counter <= 500 ? 15000 : Infinity);
++  const ties = HandleBinder.bind([unit(1, 'hfoo', 90000)], handles(handle('1/100', 100000)), [], madeBy);
++  assert.strictEqual(ties.size, 0);
++});
++
++check('a unit may come out before WC3V\'s training time (its queue held refused orders)', () => {
++  const madeBy = () => 40000;
++  const ties = HandleBinder.bind([unit(1, 'hfoo', 90000, null, ['hfoo'], 30000)],
++    handles(handle('1/100', 100000)), [], madeBy);
++  assert.strictEqual(ties.get(1), '1/100');
++});
++
+ check('with anchors, the creation time the counter implies picks among handles', () => {
+   const anchors = [{ counter: 1000, born: 10000 }, { counter: 2000, born: 20000 }, { counter: 3000, born: 30000 }];
+   const us = [unit(1, 'hfoo', 20000)];
+-- 
+2.56.0
+
