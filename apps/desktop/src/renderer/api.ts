@@ -108,7 +108,8 @@ type W3Api = {
    * Replays in your folders not imported yet, as the collector's last scan counted them; `asked`:
    * some of the older ones were imported already (nothing is until you ask on a new install).
    */
-  replaysScan(): Promise<{ found: number; older: number; asked: boolean } | null>;
+  /** `startedOver`: the match list started over for a new analysis (an update). */
+  replaysScan(): Promise<{ found: number; older: number; asked: boolean; startedOver: boolean } | null>;
   /** Imports the next IMPORT_STEP older replays, or all of them. */
   importMore(all: boolean): Promise<void>;
   logError(message: string): void;

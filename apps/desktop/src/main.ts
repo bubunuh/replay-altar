@@ -33,6 +33,7 @@ import {
   collectorMode,
   firstStart,
   importLimit,
+  startOverIfNewAnalysis,
   markWindowClosed,
   markWindowOpen,
   linuxUnit,
@@ -176,6 +177,10 @@ if (cliAt >= 0) {
   };
   // The language of the reports and the window (the preload asks for it before the page loads).
   const applyLanguage = () => setLanguage(resolveLanguage(loadConfig().language, app.getLocale()));
+  // Games made by an older analysis: the match list starts over (core analysis.ts), before the
+  // database is opened. The collector may be doing it right now: then this waits for it.
+  const over = startOverIfNewAnalysis(p);
+  if (over) logWindow(`new analysis: the match list starts over (${over.games} games out, ${(over.freedBytes / 1e6).toFixed(0)} MB freed; ${over.archived} archived replays and ${over.officialKept} W3Champions statistics kept)`);
   const db = openDb(p.db);
   // Recorded before the collector imports anything: whether this copy had games already (an update).
   const start = firstStart(db);
@@ -236,7 +241,9 @@ if (cliAt >= 0) {
         // Dev/test: a script run on the page just before the capture, e.g. to hide player names.
         const script = process.env.REPLAY_ALTAR_SHOT_JS;
         if (script) {
-          await win!.webContents.executeJavaScript(readFileSync(script, "utf8"));
+          // What the script returns (e.g. timings it measured) is printed.
+          const out = await win!.webContents.executeJavaScript(readFileSync(script, "utf8"));
+          if (out !== undefined && out !== null) console.log(typeof out === "string" ? out : JSON.stringify(out));
           // An offscreen page paints the change on its next frame.
           await new Promise((r) => setTimeout(r, 800));
         }
@@ -468,13 +475,14 @@ if (cliAt >= 0) {
     if (managesCollector && modeNow() !== modeBefore) collectorForWindow("setting changed", modeNow());
     restartCollectorIfRunning();
   });
-  // Replays in your folders not imported yet (from before the first start, beyond what you asked
-  // for), as the collector's last scan counted them; "Import" raises the limit. `asked`: some
-  // were imported already (by asking, or by an update's first start), so it offers "more".
+  // Replays in your folders (and the archive) not imported yet (from before the first start, beyond
+  // what you asked for), as the collector's last scan counted them; "Import" raises the limit.
+  // `asked`: some were imported already (by asking, or by an update's first start), so it offers
+  // "more". `startedOver`: the list started over for a new analysis (an update).
   ipcMain.handle("replays:scan", () => {
     try {
       const scan = JSON.parse(readFileSync(join(p.root, "replays.json"), "utf8")) as { found: number; older: number };
-      return { ...scan, asked: importLimit(loadConfig(), start) !== 0 };
+      return { ...scan, asked: importLimit(loadConfig(), start) !== 0, startedOver: !!start.startedOver };
     } catch {
       return null;
     }

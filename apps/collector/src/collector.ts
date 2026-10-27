@@ -1,13 +1,36 @@
 // The background service: archive + analyze new replays, react to Warcraft III starting. When it
 // is awake depends on Settings → Behaviour (modes.ts).
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { collectorMode, firstStart, importLimit, ingestFile, isWarcraftRunning, isWindowOpen, type CollectorMode, reingestAll, loadConfig, markCollectorRunning, mmss, openDb, paths, replayDirs, resolveLanguage, setLanguage, tr, warcraftFolders, type GameRecord } from "@replay-altar/core";
+import {
+  collectorMode,
+  firstStart,
+  importLimit,
+  ingestFile,
+  isWarcraftRunning,
+  isWindowOpen,
+  type CollectorMode,
+  logEvent,
+  reingestAll,
+  loadConfig,
+  markCollectorRunning,
+  mmss,
+  openDb,
+  paths,
+  replayDirs,
+  resolveLanguage,
+  setLanguage,
+  startOverIfNewAnalysis,
+  tr,
+  warcraftFolders,
+  type GameRecord,
+} from "@replay-altar/core";
 import { simNotReady, syncMapCache } from "@replay-altar/sim";
 import { OfficialQueue } from "./officialqueue.ts";
 import { SimQueue } from "./simqueue.ts";
 import { notify, openDesktop, watchWarcraft } from "./system.ts";
 import { ReplayWatcher } from "./watcher.ts";
+import { archiveLookup } from "./archive.ts";
 import { firstRun } from "./firstrun.ts";
 import { progressWriter } from "./progress.ts";
 import { backToWaiting, holdSimulations, waitForWake, wanted, type Wake } from "./modes.ts";
@@ -60,6 +83,9 @@ export async function runCollector() {
  */
 async function awake(mode: CollectorMode, wake: Wake | null, first: boolean, asleep: () => void, onStop: (fn: () => void) => void) {
   const p = paths();
+  // Games made by an older analysis: the match list starts over (analysis.ts), before anything else.
+  const over = startOverIfNewAnalysis(p);
+  if (over) log(`new analysis: the match list starts over (${over.games} games out, ${(over.freedBytes / 1e6).toFixed(0)} MB freed; ${over.archived} archived replays and ${over.officialKept} W3Champions statistics kept; previous database in ${over.backup ?? "-"})`);
   const found = replayDirs(loadConfig());
   const writeProgress = progressWriter(p.root);
   const config = await firstRun(loadConfig(), found, log, (setup) => writeProgress({ setup, import: null, sims: null }));
@@ -81,22 +107,35 @@ async function awake(mode: CollectorMode, wake: Wake | null, first: boolean, asl
   }
   // Warcraft III as last seen (every few seconds): "game" mode holds simulations while it runs.
   let warcraft = isWarcraftRunning();
-  const sims = new SimQueue(ctx, log, () => holdSimulations(mode, warcraft));
+  const sims = new SimQueue(ctx, log, () => holdSimulations(warcraft));
   const officials = new OfficialQueue(ctx, log);
   const dirs = replayDirs(config);
   if (dirs.length === 0) log(`no replay folders found under ${warcraftFolders(config).join(", ") || "Documents/Warcraft III"}; add yours in Settings`);
 
-  const knownFile = db.prepare("SELECT 1 FROM files WHERE path = ? AND size = ? AND mtime = ?");
+  // Imported (a replay in the folders, or the archived copy a game was imported from), or found
+  // unreadable already in this run (it would be read again at every scan).
+  const knownFile = db.prepare("SELECT game_key FROM files WHERE path = ? AND size = ? AND mtime = ? UNION ALL SELECT game_key FROM games WHERE archive_path = ? LIMIT 1");
+  const unreadable = new Set<string>();
+  const fileId = (path: string, size: number, mtime: string) => `${path}|${size}|${mtime}`;
   const watcher = new ReplayWatcher(
     dirs,
     async (path, origin) => {
       const out = await ingestFile(ctx, path);
       if (out.status === "duplicate") return;
-      if (out.status === "error") return log(`${path}: ${out.error}`);
+      if (out.status === "error") {
+        try {
+          const s = statSync(path);
+          unreadable.add(fileId(path, s.size, s.mtime.toISOString()));
+        } catch {
+          // gone
+        }
+        return log(`${path}: ${out.error}`);
+      }
       const r = out.record;
       log(`${out.status} ${r.gameKey.slice(0, 8)} ${r.classification.source}/${r.classification.category} analyzed=${r.classification.analyzed} from ${path}`);
       if (out.needsSim) sims.add(r.gameKey);
-      if (out.status === "new" && r.classification.source === "w3champions" && r.classification.analyzed && config.fetchOfficialStats !== false) officials.add(r.gameKey);
+      // Never looked up (a game imported again after a start-over keeps what was found before).
+      if (out.status === "new" && !r.official && r.classification.source === "w3champions" && r.classification.analyzed && config.fetchOfficialStats !== false) officials.add(r.gameKey);
       // Notify only for a game that just ended while we were watching. A rescan can find a
       // game from minutes ago, and its notification would land in the middle of the next match.
       const fresh = Date.now() - Date.parse(r.game.endedAt) < 10 * 60_000;
@@ -112,8 +151,21 @@ async function awake(mode: CollectorMode, wake: Wake | null, first: boolean, asl
       // on the match list (an update keeps the newest ones it had imported by itself).
       since: new Date(start.at),
       limit: importLimit(config, start),
-      known: (path, size, mtime) => !!knownFile.get(path, size, mtime),
-      onScan: (r) => writeFileSync(join(p.root, "replays.json"), JSON.stringify(r)),
+      known: (path, size, mtime) => unreadable.has(fileId(path, size, mtime)) || ((knownFile.get(path, size, mtime, path) as { game_key: string } | undefined)?.game_key ?? null),
+      onScan: (r) => {
+        const file = join(p.root, "replays.json");
+        const body = JSON.stringify(r);
+        let before = "";
+        try {
+          before = readFileSync(file, "utf8");
+        } catch {
+          // first scan
+        }
+        writeFileSync(file, body);
+        // The window offers to import them: it hears when the count changed.
+        if (body !== before) logEvent(p, { type: "scanned", ...r });
+      },
+      archive: { dir: p.archive, lookup: archiveLookup(p) },
     },
   );
   // Extracted maps live in the data folder; WC3V reads them from the install, which an update
@@ -127,6 +179,12 @@ async function awake(mode: CollectorMode, wake: Wake | null, first: boolean, asl
   watcher.start();
   watcher.scanAll(); // backfill + anything played while we were down
   sims.backfill();
+  // W3Champions statistics still missing for recent games: their later tries were lost if the
+  // collector went back to waiting or stopped meanwhile.
+  if (config.fetchOfficialStats !== false) {
+    const n = officials.catchUp();
+    if (n) log(`W3Champions statistics: ${n} recent game(s) to look up again`);
+  }
   // Games that failed for a reason outside the replay are simulated again: missing game data
   // whenever it's there now (it appears once the game is installed), and map failures once per
   // version, which may have fixed them (the 0.1 Windows builds couldn't prepare any map).

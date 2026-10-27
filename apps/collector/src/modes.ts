@@ -2,10 +2,10 @@
 // - "always": all the time (watching the replay folders, simulating as games come in);
 // - "off": the window starts it and stops it when it closes, so it is awake whenever it runs;
 // - "game": started at login, it waits, light (no database, no folder watching: a look at the
-//   process list every few seconds), until Warcraft III runs or the window opens. While the game
-//   runs it imports each game as it ends but holds the simulations, which would slow the next
-//   match down; once the game has closed they run, and when nothing has been left to do for a few
-//   minutes it goes back to waiting.
+//   process list every few seconds), until Warcraft III runs or the window opens. Once the game
+//   has closed and nothing has been left to do for a few minutes, it goes back to waiting.
+// In every mode, while Warcraft III runs each game is imported as it ends but the simulations
+// wait: they would slow the next match down. They run once the game has closed.
 import type { CollectorMode } from "@replay-altar/core";
 
 /** While waiting: how often the window's mark is looked at, and Warcraft III every few looks. */
@@ -19,8 +19,11 @@ export type Seen = { warcraft: boolean; window: boolean };
 /** Does the collector have a reason to be awake? */
 export const wanted = (mode: CollectorMode, seen: Seen) => mode !== "game" || seen.warcraft || seen.window;
 
-/** Hold simulations back: in "game" mode while Warcraft III runs (the next match is on). */
-export const holdSimulations = (mode: CollectorMode, warcraft: boolean) => mode === "game" && warcraft;
+/**
+ * Hold simulations back while Warcraft III runs (the next match may be on), whatever the mode: a
+ * simulation takes a CPU core and hundreds of MB for a minute or more.
+ */
+export const holdSimulations = (warcraft: boolean) => warcraft;
 
 /**
  * Back to waiting: a "game" collector, nothing wanted it for AWAKE_AFTER_MS (the last replay is

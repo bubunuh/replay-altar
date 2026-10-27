@@ -9,13 +9,37 @@ statistics (`data/`).
 
 - **Nothing is imported until you ask** (tester feedback after 0.2.1): on the first start, if
   replays are found, the match list offers *Import 50 replays* and *Import all replays (N)*, and
-  nothing loads by itself. The games you play from then on are added as before. If you already use
-  Replay Altar, your list doesn't change.
+  nothing loads by itself. The games you play from then on are added as before.
+- **Your games are imported again after the update, when you ask:** 0.2.2 reads and simulates
+  games differently (new numbers, the replay checks below, the new simulation), so instead of
+  reading every game again by itself, the match list starts empty, as on a new install, with
+  *Import 50 replays* and *Import all replays (N)*. N counts every replay Replay Altar can find:
+  the ones in your replay folders and the copies it keeps of every game it imported, which for
+  games whose `LastReplay.w3g` was overwritten are the only ones left (and of replays an older
+  version couldn't read, which this one may); a copy of a replay that is still in your folders
+  counts once. Games imported again keep their date, a result you corrected
+  by hand and their W3Champions statistics (not asked for again). Your settings, battletag, game
+  data and maps stay; the previous database stays in one backup file
+  (`replay-altar.previous.sqlite` in the data folder). The games you play after the update are
+  added by themselves. Later versions that change the analysis will do the same.
+- **The match list in pages of 100:** with thousands of games the list took one to two seconds
+  to redraw at every change (a filter, a search, each game imported), and the "Main problem"
+  column took about a minute to fill in. Now it shows 100 games per page, newest first, with page
+  buttons above and below; the filters, the search, the problem counts and the number of games
+  still take every game, a filter goes back to the first page, and new games coming in don't move
+  you off your page. On 5,000 games, a change now redraws in about 16 ms and the "Main problem"
+  column fills in about 2.5 s.
+- **W3Champions statistics are looked for again at start:** a game whose end-of-game statistics
+  weren't on W3Champions yet is tried again 10 minutes and 1 hour later, but those tries were lost
+  when Replay Altar went back to waiting or was closed. Now, when it starts, the games of the last
+  three days still without them get their remaining tries, one game at a time and a few seconds
+  apart as before, with a long pause if W3Champions asks to slow down.
 - **Choose when Replay Altar runs in the background** (tester feedback): Settings → Behaviour has
   three choices. *Only while Warcraft III is running*, the new default (also when you update): a
   light program starts when you log in and only waits for the game; while you play it saves each
-  replay as the match ends, and once you close the game it simulates the new games (no longer
-  during your next match), then goes back to waiting. *Always*: as before. *Off*: nothing starts
+  replay as the match ends, and once you close the game it simulates the new games, then goes
+  back to waiting. *Always*: awake all the time, as before. In every mode the simulations now wait
+  until you close the game, so they no longer slow down your next match. *Off*: nothing starts
   when you log in and closing the window stops Replay Altar; new games are picked up the next time
   you open it (the game keeps them in Replays and Replays/Autosaved; only an overwritten
   `LastReplay.w3g` can be missed), and Settings warns about that when you choose it.
@@ -28,13 +52,16 @@ statistics (`data/`).
 
 Planned:
 
-- **Every game simulated again with the new simulation:** yours on the update, the pro and
-  tournament games before the release, with the pro statistics republished and the evaluation
-  curve's model refitted on the new numbers, so the curve and your games are measured the same way
-  (the full review is for 0.2.3). Before the release: the simulation stops reading one of the 15
-  held-out recorded games at 9:24 (batch3-11: a selection the game lists right after a deselect is
-  not taken, then an upgrade from an empty selection fails); the fix goes to the WC3V lab, to come
-  back as one more patch.
+- **Every game simulated again with the new simulation:** yours as you import them again after
+  the update, the pro and tournament games before the release, with the pro statistics republished
+  and the evaluation curve's model refitted on the new numbers, so the curve and your games are
+  measured the same way (the full review is for 0.2.3). Before the release: the simulation stops
+  reading one of the 15 held-out recorded games at 9:24 (batch3-11: a selection the game lists
+  right after a deselect is not taken, then an upgrade from an empty selection fails); the fix is
+  in the WC3V lab, to come back as one more patch. Also from the lab: games on 60 maps (mostly the
+  copies hosted under hashed names, plus a few ATR maps) stopped at 0:01 because their start
+  positions were misread (91 of our tournament and ladder replays); the fix needs the patch plus
+  the map entries read again, in the installer and in players' saved entries.
 
 ### Checked for 0.2.2
 
