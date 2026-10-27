@@ -1,7 +1,8 @@
-// The always-on service: archive + analyze new replays, react to Warcraft III starting.
+// The background service: archive + analyze new replays, react to Warcraft III starting. When it
+// is awake depends on Settings → Behaviour (modes.ts).
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { firstStart, importLimit, ingestFile, reingestAll, loadConfig, markCollectorRunning, mmss, openDb, paths, replayDirs, resolveLanguage, setLanguage, tr, warcraftFolders, type GameRecord } from "@replay-altar/core";
+import { collectorMode, firstStart, importLimit, ingestFile, isWarcraftRunning, isWindowOpen, type CollectorMode, reingestAll, loadConfig, markCollectorRunning, mmss, openDb, paths, replayDirs, resolveLanguage, setLanguage, tr, warcraftFolders, type GameRecord } from "@replay-altar/core";
 import { simNotReady, syncMapCache } from "@replay-altar/sim";
 import { OfficialQueue } from "./officialqueue.ts";
 import { SimQueue } from "./simqueue.ts";
@@ -9,6 +10,8 @@ import { notify, openDesktop, watchWarcraft } from "./system.ts";
 import { ReplayWatcher } from "./watcher.ts";
 import { firstRun } from "./firstrun.ts";
 import { progressWriter } from "./progress.ts";
+import { backToWaiting, holdSimulations, waitForWake, wanted, type Wake } from "./modes.ts";
+import { setTimeout as sleep } from "node:timers/promises";
 
 const log = (msg: string) => console.log(`[replay-altar] ${msg}`);
 
@@ -25,15 +28,45 @@ function describe(r: GameRecord) {
 
 export async function runCollector() {
   const p = paths();
-  const found = replayDirs(loadConfig());
   mkdirSync(p.root, { recursive: true });
+  markCollectorRunning();
+  // Read once: changing it in Settings restarts the collector.
+  const mode = collectorMode(loadConfig());
+  let stop: () => void = () => {};
+  const shutdown = () => {
+    log("stopping");
+    stop();
+    process.exit(0);
+  };
+  process.on("SIGTERM", shutdown);
+  process.on("SIGINT", shutdown);
+  for (let first = true; ; first = false) {
+    let wake: Wake | null = null;
+    if (mode === "game") {
+      log(first ? "waiting for Warcraft III (or the window) before doing anything" : "nothing left to do: waiting for Warcraft III again");
+      wake = await waitForWake((warcraftToo) => ({ warcraft: warcraftToo && isWarcraftRunning(), window: isWindowOpen() }), (ms) => sleep(ms));
+      log(wake === "window" ? "the window opened: awake" : "Warcraft III is running: awake");
+    }
+    await new Promise<void>((asleep) => {
+      void awake(mode, wake, first, asleep, (fn) => (stop = fn));
+    });
+    stop = () => {};
+  }
+}
+
+/**
+ * Archives and analyzes replays until `asleep` (a "game" collector with nothing left to do; the
+ * others stay awake). `onStop`: how to close everything when the process is asked to stop.
+ */
+async function awake(mode: CollectorMode, wake: Wake | null, first: boolean, asleep: () => void, onStop: (fn: () => void) => void) {
+  const p = paths();
+  const found = replayDirs(loadConfig());
   const writeProgress = progressWriter(p.root);
   const config = await firstRun(loadConfig(), found, log, (setup) => writeProgress({ setup, import: null, sims: null }));
   setLanguage(resolveLanguage(config.language));
   const db = openDb(p.db);
   // Before anything is imported: a database with games already means an update.
   const start = firstStart(db);
-  markCollectorRunning();
   const ctx = { db, config, paths: p };
   // Your battletags changed (confirmed or edited in Settings, which restarts the collector): sort
   // the archived games again, so the ones you played count as yours.
@@ -46,7 +79,9 @@ export async function runCollector() {
     writeFileSync(applied, accountsKey);
     writeProgress({ setup: null, import: null, sims: null });
   }
-  const sims = new SimQueue(ctx, log);
+  // Warcraft III as last seen (every few seconds): "game" mode holds simulations while it runs.
+  let warcraft = isWarcraftRunning();
+  const sims = new SimQueue(ctx, log, () => holdSimulations(mode, warcraft));
   const officials = new OfficialQueue(ctx, log);
   const dirs = replayDirs(config);
   if (dirs.length === 0) log(`no replay folders found under ${warcraftFolders(config).join(", ") || "Documents/Warcraft III"}; add yours in Settings`);
@@ -95,11 +130,14 @@ export async function runCollector() {
   // Games that failed for a reason outside the replay are simulated again: missing game data
   // whenever it's there now (it appears once the game is installed), and map failures once per
   // version, which may have fixed them (the 0.1 Windows builds couldn't prepare any map).
-  const version = process.env.REPLAY_ALTAR_VERSION;
-  const retried = join(p.root, "sims-retried.txt");
-  const newVersion = !!version && (!existsSync(retried) || readFileSync(retried, "utf8") !== version);
-  if (!simNotReady(p.root)) sims.retryFailed(newVersion ? /^(map |game data|WC3V)/ : /^(game data|WC3V)/);
-  if (newVersion) writeFileSync(retried, version);
+  // Once per run of the collector (a "game" one wakes up often).
+  if (first) {
+    const version = process.env.REPLAY_ALTAR_VERSION;
+    const retried = join(p.root, "sims-retried.txt");
+    const newVersion = !!version && (!existsSync(retried) || readFileSync(retried, "utf8") !== version);
+    if (!simNotReady(p.root)) sims.retryFailed(newVersion ? /^(map |game data|WC3V)/ : /^(game data|WC3V)/);
+    if (newVersion) writeFileSync(retried, version);
+  }
 
   // Progress for the window: the replays found at start (later rescans find known files and
   // would only flash a bar), then the simulations.
@@ -110,24 +148,42 @@ export async function runCollector() {
     writeProgress({ setup: null, import: importing ? { done: importTotal - watcher.pendingCount, total: importTotal } : null, sims: sims.progress });
   }, 1000);
 
+  const onWarcraftStart = () => {
+    log("Warcraft III started");
+    if (config.openWindowOnGameStart) openDesktop(["--background"]);
+  };
+  // Woken up by the game starting: what the watch below would have seen.
+  if (wake === "warcraft started") onWarcraftStart();
+  let lastWanted = Date.now();
   const wc3 = watchWarcraft(
     () => {
-      log("Warcraft III started");
-      if (config.openWindowOnGameStart) openDesktop(["--background"]);
+      warcraft = true;
+      onWarcraftStart();
     },
-    () => log("Warcraft III stopped"),
+    () => {
+      warcraft = false;
+      log("Warcraft III stopped");
+      sims.resume(); // the simulations held during the match
+    },
+    warcraft,
+    () => {
+      // Back to waiting once nothing has wanted us awake for a while and the work is done.
+      const now = Date.now();
+      if (wanted(mode, { warcraft, window: isWindowOpen() })) lastWanted = now;
+      else if (backToWaiting(mode, now, lastWanted, watcher.pendingCount > 0 || sims.pending > 0)) {
+        close();
+        asleep();
+      }
+    },
   );
 
-  const shutdown = () => {
-    log("stopping");
+  function close() {
     watcher.stop();
     clearInterval(wc3);
     clearInterval(progress);
     writeProgress({ setup: null, import: null, sims: null });
     db.close();
-    process.exit(0);
-  };
-  process.on("SIGTERM", shutdown);
-  process.on("SIGINT", shutdown);
+  }
+  onStop(close);
   log(`running; data in ${p.root}`);
 }

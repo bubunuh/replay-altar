@@ -11,12 +11,14 @@ statistics (`data/`).
   replays are found, the match list offers *Import 50 replays* and *Import all replays (N)*, and
   nothing loads by itself. The games you play from then on are added as before. If you already use
   Replay Altar, your list doesn't change.
-- **Choose whether Replay Altar keeps running after you close it** (tester feedback): Settings →
-  Behaviour → *Keep Replay Altar running after closing the window*, off on a new install. Off:
-  closing the window stops the background collector and it doesn't start when you log in; the
-  games you play meanwhile are picked up the next time you open the app (the game keeps them in
-  Replays and Replays/Autosaved; only an overwritten `LastReplay.w3g` is missed). On: as before,
-  it keeps watching and starts at login. If you already use Replay Altar, it stays on.
+- **Choose when Replay Altar runs in the background** (tester feedback): Settings → Behaviour has
+  three choices. *Only while Warcraft III is running*, the new default (also when you update): a
+  light program starts when you log in and only waits for the game; while you play it saves each
+  replay as the match ends, and once you close the game it simulates the new games (no longer
+  during your next match), then goes back to waiting. *Always*: as before. *Off*: nothing starts
+  when you log in and closing the window stops Replay Altar; new games are picked up the next time
+  you open it (the game keeps them in Replays and Replays/Autosaved; only an overwritten
+  `LastReplay.w3g` can be missed), and Settings warns about that when you choose it.
 
 Planned:
 

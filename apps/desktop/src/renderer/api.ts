@@ -1,4 +1,4 @@
-import type { Config, GameDetail, GameRow, MetricDef, Paths, PerfGame, Progress, ReferenceGroup } from "@replay-altar/core/ui";
+import type { CollectorMode, Config, GameDetail, GameRow, MetricDef, Paths, PerfGame, Progress, ReferenceGroup } from "@replay-altar/core/ui";
 import type { RefProfile } from "@replay-altar/reference/types";
 import type { RulesBook } from "@replay-altar/rules/types";
 import type { Principles } from "@replay-altar/rules/principles";
@@ -48,8 +48,8 @@ type W3Api = {
   getGame(key: string): Promise<GameDetail>;
   performance(): Promise<{ games: PerfGame[]; metrics: MetricDef[] }>;
   overrideResult(key: string, result: "win" | "loss" | null): Promise<void>;
-  /** `keepRunning`: the setting as it applies now (config.keepRunning, or its default for this copy). */
-  getConfig(): Promise<{ config: Config; configPath: string; paths: Paths; keepRunning: boolean }>;
+  /** `collectorMode`: when the collector runs, as it applies now (config.collectorMode, or the default). */
+  getConfig(): Promise<{ config: Config; configPath: string; paths: Paths; collectorMode: CollectorMode }>;
   setConfig(config: Config): Promise<void>;
   collectorStatus(): Promise<string>;
   folders(): Promise<Folders>;

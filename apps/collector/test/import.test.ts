@@ -5,7 +5,7 @@ import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, utimesS
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { DEFAULT_CONFIG, firstStart, firstStartFile, importLimit, ingestFile, keepRunning, KEEP_RUNNING_AFTER_UPDATE, openDb, paths, type Config } from "@replay-altar/core";
+import { DEFAULT_CONFIG, firstStart, firstStartFile, importLimit, ingestFile, openDb, paths, type Config } from "@replay-altar/core";
 import { ReplayWatcher, type ScanResult } from "../src/watcher.ts";
 
 const FIXTURES = join(import.meta.dirname, "../../../fixtures/replays");
@@ -79,7 +79,7 @@ describe("first start", () => {
     expect(scan(dir, new Date(start.at), importLimit(config({ importLimit: "all" }), start)).scheduled).toHaveLength(120);
   });
 
-  test.skipIf(!existsSync(join(FIXTURES, "replay1.w3g")))("an update from 0.2.1 keeps importing the newest 50 and keeps the collector running", async () => {
+  test.skipIf(!existsSync(join(FIXTURES, "replay1.w3g")))("an update from 0.2.1 keeps importing the newest 50", async () => {
     const p = paths();
     const db = openDb(p.db);
     const inbox = join(p.root, "inbox");
@@ -89,7 +89,6 @@ describe("first start", () => {
     const start = firstStart(db);
     expect(start.updated).toBe(true);
     expect(importLimit(config(), start)).toBe(50);
-    expect(keepRunning(config(), start)).toBe(KEEP_RUNNING_AFTER_UPDATE);
     // The same 50 as 0.2.1's first start chose: the newest of the replays already there.
     const dir = folder(120, Date.parse(start.at) - 60_000);
     const { scheduled, result } = scan(dir, new Date(start.at), importLimit(config(), start));
@@ -105,15 +104,5 @@ describe("first start", () => {
     expect(JSON.parse(readFileSync(firstStartFile(), "utf8"))).toEqual(first);
     const db = openDb(paths().db);
     expect(firstStart(db)).toEqual(first);
-  });
-});
-
-describe("keep running after closing the window", () => {
-  test("off on a new install, your choice otherwise", () => {
-    const fresh = { at: new Date().toISOString(), updated: false };
-    expect(keepRunning(config(), fresh)).toBe(false);
-    expect(keepRunning(config({ keepRunning: true }), fresh)).toBe(true);
-    const updated = { ...fresh, updated: true };
-    expect(keepRunning(config({ keepRunning: false }), updated)).toBe(false);
   });
 });

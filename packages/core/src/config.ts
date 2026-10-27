@@ -20,6 +20,9 @@ export type ReferenceGroup = {
   onlyIfPlayed?: boolean;
 };
 
+/** When the collector runs: see Config.collectorMode. */
+export type CollectorMode = "off" | "game" | "always";
+
 export type Config = {
   /** Battletags that are you. Games where none of them played are archived as "observed". */
   accounts: string[];
@@ -58,11 +61,13 @@ export type Config = {
    */
   importLimit?: number | "all";
   /**
-   * Keep the collector running (and starting at login) after the window closes. Off: it runs
-   * only while the window is open, and catches up on the replays saved meanwhile at the next
-   * start. Unset: off on a new install (keepRunning() in firststart.ts).
+   * When the collector runs (collectorMode() in firststart.ts; unset: "game"). "off": only while
+   * the window is open, nothing at login; the replays saved meanwhile are picked up at the next
+   * start. "game": a light process from login that wakes up while Warcraft III runs (and while the
+   * window is open), simulates the new games once the game closes, and goes back to waiting.
+   * "always": watching all the time, from login.
    */
-  keepRunning?: boolean;
+  collectorMode?: CollectorMode;
   /** Pro games (warcraft3.info tournament replays) the shipped statistics come from (maintainers). */
   reference: { groups: ReferenceGroup[] };
 };

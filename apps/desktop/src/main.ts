@@ -26,12 +26,15 @@ import {
   IMPORT_STEP,
   projectRoot,
   isInstalled,
+  type CollectorMode,
   collectorFiles,
   collectorForWindow,
   collectorInstalled,
+  collectorMode,
   firstStart,
   importLimit,
-  keepRunning,
+  markWindowClosed,
+  markWindowOpen,
   linuxUnit,
   windowsLauncher,
   language,
@@ -65,10 +68,10 @@ if (cliAt >= 0) {
 
 /**
  * An installed copy on Windows sets up its own collector: started now, on this executable as Node
- * (the launcher is rewritten when an update moves the executable), and at every login with
- * `keep` ("Keep Replay Altar running after closing the window"). True when it did.
+ * (the launcher is rewritten when an update moves the executable), and at every login unless
+ * `mode` is "off" (Settings → Behaviour). True when it did.
  */
-function ensureWindowsCollector(keep: boolean): boolean {
+function ensureWindowsCollector(mode: CollectorMode): boolean {
   if (process.platform !== "win32" || !isInstalled()) return false;
   const files = collectorFiles();
   const launcher = windowsLauncher([process.execPath, join(projectRoot(), "collector/collector.mjs"), "collector"], { ELECTRON_RUN_AS_NODE: "1" });
@@ -79,7 +82,7 @@ function ensureWindowsCollector(keep: boolean): boolean {
     writeFileSync(files.launcher, launcher);
     restartCollectorIfRunning();
   }
-  collectorForWindow("opened", keep);
+  collectorForWindow("opened", mode);
   return true;
 }
 
@@ -90,11 +93,11 @@ const shWord = (s: string) => `'${s.replaceAll("'", "'\\''")}'`;
 
 /**
  * A Linux AppImage sets up what `replay-altar install` sets up for a checkout: the collector as a
- * systemd user service (started now, and at every login with `keep`) running through this
+ * systemd user service (started now, and at every login unless `mode` is "off") running through this
  * AppImage file, the `replay-altar` command and a menu entry with its icon. Rewritten when the
  * AppImage moves (an update may rename it). True when it did.
  */
-function ensureAppImageCollector(keep: boolean): boolean {
+function ensureAppImageCollector(mode: CollectorMode): boolean {
   const appImage = process.env.APPIMAGE;
   if (process.platform !== "linux" || !appImage) return false;
   const home = homedir();
@@ -120,7 +123,7 @@ function ensureAppImageCollector(keep: boolean): boolean {
     mkdirSync(dirname(icon), { recursive: true });
     writeFileSync(icon, readFileSync(join(import.meta.dirname, "../assets/replay-altar.svg")));
   }
-  collectorForWindow("opened", keep);
+  collectorForWindow("opened", mode);
   // A new unit or a new version: the running collector must move to it before old copies go.
   if (unitChanged || freshCopy) restartCollectorIfRunning();
   pruneOldCopies();
@@ -128,12 +131,12 @@ function ensureAppImageCollector(keep: boolean): boolean {
 }
 
 /**
- * A checkout whose collector `replay-altar install` set up: with `keep` off the window runs it
- * like an installed copy's; with it on, it is left as install, suspend and resume set it.
+ * A checkout whose collector `replay-altar install` set up: with `mode` "off" the window runs it
+ * like an installed copy's; otherwise it is left as install, suspend and resume set it.
  */
-function ensureCheckoutCollector(keep: boolean): boolean {
+function ensureCheckoutCollector(mode: CollectorMode): boolean {
   if (isInstalled() || process.env.APPIMAGE || !collectorInstalled()) return false;
-  if (!keep) collectorForWindow("opened", keep);
+  if (mode === "off") collectorForWindow("opened", mode);
   return true;
 }
 
@@ -176,9 +179,9 @@ if (cliAt >= 0) {
   const db = openDb(p.db);
   // Recorded before the collector imports anything: whether this copy had games already (an update).
   const start = firstStart(db);
-  /** "Keep Replay Altar running after closing the window", as set now. */
-  const keepNow = () => keepRunning(loadConfig(), start);
-  /** The window started the collector, and stops it when it closes unless it should keep running. */
+  /** When the collector runs (Settings → Behaviour), as set now. */
+  const modeNow = () => collectorMode(loadConfig());
+  /** The window started the collector, and stops it when it closes if it runs only with the window. */
   let managesCollector = false;
   // Rules reports by game, kept until the data or a result changes.
   // An analyzed replay's own database (the Analyzer page), opened on first use.
@@ -260,8 +263,10 @@ if (cliAt >= 0) {
     applyLanguage();
     const launch = parseArgs(process.argv);
     if (!launch.screenshot) {
-      const keep = keepNow();
-      managesCollector = ensureWindowsCollector(keep) || ensureAppImageCollector(keep) || ensureCheckoutCollector(keep);
+      // A collector waiting for Warcraft III wakes up while the window is open.
+      markWindowOpen();
+      const mode = modeNow();
+      managesCollector = ensureWindowsCollector(mode) || ensureAppImageCollector(mode) || ensureCheckoutCollector(mode);
     }
     // Screenshot runs stay offline unless pointed at a test list of releases.
     if (!launch.screenshot || process.env.REPLAY_ALTAR_RELEASES_URL) {
@@ -365,10 +370,13 @@ if (cliAt >= 0) {
   });
 
   app.on("window-all-closed", () => app.quit());
-  // Closing the window (or quitting to install an update) stops the collector unless "Keep Replay
-  // Altar running after closing the window" is on; the next start picks up the replays saved meanwhile.
+  // Closing the window (or quitting to install an update) stops a collector that runs only with
+  // the window ("off"); the next start picks up the replays saved meanwhile. A "game" one goes
+  // back to waiting for Warcraft III by itself.
   app.on("will-quit", () => {
-    if (managesCollector) collectorForWindow("closed", keepNow());
+    if (parseArgs(process.argv).screenshot) return;
+    markWindowClosed();
+    if (managesCollector) collectorForWindow("closed", modeNow());
   });
 
   ipcMain.handle("rules:get", (_e, key: string) => bookOf(key));
@@ -443,11 +451,11 @@ if (cliAt >= 0) {
   });
   ipcMain.handle("config:get", () => {
     const config = loadConfig();
-    return { config, configPath: configPath(), paths: p, keepRunning: keepRunning(config, start) };
+    return { config, configPath: configPath(), paths: p, collectorMode: collectorMode(config) };
   });
   ipcMain.handle("config:set", (_e, config: Config) => {
     const before = loadConfig().language;
-    const keptBefore = keepNow();
+    const modeBefore = modeNow();
     // Once you have a battletag, the first run's suggestions are done with.
     saveConfig(config.accounts.length ? { ...config, suggestedAccounts: undefined } : config);
     // The page reloads after a theme change (charts take their colours when drawn).
@@ -456,8 +464,8 @@ if (cliAt >= 0) {
       applyLanguage();
       books.clear(); // reports are written in the language
     }
-    // Kept running or not: at login only when on; it stops when the window closes when off.
-    if (managesCollector && keepNow() !== keptBefore) collectorForWindow("setting changed", keepNow());
+    // When the collector runs: at login unless "off" (which stops it when the window closes).
+    if (managesCollector && modeNow() !== modeBefore) collectorForWindow("setting changed", modeNow());
     restartCollectorIfRunning();
   });
   // Replays in your folders not imported yet (from before the first start, beyond what you asked

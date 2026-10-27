@@ -1,10 +1,10 @@
 // When this copy of Replay Altar first ran with the 0.2.2 rules, and whether it already had games
-// then (an update). Two defaults depend on it: how many older replays are imported without being
-// asked, and whether the collector keeps running after the window closes. Kept in the data folder
-// (first-start.json), next to the games it describes; the settings file only holds what you chose.
+// then (an update): how many older replays are imported without being asked depends on it. Kept in
+// the data folder (first-start.json), next to the games it describes; the settings file only holds
+// what you chose. Also the default of when the collector runs.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { dataDir, IMPORT_STEP, type Config } from "./config.ts";
+import { dataDir, IMPORT_STEP, type CollectorMode, type Config } from "./config.ts";
 import type { DB } from "./db.ts";
 
 export type FirstStart = {
@@ -15,10 +15,10 @@ export type FirstStart = {
 };
 
 /**
- * "Keep Replay Altar running after closing the window" for a copy updated from 0.2.1 or older
- * that never chose: those collectors started at login and kept running until now.
+ * When the collector runs unless you chose (Settings → Behaviour), on new installs and on copies
+ * updated from 0.2.1 or older alike: from login, but only awake while Warcraft III runs.
  */
-export const KEEP_RUNNING_AFTER_UPDATE = true;
+export const DEFAULT_COLLECTOR_MODE: CollectorMode = "game";
 
 export const firstStartFile = () => join(dataDir(), "first-start.json");
 
@@ -60,7 +60,7 @@ export function importLimit(config: Config, start: FirstStart): number | null {
   return config.importLimit ?? (start.updated ? IMPORT_STEP : 0);
 }
 
-/** "Keep Replay Altar running after closing the window": your choice, else off on a new install. */
-export function keepRunning(config: Config, start: FirstStart): boolean {
-  return config.keepRunning ?? (start.updated ? KEEP_RUNNING_AFTER_UPDATE : false);
+/** When the collector runs: your choice in Settings, else DEFAULT_COLLECTOR_MODE. */
+export function collectorMode(config: Config): CollectorMode {
+  return config.collectorMode === "off" || config.collectorMode === "game" || config.collectorMode === "always" ? config.collectorMode : DEFAULT_COLLECTOR_MODE;
 }

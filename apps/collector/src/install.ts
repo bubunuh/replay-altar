@@ -7,7 +7,7 @@ import { chmodSync, copyFileSync, existsSync, mkdirSync, readdirSync, readFileSy
 import { homedir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import { collectorFiles, configPath, dataDir, disableCollector, firstStart, keepRunning, linuxUnit, loadConfig, openDb, paths, projectRoot, SERVICE, startCollector, windowsLauncher } from "@replay-altar/core";
+import { collectorFiles, collectorMode, configPath, dataDir, disableCollector, linuxUnit, loadConfig, projectRoot, SERVICE, startCollector, windowsLauncher } from "@replay-altar/core";
 
 const home = homedir();
 const windows = process.platform === "win32";
@@ -33,20 +33,13 @@ const WINDOWS = {
 export const windowsDesktop = () => ({ exe: join(PROJECT, "node_modules/electron/dist/electron.exe"), args: [join(PROJECT, "apps/desktop")] });
 const SHORTCUT = "Replay Altar.lnk";
 
-/** The setting "Keep Replay Altar running after closing the window": the collector starts at login only with it on. */
-function atLogin(): boolean {
-  const db = existsSync(paths().db) ? openDb(paths().db) : null;
-  try {
-    return keepRunning(loadConfig(), firstStart(db));
-  } finally {
-    db?.close();
-  }
-}
+/** Settings → Behaviour: the collector starts at login unless it should run only with the window ("off"). */
+const atLogin = () => collectorMode(loadConfig()) !== "off";
 
 const runningNote = (login: boolean) =>
   login
-    ? "Collector is running and starts at login"
-    : "Collector is running; it doesn't start at login and closing Replay Altar's window stops it (turn on Settings → Behaviour → Keep Replay Altar running after closing the window to change that)";
+    ? `Collector is running and starts at login${collectorMode(loadConfig()) === "game" ? " (it only wakes up while Warcraft III or Replay Altar's window is open)" : ""}`
+    : "Collector is running; it doesn't start at login and closing Replay Altar's window stops it (Settings → Behaviour changes that)";
 
 function write(path: string, content: string, mode = 0o644) {
   mkdirSync(dirname(path), { recursive: true });
@@ -220,7 +213,7 @@ export function suspend() {
 export function resume() {
   const login = atLogin();
   startCollector(login);
-  console.log(`${login ? "Collector running again and at login" : "Collector running again (not at login: Keep Replay Altar running after closing the window is off)"}; it will pick up replays played while suspended (except overwritten LastReplay.w3g).`);
+  console.log(`${login ? "Collector running again and at login" : "Collector running again (not at login: Settings → Behaviour says only with the window)"}; it will pick up replays played while suspended (except overwritten LastReplay.w3g).`);
 }
 
 export function uninstall(purge: boolean) {
