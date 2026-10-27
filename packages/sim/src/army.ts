@@ -1,6 +1,5 @@
 // Army size and value over time, hero timelines (levels, deaths, revives), and a units-killed
 // estimate. Validated against W3Champions' official numbers on 86 pro player-games (0.2.2):
-// - "largest army" (game counts it in food) vs our max army food: correlation 0.86, 1.02x
 // - "units killed" (game counts creeps too) vs (enemy losses + creeps in camps you cleared) x 1.29:
 //   correlation 0.93
 import { baseUnit, RACES, type GameRecord, type HeroTimeline } from "@replay-altar/core";
@@ -22,8 +21,8 @@ type WUnitX = {
 };
 
 /**
- * Army food and value at time t. Food comes from the simulation's supply (food used minus
- * workers minus heroes); value prices that food at the average cost per food of the army units
+ * Army food and value at time t. Food comes from the food used (food.ts) minus workers minus
+ * heroes; value prices that food at the average cost per food of the army units
  * you had finished training by then (from your orders), so 10 food of Knights is worth more
  * than 10 food of Footmen.
  */
