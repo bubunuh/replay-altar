@@ -46,7 +46,7 @@ statistics (`data/`).
 - **Damaged W3Champions replays are pointed out:** some W3Champions (FLO) replays lack the players' first selection at the start of the game, and Warcraft III plays them back wrong from the start, so rewatching one shows a different game. The report of such a game now says so. Its numbers stay: Replay Altar reads the players' orders, which are all there (on the two such games with W3Champions' own end-of-game numbers, hero levels matched exactly and the estimates were as close as usual).
 - **Hero levels after a Tome of Retraining:** a hero retrained with a tome could end up to four levels too high or too low (30% of the games with a tome), which threw off hero levels, hero experience and the findings about them. Replay Altar now reads the retraining from when the skill menu was opened and the tome bought: on games with W3Champions' own hero levels, 27 of 28 retrained players' heroes now match (25 before).
 - **Second and third heroes count in the resources spent:** the gold and lumber spent left out every hero after the first (which is free), so it read about 7% low against the game's own numbers; now 2% (on 176 W3Champions player-games). This also moves the gold collected estimated for Battle.net games.
-- **More accurate army value, losses and fights (our improved WC3V):** the simulation now reads the replay's own selection lists, so it knows which units really exist and when they die, and a train click with several buildings selected trains in each of them. Measured against Warcraft III's own unit counts on 15 recorded games it was not developed on, the army value is off by 97 on average over a game instead of 158, typically by about 24% instead of 37%, and in fights in which a side lost 300 or more, the side that lost more is named wrongly in 19% of them instead of 32%. A unit seen in another form (a Druid of the Claw in bear form, a burrowed Crypt Fiend, a Berserker) counts as the unit trained, train orders the game refused no longer count as units lost, and Militia no longer count as army. Replay Altar's own correction of the deaths, which did part of this after the simulation, is no longer needed and was removed.
+- **More accurate army value, losses and fights (our improved WC3V):** the simulation now reads the replay's own selection lists, so it knows which units really exist and when they die, and a train click with several buildings selected trains in each of them (for Night Elf in the first Ancient only: with several Ancients of Lore selected, the clicks the game refused for lack of gold became extra Druids of the Claw). Measured against Warcraft III's own unit counts on 15 recorded games it was not developed on, the army value is off by 93 on average over a game instead of 158, typically by about 22% instead of 37%, and in fights in which a side lost 300 or more, the side that lost more is named wrongly in 19% of them instead of 32%. A unit seen in another form (a Druid of the Claw in bear form, a burrowed Crypt Fiend, a Berserker) counts as the unit trained, train orders the game refused no longer count as units lost, and Militia no longer count as army. Replay Altar's own correction of the deaths, which did part of this after the simulation, is no longer needed and was removed.
 - **Food used is counted right:** the simulation's food counter added each unit when it was
   trained but never took it off when it died, so food climbed to about 100 and stayed there (on 51
   games recorded from the game's own numbers, food read 10 too high on average and over 20 late in
@@ -65,29 +65,41 @@ statistics (`data/`).
   simulation could read the replay only up to 0:01".
 - **Every pro and tournament game simulated again with the new simulation:** the 4,202 pro,
   tournament and review games were read and simulated again, so your games and the pros' are
-  measured the same way. 140 more tournament games can be simulated now (3,173 of 3,370: the 129
-  on maps whose start positions were misread, and the replays the simulation stopped reading
-  part way), and every pro game but one (a map we don't have). What changes for you:
+  measured the same way, then summarized again with food counted right (and the 1,701 with a
+  Night Elf player simulated once more with the Night Elf fix above). 140 more tournament games
+  can be simulated now (3,173 of 3,370: the 129 on maps whose start positions were misread, and
+  the replays the simulation stopped reading part way), and every pro game but one (a map we
+  don't have). What changes for you:
   - **The pro comparisons** ("better than 86% of pro games", the bands on the charts) come from
     about 1,720 to 1,830 player-games per race instead of 1,660 to 1,740. With deaths read from
     the replay, the pros' resources lost and killed are a third to a half higher than before,
-    and their estimated unspent gold about half: a lead or a deficit there now compares like with like.
-  - **The evaluation curve was fitted again** on the new numbers: on the 3,138 tournament games
-    it never saw (2,998 before) it still picks the eventual winner 63% of the time at 10 minutes
-    and 68% at 20 (69% before), and its scores improved (log loss 0.6367 instead of 0.6422). The
-    army value counts for more in it (at 15 minutes, a typical army lead moves the curve 17 points
-    instead of 7), since it is now closer to the real one. On unseen pro games it is a little more
-    sure of itself than before (calibration slope 0.92 instead of 1.03).
+    and their estimated unspent gold less than half: a lead or a deficit there now compares like
+    with like. With food counted right the pros' food is lower late in the game (about 50 to 60 at 15
+    minutes instead of 80 to 90), their largest army is 54 to 64 food on median instead of 68 to
+    80, they are almost never above 80 food for long, and they reach 3-3-60 about 1:30 to 2:30
+    later (Human 14:35 instead of 12:56). Night Elf pros' army value is 10 to 15% lower from 10
+    minutes on (the extra Druids of the Claw are gone).
+  - **The evaluation curve was fitted again** on the new numbers. With food counted right, the
+    food used now describes the armies as well as the army value did, so the curve uses it
+    instead (with workers, hero experience, heroes alive, expansions, units lost and upgrades);
+    adding the army value back changes nothing measurable. On the 3,138 tournament games it never
+    saw (2,998 before) it picks the eventual winner 64% of the time at 10 minutes (63% before)
+    and 70% at 20 (69%), and its scores improved (log loss 0.6326 instead of 0.6422). On unseen
+    pro games it is a little more sure of itself than before (calibration slope 0.93 instead of
+    1.03). A swing caused by a fight is now explained by the food used and the units lost.
+  - **Gold mined and unspent gold** (estimates): the income model's gold rate was fitted again
+    (1.80 gold per worker-second instead of 1.96), since upkeep no longer takes gold it never
+    took: its end-of-game gold is now typically 6% off W3Champions' own number instead of 12%.
   - **Units killed** (for games without W3Champions' numbers) is estimated with a new factor, 1.29
-    instead of 1.48, which matches the game's own count better (correlation 0.93 instead of 0.90).
+    instead of 1.48, which matches the game's own count better (correlation 0.94 instead of 0.90).
   - **The findings** were scored again on 3,532 held-out player-games, with the same test as in
-    0.2.0 (fires clearly more often in losses than in wins). Two pass now and are shown: *upkeep*
-    (time spent in upkeep) and *3-3-60* (Grubby's goal: both heroes at level 3 and 60 food). Two no longer pass and
-    are hidden: *unspent gold* and *supply blocks*. Still 11 rules.
-    The fights finding still separates losses from wins clearly (37% of losses, 18% of wins).
-    Measured the same way as before, two shown rules (unspent gold, supply blocks) now fall just
-    short and three hidden ones (upkeep, 3360, no items) now pass; which ones to show is left for
-    the full review in 0.2.3.
+    0.2.0 (the whole 95% range of "fires more often in losses than in wins" above no difference,
+    and firing in at least 1% of games). 10 rules pass and are shown (11 before): *3-3-60*
+    (Grubby's goal: both heroes at level 3 and 60 food) passes now and is shown. *Upkeep* (time
+    above 80 food on fewer than two expansions) passed only with the old food counter, which kept
+    players in upkeep for minutes; with food counted right it fires as often in wins as in losses
+    and is hidden. *Unspent gold* and *supply blocks* no longer pass and are hidden. The fights
+    finding still separates losses from wins clearly (37% of losses, 17% of wins).
 - **Cut-short replays can be imported:** a replay file that ends in the middle of the game (FloTV recordings, or a copy made while the game was still running) often couldn't be imported at all. It now is, up to where it ends, and its report says the rest is missing.
 
 
@@ -179,7 +191,7 @@ W3Champions' official numbers); what helped is in the list above.
   working. Refit it together with the gold and lumber model.
 - **Gold and lumber in WC3V:** the biggest error left in the new WC3V is train orders the game
   refused for lack of gold, lumber or food, which WC3V still turns into units (worst with Night Elf
-  Druid spam). A gold and lumber model inside the simulation would tell them apart. The observer
+  Druid spam until 0.2.2 trained Night Elf units in the first selected Ancient only). A gold and lumber model inside the simulation would tell them apart. The observer
   recordings already hold gold, lumber, gold mined and lumber harvested at every snapshot, so they
   serve as ground truth; more recordings (more races, expansions, long games) as needed. The same
   model would let Replay Altar's own counts (units ordered, spending, build order) count a train
