@@ -22,21 +22,19 @@ statistics (`data/`).
 - **Damaged W3Champions replays are pointed out:** some W3Champions (FLO) replays lack the players' first selection at the start of the game, and Warcraft III plays them back wrong from the start, so rewatching one shows a different game. The report of such a game now says so. Its numbers stay: Replay Altar reads the players' orders, which are all there (on the two such games with W3Champions' own end-of-game numbers, hero levels matched exactly and the estimates were as close as usual).
 - **Hero levels after a Tome of Retraining:** a hero retrained with a tome could end up to four levels too high or too low (30% of the games with a tome), which threw off hero levels, hero experience and the findings about them. Replay Altar now reads the retraining from when the skill menu was opened and the tome bought: on games with W3Champions' own hero levels, 27 of 28 retrained players' heroes now match (25 before).
 - **Second and third heroes count in the resources spent:** the gold and lumber spent left out every hero after the first (which is free), so it read about 7% low against the game's own numbers; now 2% (on 176 W3Champions player-games). This also moves the gold collected estimated for Battle.net games.
-- **Army losses:** a unit seen in another form (a Druid of the Claw in bear form, a burrowed Crypt Fiend, a Berserker) is now matched to the unit trained, so its death counts in the army value and the losses (3.8% of the pro player-games checked had such a death missed).
+- **More accurate army value, losses and fights (our improved WC3V):** the simulation now reads the replay's own selection lists, so it knows which units really exist and when they die, and a train click with several buildings selected trains in each of them. Measured against Warcraft III's own unit counts on 14 recorded games it was not developed on, the army value is off by 84 on average over a game instead of 143, typically by about 20% instead of 37%, and in fights in which a side lost 300 or more, the side that lost more is named wrongly in 18% of them instead of 31%. A unit seen in another form (a Druid of the Claw in bear form, a burrowed Crypt Fiend, a Berserker) counts as the unit trained, train orders the game refused no longer count as units lost, and Militia no longer count as army. Replay Altar's own correction of the deaths, which did part of this after the simulation, is no longer needed and was removed.
 - **Hero timelines:** a hero cancelled at the altar and ordered again later no longer appears on the hero chart, and in the build-order comparison, at the time of the cancelled order (and a Demon Hunter or Alchemist the simulation last saw transformed is found again).
 - **Cut-short replays can be imported:** a replay file that ends in the middle of the game (FloTV recordings, or a copy made while the game was still running) often couldn't be imported at all. It now is, up to where it ends, and its report says the rest is missing.
 
 Planned:
 
-- **More accurate simulation (our improved WC3V):** WC3V now reads the replay's own selection lists,
-  so it knows which units really exist and when they die; a train click with several buildings
-  selected trains in each of them. Measured against Warcraft III's own unit counts on 15 games it
-  was not developed on, the army value error fell from 181 to 103 (Replay Altar today: 158). Comes
-  with re-simulating every game (yours on the update, the pro and tournament games before the
-  release), republishing the pro statistics, and refitting the evaluation curve's model on the new
-  numbers so the curve and your games are measured the same way (the full review is for 0.2.3).
-  Before merging: check whether Replay Altar's own death correction (`deaths.ts`) still helps on
-  top, and look at the two hidden games that got worse (batch3-11, batch3-06 Ventus).
+- **Every game simulated again with the new simulation:** yours on the update, the pro and
+  tournament games before the release, with the pro statistics republished and the evaluation
+  curve's model refitted on the new numbers, so the curve and your games are measured the same way
+  (the full review is for 0.2.3). Before the release: the simulation stops reading one of the 15
+  held-out recorded games at 9:24 (batch3-11: a selection the game lists right after a deselect is
+  not taken, then an upgrade from an empty selection fails); the fix goes to the WC3V lab, to come
+  back as one more patch.
 
 ### Checked for 0.2.2
 
@@ -66,6 +64,9 @@ W3Champions' official numbers); what helped is in the list above.
   that heroes were missing from the spending (*done*, above). Variant codes: in Replay Altar's own
   counts only hrtt, otbk and ospm appear in orders, priced and named like their base unit; the
   others come from in-game transformations, which mattered in the death matching (*done*, above).
+  The simulation (our improved WC3V, above) does train in each selected building; the copies the
+  game refused are its largest remaining error (a Night Elf with two Ancients of Lore, 103 → 302
+  per player-game on one held-out game), which the gold and lumber model should fix too.
 - **Cancelled altar orders:** the hero count, hero timings and the one-hero rule were never
   affected: they come from skill picks, which a cancelled hero never makes (60 cancels in 47 of
   8,049 player-games, none counted). WC3V, though, makes a hero for every cancelled order (all 44
