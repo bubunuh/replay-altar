@@ -19,21 +19,23 @@ target and 9 in 10 pros). Expansions come from the simulation's standing halls. 
 games of every race and level, and what they changed: [REVIEWS.md](REVIEWS.md). Shared principles
 and how pros play each library build: [PRINCIPLES.md](PRINCIPLES.md).
 
-**Shown in the app** (since 2026-10-23): only the rules whose whole 95% range of lift (games
+**Shown in the app** (since 2026-10-27, 0.2.2): only the rules whose whole 95% range of lift (games
 resampled 400 times) lies above 1: fights, heroes, hero deaths, expansion, out-expanded, workers
-lost, no sustain, mine dry, floating, upgrades and supply (`SHOWN_RULES` in `findings.ts`). The
+lost, no sustain, mine dry, upgrades, upkeep and 3-3-60 (`goal_3360`) (`SHOWN_RULES` in
+`findings.ts`). `no_items` also passes but fires in under 1% of games, so it stays hidden. The
 others still run and are scored here, but stay hidden until they can be tuned per skill level:
 several matter more for beginners than for tournament players. The hotkeys check (`mechanics`)
 is shown whenever it fires, win or lose, on top of the three main findings.
 
-**Re-scored on 0.2.2's simulation (2026-10-27), shown rules unchanged until reviewed:** by the
-same criterion, `floating` (95% range 0.99–1.63) and `supply` (0.99–1.28) would now be hidden,
-and `upkeep` (1.08–1.39), `goal_3360` (1.03–1.27) and `no_items` (1.10–inf, fires in under 1%
-of games) would be shown. `fights` still passes clearly, with a lower lift than on 0.2.1's
+**Re-scored on 0.2.2's simulation (2026-10-27):** by the same criterion `floating` (95% range
+0.99–1.63) and `supply` (0.99–1.28) are now hidden, and `upkeep` (1.08–1.39) and `goal_3360`
+(1.03–1.27) are shown (0.2.0 to 0.2.1 showed floating and supply instead). `floating` likely
+dropped because the second and third heroes now count in spending and the income model runs short
+early, so the unspent gold is mostly 0 (to be revisited with the gold and lumber model, 0.2.3). `fights` still passes clearly, with a lower lift than on 0.2.1's
 simulation (2.1 instead of 3.1: it fires in 18% of wins instead of 13%; raising its 1.3x to 1.5x
 gave 2.3, 12% / 28%).
 
-Shown per game (top 3 of the shown rules): 1.15 findings in wins, 1.95 in losses.
+Shown per game (top 3 of the shown rules, with the 0.2.1 set): 1.15 findings in wins, 1.95 in losses.
 
 ## Main findings
 

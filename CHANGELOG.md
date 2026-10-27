@@ -73,7 +73,10 @@ statistics (`data/`).
     sure of itself than before (calibration slope 0.92 instead of 1.03).
   - **Units killed** (for games without W3Champions' numbers) is estimated with a new factor, 1.29
     instead of 1.48, which matches the game's own count better (correlation 0.93 instead of 0.90).
-  - **The findings** were scored again on 3,532 held-out player-games; the same 11 rules are shown.
+  - **The findings** were scored again on 3,532 held-out player-games, with the same test as in
+    0.2.0 (fires clearly more often in losses than in wins). Two pass now and are shown: *upkeep*
+    (time spent in upkeep) and *3-3-60* (third-level upgrades at 60 food). Two no longer pass and
+    are hidden: *unspent gold* and *supply blocks*. Still 11 rules.
     The fights finding still separates losses from wins clearly (37% of losses, 18% of wins).
     Measured the same way as before, two shown rules (unspent gold, supply blocks) now fall just
     short and three hidden ones (upkeep, 3360, no items) now pass; which ones to show is left for
@@ -163,6 +166,10 @@ W3Champions' official numbers); what helped is in the list above.
 
 ## Planned for 0.2.3
 
+- **Income model:** since 0.2.2 the second and third heroes count in the gold spent, and the
+  mined-income model now often runs short early in the game (pros "spend" about 900 gold more than
+  it estimates by 10:00), so the unspent gold reads 0 and the *unspent gold* finding stopped
+  working. Refit it together with the gold and lumber model.
 - **Gold and lumber in WC3V:** the biggest error left in the new WC3V is train orders the game
   refused for lack of gold, lumber or food, which WC3V still turns into units (worst with Night Elf
   Druid spam). A gold and lumber model inside the simulation would tell them apart. The observer
@@ -181,7 +188,6 @@ W3Champions' official numbers); what helped is in the list above.
   or Linux and are untested on a Mac. A Mac build needs the rest of the plan (game process detection, start at login, a macOS game data
   extractor, packaging, unsigned) and someone with a Mac to test each step.
 
-- **Re-simulate every game with WC3V's merged fixes:** once the WC3V author has merged the revised fixes (#19, #21), switch Replay Altar's patches to the merged code and simulate all pro, tournament and your games again (about half an hour at full CPU). Measured beforehand: findings unchanged, the evaluation curve moves by more than half a point in 4% of games (6 points at most).
 - **Findings by skill level:** download ladder games across skill levels (W3Champions, by MMR) and choose and tune the findings for the level detected for each player, so beginner checks (upkeep, supply, towers…) show where they matter and stay hidden for strong players.
 - **More languages:** German, Ukrainian, Russian, Chinese and Korean (needs a text format that scales past four languages, and fonts for Cyrillic, Chinese and Korean).
 - **Code signing:** SignPath turned the project down for now (too new, no reputation); try again later.
