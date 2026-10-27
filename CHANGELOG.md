@@ -19,6 +19,12 @@ statistics (`data/`).
   when you log in and closing the window stops Replay Altar; new games are picked up the next time
   you open it (the game keeps them in Replays and Replays/Autosaved; only an overwritten
   `LastReplay.w3g` can be missed), and Settings warns about that when you choose it.
+- **Damaged W3Champions replays are pointed out:** some W3Champions (FLO) replays lack the players' first selection at the start of the game, and Warcraft III plays them back wrong from the start, so rewatching one shows a different game. The report of such a game now says so. Its numbers stay: Replay Altar reads the players' orders, which are all there (on the two such games with W3Champions' own end-of-game numbers, hero levels matched exactly and the estimates were as close as usual).
+- **Hero levels after a Tome of Retraining:** a hero retrained with a tome could end up to four levels too high or too low (30% of the games with a tome), which threw off hero levels, hero experience and the findings about them. Replay Altar now reads the retraining from when the skill menu was opened and the tome bought: on games with W3Champions' own hero levels, 27 of 28 retrained players' heroes now match (25 before).
+- **Second and third heroes count in the resources spent:** the gold and lumber spent left out every hero after the first (which is free), so it read about 7% low against the game's own numbers; now 2% (on 176 W3Champions player-games). This also moves the gold collected estimated for Battle.net games.
+- **Army losses:** a unit seen in another form (a Druid of the Claw in bear form, a burrowed Crypt Fiend, a Berserker) is now matched to the unit trained, so its death counts in the army value and the losses (3.8% of the pro player-games checked had such a death missed).
+- **Hero timelines:** a hero cancelled at the altar and ordered again later no longer appears on the hero chart, and in the build-order comparison, at the time of the cancelled order (and a Demon Hunter or Alchemist the simulation last saw transformed is found again).
+- **Cut-short replays can be imported:** a replay file that ends in the middle of the game (FloTV recordings, or a copy made while the game was still running) often couldn't be imported at all. It now is, up to where it ends, and its report says the rest is missing.
 
 Planned:
 
@@ -32,32 +38,50 @@ Planned:
   Before merging: check whether Replay Altar's own death correction (`deaths.ts`) still helps on
   top, and look at the two hidden games that got worse (batch3-11, batch3-06 Ventus).
 
-### To check for 0.2.2 (untested)
+### Checked for 0.2.2
 
-Suggestions from SaulApeMan's replay project (via Discord, 2026-10-25). None of these is verified
-in Replay Altar yet except where noted; each goes into 0.2.2 only if a test on our replays shows
-it matters.
+Suggestions from SaulApeMan's replay project (via Discord, 2026-10-25), each tested on our replays
+(518 pro, 3,370 tournament, 55 review and 101 of your games, and the 176 player-games with
+W3Champions' official numbers); what helped is in the list above.
 
-- **Broken W3Champions/FLO replays:** since the 19 Oct 2026 patch some FLO replays lack the players'
-  first selections (the first orders come before any selection) and desync in the game from the
-  start, so every number from them is wrong. Proposed check: a player's first order before their
-  first selection → mark the game broken and skip it; also W3C files with header build 7000 dated
-  after 19 Oct 2026. *Partly checked:* on 30 ladder/tournament replays the check flagged exactly the
-  2 that played broken in the game, and no others.
-- **Hero levels after a Tome of Retraining:** `heroxp.ts` may drop real skill picks (players
-  re-spend 4–6 points within a second, sometimes the same skill twice). Proposed: picks between two
-  openings of the skill menu are one session.
-- **Units per selected building:** one train click queues a unit in every selected building of
-  that type, so units ordered, production and the spending priced from orders may be undercounted.
-  The WC3V lab found and fixed the same thing inside WC3V; Replay Altar's own counts from w3gjs
-  orders still count one per click. Also merge variant codes of one unit (hmtt/hrtt, ohun/otbk,
-  hpea/hmil, edoc/edcm, edot/edtm, ucry/ucrm, ugar/ugrm, ospw/ospm, Nalc/Nalm/Nal2, Edem/Edmm).
-- **Cancelled altar orders:** a hero ordered and cancelled within its training time never existed,
-  but may shift hero timings, the hero count and the one-hero rule.
-- **Lobby password:** tournament replays may carry a password after the game name, which could
-  misalign the lobby records if w3gjs doesn't read it.
-- **Truncated last record** (FloTV recordings end mid-record): tolerate it instead of failing the
-  import.
+- **Broken W3Champions/FLO replays:** *done* (above). The check as proposed (any order before the
+  first selection) also flags normal games, where a player trains a worker from the hall that is
+  selected at the start before selecting anything (3 of 518 pro games, 23 tournament
+  games); limited to orders in the first 0.5 s it flagged exactly the 4 of 48 recorded replays that
+  played wrong (batch 2: 10, 12; batch 3: 16, 17), 5 of 3,370 tournament replays (builds 6117 to
+  7003, so not only since the 19 Oct patch), and no pro or review game. "Every number is wrong" does
+  not hold for Replay Altar: the orders are complete, so such games stay analyzed, with a note. The
+  second check (W3Champions files with header build 7000 dated after 19 Oct 2026) matched no
+  replay we have (the 4 broken ones are build 7003), so it wasn't added.
+- **Hero levels after a Tome of Retraining:** *done* (above). The problem was w3gjs's retraining
+  mark (levels changed in 30% of the 587 player-games with a tome), plus refused extra clicks in
+  the re-spend; "the same skill twice" was already handled by the rank rules. The skill menu's
+  openings (action 0x66) do bound the sessions, as suggested.
+- **Units per selected building:** *not applied, moved to the gold and lumber model (0.2.3).* It
+  exists: 9.6% of train clicks (176 W3Champions player-games) had 2 or more buildings of the type
+  selected (types from the replay's own subgroup names). But the game refuses the copies it can't
+  pay for or feed, and the replay doesn't say which: counted in full, spending − 500 went over the
+  official gold collected in 62% of player-games (40% without), up to +54% (21 clicks with 4
+  Workshops selected = 84 Siege Engines); capped at 2 per click, still 62%. Measuring it showed
+  that heroes were missing from the spending (*done*, above). Variant codes: in Replay Altar's own
+  counts only hrtt, otbk and ospm appear in orders, priced and named like their base unit; the
+  others come from in-game transformations, which mattered in the death matching (*done*, above).
+- **Cancelled altar orders:** the hero count, hero timings and the one-hero rule were never
+  affected: they come from skill picks, which a cancelled hero never makes (60 cancels in 47 of
+  8,049 player-games, none counted). WC3V, though, makes a hero for every cancelled order (all 44
+  checked), and Replay Altar took the first one as the hero: 56 heroes appeared too early, by up
+  to 9 minutes (*fixed*, above, with 43 heroes it couldn't find in a transformed form). For the
+  WC3V lab: those phantom heroes may also hold 5 food each in WC3V's supply.
+- **Lobby password:** *doesn't apply.* w3gjs reads the string after the game name (its
+  `privateString`) and skips it. 58 of our 4,024 replays carry one (all "wuyue" tournament lobbies,
+  passwords 1011 to 1018), and all 58 read correctly: no metadata warning, both players named,
+  map and checksum read, and 56 simulated (one lacks its map, one was never simulated).
+- **Truncated last record** (FloTV recordings end mid-record): *done* (above). w3gjs failed on 15%
+  of cut points (294 of 1,993 cuts of our 5 test replays), in its last game data record or a block
+  header; the others parsed but kept the header's full length. None of our 4,024 replays is cut.
+  Unrelated but found on the way: WC3V reports "parse truncated" for 105 complete replays (97
+  tournament, 8 review), which is why they have no simulation; w3gjs reads all of them to the end,
+  so it's WC3V's own parser (for the WC3V lab).
 - Already fine, nothing to do: hero revives (the hero timelines already use the revive order);
   "selections via hotkey" already compares group recalls with mouse selections, the only
   distinction the replay allows.
@@ -97,7 +121,9 @@ it matters.
   refused for lack of gold, lumber or food, which WC3V still turns into units (worst with Night Elf
   Druid spam). A gold and lumber model inside the simulation would tell them apart. The observer
   recordings already hold gold, lumber, gold mined and lumber harvested at every snapshot, so they
-  serve as ground truth; more recordings (more races, expansions, long games) as needed.
+  serve as ground truth; more recordings (more races, expansions, long games) as needed. The same
+  model would let Replay Altar's own counts (units ordered, spending, build order) count a train
+  click once per selected building, which they can't do safely yet (see 0.2.2's checks).
 - **Review the evaluation curve and the coaching rules on the better data:** refit the win-chance
   model on the ~500 current-patch pro games and validate it on the ~3,000 tournament games, as for
   0.2.0; re-score every rule held out (docs/RULES.md) and revisit which are shown.

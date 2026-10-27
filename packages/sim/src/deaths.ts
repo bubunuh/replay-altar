@@ -8,7 +8,7 @@
 //   for the same reason, an Undead player's handles the game never named get no deaths from the lists.
 // Against the game's own counts on 50 recorded player-games (scripts/observer/batch-compare.py) the
 // average army value error went 257 → 183.
-import { RACES } from "@replay-altar/core";
+import { baseUnit, RACES } from "@replay-altar/core";
 import { costOf, type CostTables } from "./costs.ts";
 import { listDeaths, type SelectionAction } from "./selections.ts";
 
@@ -62,16 +62,18 @@ export function unitDeaths<U extends DeathUnit>(units: U[], costs: CostTables, a
     // A unit WC3V never tied to its handle: the type the game named, else the type the player had
     // trained more of than has been matched by the time the handle first shows up.
     const seenAt = firstSeen.get(h) ?? 0;
-    let type = typeOf.get(h);
+    // Types compare by their base form: the game names a Druid in bear form edcm, WC3V the edoc trained.
+    const named = typeOf.get(h);
+    let type = named && baseUnit(named);
     if (!type) {
       let best = 0;
-      for (const ty of new Set(unfollowed.map((u) => u.itemId))) {
-        const room = unfollowed.filter((u) => u.itemId === ty && u.trainedTime! <= seenAt).length - (assigned.get(ty) ?? 0);
+      for (const ty of new Set(unfollowed.map((u) => baseUnit(u.itemId)))) {
+        const room = unfollowed.filter((u) => baseUnit(u.itemId) === ty && u.trainedTime! <= seenAt).length - (assigned.get(ty) ?? 0);
         if (room > best) [best, type] = [room, ty];
       }
     }
     if (!type || NOT_FROM_LISTS.has(type)) continue;
-    const unit = unfollowed.find((u) => u.itemId === type && !taken.has(u) && u.trainedTime! <= gone);
+    const unit = unfollowed.find((u) => baseUnit(u.itemId) === type && !taken.has(u) && u.trainedTime! <= gone);
     if (!unit) continue;
     taken.add(unit);
     assigned.set(type, (assigned.get(type) ?? 0) + 1);

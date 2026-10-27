@@ -3,7 +3,7 @@
 // - "largest army" (game counts it in food) vs our max army food: correlation 0.90, 0.95x
 // - "units killed" (game counts creeps too) vs (enemy losses + creeps in camps you cleared) x 1.49:
 //   correlation 0.90
-import { RACES, type GameRecord, type HeroTimeline } from "@replay-altar/core";
+import { baseUnit, RACES, type GameRecord, type HeroTimeline } from "@replay-altar/core";
 import { costOf, type CostTables } from "./costs.ts";
 import type { WOutput } from "./economy.ts";
 
@@ -73,6 +73,18 @@ export function armyValueFn(o: WOutput, playerId: number, costs: CostTables, dea
 const reviveMs = (buildMs: number, level: number) => Math.min(150_000, buildMs * level * 0.6, buildMs * 2);
 
 /**
+ * The simulation's unit for a hero. WC3V makes a hero for every train order, also one cancelled
+ * at the altar (seen for every cancel in our corpora); the real one is the last trained before
+ * the hero learned its first skill. A hero is matched by its base form (Metamorphosis, Chemical Rage).
+ */
+export function heroUnit<U extends WUnitX>(units: U[], code: string, firstLevelUp: number | undefined): U | undefined {
+  const same = units.filter((u) => baseUnit(u.itemId) === baseUnit(code));
+  const at = (u: U) => u.trainedTime ?? u.spawnTime ?? Infinity;
+  const before = same.filter((u) => at(u) <= (firstLevelUp ?? Infinity));
+  return before.length ? before.reduce((a, b) => (at(b) > at(a) ? b : a)) : same[0];
+}
+
+/**
  * When each hero appeared, levelled, died and came back. Levels are exact (replay skill
  * points). Deaths are approximate: a dead hero can't be ordered around, so the death is taken as
  * its last movement before the revive order; it is back after the game's revive time.
@@ -84,8 +96,8 @@ export function heroTimelines(o: WOutput, playerId: number, player: GameRecord["
   const heroOf = (e: { hero?: string | { itemId?: string } }) => (typeof e.hero === "string" ? e.hero : e.hero?.itemId);
   const revives = (wp?.eventStream ?? []).filter((e) => e.key === "heroRevive" && heroOf(e));
   return player.heroes.map((h) => {
-    const unit = units.find((u) => u.itemId === h.code);
     const levels = h.levelUps ?? [];
+    const unit = heroUnit(units, h.code, levels[0]);
     const appearAt = unit?.trainedTime ?? unit?.spawnTime ?? levels[0] ?? null;
     const levelAt = (t: number) => Math.max(1, levels.filter((x) => x <= t).length);
     const buildMs = costOf(costs, h.code).buildMs || 55_000;

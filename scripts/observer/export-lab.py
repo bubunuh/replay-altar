@@ -78,6 +78,9 @@ def main():
             if not r:
                 print(f"{batch}/{entry['file']}: no simulated record, skipped")
                 continue
+            if r["classification"].get("replayProblem"):
+                print(f"{batch}/{entry['file']}: damaged replay ({r['classification']['replayProblem']}), the game played it wrong; skipped")
+                continue
             gid = f"{batch}-{entry['file'][:2]}"
             d = os.path.join(out, gid)
             os.makedirs(d, exist_ok=True)

@@ -116,7 +116,19 @@ export const CORE_UPGRADES: Record<RaceCode, { code: string; kind: UpgradeKind; 
   ],
 };
 
-/** Names of the tier-2 and tier-3 main halls. */
+/**
+ * Other forms of one unit: what it can turn into in the game (Militia, a Druid's beast form, a
+ * burrowed Crypt Fiend, a Stone Gargoyle, an ethereal Spirit Walker, Metamorphosis, the
+ * Alchemist's Chemical Rage) or what it is trained as after an upgrade (Barrage Siege Engine,
+ * Berserker). Same cost; the replay names a unit by the form it had when the player selected it.
+ */
+export const UNIT_VARIANTS: Record<string, string> = {
+  hrtt: "hmtt", otbk: "ohun", hmil: "hpea", edcm: "edoc", edtm: "edot", ucrm: "ucry", ugrm: "ugar", ospm: "ospw",
+  Nalm: "Nalc", Nal2: "Nalc", Edmm: "Edem",
+};
+/** One code for all forms of a unit (UNIT_VARIANTS). */
+export const baseUnit = (code: string) => UNIT_VARIANTS[code] ?? code;
+
 /**
  * Hero ultimates (abilitydata.slk: hero skills with reqLevel 6, one level). Other hero skills
  * have 3 ranks, learnable from hero level 1, 3 and 5 (HeroAbilityLevelSkip 2).
