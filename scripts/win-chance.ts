@@ -517,7 +517,8 @@ const results = {
   generatedAt: new Date().toISOString(),
   commit,
   calibration: { games: calUsed.size, moments: calMoments.length },
-  validation: { ...valCounts, scored: valUsed.size, moments: valMoments.length },
+  // usable: simulated with a known winner (before games with unreadable numbers are left out).
+  validation: { ...valCounts, usable: new Set(validation.flatMap((g) => momentsOf(g)).map((m) => m.game)).size, scored: valUsed.size, moments: valMoments.length },
   features: FEATURES,
   models: scored.map((c) => ({ label: label(c.spec), keep: c.spec.keep.map((f) => FEATURES[f]), basis: c.spec.basis, matchup: c.spec.matchup, lambda: c.spec.lambda, cv: c.loss, validation: valMoments.length ? lossOf(predsOn(finals.find((f) => f.spec === c.spec)!.model, valMoments)) : null, brier: valMoments.length ? brierOf(predsOn(finals.find((f) => f.spec === c.spec)!.model, valMoments)) : null, best: c.spec === best.spec })),
   trees: { trees: bestTrees.spec.trees, depth: bestTrees.spec.depth, cv: bestTrees.loss, validation: valMoments.length ? lossOf(valTrees) : null, brier: valMoments.length ? brierOf(valTrees) : null },

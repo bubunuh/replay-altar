@@ -46,7 +46,7 @@ statistics (`data/`).
 - **Damaged W3Champions replays are pointed out:** some W3Champions (FLO) replays lack the players' first selection at the start of the game, and Warcraft III plays them back wrong from the start, so rewatching one shows a different game. The report of such a game now says so. Its numbers stay: Replay Altar reads the players' orders, which are all there (on the two such games with W3Champions' own end-of-game numbers, hero levels matched exactly and the estimates were as close as usual).
 - **Hero levels after a Tome of Retraining:** a hero retrained with a tome could end up to four levels too high or too low (30% of the games with a tome), which threw off hero levels, hero experience and the findings about them. Replay Altar now reads the retraining from when the skill menu was opened and the tome bought: on games with W3Champions' own hero levels, 27 of 28 retrained players' heroes now match (25 before).
 - **Second and third heroes count in the resources spent:** the gold and lumber spent left out every hero after the first (which is free), so it read about 7% low against the game's own numbers; now 2% (on 176 W3Champions player-games). This also moves the gold collected estimated for Battle.net games.
-- **More accurate army value, losses and fights (our improved WC3V):** the simulation now reads the replay's own selection lists, so it knows which units really exist and when they die, and a train click with several buildings selected trains in each of them. Measured against Warcraft III's own unit counts on 14 recorded games it was not developed on, the army value is off by 84 on average over a game instead of 143, typically by about 20% instead of 37%, and in fights in which a side lost 300 or more, the side that lost more is named wrongly in 18% of them instead of 31%. A unit seen in another form (a Druid of the Claw in bear form, a burrowed Crypt Fiend, a Berserker) counts as the unit trained, train orders the game refused no longer count as units lost, and Militia no longer count as army. Replay Altar's own correction of the deaths, which did part of this after the simulation, is no longer needed and was removed.
+- **More accurate army value, losses and fights (our improved WC3V):** the simulation now reads the replay's own selection lists, so it knows which units really exist and when they die, and a train click with several buildings selected trains in each of them. Measured against Warcraft III's own unit counts on 15 recorded games it was not developed on, the army value is off by 97 on average over a game instead of 158, typically by about 24% instead of 37%, and in fights in which a side lost 300 or more, the side that lost more is named wrongly in 19% of them instead of 32%. A unit seen in another form (a Druid of the Claw in bear form, a burrowed Crypt Fiend, a Berserker) counts as the unit trained, train orders the game refused no longer count as units lost, and Militia no longer count as army. Replay Altar's own correction of the deaths, which did part of this after the simulation, is no longer needed and was removed.
 - **Hero timelines:** a hero cancelled at the altar and ordered again later no longer appears on the hero chart, and in the build-order comparison, at the time of the cancelled order (and a Demon Hunter or Alchemist the simulation last saw transformed is found again).
 - **Games on some maps can be simulated again:** games on 60 maps, mostly the copies of ladder
   maps that some hosts save under a long code instead of the map's name (`Maps/dz/…`), plus a few
@@ -56,14 +56,30 @@ statistics (`data/`).
   your copy of Replay Altar already prepared are corrected by themselves when it starts after the
   update; if a map's start positions still can't be read, the game now says so instead of "the
   simulation could read the replay only up to 0:01".
+- **Every pro and tournament game simulated again with the new simulation:** the 4,202 pro,
+  tournament and review games were read and simulated again, so your games and the pros' are
+  measured the same way. 140 more tournament games can be simulated now (3,173 of 3,370: the 129
+  on maps whose start positions were misread, and the replays the simulation stopped reading
+  part way), and every pro game but one (a map we don't have). What changes for you:
+  - **The pro comparisons** ("better than 86% of pro games", the bands on the charts) come from
+    about 1,720 to 1,830 player-games per race instead of 1,660 to 1,740. With deaths read from
+    the replay, the pros' resources lost and killed are a third to a half higher than before,
+    and their estimated unspent gold about half: a lead or a deficit there now compares like with like.
+  - **The evaluation curve was fitted again** on the new numbers: on the 3,138 tournament games
+    it never saw (2,998 before) it still picks the eventual winner 63% of the time at 10 minutes
+    and 68% at 20 (69% before), and its scores improved (log loss 0.6367 instead of 0.6422). The
+    army value counts for more in it (at 15 minutes, a typical army lead moves the curve 17 points
+    instead of 7), since it is now closer to the real one. On unseen pro games it is a little more
+    sure of itself than before (calibration slope 0.92 instead of 1.03).
+  - **Units killed** (for games without W3Champions' numbers) is estimated with a new factor, 1.29
+    instead of 1.48, which matches the game's own count better (correlation 0.93 instead of 0.90).
+  - **The findings** were scored again on 3,532 held-out player-games; the same 11 rules are shown.
+    The fights finding still separates losses from wins clearly (37% of losses, 18% of wins).
+    Measured the same way as before, two shown rules (unspent gold, supply blocks) now fall just
+    short and three hidden ones (upkeep, 3360, no items) now pass; which ones to show is left for
+    the full review in 0.2.3.
 - **Cut-short replays can be imported:** a replay file that ends in the middle of the game (FloTV recordings, or a copy made while the game was still running) often couldn't be imported at all. It now is, up to where it ends, and its report says the rest is missing.
 
-Planned:
-
-- **Every game simulated again with the new simulation:** yours as you import them again after
-  the update, the pro and tournament games before the release, with the pro statistics republished
-  and the evaluation curve's model refitted on the new numbers, so the curve and your games are
-  measured the same way (the full review is for 0.2.3).
 
 ### Checked for 0.2.2
 
@@ -111,7 +127,7 @@ W3Champions' official numbers); what helped is in the list above.
   header; the others parsed but kept the header's full length. None of our 4,024 replays is cut.
   Unrelated but found on the way: WC3V reports "parse truncated" for 105 complete replays (97
   tournament, 8 review), which is why they have no simulation; w3gjs reads all of them to the end,
-  so it's WC3V's own parser (for the WC3V lab).
+  so it's WC3V's own parser (for the WC3V lab). With 0.2.2's WC3V all of them simulate to the end.
 - Already fine, nothing to do: hero revives (the hero timelines already use the revive order);
   "selections via hotkey" already compares group recalls with mouse selections, the only
   distinction the replay allows.

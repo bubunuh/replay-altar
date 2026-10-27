@@ -1,8 +1,8 @@
 // Army size and value over time, hero timelines (levels, deaths, revives), and a units-killed
-// estimate. Validated against W3Champions' official numbers on 56 pro player-games:
-// - "largest army" (game counts it in food) vs our max army food: correlation 0.90, 0.95x
-// - "units killed" (game counts creeps too) vs (enemy losses + creeps in camps you cleared) x 1.49:
-//   correlation 0.90
+// estimate. Validated against W3Champions' official numbers on 86 pro player-games (0.2.2):
+// - "largest army" (game counts it in food) vs our max army food: correlation 0.86, 1.02x
+// - "units killed" (game counts creeps too) vs (enemy losses + creeps in camps you cleared) x 1.29:
+//   correlation 0.93
 import { baseUnit, RACES, type GameRecord, type HeroTimeline } from "@replay-altar/core";
 import { costOf, type CostTables } from "./costs.ts";
 import type { WOutput } from "./economy.ts";
