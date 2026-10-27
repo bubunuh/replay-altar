@@ -24,11 +24,9 @@ describe("collector modes", () => {
     expect(wanted("game", { warcraft: false, window: true })).toBe(true);
   });
 
-  test("simulations wait for the match to end only in game mode", () => {
-    expect(holdSimulations("game", true)).toBe(true);
-    expect(holdSimulations("game", false)).toBe(false);
-    expect(holdSimulations("always", true)).toBe(false);
-    expect(holdSimulations("off", true)).toBe(false);
+  test("simulations wait while Warcraft III runs, whatever the mode", () => {
+    expect(holdSimulations(true)).toBe(true);
+    expect(holdSimulations(false)).toBe(false);
   });
 
   test("back to waiting a few minutes after the game closed, once the work is done", () => {
@@ -79,6 +77,26 @@ describe("waiting, light", () => {
 });
 
 describe("simulations held during a match", () => {
+  // As the collector wires it: held while Warcraft III was last seen running, in every mode
+  // (the user's decision for 0.2.2: "Always" too, and "Off", whose collector runs with the window
+  // that Warcraft III opens).
+  for (const mode of ["always", "game", "off"] as const) {
+    test(`${mode} mode: a game ending during the session waits until Warcraft III closes`, async () => {
+      let warcraft = true;
+      const q = new SimQueue({ paths: paths(mkdtempSync(join(tmpdir(), `ra-held-${mode}-`))) } as never, () => {}, () => holdSimulations(warcraft));
+      expect(collectorMode({ ...DEFAULT_CONFIG, collectorMode: mode })).toBe(mode);
+      q.add("ended-1");
+      await new Promise((r) => setTimeout(r, 10));
+      q.add("ended-2");
+      await new Promise((r) => setTimeout(r, 10));
+      expect(q.pending).toBe(2);
+      warcraft = false; // the collector's watch saw the game close, and resumes the queue
+      q.resume();
+      await new Promise((r) => setTimeout(r, 10));
+      expect(q.pending).toBe(0);
+    });
+  }
+
   test("queued while held, taken up after resume()", async () => {
     let held = true;
     // Games without a record on disk: the queue takes them and skips them, never running WC3V.

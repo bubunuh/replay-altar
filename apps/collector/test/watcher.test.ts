@@ -5,14 +5,14 @@ import { describe, expect, test } from "vitest";
 import { ReplayWatcher, type ScanResult } from "../src/watcher.ts";
 
 // A Replays folder with an Autosaved subfolder (both watched, as the app does) and `n` replays,
-// replay i being i days old.
+// replay i being i days old (each one a different replay: copies count once).
 function folder(n: number) {
   const root = mkdtempSync(join(tmpdir(), "ra-watch-"));
   const auto = join(root, "Autosaved");
   mkdirSync(auto);
   for (let i = 0; i < n; i++) {
     const file = join(auto, `Replay_${i}.w3g`);
-    writeFileSync(file, "x");
+    writeFileSync(file, `replay ${i}`);
     const t = Date.now() / 1000 - i * 86400;
     utimesSync(file, t, t);
   }
@@ -46,5 +46,16 @@ describe("importing replays", () => {
     const { scheduled, result } = scan([root], null, known);
     expect(scheduled).toHaveLength(5);
     expect(result).toEqual({ found: 10, older: 0 });
+  });
+
+  test("copies of one replay count once and take one place in the limit", () => {
+    const { root, auto } = folder(10);
+    // LastReplay.w3g and the copy saved from the score screen: the same bytes.
+    writeFileSync(join(root, "LastReplay.w3g"), "replay 0");
+    writeFileSync(join(root, "Replay_0_saved.w3g"), "replay 0");
+    const { scheduled, result } = scan([root, auto], 2);
+    expect(result).toEqual({ found: 10, older: 8 });
+    // Both copies of the newest game, then the next game.
+    expect(scheduled.map((p) => p.slice(root.length + 1)).sort()).toEqual(["Autosaved/Replay_0.w3g", "Autosaved/Replay_1.w3g", "LastReplay.w3g", "Replay_0_saved.w3g"]);
   });
 });

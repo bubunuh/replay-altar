@@ -21,12 +21,12 @@ afterEach(() => {
   else process.env.REPLAY_ALTAR_DATA = saved;
 });
 
-/** A Replays folder whose replay i is i days older than `newest`. */
+/** A Replays folder whose replay i is i days older than `newest` (each one a different replay: copies count once). */
 function folder(n: number, newest: number) {
   const dir = mkdtempSync(join(tmpdir(), "ra-import-replays-"));
   for (let i = 0; i < n; i++) {
     const file = join(dir, `Replay_${i}.w3g`);
-    writeFileSync(file, "x");
+    writeFileSync(file, `replay ${i}`);
     const t = (newest - i * DAY) / 1000;
     utimesSync(file, t, t);
   }
@@ -60,7 +60,7 @@ describe("first start", () => {
     const dir = folder(30, Date.parse(start.at) - 60_000);
     // Two games played later (e.g. while the window was closed), and LastReplay.w3g rewritten.
     for (const name of ["Replay_new1.w3g", "Replay_new2.w3g", "LastReplay.w3g"]) {
-      writeFileSync(join(dir, name), "x");
+      writeFileSync(join(dir, name), `game ${name}`);
       const t = (Date.parse(start.at) + 3_600_000) / 1000;
       utimesSync(join(dir, name), t, t);
     }

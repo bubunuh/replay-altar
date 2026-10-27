@@ -12,6 +12,11 @@ export type FirstStart = {
   at: string;
   /** Replays were already imported then: an update from 0.2.1 or older. */
   updated: boolean;
+  /**
+   * The match list started over then, for this analysis version (analysis.ts): an update whose
+   * games are imported again on request.
+   */
+  startedOver?: number;
 };
 
 /**
@@ -32,7 +37,8 @@ export function firstStart(db: DB | null): FirstStart {
   const read = (): FirstStart | null => {
     try {
       const v = JSON.parse(readFileSync(file, "utf8")) as Partial<FirstStart>;
-      return typeof v.at === "string" && !Number.isNaN(Date.parse(v.at)) ? { at: v.at, updated: !!v.updated } : null;
+      if (typeof v.at !== "string" || Number.isNaN(Date.parse(v.at))) return null;
+      return { at: v.at, updated: !!v.updated, ...(typeof v.startedOver === "number" ? { startedOver: v.startedOver } : {}) };
     } catch {
       return null;
     }
