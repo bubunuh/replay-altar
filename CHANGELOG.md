@@ -48,6 +48,14 @@ statistics (`data/`).
 - **Second and third heroes count in the resources spent:** the gold and lumber spent left out every hero after the first (which is free), so it read about 7% low against the game's own numbers; now 2% (on 176 W3Champions player-games). This also moves the gold collected estimated for Battle.net games.
 - **More accurate army value, losses and fights (our improved WC3V):** the simulation now reads the replay's own selection lists, so it knows which units really exist and when they die, and a train click with several buildings selected trains in each of them. Measured against Warcraft III's own unit counts on 14 recorded games it was not developed on, the army value is off by 84 on average over a game instead of 143, typically by about 20% instead of 37%, and in fights in which a side lost 300 or more, the side that lost more is named wrongly in 18% of them instead of 31%. A unit seen in another form (a Druid of the Claw in bear form, a burrowed Crypt Fiend, a Berserker) counts as the unit trained, train orders the game refused no longer count as units lost, and Militia no longer count as army. Replay Altar's own correction of the deaths, which did part of this after the simulation, is no longer needed and was removed.
 - **Hero timelines:** a hero cancelled at the altar and ordered again later no longer appears on the hero chart, and in the build-order comparison, at the time of the cancelled order (and a Demon Hunter or Alchemist the simulation last saw transformed is found again).
+- **Games on some maps can be simulated again:** games on 60 maps, mostly the copies of ladder
+  maps that some hosts save under a long code instead of the map's name (`Maps/dz/…`), plus a few
+  ATR maps (Devil's Forest, Shallow Grave, Shattered Exile, Hammerfall, Icemond), stopped at the
+  first second and couldn't be simulated, because the simulation misread where the players start
+  on them. They now simulate to the end (all 91 such games among our tournament replays). Maps
+  your copy of Replay Altar already prepared are corrected by themselves when it starts after the
+  update; if a map's start positions still can't be read, the game now says so instead of "the
+  simulation could read the replay only up to 0:01".
 - **Cut-short replays can be imported:** a replay file that ends in the middle of the game (FloTV recordings, or a copy made while the game was still running) often couldn't be imported at all. It now is, up to where it ends, and its report says the rest is missing.
 
 Planned:
@@ -58,10 +66,7 @@ Planned:
   measured the same way (the full review is for 0.2.3). Before the release: the simulation stops
   reading one of the 15 held-out recorded games at 9:24 (batch3-11: a selection the game lists
   right after a deselect is not taken, then an upgrade from an empty selection fails); the fix is
-  in the WC3V lab, to come back as one more patch. Also from the lab: games on 60 maps (mostly the
-  copies hosted under hashed names, plus a few ATR maps) stopped at 0:01 because their start
-  positions were misread (91 of our tournament and ladder replays); the fix needs the patch plus
-  the map entries read again, in the installer and in players' saved entries.
+  in the WC3V lab, to come back as one more patch.
 
 ### Checked for 0.2.2
 

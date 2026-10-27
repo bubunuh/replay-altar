@@ -6,6 +6,7 @@ import { projectRoot } from "@replay-altar/core";
 export const PROJECT_DIR = projectRoot();
 export const WC3V_DIR = join(PROJECT_DIR, "vendor/wc3v");
 export const DRIVER = join(PROJECT_DIR, "packages/sim/driver/wc3v-driver.cjs");
+export const START_LOCATIONS = join(PROJECT_DIR, "packages/sim/driver/start-locations.cjs");
 
 export const gamedataDir = (dataRoot: string) => join(dataRoot, "sim/gamedata/current");
 export const simOutputPath = (dataRoot: string, gameKey: string) => join(dataRoot, "sim/out", `${gameKey}.wc3v.gz`);

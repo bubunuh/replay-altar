@@ -173,6 +173,7 @@ async function awake(mode: CollectorMode, wake: Wake | null, first: boolean, asl
   try {
     const moved = syncMapCache(p.root);
     if (moved.restored || moved.saved) log(`maps: ${moved.restored} restored from the data folder, ${moved.saved} saved to it`);
+    if (moved.repaired) log(`maps: start positions read again for ${moved.repaired} map(s) an older version misread`);
   } catch (e) {
     log(`maps: ${(e as Error).message}`);
   }
