@@ -8,6 +8,7 @@
 import { RACES, type GameRecord, type Metrics, type RaceCode, type SimSample } from "@replay-altar/core";
 import { costOf, type CostTables } from "./costs.ts";
 import { diedAt } from "./deaths.ts";
+import { foodInUse, type FoodUnit } from "./food.ts";
 
 // --- WC3V output (only the fields we read) -------------------------------------------------
 type WUnit = {
@@ -206,9 +207,20 @@ export function buildTimelines(o: WOutput, record: GameRecord, costs: CostTables
     };
 
     const events = (p.eventStream ?? []).filter((e) => e.gameTime <= endMs).sort((a, b) => a.gameTime - b.gameTime);
-    const food = events
+    // Food used from the units that existed (food.ts); WC3V's own counter never takes off the
+    // units that died. Food max stays WC3V's, raised to the food used where it misses a farm.
+    const supply = events
       .filter((e) => typeof e.supplyUsed === "number" && typeof e.supplyMax === "number")
-      .map((e) => ({ t: e.gameTime, used: e.supplyUsed!, max: e.supplyMax! }));
+      .map((e) => ({ t: e.gameTime, max: e.supplyMax! }));
+    const used = foodInUse((p.units ?? []) as FoodUnit[], rp.heroes, costs).filter((s) => s.t <= endMs);
+    const food = supply.length
+      ? [...new Set([...supply.map((s) => s.t), ...used.map((s) => s.t)])]
+          .sort((a, b) => a - b)
+          .map((t) => {
+            const u = stepAt(used, t).used;
+            return { t, used: u, max: Math.max(u, stepAt(supply, t).max) };
+          })
+      : [];
     const workers = events
       .filter((e) => e.workers)
       .map((e) => ({ t: e.gameTime, total: e.workers!.totalWorkers, onBuild: e.workers!.onBuild ?? 0, ghoulsOnLumber: e.workers!.ghoulsOnLumber ?? 0 }));

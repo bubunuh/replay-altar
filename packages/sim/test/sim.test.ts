@@ -7,6 +7,7 @@ import { CONSTANTS, gamedataDir, loadCosts, simNotReady, simulateGame } from "..
 import { runIncome, spendFromOrders, type Timeline, type WOutput } from "../src/economy.ts";
 import { neverMade, withoutNeverMade } from "../src/deaths.ts";
 import { armyValueFn, heroUnit } from "../src/army.ts";
+import { foodInUse } from "../src/food.ts";
 import type { CostTables } from "../src/costs.ts";
 
 const realData = paths().root;
@@ -49,6 +50,23 @@ describe("heroes in the spending", () => {
   });
   test("without the order time (older records), a hero is priced its training time before its first skill", () => {
     expect(spendFromOrders([], FAKE, [hero("Hamg", 120_000), hero("Npal", 500_000, null)])).toEqual([{ t: 445_000, gold: 425, lumber: 100 }]);
+  });
+});
+
+describe("food used, from the units", () => {
+  test("a unit counts from the start of its training until it dies; a hero from its order, dead or not; a Wisp until it becomes a building", () => {
+    const costs: CostTables = { ...FAKE, units: { ...FAKE.units, ewsp: unit(60, 0, 1, 14) } };
+    const units = [
+      { itemId: "hpea", spawnTime: 500 }, // starting worker
+      { itemId: "hfoo", spawnTime: 100_000, trainedTime: 130_000, lostState: { state: "lost", since: 200_000 } }, // queued, started at 110 s
+      { itemId: "hfoo", spawnTime: 150_000, trainedTime: 170_000, lostState: { state: "possiblyLost", since: 400_000 } },
+      { itemId: "ewsp", spawnTime: 10_000, trainedTime: 24_000, destroyedByBuilding: true, destroyedAt: 60_000 },
+      { itemId: "hfoo", isBuilding: true, spawnTime: 0 },
+      { itemId: "Hamg", spawnTime: 60_000, trainedTime: 119_000, lostState: { state: "lost", since: 300_000 } },
+    ];
+    const f = foodInUse(units, [hero("Hamg", 125_000, 64_000)], costs);
+    const at = (t: number) => f.filter((s) => s.t <= t).at(-1)!.used;
+    expect([at(0), at(1000), at(20_000), at(64_000), at(110_000), at(150_000), at(250_000), at(500_000)]).toEqual([0, 1, 2, 6, 8, 10, 8, 6]);
   });
 });
 
