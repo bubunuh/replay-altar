@@ -1,0 +1,61 @@
+From 680c845d26e9dcf5adfd6eb816d120de6edda6d9 Mon Sep 17 00:00:00 2001
+From: bubunuh <76405364+bubunuh@users.noreply.github.com>
+Date: Sun, 25 Oct 2026 00:18:54 +0200
+Subject: [PATCH 06/21] Selection ledger: lists that end on a unit sent to
+ harvest are no death
+
+Players send ghouls (or workers) to the trees and then shift-click them out
+of the selection one by one; those deselects look exactly like the game
+taking out a unit that died, and the units are never listed again while they
+work. A handle whose last order was a work order gets no death from the lists.
+
+Dev games: Undead army value error 169 -> 143, all 120 -> 115.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ lib/SelectionLedger.js         |  5 +++++
+ tests/selection-ledger.test.js | 12 ++++++++++++
+ 2 files changed, 17 insertions(+)
+
+diff --git a/lib/SelectionLedger.js b/lib/SelectionLedger.js
+index 64cf96d..b65c283 100644
+--- a/lib/SelectionLedger.js
++++ b/lib/SelectionLedger.js
+@@ -353,6 +353,11 @@ class SelectionLedger {
+     for (const h of pl.handles.values()) {
+       h.death = null;
+ 
++      // Sent to harvest: players take the workers out of the selection one
++      // by one and never list them again while they work. Their lists end,
++      // they don't die.
++      if (h.lastOrder && h.lastOrder.work) continue;
++
+       if (h.lastKind === 'deselectAlone') {
+         h.death = { at: h.last, from: h.last, kind: 'deselected' };
+         continue;
+diff --git a/tests/selection-ledger.test.js b/tests/selection-ledger.test.js
+index 811b548..fd6ac98 100644
+--- a/tests/selection-ledger.test.js
++++ b/tests/selection-ledger.test.js
+@@ -187,6 +187,18 @@ check('the last order of the selection is kept per handle, with its work flag',
+   assert.strictEqual(handleOf(L, 1, B).lastOrder.work, true);
+ });
+ 
++check('units sent to harvest and then deselected one by one are not dead', () => {
++  const L = new SelectionLedger();
++  L.selectionChange(1, 1000, SELECT, [A, B, C]);
++  L.order(1, 2000, 0xD0003, 900, 900, false, true);
++  L.selectionChange(1, 2500, DESELECT, [A]);
++  L.selectionChange(1, 3000, DESELECT, [B]);
++  L.assignGroup(1, 3500, 1, [C]);
++  L.resolve();
++  assert.strictEqual(handleOf(L, 1, A).death, null);
++  assert.strictEqual(handleOf(L, 1, B).death, null);
++});
++
+ check('object ids that name no unit are ignored', () => {
+   const L = new SelectionLedger();
+   L.preSubselection(1, 1000, 4294967295, 4294967295);
+-- 
+2.56.0
+

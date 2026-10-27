@@ -1,0 +1,104 @@
+From abea6a5ad3d99580675e39f42d29958692aba52a Mon Sep 17 00:00:00 2001
+From: bubunuh <76405364+bubunuh@users.noreply.github.com>
+Date: Sun, 25 Oct 2026 00:57:07 +0200
+Subject: [PATCH 10/21] Turn units into the type a finished research makes them
+
+The Berserker upgrade turns every Headhunter into a Berserker and Barrage
+every Siege Engine into the rocket one; units trained afterwards come out as
+the new type. WC3V kept the old type for all of them. After the simulation,
+when the research start times are known, morph those units at the research's
+end (or at their training, if later), so morphHistory shows the change.
+
+Same cost, so army value is unchanged; dev unit-type count error 0.98 -> 0.93
+(Orc 1.1 -> 0.8).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ lib/HandleBinder.js |  4 ++--
+ lib/Player.js       | 27 +++++++++++++++++++++++++++
+ wc3v.js             |  7 +++++++
+ 3 files changed, 36 insertions(+), 2 deletions(-)
+
+diff --git a/lib/HandleBinder.js b/lib/HandleBinder.js
+index a4e8cf3..abb719e 100644
+--- a/lib/HandleBinder.js
++++ b/lib/HandleBinder.js
+@@ -17,10 +17,10 @@
+ 
+ // Forms of one unit that keep its handle: toggled forms (Bear / Crow Form,
+ // Burrow, Ethereal Form, Stone Form, Metamorphosis), Destroyer Form, militia,
+-// and the Headhunter the Berserker upgrade turns into a Berserker.
++// and the units a research turns into another type (Berserker upgrade, Barrage).
+ const FORM_CLASSES = [
+   ['edoc', 'edcm'], ['edot', 'edtm'], ['ucry', 'ucrm'], ['ospw', 'ospm'], ['uobs', 'ubsp'],
+-  ['hpea', 'hmil'], ['ugar', 'ugrm'], ['Edem', 'Edmm'], ['ohun', 'otbk']
++  ['hpea', 'hmil'], ['ugar', 'ugrm'], ['Edem', 'Edmm'], ['ohun', 'otbk'], ['hmtt', 'hrtt']
+ ];
+ const formClassOf = new Map();
+ for (const cls of FORM_CLASSES) for (const id of cls) formClassOf.set(id, cls[0]);
+diff --git a/lib/Player.js b/lib/Player.js
+index 1e90de5..198bd84 100644
+--- a/lib/Player.js
++++ b/lib/Player.js
+@@ -62,6 +62,12 @@ const EXPANSION_DISTANCE_THRESHOLD = 2500; // WC3 coord units from starting posi
+ const SCOUT_DISTANCE_THRESHOLD = 2000;    // WC3 coord units — worker sent outside base area
+ const SCOUT_TIME_CUTOFF = 240000;         // 4 minutes — no scouts detected after this
+ 
++// research -> [unit type it turns, the type it turns into]
++const RESEARCH_FORMS = {
++  Robk: ['ohun', 'otbk'],
++  Rhrt: ['hmtt', 'hrtt']
++};
++
+ // Building footprint helpers live in helpers/buildingFootprints.js so tools
+ // (parse-building-pathing.js) and the parser bundle share one source.
+ 
+@@ -5270,6 +5276,27 @@ const Player = class {
+   // Post-processing: update eventStream worker assignments
+   // with per-unit primaryRole and roleHistory (set during replay parsing)
+   //
++  //
++  // Researches that turn every unit of one type into another: the Berserker
++  // upgrade (Headhunter → Berserker) and Barrage (Siege Engine → the rocket
++  // one). The game swaps the type of every such unit when the research
++  // finishes, and later ones come out as the new type; WC3V kept calling them
++  // by the old one. Run after the simulation, when the research times are known.
++  //
++  applyResearchForms () {
++    for (const [researchId, [fromId, toId]] of Object.entries(RESEARCH_FORMS)) {
++      const meta = researchMeta[researchId];
++      const entry = this.researchStream.find(e => e.itemId === researchId);
++      if (!meta || !entry) continue;
++      const done = entry.gameTime + ((meta.time && meta.time[0]) || 0) * utils.SECONDS_TO_MS;
++      for (const unit of this.units) {
++        if (!unit || unit.isBuilding || unit.itemId !== fromId) continue;
++        const born = unit.trainedTime != null ? unit.trainedTime : unit.spawnTime;
++        unit.morphTo(toId, Math.max(done, born || 0));
++      }
++    }
++  }
++
+   postProcessWorkerAssignments () {
+     this.eventStream.forEach(event => {
+       if (event.key !== 'addUnit' || !event.unit) return;
+diff --git a/wc3v.js b/wc3v.js
+index 46657e7..47ae055 100644
+--- a/wc3v.js
++++ b/wc3v.js
+@@ -292,6 +292,13 @@ const doParsing = async (input, options = {}) => {
+     }
+   });
+ 
++  // post-process: unit types a finished research changed
++  Object.values(playerManager.players).forEach(player => {
++    if (player.applyResearchForms) {
++      player.applyResearchForms();
++    }
++  });
++
+   // post-process: build item stream summary per player
+   Object.values(playerManager.players).forEach(player => {
+     if (player.buildItemStream) {
+-- 
+2.56.0
+

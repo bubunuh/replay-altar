@@ -1,0 +1,159 @@
+From ad44997c029cc500e61a118f39f45b5855515b0a Mon Sep 17 00:00:00 2001
+From: bubunuh <76405364+bubunuh@users.noreply.github.com>
+Date: Sun, 25 Oct 2026 01:42:49 +0200
+Subject: [PATCH 20/21] SelectionEvidence: unit test, and its header follows
+ the binder
+
+tests/selection-evidence.test.js runs the pass on a hand-built ledger and
+player (no replay): a trained unit gets its handle and listed death, an
+unlisted one is flagged, a typed mercenary handle nobody took is added and an
+enemy unit clicked on alone is not.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ lib/SelectionEvidence.js         |   8 +--
+ tests/selection-evidence.test.js | 106 +++++++++++++++++++++++++++++++
+ 2 files changed, 110 insertions(+), 4 deletions(-)
+ create mode 100644 tests/selection-evidence.test.js
+
+diff --git a/lib/SelectionEvidence.js b/lib/SelectionEvidence.js
+index 10543e1..d6f67e5 100644
+--- a/lib/SelectionEvidence.js
++++ b/lib/SelectionEvidence.js
+@@ -5,9 +5,8 @@
+  * PlayerManager records every selection action into a SelectionLedger while the
+  * replay is read. Here the ledger is resolved (per handle: first and last time
+  * the game listed it, and when it died if the lists show that), and each player's
+- * units are tied to handles with HandleBinder: the ties WC3V made during the
+- * simulation where the lists agree, the rest by creation order. Each tied unit
+- * gets
++ * units are tied to handles with HandleBinder, by creation order (the ties WC3V
++ * made during the simulation count as a hint). Each tied unit gets
+  *
+  *   unit.selectionLife = { handle, first, last, lastKind, death, lastOrder }
+  *
+@@ -215,7 +214,8 @@ class SelectionEvidence {
+       const born = Math.min(h.first, this.madeBy(h.counter));
+       // made at the start: the map's own units (creeps), or start units WC3V has
+       if (born < START_MS) continue;
+-      const unit = new Unit(player.eventTimer, h.key.split('/')[0], h.key.split('/')[1], type, false);
++      const [itemId1, itemId2] = key.split('/');
++      const unit = new Unit(player.eventTimer, itemId1, itemId2, type, false);
+       unit.spawnTime = born;
+       unit.trainedTime = born;
+       unit.fromSelectionLists = true;
+diff --git a/tests/selection-evidence.test.js b/tests/selection-evidence.test.js
+new file mode 100644
+index 0000000..4811afd
+--- /dev/null
++++ b/tests/selection-evidence.test.js
+@@ -0,0 +1,106 @@
++/*
++ * selection-evidence.test.js — SelectionEvidence on a hand-built ledger and
++ * players (no replay needed).
++ *
++ * Covers:
++ *   1. a trained unit is tied to its handle and gets the death the lists show
++ *   2. a trained unit the lists never show is flagged selectionUnlisted
++ *   3. a handle the lists type as an army unit nobody took becomes a unit
++ *   4. a foreign handle (only ever clicked alone) is not bound or added
++ *
++ * Run: `node tests/selection-evidence.test.js`
++ */
++
++const assert = require('assert');
++const logManager = require('../helpers/logManager');
++logManager.setTestMode(true);
++logManager.setProductionMode(true);
++logManager.setLogger('selection-evidence-test');
++
++const EventTimer = require('../lib/EventTimer');
++const Unit = require('../lib/Unit');
++const SelectionLedger = require('../lib/SelectionLedger');
++const SelectionEvidence = require('../lib/SelectionEvidence');
++
++let failures = 0;
++function check (label, fn) {
++  try {
++    fn();
++    console.log(`  ✓ ${label}`);
++  } catch (err) {
++    failures++;
++    console.log(`  ✗ ${label}`);
++    console.log(`    ${err.stack.split('\n').slice(0, 3).join('\n    ')}`);
++  }
++}
++
++const SELECT = 1, DESELECT = 2;
++const u = (a, b) => ({ itemId1: a, itemId2: b });
++
++function setup () {
++  const eventTimer = new EventTimer();
++  const trained = (type, t) => {
++    const unit = new Unit(eventTimer, null, null, type, false);
++    unit.spawnTime = t - 20000;
++    unit.trainedTime = t;
++    return unit;
++  };
++  const footman = trained('hfoo', 60000);
++  const phantom = trained('hfoo', 90000);
++  const player = { id: 1, units: [footman, phantom], eventTimer, startingPosition: { x: 0, y: 0 } };
++
++  const L = new SelectionLedger();
++  // the footman's handle, listed with the hero, then the game deselects it as it dies
++  L.selectionChange(1, 70000, SELECT, [u(10, 1000), u(11, 2000)]);
++  L.selectSubgroup(1, 70000, 'Hpal', 10, 1000);
++  L.order(1, 71000, 0xD0003);
++  L.selectionChange(1, 150000, DESELECT, [u(11, 2000)]);
++  // a mercenary nobody trained, selected with the hero
++  L.selectionChange(1, 200000, DESELECT, [u(10, 1000)]);
++  L.selectionChange(1, 200000, SELECT, [u(10, 1000), u(12, 9000)]);
++  L.selectSubgroup(1, 200000, 'nftb', 12, 9000);
++  // an enemy unit, clicked on alone
++  L.selectionChange(1, 210000, DESELECT, [u(10, 1000), u(12, 9000)]);
++  L.selectionChange(1, 210000, SELECT, [u(13, 9500)]);
++  L.selectSubgroup(1, 210000, 'hkni', 13, 9500);
++
++  const hero = new Unit(eventTimer, '10', '1000', 'Hpal', false);
++  hero.spawnTime = 0;
++  hero.trainedTime = 0;
++  player.units.unshift(hero);
++
++  const pm = { selectionLedger: L, players: { 1: player } };
++  const stats = new SelectionEvidence(pm).run();
++  return { player, footman, phantom, hero, stats };
++}
++
++console.log('[SelectionEvidence]');
++
++check('the trained unit gets its handle and the death the lists show', () => {
++  const { footman } = setup();
++  assert.ok(footman.selectionLife);
++  assert.strictEqual(footman.selectionLife.handle, '11/2000');
++  assert.deepStrictEqual(footman.selectionLife.death, { at: 150000, from: 150000, kind: 'deselected' });
++});
++
++check('a trained unit the lists never show is flagged unlisted', () => {
++  const { phantom } = setup();
++  assert.strictEqual(phantom.selectionLife, undefined);
++  assert.strictEqual(phantom.selectionUnlisted, true);
++});
++
++check('a typed army handle nobody took becomes a unit, an enemy click does not', () => {
++  const { player, stats } = setup();
++  const added = player.units.filter(x => x.fromSelectionLists);
++  assert.strictEqual(stats.added, 1);
++  assert.strictEqual(added.length, 1);
++  assert.strictEqual(added[0].itemId, 'nftb');
++  assert.strictEqual(added[0].trainedTime, 200000);
++  assert.strictEqual(added[0].selectionLife.handle, '12/9000');
++});
++
++if (failures) {
++  console.log(`\n${failures} failure(s)`);
++  process.exit(1);
++}
++console.log('\nall passed');
+-- 
+2.56.0
+

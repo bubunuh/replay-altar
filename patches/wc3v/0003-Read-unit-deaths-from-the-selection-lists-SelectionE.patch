@@ -1,0 +1,248 @@
+From 6ea39480c743bdc8374d309348b533be4cb2a054 Mon Sep 17 00:00:00 2001
+From: bubunuh <76405364+bubunuh@users.noreply.github.com>
+Date: Sun, 25 Oct 2026 00:11:33 +0200
+Subject: [PATCH 03/21] Read unit deaths from the selection lists
+ (SelectionEvidence)
+
+A new post-pass before DeathInference resolves the SelectionLedger and ties
+each player's units to handles with HandleBinder; every tied unit gets
+unit.selectionLife = { handle, first, last, lastKind, death, lastOrder }.
+
+DeathInference reads it:
+- a death the lists show ends the unit there (source 'selection'): exactly
+  when the game deselected it as it died, else the middle of the window
+  between its last listing and the list that left it out;
+- a later listing counts as activity, so a unit that stands still but is
+  still being selected is no longer called lost for its silent path.
+Workers keep the old rules for the end of their life (they leave the lists
+inside a gold mine or a burrow too).
+
+On the 36 dev games with recorded ground truth (Warcraft III's observer
+counts), mean army value error per player-game 198 -> 127.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ lib/DeathInference.js    |  32 +++++++++-
+ lib/SelectionEvidence.js | 133 +++++++++++++++++++++++++++++++++++++++
+ wc3v.js                  |   5 ++
+ 3 files changed, 169 insertions(+), 1 deletion(-)
+ create mode 100644 lib/SelectionEvidence.js
+
+diff --git a/lib/DeathInference.js b/lib/DeathInference.js
+index e65764d..ca6faf4 100644
+--- a/lib/DeathInference.js
++++ b/lib/DeathInference.js
+@@ -46,6 +46,12 @@ function estimateXpReward (unit) {
+   return Math.round(20 + food * 8);    // 20-100ish for typical units
+ }
+ 
++// A death the selection lists bound to (from, at]: the middle of it. Exact
++// (from === at) for a unit the game deselected as it died.
++function selectionDeathTime (death) {
++  return Math.round((death.from + death.at) / 2);
++}
++
+ class DeathInference {
+   constructor (playerManager) {
+     this.playerManager = playerManager;
+@@ -138,10 +144,34 @@ class DeathInference {
+       };
+     }
+ 
++    // 1b. The game's own selection lists (SelectionEvidence): they show the
++    //     death of a unit they stop naming, bounded by its last listing.
++    const life = unit.selectionLife || null;
++    const isWorker = !!(unit.meta && unit.meta.worker);
++    if (life && life.death && !isWorker) {
++      return {
++        state: 'lost',
++        since: selectionDeathTime(life.death),
++        confidence: life.death.kind === 'deselected' ? 90 : 75,
++        source: 'selection',
++        killedInBattleId: null,
++        killerPlayerIds: null,
++        xpAwarded: estimateXpReward(unit)
++      };
++    }
++
+     const lastSample = (unit.path && unit.path.length)
+       ? unit.path[unit.path.length - 1]
+       : null;
+-    const lastActivity = lastSample ? lastSample.gameTime : (unit.spawnTime || 0);
++    // A unit the game listed later than its path's last sample was alive then.
++    // Not for a worker the lists end: workers leave the lists when they enter a
++    // gold mine or burrow too, so that end is no death of its own, but neither
++    // does a late listing then outweigh a battle that caught it.
++    const listedLast = life && !(isWorker && life.death) ? life.last : -Infinity;
++    const lastActivity = Math.max(
++      lastSample ? lastSample.gameTime : (unit.spawnTime || 0),
++      listedLast
++    );
+     const gameEnd = this._gameEndTime();
+     const silentFor = gameEnd - lastActivity;
+ 
+diff --git a/lib/SelectionEvidence.js b/lib/SelectionEvidence.js
+new file mode 100644
+index 0000000..0f348e0
+--- /dev/null
++++ b/lib/SelectionEvidence.js
+@@ -0,0 +1,133 @@
++/**
++ * SelectionEvidence — post-pass that turns the replay's selection lists into
++ * per-unit life evidence, for DeathInference.
++ *
++ * PlayerManager records every selection action into a SelectionLedger while the
++ * replay is read. Here the ledger is resolved (per handle: first and last time
++ * the game listed it, and when it died if the lists show that), and each player's
++ * units are tied to handles with HandleBinder: the ties WC3V made during the
++ * simulation where the lists agree, the rest by creation order. Each tied unit
++ * gets
++ *
++ *   unit.selectionLife = { handle, first, last, lastKind, death, lastOrder }
++ *
++ * which DeathInference reads: a death the lists show ends the unit there, and
++ * a later sighting keeps it alive past what its path alone would say.
++ */
++
++const HandleBinder = require('./HandleBinder');
++const { getUnitInfo } = require('../helpers/mappings');
++
++const isPlayerId = (id) => Number(id) >= 0 && Number(id) < 24;
++
++class SelectionEvidence {
++  constructor (playerManager) {
++    this.playerManager = playerManager;
++    this.stats = { handles: 0, units: 0, tied: 0, kept: 0, retied: 0, deaths: 0 };
++  }
++
++  run () {
++    const ledger = this.playerManager.selectionLedger;
++    if (!ledger) return this.stats;
++
++    const resolved = ledger.resolve();
++    const players = Object.values(this.playerManager.players || {})
++      .filter(p => p && !p.isNeutralPlayer && isPlayerId(p.id));
++
++    const anchors = this._anchors(players, resolved);
++
++    for (const player of players) {
++      const pl = resolved.get(Number(player.id));
++      if (!pl) continue;
++      this._bindPlayer(player, pl, anchors);
++    }
++    return this.stats;
++  }
++
++  _candidates (player) {
++    return (player.units || []).filter(u => u && !u.isBuilding && !u.isIllusion && !u.isInferred);
++  }
++
++  _unitHandle (unit) {
++    const { itemId1, itemId2 } = unit;
++    if (itemId1 == null || itemId2 == null) return null;
++    if (Number(itemId1) < 0) return null;            // retired by a recycled handle
++    return `${itemId1}/${itemId2}`;
++  }
++
++  _born (unit) {
++    if (unit.trainedTime != null) return unit.trainedTime;
++    return unit.spawnTime || 0;
++  }
++
++  _forms (unit) {
++    const forms = new Set([unit.itemId]);
++    for (const m of (unit.morphHistory || [])) {
++      if (m.from) forms.add(m.from);
++      if (m.itemId) forms.add(m.itemId);
++    }
++    return forms;
++  }
++
++  // (counter, creation time) pairs from every player's ties that the lists
++  // confirm (same type), for the counter → creation time fit.
++  _anchors (players, resolved) {
++    const anchors = [];
++    for (const player of players) {
++      const pl = resolved.get(Number(player.id));
++      if (!pl) continue;
++      for (const unit of this._candidates(player)) {
++        const key = this._unitHandle(unit);
++        const h = key && pl.handles.get(key);
++        if (!h || !h.types.length) continue;
++        const forms = this._forms(unit);
++        if (!h.types.some(x => HandleBinder.formMatches({ forms }, x.type))) continue;
++        anchors.push({ counter: h.counter, born: this._born(unit) });
++      }
++    }
++    return anchors;
++  }
++
++  _bindPlayer (player, pl, anchors) {
++    // handles a unit can be: not ones the game named as a building
++    const handles = new Map();
++    for (const [k, h] of pl.handles) {
++      if (h.types.some(x => getUnitInfo(x.type).isBuilding)) continue;
++      handles.set(k, h);
++    }
++    this.stats.handles += handles.size;
++
++    const units = this._candidates(player);
++    const entries = units.map((unit, id) => ({
++      id,
++      unit,
++      type: unit.itemId,
++      forms: this._forms(unit),
++      born: this._born(unit),
++      handle: this._unitHandle(unit)
++    }));
++    this.stats.units += entries.length;
++
++    const ties = HandleBinder.bind(entries, handles, anchors);
++
++    for (const e of entries) {
++      const key = ties.get(e.id);
++      if (!key) continue;
++      const h = handles.get(key);
++      this.stats.tied++;
++      if (key === e.handle) this.stats.kept++;
++      else this.stats.retied++;
++      if (h.death) this.stats.deaths++;
++      e.unit.selectionLife = {
++        handle: key,
++        first: h.first,
++        last: h.last,
++        lastKind: h.lastKind,
++        death: h.death,
++        lastOrder: h.lastOrder
++      };
++    }
++  }
++}
++
++module.exports = SelectionEvidence;
+diff --git a/wc3v.js b/wc3v.js
+index c6a87df..46657e7 100644
+--- a/wc3v.js
++++ b/wc3v.js
+@@ -81,6 +81,7 @@ const config = require("./config/config");
+ const ReplayValidator = require("./lib/ReplayValidator");
+ const BattleDetector  = require("./lib/BattleDetector");
+ const DeathInference  = require("./lib/DeathInference");
++const SelectionEvidence = require("./lib/SelectionEvidence");
+ const FacingInference = require("./lib/FacingInference");
+ const KinematicResim  = require("./lib/KinematicResim");
+ const HideInference   = require("./lib/HideInference");
+@@ -683,6 +684,10 @@ const doParsing = async (input, options = {}) => {
+   // a `lostState` on every Unit. Client uses this to render the 4-state
+   // active/idle/possiblyLost/lost visual state machine.
+   emitProgress('postprocess', 98, { detail: 'deaths' });
++  const selStats = new SelectionEvidence(playerManager).run();
++  console.log(`selection evidence: ${selStats.handles} handles, ${selStats.units} units, ` +
++    `tied ${selStats.tied} (${selStats.kept} as simulated, ${selStats.retied} re-tied), ` +
++    `${selStats.deaths} listed deaths`);
+   const deathStats = new DeathInference(playerManager).run();
+   console.log('----------------------------------');
+   console.log('DEATH INFERENCE');
+-- 
+2.56.0
+
