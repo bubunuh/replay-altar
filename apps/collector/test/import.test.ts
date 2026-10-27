@@ -105,4 +105,31 @@ describe("first start", () => {
     const db = openDb(paths().db);
     expect(firstStart(db)).toEqual(first);
   });
+
+  test("a file event on an older replay (OneDrive touching it, a copy keeping its date) waits for Import like the others", () => {
+    const start = firstStart(null);
+    const dir = folder(3, Date.parse(start.at) - 60_000);
+    const scheduled: string[] = [];
+    const watcher = (limit: number | null) => {
+      const w = new ReplayWatcher([dir], async () => {}, () => {}, { since: new Date(start.at), limit, known: () => false });
+      (w as unknown as { schedule: (p: string) => void }).schedule = (p: string) => scheduled.push(p);
+      return w;
+    };
+    watcher(0).onEvent(join(dir, "Replay_1.w3g"));
+    expect(scheduled).toEqual([]);
+    // A game that just ended.
+    writeFileSync(join(dir, "LastReplay.w3g"), "a new game");
+    utimesSync(join(dir, "LastReplay.w3g"), (Date.parse(start.at) + 60_000) / 1000, (Date.parse(start.at) + 60_000) / 1000);
+    watcher(0).onEvent(join(dir, "LastReplay.w3g"));
+    expect(scheduled).toEqual([join(dir, "LastReplay.w3g")]);
+    // "Import all": every replay is wanted anyway.
+    watcher(null).onEvent(join(dir, "Replay_2.w3g"));
+    expect(scheduled).toContain(join(dir, "Replay_2.w3g"));
+    // An imported file read again (Windows reports its last-access time): nothing to do.
+    scheduled.length = 0;
+    const w = new ReplayWatcher([dir], async () => {}, () => {}, { since: new Date(start.at), limit: null, known: () => "game" });
+    (w as unknown as { schedule: (p: string) => void }).schedule = (p: string) => scheduled.push(p);
+    w.onEvent(join(dir, "LastReplay.w3g"));
+    expect(scheduled).toEqual([]);
+  });
 });

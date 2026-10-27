@@ -86,13 +86,32 @@ export class ReplayWatcher {
     for (const dir of this.dirs) {
       if (!existsSync(dir)) continue;
       const w = watch(dir, { recursive: true }, (_event, name) => {
-        if (name && isReplayFile(name)) this.schedule(join(dir, name), "event");
+        if (name && isReplayFile(name)) this.onEvent(join(dir, name));
       });
       w.on("error", (e) => this.log(`watch error on ${dir}: ${e.message}`));
       this.watchers.push(w);
       this.log(`watching ${dir}`);
     }
     this.rescanTimer = setInterval(() => this.scanAll(), RESCAN_MS);
+  }
+
+  /**
+   * A file appeared or changed: a game that just ended (or LastReplay.w3g rewritten). Windows also
+   * reports a file whose last-access time or attributes changed (reading it, OneDrive): an
+   * imported file that is unchanged needs nothing, and a replay dated before `since` (touched, or
+   * copied in with its date) is an older replay, imported only when the limit takes it (at the
+   * next scan).
+   */
+  onEvent(path: string) {
+    let s;
+    try {
+      s = statSync(path);
+    } catch {
+      return; // gone (or not written yet: another event follows)
+    }
+    if (this.opts.known(path, s.size, s.mtime.toISOString())) return;
+    if (this.opts.limit !== null && this.opts.since && s.mtimeMs <= this.opts.since.getTime()) return;
+    this.schedule(path, "event");
   }
 
   /** Files waiting to settle or being ingested. */
