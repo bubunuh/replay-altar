@@ -60,10 +60,16 @@ export function summarize(record: GameRecord, output: WOutput, costs: CostTables
   // A truncated read looks like a game where everyone stopped playing: no fights, no levels,
   // no spending after the cut. Better no simulation than one that misleads (7-10% of the pro
   // corpus on WC3V 2026-10).
-  const cut = ((output.validation?.warnings ?? []) as { type?: string; missingMs?: number; lastActionGameTimeMs?: number }[]).find((w) => w.type === "PARSE_TRUNCATED" && (w.missingMs ?? 0) > MAX_MISSING_MS);
+  const cut = ((output.validation?.warnings ?? []) as { type?: string; missingMs?: number; lastActionGameTimeMs?: number; details?: string }[]).find((w) => w.type === "PARSE_TRUNCATED" && (w.missingMs ?? 0) > MAX_MISSING_MS);
   if (cut) {
     const at = Math.round((cut.lastActionGameTimeMs ?? 0) / 1000);
-    return { status: "failed", engine: { name: "wc3v", commit: wc3vCommit() }, ranAt: meta.ranAt, reason: `the simulation could read the replay only up to ${Math.floor(at / 60)}:${String(at % 60).padStart(2, "0")} (WC3V parse truncated)` };
+    const time = `${Math.floor(at / 60)}:${String(at % 60).padStart(2, "0")}`;
+    const failed = { status: "failed" as const, engine: { name: "wc3v" as const, commit: wc3vCommit() }, ranAt: meta.ranAt };
+    // WC3V found no start position in the map's entry (repairStartLocations couldn't read them
+    // either): said as a map problem, which is tried again with the next version.
+    if (/Cause: map has no usable start positions/.test(cut.details ?? ""))
+      return { ...failed, reason: `map start positions couldn't be read from this map's script, so the simulation stopped at ${time}` };
+    return { ...failed, reason: `the simulation could read the replay only up to ${time} (WC3V parse truncated)` };
   }
   // Train orders the game refused or cancelled are units in WC3V's output; they never existed.
   const o = withoutNeverMade(output);

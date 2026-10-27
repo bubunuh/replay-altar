@@ -28,10 +28,10 @@ describe("extracted maps are kept in the data folder", () => {
   });
 
   test("a map WC3V already has is copied to the data folder", () => {
-    expect(syncMapCache(data)).toEqual({ restored: 0, saved: 1 });
+    expect(syncMapCache(data)).toEqual({ restored: 0, saved: 1, repaired: 0 });
     expect(readFileSync(join(data, "sim/maps/EchoIsles_S2_v2.2/mapdata/war3map.wpm"), "utf8")).toBe("pathing");
     expect(existsSync(join(data, "sim/maps/EchoIsles_S2_v2.2/client/map.jpg"))).toBe(true);
-    expect(syncMapCache(data)).toEqual({ restored: 0, saved: 0 });
+    expect(syncMapCache(data)).toEqual({ restored: 0, saved: 0, repaired: 0 });
   });
 
   test("after an update wipes WC3V's copy, the map and its shared entries come back", () => {
@@ -41,7 +41,7 @@ describe("extracted maps are kept in the data folder", () => {
     write(join(wc3v, "client/js/gameData.json"), JSON.stringify({ maps: {} }));
     expect(mapClientDir(data, "(2)EchoIsles_S2_v2.2.w3x")).toBe(join(data, "sim/maps/EchoIsles_S2_v2.2/client"));
 
-    expect(syncMapCache(data)).toEqual({ restored: 1, saved: 0 });
+    expect(syncMapCache(data)).toEqual({ restored: 1, saved: 0, repaired: 0 });
     expect(readFileSync(join(wc3v, "mapdata/EchoIsles_S2_v2.2/war3map.wpm"), "utf8")).toBe("pathing");
     expect(JSON.parse(readFileSync(join(wc3v, "helpers/mapConfiguration.json"), "utf8")).maps["EchoIsles_S2_v2.2.w3x"]).toEqual({ info: { name: "EchoIsles" } });
     expect(JSON.parse(readFileSync(join(wc3v, "client/js/gameData.json"), "utf8")).maps["EchoIsles_S2_v2.2.w3x"]).toEqual({ name: "EchoIsles" });
