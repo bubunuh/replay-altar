@@ -7,6 +7,7 @@
 // rates calibrated on real games (scripts/calibrate-economy.ts).
 import { RACES, type GameRecord, type Metrics, type RaceCode, type SimSample } from "@replay-altar/core";
 import { costOf, type CostTables } from "./costs.ts";
+import { diedAt } from "./deaths.ts";
 
 // --- WC3V output (only the fields we read) -------------------------------------------------
 type WUnit = {
@@ -15,7 +16,7 @@ type WUnit = {
   spawnTime?: number | null;
   trainedTime?: number | null;
   constructionStartTime?: number | null;
-  lostState?: { state: string; since: number } | null;
+  lostState?: { state: string; since: number; source?: string } | null;
   levelStream?: { gameTime: number; newLevel: number }[];
 };
 type WEvent = {
@@ -157,8 +158,8 @@ export function spendFromOrders(build: GameRecord["players"][number]["build"], c
   return spend.sort((a, b) => a.t - b.t);
 }
 
-/** `deathsOf`: when each of a player's units died (deaths.ts); without it, WC3V's own guess. */
-export function buildTimelines(o: WOutput, record: GameRecord, costs: CostTables, deathsOf?: (playerId: number) => Map<object, number | null>): Timeline[] {
+/** `o` without the units that never existed (deaths.ts, withoutNeverMade). */
+export function buildTimelines(o: WOutput, record: GameRecord, costs: CostTables): Timeline[] {
   const endMs = record.game.durationMs;
   const out: Timeline[] = [];
   for (const rp of record.players) {
@@ -176,11 +177,9 @@ export function buildTimelines(o: WOutput, record: GameRecord, costs: CostTables
 
     const spend = spendFromOrders(rp.build, costs, rp.heroes);
     const losses: Amount[] = [];
-    // WC3V infers deaths; most come back as "possiblyLost" rather than "lost". Like WC3V's own
-    // charts we count both, so losses (and trades) are estimates; deaths.ts corrects them with the
-    // replay's selection lists when it can.
-    const deaths = deathsOf?.(rp.playerId);
-    const diedAt = (u: WUnit) => (deaths ? (deaths.get(u) ?? null) : u.lostState?.state === "lost" || u.lostState?.state === "possiblyLost" ? u.lostState.since : null);
+    // WC3V infers deaths, most of them from the replay's selection lists; many come back as
+    // "possiblyLost" rather than "lost". Like WC3V's own charts we count both, so losses (and
+    // trades) are estimates.
     for (const u of units) {
       const t = diedAt(u);
       if (t === null || costOf(costs, u.itemId).isHero) continue;

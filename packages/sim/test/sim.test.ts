@@ -4,9 +4,9 @@ import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import { buildRecord, endTimeOf, paths, parseReplay, type BuildEvent, type SimSummary } from "@replay-altar/core";
 import { CONSTANTS, gamedataDir, loadCosts, simNotReady, simulateGame } from "../src/index.ts";
-import { runIncome, spendFromOrders, type Timeline } from "../src/economy.ts";
-import { unitDeaths } from "../src/deaths.ts";
-import { heroUnit } from "../src/army.ts";
+import { runIncome, spendFromOrders, type Timeline, type WOutput } from "../src/economy.ts";
+import { neverMade, withoutNeverMade } from "../src/deaths.ts";
+import { armyValueFn, heroUnit } from "../src/army.ts";
 import type { CostTables } from "../src/costs.ts";
 
 const realData = paths().root;
@@ -38,7 +38,7 @@ describe.skipIf(!ready)("spending from orders", () => {
 const unit = (gold: number, lumber: number, food: number, buildS: number, isHero = false) => ({ gold, lumber, food, foodMade: 0, buildMs: buildS * 1000, isHero });
 const FAKE: CostTables = {
   version: "test", manifestSha256: "", items: {}, upgrades: {},
-  units: { Hamg: unit(425, 100, 5, 55, true), Hmkg: unit(425, 100, 5, 55, true), Npal: unit(425, 100, 5, 55, true), hfoo: unit(135, 0, 2, 20), edoc: unit(255, 80, 4, 35) },
+  units: { Hamg: unit(425, 100, 5, 55, true), Hmkg: unit(425, 100, 5, 55, true), Npal: unit(425, 100, 5, 55, true), hfoo: unit(135, 0, 2, 20), edoc: unit(255, 80, 4, 35), hmil: unit(75, 0, 1, 0), hpea: unit(75, 0, 1, 15) },
 };
 const hero = (code: string, firstPickMs: number, orderedMs?: number | null) => ({ order: 0, code, name: code, level: 1, levelUps: [firstPickMs], skills: [], retrainings: 0, orderedMs });
 
@@ -65,18 +65,25 @@ describe("the simulation's unit for a hero", () => {
   });
 });
 
-describe("deaths from the selection lists", () => {
-  test("a unit the game named by another form (a Druid of the Claw in bear form) is matched to the unit trained", () => {
-    const druids = [1, 2, 3].map(() => ({ itemId: "edoc", trainedTime: 10_000, path: [] }));
-    const tag = (n: number): [number, number] => [n, n];
-    const deaths = unitDeaths(druids, FAKE, [
-      { t: 15_000, kind: "focus", itemId: "edcm", object: tag(1) },
-      { t: 20_000, kind: "deselect", units: [tag(1), tag(2), tag(3)] },
-      { t: 20_000, kind: "select", units: [tag(9)] },
-      { t: 60_000, kind: "deselect", units: [tag(2), tag(3)] },
-      { t: 60_000, kind: "select", units: [tag(9)] },
-    ]);
-    expect([...deaths.values()].filter((t) => t !== null)).toEqual([40_000]);
+describe("which units count in the army value", () => {
+  const units = [
+    { itemId: "hfoo", trainedTime: 10_000 },
+    // a train order the game refused: the selection lists never showed it
+    { itemId: "hfoo", trainedTime: 20_000, lostState: { state: "possiblyLost", since: 20_000, source: "unlisted" } },
+    { itemId: "hfoo", trainedTime: 30_000, lostState: { state: "lost", since: 90_000, source: "selection" } },
+    // a Peasant called to arms that WC3V never saw go back to work
+    { itemId: "hmil", spawnTime: 5_000, morphHistory: [{ gameTime: 50_000, itemId: "hmil", from: "hpea" }] },
+  ];
+  const o = { players: { "1": { teamId: 0, race: "H", parseConfidence: 1, units } } } as unknown as WOutput;
+
+  test("a unit that never existed is left out, the output itself untouched", () => {
+    expect(units.filter(neverMade)).toEqual([units[1]]);
+    expect(withoutNeverMade(o).players["1"].units).toEqual([units[0], units[2], units[3]]);
+    expect(o.players["1"].units).toHaveLength(4);
+  });
+  test("units count from training until WC3V's death; Militia are workers", () => {
+    const value = armyValueFn(withoutNeverMade(o), 1, FAKE);
+    expect([value(15_000), value(60_000), value(100_000)]).toEqual([135, 270, 135]);
   });
 });
 

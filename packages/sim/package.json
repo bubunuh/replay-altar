@@ -9,7 +9,6 @@
     "./mapname": "./src/mapname.ts"
   },
   "dependencies": {
-    "@replay-altar/core": "*",
-    "w3gjs": "^4.3.0"
+    "@replay-altar/core": "*"
   }
 }

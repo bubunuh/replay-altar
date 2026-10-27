@@ -6,8 +6,11 @@
 import { baseUnit, RACES, type GameRecord, type HeroTimeline } from "@replay-altar/core";
 import { costOf, type CostTables } from "./costs.ts";
 import type { WOutput } from "./economy.ts";
+import { diedAt } from "./deaths.ts";
 
 const WORKERS = new Set(Object.values(RACES).map((r) => r.worker));
+/** Militia are Peasants called to arms for 45 s: workers, not army (WC3V often misses their return to work). */
+const NOT_ARMY = new Set([...WORKERS, "hmil"]);
 const HERO_FOOD = 5;
 
 type WUnitX = {
@@ -17,8 +20,6 @@ type WUnitX = {
   lostState?: { state: string; since: number } | null;
   path?: { gameTime: number }[];
 };
-
-const isLost = (u: WUnitX) => u.lostState?.state === "lost" || u.lostState?.state === "possiblyLost";
 
 /**
  * Army food and value at time t. Food comes from the simulation's supply (food used minus
@@ -49,22 +50,22 @@ export function armyAt(
 
 /**
  * Army value at each time from the simulation's own units: what the army units finished by then
- * cost, minus those that died by then (`deaths`, from deaths.ts; without it WC3V's lost or possibly
- * lost, like the loss series). The supply count can't be used for this: the simulation rarely takes
- * dead units off it (pros sit at "100 food" after losing half their army), so a wiped army still
- * looked full. A unit that changed form (Obsidian Statue to Destroyer) is valued as what it was then.
+ * cost, minus those that died by then (WC3V's lost or possibly lost, like the loss series; `o`
+ * without the units that never existed, deaths.ts). The supply count can't be used for this: the
+ * simulation rarely takes dead units off it (pros sit at "100 food" after losing half their army),
+ * so a wiped army still looked full. A unit that changed form (Obsidian Statue to Destroyer) is
+ * valued as what it was then. Militia don't count (NOT_ARMY).
  */
-export function armyValueFn(o: WOutput, playerId: number, costs: CostTables, deaths?: Map<object, number | null>): (t: number) => number {
+export function armyValueFn(o: WOutput, playerId: number, costs: CostTables): (t: number) => number {
   type U = WUnitX & { isBuilding?: boolean; isIllusion?: boolean; morphHistory?: { gameTime: number; itemId: string; from: string }[] };
   const units = ((o.players[String(playerId)] as unknown as { units?: U[] })?.units ?? [])
-    .filter((u) => !u.isBuilding && !u.isIllusion && !WORKERS.has(u.itemId))
+    .filter((u) => !u.isBuilding && !u.isIllusion && !NOT_ARMY.has(u.itemId))
     .map((u) => ({ u, c: costOf(costs, u.itemId) }))
     .filter(({ c }) => !c.isHero && c.food > 0)
     .map(({ u, c }) => {
       const morphs = [...(u.morphHistory ?? [])].sort((a, b) => a.gameTime - b.gameTime);
       const before = morphs.length ? costOf(costs, morphs[0].from) : c;
-      const died = deaths ? (deaths.get(u) ?? null) : isLost(u) ? u.lostState!.since : null;
-      return { from: u.trainedTime ?? u.spawnTime ?? Infinity, to: died ?? Infinity, morphAt: morphs[0]?.gameTime ?? -Infinity, value: c.gold + c.lumber, valueBefore: before.gold + before.lumber };
+      return { from: u.trainedTime ?? u.spawnTime ?? Infinity, to: diedAt(u) ?? Infinity, morphAt: morphs[0]?.gameTime ?? -Infinity, value: c.gold + c.lumber, valueBefore: before.gold + before.lumber };
     });
   return (t) => units.reduce((n, x) => (x.from <= t && x.to > t ? n + (t < x.morphAt ? x.valueBefore : x.value) : n), 0);
 }
@@ -106,9 +107,9 @@ export function heroTimelines(o: WOutput, playerId: number, player: GameRecord["
     let lastRevive = appearAt ?? 0;
     for (const r of revives.filter((e) => heroOf(e) === h.code).sort((a, b) => a.gameTime - b.gameTime)) {
       const before = pathTimes.filter((x) => x < r.gameTime - 1000 && x >= lastRevive);
-      const diedAt = before.length ? before[before.length - 1] : r.gameTime;
+      const died = before.length ? before[before.length - 1] : r.gameTime;
       const revivedAt = Math.min(endMs, r.gameTime + reviveMs(buildMs, levelAt(r.gameTime)));
-      deaths.push({ diedAt, revivedAt });
+      deaths.push({ diedAt: died, revivedAt });
       lastRevive = revivedAt;
     }
     if (unit?.lostState?.state === "lost" && unit.lostState.since > lastRevive) deaths.push({ diedAt: unit.lostState.since, revivedAt: null });
@@ -127,7 +128,7 @@ export function unitsKilledEstimate(o: WOutput, playerId: number, teamId: number
     return c.food > 0 && !c.isHero;
   };
   let lost = 0;
-  for (const [, p] of enemies) lost += ((p.units ?? []) as WUnitX[]).filter((u) => isLost(u) && isUnit(u.itemId)).length;
+  for (const [, p] of enemies) lost += ((p.units ?? []) as WUnitX[]).filter((u) => diedAt(u) !== null && isUnit(u.itemId)).length;
   const camps = Object.values(o.world?.neutralGroups ?? {}) as { claimState: number; claimOwnerId: number | null; units?: unknown[] }[];
   const creeps = camps.filter((g) => g.claimState === 2 && g.claimOwnerId === teamId).reduce((s, g) => s + (g.units?.length ?? 0), 0);
   return Math.round((lost + creeps) * factor);
