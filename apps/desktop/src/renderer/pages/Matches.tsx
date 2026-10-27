@@ -88,6 +88,8 @@ export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: str
         <span className="muted small">{tr(`${rows.length} games`, `${rows.length} partidas`, `${rows.length} partidas`, `${rows.length} parties`)}</span>
       </div>
       {games.length === 0 && <ReplayFolders empty />}
+      {/* Nothing imported yet (a first start): the offer to import comes first. */}
+      {games.length === 0 && <ImportMore games={games} />}
       <div className="card" style={{ padding: 0 }}>
         {rows.length === 0 ? (
           <div className="empty">
@@ -143,17 +145,18 @@ export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: str
           </table>
         )}
       </div>
-      <ImportMore games={games} />
+      {games.length > 0 && <ImportMore games={games} />}
     </div>
   );
 }
 
 /**
- * Older replays in your folders that aren't imported yet: a first start imports only the newest
- * ones (a folder with thousands of replays took ages and kept the window busy).
+ * Replays that were in your folders before the first start and aren't imported yet: nothing is
+ * imported until you ask (a folder with thousands of replays took ages and kept the window busy,
+ * and not everyone wants their old games). New games are imported by themselves.
  */
 function ImportMore({ games }: { games: GameRow[] }) {
-  const [scan, setScan] = useState<{ found: number; older: number } | null>(null);
+  const [scan, setScan] = useState<{ found: number; older: number; asked: boolean } | null>(null);
   const [asked, setAsked] = useState(false);
   useEffect(() => {
     api.replaysScan().then((s) => {
@@ -169,14 +172,27 @@ function ImportMore({ games }: { games: GameRow[] }) {
   return (
     <div className="import-more">
       <p className="sub">
-        {scan.older === 1
-          ? tr("1 older replay in your folders isn't imported yet.", "1 replay mais antigo nas suas pastas ainda não foi importado.", "1 replay más antiguo de tus carpetas aún no se ha importado.", "1 replay plus ancien de vos dossiers n'est pas encore importé.")
-          : tr(`${scan.older} older replays in your folders aren't imported yet.`, `${scan.older} replays mais antigos nas suas pastas ainda não foram importados.`, `${scan.older} replays más antiguos de tus carpetas aún no se han importado.`, `${scan.older} replays plus anciens de vos dossiers ne sont pas encore importés.`)}
+        {!scan.asked
+          ? (scan.older === 1
+              ? tr("1 replay found in your folders.", "1 replay encontrado nas suas pastas.", "1 replay encontrado en tus carpetas.", "1 replay trouvé dans vos dossiers.")
+              : tr(`${scan.older} replays found in your folders.`, `${scan.older} replays encontrados nas suas pastas.`, `${scan.older} replays encontrados en tus carpetas.`, `${scan.older} replays trouvés dans vos dossiers.`)) +
+            " " +
+            tr(
+              "Nothing is imported until you ask. The games you play from now on are added by themselves.",
+              "Nada é importado até você pedir. As partidas que você jogar a partir de agora entram sozinhas.",
+              "No se importa nada hasta que lo pidas. Las partidas que juegues a partir de ahora se añaden solas.",
+              "Rien n'est importé tant que vous ne le demandez pas. Les parties que vous jouerez désormais s'ajoutent toutes seules.",
+            )
+          : scan.older === 1
+            ? tr("1 older replay in your folders isn't imported yet.", "1 replay mais antigo nas suas pastas ainda não foi importado.", "1 replay más antiguo de tus carpetas aún no se ha importado.", "1 replay plus ancien de vos dossiers n'est pas encore importé.")
+            : tr(`${scan.older} older replays in your folders aren't imported yet.`, `${scan.older} replays mais antigos nas suas pastas ainda não foram importados.`, `${scan.older} replays más antiguos de tus carpetas aún no se han importado.`, `${scan.older} replays plus anciens de vos dossiers ne sont pas encore importés.`)}
       </p>
       <div className="filters">
         {scan.older > 50 && (
           <button className="btn" disabled={asked} onClick={() => more(false)}>
-            {tr("Import 50 more replays", "Importar mais 50 replays", "Importar 50 replays más", "Importer 50 replays de plus")}
+            {scan.asked
+              ? tr("Import 50 more replays", "Importar mais 50 replays", "Importar 50 replays más", "Importer 50 replays de plus")
+              : tr("Import 50 replays", "Importar 50 replays", "Importar 50 replays", "Importer 50 replays")}
           </button>
         )}
         <button className="btn" disabled={asked} onClick={() => more(true)}>

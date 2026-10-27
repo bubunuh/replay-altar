@@ -6,7 +6,7 @@ Replay Altar is a Warcraft III: Reforged replay analyzer for 1v1 players. It run
 
 [Download](https://github.com/bubunuh/replay-altar/releases)
 
-- **Every replay kept, automatically.** A small background program saves each replay the moment a game ends, before the game overwrites `LastReplay.w3g`. Battle.net ladder, W3Champions and custom melee games are all picked up, with nothing to upload or click.
+- **Every replay kept, automatically.** A small background program saves each replay the moment a game ends, before the game overwrites `LastReplay.w3g`. It starts with your computer but only wakes up while Warcraft III runs (Settings can make it always on, or off). Battle.net ladder, W3Champions and custom melee games are all picked up, with nothing to upload or click.
 - **The game reconstructed.** Each 1v1 is simulated from its replay with the [WC3V](https://github.com/jblanchette/wc3v) engine: workers, army value, supply, creep camps, hero levels and fights over time.
 - **A coach's report after every game.** Rules drawn from well-known guides (Grubby, Liquipedia, Warcraft 3 Gym, Vortix and others) name the problems that cost you the game, show the facts behind each one, explain why it happened and say what to do next time. Only rules that proved themselves on 3,388 tournament player-games are shown: each one appears clearly more often in lost games than in won ones. The report also points out the fight that turned the game (with the moment to rewatch), your strengths and the opponent's plan. [More below](#how-the-report-is-made).
 - **An evaluation curve, like in chess.** Who was ahead at every moment of the game, as how often a pro player in your position went on to win, with the three moments that swung it most and what moved them. Learned from 513 pro games and tested on 2,998 tournament games it had never seen. [More below](#the-evaluation-curve).
@@ -65,9 +65,9 @@ How the graph works: every 30 seconds it compares you and your opponent on 7 thi
 
 1. Download `ReplayAltar-Setup-<version>.exe` from the [Releases](../../releases) page.
 2. Run it. Windows will probably warn that it protected your PC, because the installer isn't digitally signed yet: click **More info**, then **Run anyway**.
-3. The installer first shows what Replay Altar does on your computer (privacy, starting at login); click **I Agree**. It needs no administrator rights, installs for your user, adds a Start menu and desktop shortcut, and opens the app.
+3. The installer first shows what Replay Altar does on your computer (privacy, what runs in the background); click **I Agree**. It needs no administrator rights, installs for your user, adds a Start menu and desktop shortcut, and opens the app.
 
-On the first start, in the background, Replay Altar reads the data it needs from your Warcraft III installation and imports your 50 newest replays (*Import 50 more replays* and *Import all replays*, at the end of the match list, bring in the older ones). It looks for the battletag that appears in most of your replays and asks you to confirm it (or type yours in Settings); until you do, nothing counts as yours. The list of games fills in by itself after a few minutes. From then on it starts with Windows and picks up each game as it ends.
+On the first start, in the background, Replay Altar reads the data it needs from your Warcraft III installation. It imports none of the replays already on your computer until you ask: the match list offers *Import 50 replays* (the newest) and *Import all replays*. It looks for the battletag that appears in most of your replays and asks you to confirm it (or type yours in Settings); until you do, nothing counts as yours. From then on a light background program starts with Windows and waits for the game: while Warcraft III runs it picks up each game as it ends, and once you close the game it simulates the new ones. **Settings → Behaviour** can make it run all the time, or only while Replay Altar's window is open (then the games you played meanwhile are picked up when you open it again; only `LastReplay.w3g`, which every game overwrites, can be missed).
 
 - **Replays somewhere else?** It finds the game's `Documents\Warcraft III` folder by itself, OneDrive included. If yours is elsewhere, use **Settings → Replay folders → Choose folder…**.
 - **Something wrong?** The log is in `%LOCALAPPDATA%\replay-altar\logs\collector.log`.
@@ -80,7 +80,7 @@ On the first start, in the background, Replay Altar reads the data it needs from
 1. Download `ReplayAltar-<version>.AppImage` from the [Releases](../../releases) page.
 2. Make it executable (`chmod +x ReplayAltar-*.AppImage`, or Properties → Permissions in your file manager) and run it.
 
-On its first start it sets up what the checkout's `install` sets up: the background collector as a systemd user service, the `replay-altar` command and a menu entry. It finds Battle.net in Lutris (`~/Games/…`), plain Wine (`~/.wine`), Steam's Proton prefixes and Bottles, and reads the game's data with a built-in read-only extractor (no podman needed). Keep the AppImage where you put it: the service runs it from there, and Settings → Updates replaces it in place. On distributions that block Electron's sandbox (Ubuntu 24.04 and later), it may need `--no-sandbox`.
+On its first start it sets up what the checkout's `install` sets up: the background collector as a systemd user service (started at login and awake while Warcraft III runs, or as chosen in Settings → Behaviour), the `replay-altar` command and a menu entry. It finds Battle.net in Lutris (`~/Games/…`), plain Wine (`~/.wine`), Steam's Proton prefixes and Bottles, and reads the game's data with a built-in read-only extractor (no podman needed). Keep the AppImage where you put it: the service runs it from there, and Settings → Updates replaces it in place. On distributions that block Electron's sandbox (Ubuntu 24.04 and later), it may need `--no-sandbox`.
 
 **From a checkout**
 
@@ -95,7 +95,7 @@ node apps/collector/src/cli.ts setup-sim   # simulation engine and game data fro
 node apps/collector/src/cli.ts install     # background service, `replay-altar` command, desktop icon
 ```
 
-`install` sets up a systemd user service that starts at login, adds `replay-altar` and `replay-altar-desktop` to `~/.local/bin`, creates a desktop icon and imports your existing replays.
+`install` sets up the collector as a systemd user service and starts it, adds `replay-altar` and `replay-altar-desktop` to `~/.local/bin` and creates a desktop icon. The service starts at login and wakes up while Warcraft III (or the window) is open; Settings → Behaviour can make it always awake, or run only with the window. Your existing replays wait on the match list until you import them.
 
 The default game location is the Lutris Battle.net prefix in `~/Games/battlenet`. For another location, pass the Warcraft III folder to `node scripts/extract-gamedata.ts <folder>` and add your replay folder in Settings.
 
@@ -104,7 +104,7 @@ The default game location is the Lutris Battle.net prefix in `~/Games/battlenet`
 - **Matches:** every analyzed game, with its main problem. Open one for its report, charts, key numbers against pros, the build orders and a map of the fights and each player's creeping. **Feedback** under a game's findings tells us on GitHub whether they were right (the report is filled in, without player names), and **Report a bug** at the top opens a bug report.
 - **Performance:** your win rates, recurring problems with the one to work on now, and your numbers in wins, losses and against pros.
 - **Analyzer:** choose a replay file and the player whose side to take; the report opens like one of your games. Analyzed replays are listed there and kept apart from your stats.
-- **Settings:** your battletags, language, light or dark theme, replay folders, map folders, notifications, updates (a yellow mark on Settings when a new version is out; updating is your choice), which pro games your numbers are compared with, and **Help and feedback** to report a problem or suggest an idea.
+- **Settings:** your battletags, language, light or dark theme, replay folders, map folders, when Replay Altar runs in the background, notifications, updates (a yellow mark on Settings when a new version is out; updating is your choice), which pro games your numbers are compared with, and **Help and feedback** to report a problem or suggest an idea.
 
 Custom maps, games against the computer, team games and games you only observed are kept in the archive but not counted.
 
@@ -134,14 +134,14 @@ Player names in these screenshots are replaced with placeholders.
 
 ![Settings: battletags, language and theme, replay and map folders, behaviour, pro games, and help and feedback](docs/images/settings.png)
 
-When Warcraft III starts, the window opens behind the game without taking focus, and a notification after each game opens its report. Both can be turned off in Settings.
+When Warcraft III starts, the window opens behind the game without taking focus, and a notification after each game opens its report. Both can be turned off in Settings; if Replay Altar runs only while its window is open (Settings → Behaviour), they only happen then.
 
 ### Commands (Linux, or a Windows checkout)
 
 | Command | What it does |
 |---|---|
 | `replay-altar status` | Is the collector running, plus your last 10 games |
-| `replay-altar suspend` / `resume` | Stop the collector and keep it from starting at login / start it again (it catches up on saved replays) |
+| `replay-altar suspend` / `resume` | Stop the collector and keep it from starting at login / start it again, at login too unless Settings → Behaviour says only with the window (it catches up on saved replays) |
 | `replay-altar scan` | Import every replay in the game folders now |
 | `replay-altar override <game> win\|loss` | Fix a wrong result (`<game>`: the first characters of the game key, or `latest`) |
 | `replay-altar reingest` | Rebuild all statistics from the archived replays (after an update or a settings change) |
@@ -157,7 +157,7 @@ When Warcraft III starts, the window opens behind the game without taking focus,
 |---|---|---|
 | Archived replays (originals, never modified), game records, database, simulations | `~/.local/share/replay-altar/` | `%LOCALAPPDATA%\replay-altar\` |
 | Settings | `~/.config/replay-altar/config.json` | `%APPDATA%\replay-altar\config.json` |
-| Background service | systemd user unit `replay-altar-collector.service` | started at login from `HKCU\…\CurrentVersion\Run` (`ReplayAltarCollector`) |
+| Background service | systemd user unit `replay-altar-collector.service` (not enabled when it runs only with the window) | started at login from `HKCU\…\CurrentVersion\Run` (`ReplayAltarCollector`), or by the window when it runs only with the window |
 | Collector log | `journalctl --user -u replay-altar-collector` | `%LOCALAPPDATA%\replay-altar\logs\collector.log` |
 | Pro games (one folder per race) | `…/replay-altar/reference/` | `…\replay-altar\reference\` |
 

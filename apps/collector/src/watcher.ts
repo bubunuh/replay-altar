@@ -18,7 +18,15 @@ export const isReplayFile = (name: string) => /\.w3g$/i.test(name) && !/(^|[\\/]
 export type ScanResult = { found: number; older: number };
 
 export type WatcherOptions = {
-  /** How many of the newest replays a scan imports (null: all). New files are always imported. */
+  /**
+   * Replays saved after this are new games: a scan always imports them (the ones played while
+   * the collector was stopped, too). Null: every replay counts as older.
+   */
+  since: Date | null;
+  /**
+   * How many of the older replays (saved before `since`) a scan imports, newest first (null: all;
+   * 0: none until asked for). A file event always imports its replay.
+   */
   limit: number | null;
   /** Already imported, unchanged since: a scan doesn't read it again. */
   known: (path: string, size: number, mtime: string) => boolean;
@@ -67,8 +75,8 @@ export class ReplayWatcher {
   }
 
   /**
-   * The newest replays under the watched folders, up to the limit, that aren't imported yet
-   * (or changed since, like LastReplay.w3g after every game).
+   * The replays under the watched folders that aren't imported yet (or changed since, like
+   * LastReplay.w3g after every game): every new one, and the newest older ones up to the limit.
    */
   scanAll() {
     // The folders overlap (Replays and its Autosaved subfolder are both watched): once per file.
@@ -90,7 +98,10 @@ export class ReplayWatcher {
     const all = [...byPath.values()];
     all.sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
     const fresh = all.filter((f) => !this.opts.known(f.path, f.size, f.mtime.toISOString()));
-    const inLimit = new Set(this.opts.limit === null ? all.map((f) => f.path) : all.slice(0, this.opts.limit).map((f) => f.path));
+    const since = this.opts.since?.getTime() ?? Infinity;
+    const older = all.filter((f) => f.mtime.getTime() <= since);
+    const wanted = [...all.filter((f) => f.mtime.getTime() > since), ...(this.opts.limit === null ? older : older.slice(0, this.opts.limit))];
+    const inLimit = new Set(wanted.map((f) => f.path));
     for (const f of fresh) if (inLimit.has(f.path)) this.schedule(f.path, "scan");
     this.opts.onScan?.({ found: all.length, older: fresh.filter((f) => !inLimit.has(f.path)).length });
   }

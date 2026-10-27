@@ -13,7 +13,8 @@ Full privacy policy: https://github.com/bubunuh/replay-altar/blob/main/PRIVACY.m
 
 CHANGES TO YOUR SYSTEM
 - Installs for your user only; no administrator rights are needed.
-- Starts a small background program when you log in (an entry in your user's Run key) that saves each replay as soon as a game ends. You can disable it in Task Manager > Startup apps.
+- Starts a small background program when you log in (an entry in your user's Run key). It waits for Warcraft III and, while the game runs, saves each replay as soon as a game ends. In Settings > Behaviour you can have it run all the time instead, or only while Replay Altar's window is open.
+- Nothing is imported from the replays already on your computer until you ask on the match list.
 - Reads Warcraft III's game data, maps and replays from your installation and your Documents folder; it never changes them.
 - Uninstall: Settings > Apps > Replay Altar. Your games and statistics in %LOCALAPPDATA%\replay-altar are kept until you delete that folder.
 

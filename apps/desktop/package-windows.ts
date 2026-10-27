@@ -43,7 +43,7 @@ await build({
       installerIcon: join(desktop, "assets/replay-altar.ico"),
       uninstallerIcon: join(desktop, "assets/replay-altar.ico"),
       include: join(desktop, "build-resources/installer.nsh"),
-      // What the app does on your computer (privacy, start at login), shown before installing
+      // What the app does on your computer (privacy, what runs in the background), shown before installing
       // and skipped on updates.
       license: join(desktop, "build-resources/installer-notice.txt"),
       artifactName: "ReplayAltar-Setup-${version}.exe",

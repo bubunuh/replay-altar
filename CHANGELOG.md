@@ -7,7 +7,20 @@ statistics (`data/`).
 
 ## Unreleased (next version, 0.2.2)
 
-Nothing done yet. Planned:
+- **Nothing is imported until you ask** (tester feedback after 0.2.1): on the first start, if
+  replays are found, the match list offers *Import 50 replays* and *Import all replays (N)*, and
+  nothing loads by itself. The games you play from then on are added as before. If you already use
+  Replay Altar, your list doesn't change.
+- **Choose when Replay Altar runs in the background** (tester feedback): Settings → Behaviour has
+  three choices. *Only while Warcraft III is running*, the new default (also when you update): a
+  light program starts when you log in and only waits for the game; while you play it saves each
+  replay as the match ends, and once you close the game it simulates the new games (no longer
+  during your next match), then goes back to waiting. *Always*: as before. *Off*: nothing starts
+  when you log in and closing the window stops Replay Altar; new games are picked up the next time
+  you open it (the game keeps them in Replays and Replays/Autosaved; only an overwritten
+  `LastReplay.w3g` can be missed), and Settings warns about that when you choose it.
+
+Planned:
 
 - **More accurate simulation (our improved WC3V):** WC3V now reads the replay's own selection lists,
   so it knows which units really exist and when they die; a train click with several buildings
@@ -18,13 +31,6 @@ Nothing done yet. Planned:
   numbers so the curve and your games are measured the same way (the full review is for 0.2.3).
   Before merging: check whether Replay Altar's own death correction (`deaths.ts`) still helps on
   top, and look at the two hidden games that got worse (batch3-11, batch3-06 Ventus).
-- **Nothing is imported until you ask** (tester feedback after 0.2.1): on the first start, if
-  replays are found, the match list offers *Import 50 replays* and *Import all replays (N)*, and
-  nothing loads by itself.
-- **Choose whether Replay Altar keeps running after you close it** (tester feedback): a setting,
-  off by default. When off, closing the window stops the background collector, and new games are
-  picked up the next time you open the app (the game keeps them in Replays and Replays/Autosaved;
-  only an overwritten `LastReplay.w3g` is missed).
 
 ### To check for 0.2.2 (untested)
 
