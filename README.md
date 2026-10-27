@@ -35,13 +35,13 @@ Your games stay on your computer. Replay Altar fetches only two things from the 
 
 | Finding | Appears in lost games | Appears in won games |
 |---|---|---|
-| Your fights cost far more than theirs | 37% | 18% |
+| Your fights cost far more than theirs | 37% | 17% |
 | Your heroes fell behind | 67% | 24% |
 | You lost your heroes too often | 14% | 6% |
 | No expansion in a long game | 7% | 3% |
 | They had more bases than you | 21% | 13% |
 
-11 rules passed and are shown (scored on 0.2.2's simulation; [docs/RULES.md](docs/RULES.md) has every rule's numbers). One check is shown whatever the result: playing without control groups or hotkeys.
+10 rules passed and are shown (scored on 0.2.2's simulation; [docs/RULES.md](docs/RULES.md) has every rule's numbers). One check is shown whatever the result: playing without control groups or hotkeys.
 
 In the future, suggestions will be skill based: during the analysis, the app will estimate your skill level and these suggestions will be more personal. <kbd>planned</kbd>
 
