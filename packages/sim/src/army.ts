@@ -1,7 +1,7 @@
 // Army size and value over time, hero timelines (levels, deaths, revives), and a units-killed
 // estimate. Validated against W3Champions' official numbers on 86 pro player-games (0.2.2):
 // - "units killed" (game counts creeps too) vs (enemy losses + creeps in camps you cleared) x 1.29:
-//   correlation 0.93
+//   correlation 0.94 (after the food fix and patch 0026)
 import { baseUnit, RACES, type GameRecord, type HeroTimeline } from "@replay-altar/core";
 import { costOf, type CostTables } from "./costs.ts";
 import type { WOutput } from "./economy.ts";

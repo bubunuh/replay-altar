@@ -1,10 +1,10 @@
 {
-  "version": 5,
+  "version": 6,
   "startGold": 500,
   "startLumber": 150,
   "workersPerMine": 5,
   "goldPerMine": 12500,
-  "goldPerWorkerSecond": 1.973,
+  "goldPerWorkerSecond": 1.801,
   "lumberPerWorkerSecond": {
     "H": 0.452,
     "O": 0.613,
@@ -24,12 +24,12 @@
   "calibration": {
     "method": "median end-of-game estimate = official gold collected (W3Champions score sheets)",
     "playerGames": 86,
-    "medianAbsError": 0.124,
-    "medianRatioUnder15Min": 1.08,
-    "medianRatioFrom15Min": 0.86,
+    "medianAbsError": 0.059,
+    "medianRatioUnder15Min": 1.02,
+    "medianRatioFrom15Min": 0.98,
     "priorGold": 2,
     "unitsKilledSamples": 86,
-    "at": "2026-10-27T16:59:50.675Z"
+    "at": "2026-10-27T22:37:05.434Z"
   },
   "unitsKilledFactor": 1.29
 }
