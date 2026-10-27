@@ -63,10 +63,7 @@ Planned:
 - **Every game simulated again with the new simulation:** yours as you import them again after
   the update, the pro and tournament games before the release, with the pro statistics republished
   and the evaluation curve's model refitted on the new numbers, so the curve and your games are
-  measured the same way (the full review is for 0.2.3). Before the release: the simulation stops
-  reading one of the 15 held-out recorded games at 9:24 (batch3-11: a selection the game lists
-  right after a deselect is not taken, then an upgrade from an empty selection fails); the fix is
-  in the WC3V lab, to come back as one more patch.
+  measured the same way (the full review is for 0.2.3).
 
 ### Checked for 0.2.2
 
