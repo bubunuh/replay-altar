@@ -75,7 +75,7 @@ statistics (`data/`).
     instead of 1.48, which matches the game's own count better (correlation 0.93 instead of 0.90).
   - **The findings** were scored again on 3,532 held-out player-games, with the same test as in
     0.2.0 (fires clearly more often in losses than in wins). Two pass now and are shown: *upkeep*
-    (time spent in upkeep) and *3-3-60* (third-level upgrades at 60 food). Two no longer pass and
+    (time spent in upkeep) and *3-3-60* (Grubby's goal: both heroes at level 3 and 60 food). Two no longer pass and
     are hidden: *unspent gold* and *supply blocks*. Still 11 rules.
     The fights finding still separates losses from wins clearly (37% of losses, 18% of wins).
     Measured the same way as before, two shown rules (unspent gold, supply blocks) now fall just
