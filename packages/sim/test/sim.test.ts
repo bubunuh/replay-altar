@@ -66,7 +66,13 @@ describe("food used, from the units", () => {
     ];
     const f = foodInUse(units, [hero("Hamg", 125_000, 64_000)], costs);
     const at = (t: number) => f.filter((s) => s.t <= t).at(-1)!.used;
-    expect([at(0), at(1000), at(20_000), at(64_000), at(110_000), at(150_000), at(250_000), at(500_000)]).toEqual([0, 1, 2, 6, 8, 10, 8, 6]);
+    expect([at(0), at(1000), at(20_000), at(64_000), at(110_000), at(150_000), at(250_000), at(500_000)]).toEqual([1, 1, 2, 6, 8, 10, 8, 6]);
+  });
+  test("the starting workers count from 0:00, though WC3V first sees them a few hundred ms in", () => {
+    const start = Array.from({ length: 5 }, () => ({ itemId: "hpea", spawnTime: 344 }));
+    const f = foodInUse([...start, { itemId: "hpea", spawnTime: 2_000, trainedTime: 17_000 }], [], FAKE);
+    const at = (t: number) => f.filter((s) => s.t <= t).at(-1)!.used;
+    expect([at(0), at(1_000), at(2_000)]).toEqual([5, 5, 6]);
   });
 });
 

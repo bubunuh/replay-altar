@@ -106,12 +106,13 @@ export function keyEvents(r: GameRecord, p: PlayerRecord, untilMs = 12 * 60_000)
       out.push({ ms: b.ms, food: foodAt(b.ms), action: "item", code: b.code, name: b.name });
     }
   }
-  // Heroes: when they were trained (the simulation's appearance time, else the first skill).
+  // Heroes: when they were ordered, like the other steps (guides give a hero's food at its order,
+  // and food counts it from then on); older records: the simulation's appearance, else the first skill.
   const sim = r.sim?.status === "ok" ? r.sim.players.find((x) => x.playerId === p.playerId)?.heroes : undefined;
   for (const h of p.heroes) {
-    const appear = sim?.find((x) => x.code === h.code)?.appearAt ?? h.levelUps[0];
-    if (appear === undefined || appear === null || appear > untilMs) continue;
-    out.push({ ms: appear, food: foodAt(appear), action: "hero", code: h.code, name: h.name });
+    const ms = h.orderedMs ?? sim?.find((x) => x.code === h.code)?.appearAt ?? h.levelUps[0];
+    if (ms === undefined || ms === null || ms > untilMs) continue;
+    out.push({ ms, food: foodAt(ms), action: "hero", code: h.code, name: h.name });
   }
   return out.sort((a, b) => a.ms - b.ms);
 }
