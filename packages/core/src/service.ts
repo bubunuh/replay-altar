@@ -1,18 +1,48 @@
 // The collector as a background service that starts at login. Linux: a systemd user unit.
 // Windows: a hidden launcher script (collector.vbs) in the user's Run key, with the running
 // collector's pid in collector.pid (no admin rights needed for either).
+// macOS: a LaunchAgent that runs the collector in the background under the current user session.
 import { execFileSync, spawn } from "node:child_process";
-import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { dirname, join } from "node:path";
 import { dataDir } from "./config.ts";
 
 export const SERVICE = "replay-altar-collector.service";
 const RUN_KEY = "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run";
 const RUN_VALUE = "ReplayAltarCollector";
 const windows = process.platform === "win32";
+const darwin = process.platform === "darwin";
+const LAUNCH_AGENTS_DIR = "Library/LaunchAgents";
+
+export const darwinLaunchAgentPath = () => join(homedir(), LAUNCH_AGENTS_DIR, "replay-altar-collector.plist");
+
+/** A macOS LaunchAgent plist that starts the collector at login. */
+export function darwinLaunchAgent(binary: string, args: string[] = []): string {
+  const xml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+  return [
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+    "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">",
+    "<plist version=\"1.0\">",
+    "<dict>",
+    "  <key>Label</key>",
+    "  <string>replay-altar-collector</string>",
+    "  <key>ProgramArguments</key>",
+    "  <array>",
+    ...[binary, ...args].map((arg) => `  <string>${xml(arg)}</string>`),
+    "  </array>",
+    "  <key>RunAtLoad</key>",
+    "  <true/>",
+    "  <key>KeepAlive</key>",
+    "  <false/>",
+    "</dict>",
+    "</plist>",
+  ].join("\n");
+}
 
 export const collectorFiles = () => ({
   launcher: join(dataDir(), "bin/collector.vbs"),
+  macosPlist: join(dataDir(), "bin/replay-altar-collector.plist"),
   pid: join(dataDir(), "collector.pid"),
   log: join(dataDir(), "logs/collector.log"),
 });
@@ -63,6 +93,11 @@ export function markCollectorRunning() {
 /** "active", "inactive" (installed, not running), "not installed", or systemd's own word. */
 export function collectorState(): string {
   if (windows) return runningPid() ? "active" : existsSync(collectorFiles().launcher) ? "inactive" : "not installed";
+  if (darwin) {
+    const plist = darwinLaunchAgentPath();
+    if (!existsSync(plist)) return "not installed";
+    return runningPid() ? "active" : "inactive";
+  }
   try {
     return execFileSync("systemctl", ["--user", "is-active", SERVICE], { encoding: "utf8" }).trim();
   } catch (e) {
@@ -90,6 +125,21 @@ function stopOnWindows() {
 
 /** Start now and at every login. */
 export function enableCollector() {
+  if (darwin) {
+    const plist = darwinLaunchAgentPath();
+    const launchPath = join(homedir(), ".local/bin/replay-altar");
+    const agent = darwinLaunchAgent(launchPath, ["collector"]);
+    if (dryRun()) return console.log(`  (skipped) launchctl load ${plist}`);
+    mkdirSync(dirname(plist), { recursive: true });
+    writeFileSync(plist, agent);
+    const uid = process.getuid?.() ?? 0;
+    try {
+      execFileSync("launchctl", ["bootstrap", `gui/${uid}`, plist], { stdio: "inherit" });
+    } catch {
+      execFileSync("launchctl", ["load", "-w", plist], { stdio: "inherit" });
+    }
+    return;
+  }
   if (!windows) {
     systemctl("daemon-reload");
     return systemctl("enable", "--now", SERVICE);
@@ -100,6 +150,18 @@ export function enableCollector() {
 
 /** Stop now and not at login. */
 export function disableCollector() {
+  if (darwin) {
+    const plist = darwinLaunchAgentPath();
+    if (dryRun()) return console.log(`  (skipped) launchctl unload ${plist}`);
+    const uid = process.getuid?.() ?? 0;
+    try {
+      execFileSync("launchctl", ["bootout", `gui/${uid}`, plist], { stdio: "inherit" });
+    } catch {
+      execFileSync("launchctl", ["unload", "-w", plist], { stdio: "inherit" });
+    }
+    rmSync(plist, { force: true });
+    return;
+  }
   if (!windows) return systemctl("disable", "--now", SERVICE);
   reg("delete", RUN_KEY, "/v", RUN_VALUE, "/f");
   stopOnWindows();
@@ -107,6 +169,16 @@ export function disableCollector() {
 
 /** After a settings change: the collector reads its settings at start. */
 export function restartCollectorIfRunning() {
+  if (darwin) {
+    if (!runningPid()) return;
+    const uid = process.getuid?.() ?? 0;
+    try {
+      execFileSync("launchctl", ["kickstart", "-k", `gui/${uid}/replay-altar-collector`], { stdio: "inherit" });
+    } catch {
+      // already restarted or not installed
+    }
+    return;
+  }
   if (!windows) return systemctl("try-restart", SERVICE);
   if (!runningPid()) return;
   stopOnWindows();

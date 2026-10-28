@@ -11,6 +11,7 @@ import { collectorFiles, configPath, dataDir, disableCollector, enableCollector,
 
 const home = homedir();
 const windows = process.platform === "win32";
+const darwin = process.platform === "darwin";
 export const PROJECT = projectRoot();
 const CLI = join(PROJECT, "apps/collector/src/cli.ts");
 
@@ -19,6 +20,7 @@ export const INSTALLED = {
   cliAlias: join(home, ".local/bin/altar"),
   desktopLauncher: join(home, ".local/bin/replay-altar-desktop"),
   service: join(home, ".config/systemd/user", SERVICE),
+  launchAgent: join(home, "Library/LaunchAgents/replay-altar-collector.plist"),
   menuEntry: join(home, ".local/share/applications/replay-altar.desktop"),
   desktopIcon: join(home, "Desktop/replay-altar.desktop"),
   icon: join(home, ".local/share/icons/hicolor/scalable/apps/replay-altar.svg"),
@@ -188,6 +190,12 @@ export function install() {
     ].join("\n");
     write(INSTALLED.menuEntry, entry, 0o755);
     write(INSTALLED.desktopIcon, entry, 0o755);
+  }
+
+  if (darwin) {
+    enableCollector();
+    console.log(`\nDone. Collector is installed to start at login on macOS${hasDesktop ? "; Replay Altar is on your desktop and in the app menu" : ""}.`);
+    return;
   }
 
   write(INSTALLED.service, linuxUnit([node, `${PROJECT}/apps/collector/src/cli.ts`, "collector"]));

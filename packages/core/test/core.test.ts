@@ -13,10 +13,13 @@ import {
   computeMetrics,
   DEFAULT_CONFIG,
   hallIdleMs,
+  darwinLaunchAgent,
   detectResult,
   endTimeOf,
   ingestFile,
+  isWarcraftRunning,
   openDb,
+  parseDarwinProcessList,
   parseReplay,
   reingestAll,
   type Config,
@@ -203,6 +206,29 @@ describe("platform defaults", () => {
       data: join(homedir(), "Library/Application Support"),
       config: join(homedir(), "Library/Application Support"),
     });
+  });
+
+  test("macOS detects a running Warcraft III app from the process list", () => {
+    const text = [
+      "123 \t Warcraft III",
+      "456 \t /Applications/Warcraft III.app/Contents/MacOS/Warcraft III",
+      "789 \t Electron",
+    ].join("\n");
+    expect(parseDarwinProcessList(text)).toBe(true);
+    expect(parseDarwinProcessList("789\tElectron\n")).toBe(false);
+  });
+
+  test("isWarcraftRunning resolves native macOS process detection", () => {
+    if (process.platform !== "darwin") return;
+    expect(typeof isWarcraftRunning).toBe("function");
+  });
+
+  test("Darwin generates a LaunchAgent plist for the collector", () => {
+    const plist = darwinLaunchAgent("/usr/local/bin/replay-altar", ["collector"]);
+    expect(plist).toContain("<key>Label</key>");
+    expect(plist).toContain("replay-altar-collector");
+    expect(plist).toContain("/usr/local/bin/replay-altar");
+    expect(plist).toContain("<key>RunAtLoad</key>");
   });
 });
 

@@ -17,6 +17,8 @@ import {
   collectorState,
   configPath,
   dataDir,
+  darwinLaunchAgent,
+  darwinLaunchAgentPath,
   detectedWarcraftDocuments,
   countMaps,
   mapFolders,
@@ -72,6 +74,20 @@ function ensureWindowsCollector() {
     mkdirSync(dirname(files.launcher), { recursive: true });
     mkdirSync(dirname(files.log), { recursive: true });
     writeFileSync(files.launcher, launcher);
+    restartCollectorIfRunning();
+  }
+  enableCollector();
+}
+
+function ensureDarwinCollector() {
+  if (process.platform !== "darwin" || !isInstalled()) return;
+  const plist = darwinLaunchAgentPath();
+  const command = [process.execPath, join(projectRoot(), "collector/collector.mjs"), "collector"];
+  const agent = darwinLaunchAgent(command[0], command.slice(1));
+  const changed = !existsSync(plist) || readFileSync(plist, "utf8") !== agent;
+  if (changed) {
+    mkdirSync(dirname(plist), { recursive: true });
+    writeFileSync(plist, agent);
     restartCollectorIfRunning();
   }
   enableCollector();
@@ -238,6 +254,7 @@ if (cliAt >= 0) {
     const launch = parseArgs(process.argv);
     if (!launch.screenshot) {
       ensureWindowsCollector();
+      ensureDarwinCollector();
       ensureAppImageCollector();
     }
     // Screenshot runs stay offline unless pointed at a test list of releases.
