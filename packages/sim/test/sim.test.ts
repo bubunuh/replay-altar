@@ -68,11 +68,14 @@ describe("food used, from the units", () => {
     const at = (t: number) => f.filter((s) => s.t <= t).at(-1)!.used;
     expect([at(0), at(1000), at(20_000), at(64_000), at(110_000), at(150_000), at(250_000), at(500_000)]).toEqual([1, 1, 2, 6, 8, 10, 8, 6]);
   });
-  test("the starting workers count from 0:00, though WC3V first sees them a few hundred ms in", () => {
-    const start = Array.from({ length: 5 }, () => ({ itemId: "hpea", spawnTime: 344 }));
+  test("the starting workers count from 0:00, though WC3V first sees them up to a few seconds in", () => {
+    const start = [344, 344, 344, 1981, 2910].map((spawnTime) => ({ itemId: "hpea", spawnTime }));
     const f = foodInUse([...start, { itemId: "hpea", spawnTime: 2_000, trainedTime: 17_000 }], [], FAKE);
     const at = (t: number) => f.filter((s) => s.t <= t).at(-1)!.used;
     expect([at(0), at(1_000), at(2_000)]).toEqual([5, 5, 6]);
+    // A unit first seen later with no training time is not a starting unit.
+    const late = foodInUse([{ itemId: "hfoo", spawnTime: 60_000 }], [], FAKE);
+    expect(late.filter((s) => s.t <= 0).at(-1)!.used).toBe(0);
   });
 });
 

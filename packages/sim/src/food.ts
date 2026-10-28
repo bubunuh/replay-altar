@@ -30,8 +30,12 @@ export type FoodUnit = {
   morphHistory?: { gameTime: number; itemId: string; from: string }[];
 };
 
-/** Units WC3V first sees within this time, with no training, are the ones the game starts with. */
-const START_UNITS_MS = 1000;
+/**
+ * Units WC3V first sees within this time, with no training, are the ones the game starts with: it
+ * first sees them when the player first selects them (on the pro reference games, a player's fifth starting
+ * worker by 1.1 s on median, 2.9 s at the 99th percentile; none later than 5 s).
+ */
+const START_UNITS_MS = 5000;
 
 /** Food in use as a step function (sorted; each value holds until the next), at most 100. */
 export function foodInUse(units: FoodUnit[], heroes: GameRecord["players"][number]["heroes"], costs: CostTables): { t: number; used: number }[] {
@@ -45,7 +49,7 @@ export function foodInUse(units: FoodUnit[], heroes: GameRecord["players"][numbe
     if (u.isBuilding || u.isIllusion || neverMade(u) || costOf(costs, u.itemId).isHero) continue;
     const morph = [...(u.morphHistory ?? [])].sort((a, b) => a.gameTime - b.gameTime)[0];
     const first = morph ? morph.from : u.itemId;
-    // The starting units (no training) are there from 0:00; WC3V first sees them a few hundred ms in.
+    // The starting units (no training) are there from 0:00; WC3V first sees them up to a few seconds in.
     const spawn = u.trainedTime == null && (u.spawnTime ?? 0) < START_UNITS_MS ? 0 : (u.spawnTime ?? 0);
     const start = u.trainedTime != null ? Math.max(spawn, u.trainedTime - costOf(costs, first).buildMs) : spawn;
     const end = u.destroyedByBuilding && u.destroyedAt != null ? u.destroyedAt : diedAt(u);
