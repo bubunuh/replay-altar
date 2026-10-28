@@ -8,12 +8,13 @@ statistics (`data/`).
 ## 0.2.2 (release candidate)
 
 - **Nothing is imported until you ask** (tester feedback after 0.2.1): on the first start, if
-  replays are found, the match list offers *Import 50 replays* and *Import all replays (N)*, and
-  nothing loads by itself. The games you play from then on are added as before.
+  replays are found, the match list offers *Import 20 replays* and *Import all replays (N)*, and
+  nothing loads by itself. N counts every replay found, also games you only watched or that others
+  played; only your games appear in the list. The games you play from then on are added as before.
 - **Your games are imported again after the update, when you ask:** 0.2.2 reads and simulates
   games differently (new numbers, the replay checks below, the new simulation), so instead of
   reading every game again by itself, the match list starts empty, as on a new install, with
-  *Import 50 replays* and *Import all replays (N)*. N counts every replay Replay Altar can find:
+  *Import 20 replays* and *Import all replays (N)*. N counts every replay Replay Altar can find:
   the ones in your replay folders and the copies it keeps of every game it imported, which for
   games whose `LastReplay.w3g` was overwritten are the only ones left (and of replays an older
   version couldn't read, which this one may); a copy of a replay that is still in your folders
@@ -22,9 +23,9 @@ statistics (`data/`).
   data and maps stay; the previous database stays in one backup file
   (`replay-altar.previous.sqlite` in the data folder). The games you play after the update are
   added by themselves. Later versions that change the analysis will do the same.
-- **The match list in pages of 100:** with thousands of games the list took one to two seconds
+- **The match list in pages of 50:** with thousands of games the list took one to two seconds
   to redraw at every change (a filter, a search, each game imported), and the "Main problem"
-  column took about a minute to fill in. Now it shows 100 games per page, newest first, with page
+  column took about a minute to fill in. Now it shows 50 games per page, newest first, with page
   buttons above and below; the filters, the search, the problem counts and the number of games
   still take every game, a filter goes back to the first page, and new games coming in don't move
   you off your page. On 5,000 games, a change now redraws in about 16 ms and the "Main problem"
@@ -47,7 +48,7 @@ statistics (`data/`).
 - **Hero levels after a Tome of Retraining:** a hero retrained with a tome could end up to four levels too high or too low (30% of the games with a tome), which threw off hero levels, hero experience and the findings about them. Replay Altar now reads the retraining from when the skill menu was opened and the tome bought: on games with W3Champions' own hero levels, 27 of 28 retrained players' heroes now match (25 before).
 - **Second and third heroes count in the resources spent:** the gold and lumber spent left out every hero after the first (which is free), so it read about 7% low against the game's own numbers; now 2% (on 176 W3Champions player-games). This also moves the gold collected estimated for Battle.net games.
 - **More accurate army value, losses and fights (our improved WC3V):** the simulation now reads the replay's own selection lists, so it knows which units really exist and when they die, and a train click with several buildings selected trains in each of them (for Night Elf in the first Ancient only: with several Ancients of Lore selected, the clicks the game refused for lack of gold became extra Druids of the Claw). Measured against Warcraft III's own unit counts on 15 recorded games it was not developed on, the army value is off by 93 on average over a game instead of 158, typically by about 22% instead of 37%, and in fights in which a side lost 300 or more, the side that lost more is named wrongly in 19% of them instead of 32%. A unit seen in another form (a Druid of the Claw in bear form, a burrowed Crypt Fiend, a Berserker) counts as the unit trained, train orders the game refused no longer count as units lost, and Militia no longer count as army. Replay Altar's own correction of the deaths, which did part of this after the simulation, is no longer needed and was removed.
-- **Food used is counted right:** the simulation's food counter added each unit when it was
+- **The amount of units (food used) is counted right:** the simulation's food counter added each unit when it was
   trained but never took it off when it died, so food climbed to about 100 and stayed there (on 51
   games recorded from the game's own numbers, food read 10 too high on average and over 20 late in
   the game; real time above 80 food was 1 second per game, estimated 113). Food is now counted from
@@ -56,6 +57,10 @@ statistics (`data/`).
   used, workers included; correlation 0.92, was 0.74). The build-order comparison gives a hero's
   food when it was ordered, as the guides do (an Archmage at 9 food, guide 10).
 - **Hero timelines:** a hero cancelled at the altar and ordered again later no longer appears on the hero chart, and in the build-order comparison, at the time of the cancelled order (and a Demon Hunter or Alchemist the simulation last saw transformed is found again).
+- **Map pictures that showed only the terrain:** when a map's files were left half-written (seen on
+  a big 4-player map, saved while a simulation was still writing them), the game's map showed no
+  start locations, creep camps or fights from then on. Replay Altar now finishes such files when it starts and
+  after each simulation.
 - **Games on some maps can be simulated again:** games on 60 maps, mostly the copies of ladder
   maps that some hosts save under a long code instead of the map's name (`Maps/dz/…`), plus a few
   ATR maps (Devil's Forest, Shallow Grave, Shattered Exile, Hammerfall, Icemond), stopped at the
@@ -81,13 +86,13 @@ statistics (`data/`).
     later (Human 14:35 instead of 12:56). Night Elf pros' army value is 10 to 15% lower from 10
     minutes on (the extra Druids of the Claw are gone).
   - **The evaluation curve was fitted again** on the new numbers. With food counted right, the
-    food used now describes the armies as well as the army value did, so the curve uses it
+    amount of units (the food in use) now describes the armies as well as the army value did, so the curve uses it
     instead (with workers, hero experience, heroes alive, expansions, units lost and upgrades);
     adding the army value back changes nothing measurable. On the 3,138 tournament games it never
     saw (2,998 before) it picks the eventual winner 64% of the time at 10 minutes (63% before)
     and 70% at 20 (69%), and its scores improved (log loss 0.6326 instead of 0.6422). On unseen
     pro games it is a little more sure of itself than before (calibration slope 0.93 instead of
-    1.03). A swing caused by a fight is now explained by the food used and the units lost.
+    1.03). A swing caused by a fight is now explained by the amount of units and the units lost.
   - **Gold mined and unspent gold** (estimates): the income model's gold rate was fitted again
     (1.80 gold per worker-second instead of 1.96), since upkeep no longer takes gold it never
     took: its end-of-game gold is now typically 6% off W3Champions' own number instead of 12%.

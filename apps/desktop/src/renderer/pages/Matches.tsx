@@ -232,28 +232,28 @@ function ImportMore({ games }: { games: GameRow[] }) {
               ? tr("1 replay found, counting the copies Replay Altar keeps.", "1 replay encontrado, contando as cópias que o Replay Altar guarda.", "1 replay encontrado, contando las copias que guarda Replay Altar.", "1 replay trouvé, en comptant les copies que garde Replay Altar.")
               : tr(`${scan.older} replays found, counting the copies Replay Altar keeps.`, `${scan.older} replays encontrados, contando as cópias que o Replay Altar guarda.`, `${scan.older} replays encontrados, contando las copias que guarda Replay Altar.`, `${scan.older} replays trouvés, en comptant les copies que garde Replay Altar.`)) +
             " " +
-            tr("The games you play from now on are added by themselves.", "As partidas que você jogar a partir de agora entram sozinhas.", "Las partidas que juegues a partir de ahora se añaden solas.", "Les parties que vous jouerez désormais s'ajoutent toutes seules.")
+            tr("Only the games you played appear in the list. The games you play from now on are added by themselves.", "Só as partidas que você jogou aparecem na lista. As partidas que você jogar a partir de agora entram sozinhas.", "Solo aparecen en la lista las partidas que jugaste. Las partidas que juegues a partir de ahora se añaden solas.", "Seules les parties que vous avez jouées apparaissent dans la liste. Les parties que vous jouerez désormais s'ajoutent toutes seules.")
           : !scan.asked
           ? (scan.older === 1
               ? tr("1 replay found in your folders.", "1 replay encontrado nas suas pastas.", "1 replay encontrado en tus carpetas.", "1 replay trouvé dans vos dossiers.")
               : tr(`${scan.older} replays found in your folders.`, `${scan.older} replays encontrados nas suas pastas.`, `${scan.older} replays encontrados en tus carpetas.`, `${scan.older} replays trouvés dans vos dossiers.`)) +
             " " +
             tr(
-              "Nothing is imported until you ask. The games you play from now on are added by themselves.",
-              "Nada é importado até você pedir. As partidas que você jogar a partir de agora entram sozinhas.",
-              "No se importa nada hasta que lo pidas. Las partidas que juegues a partir de ahora se añaden solas.",
-              "Rien n'est importé tant que vous ne le demandez pas. Les parties que vous jouerez désormais s'ajoutent toutes seules.",
+              "Nothing is imported until you ask, and only the games you played appear in the list. The games you play from now on are added by themselves.",
+              "Nada é importado até você pedir, e só as partidas que você jogou aparecem na lista. As partidas que você jogar a partir de agora entram sozinhas.",
+              "No se importa nada hasta que lo pidas, y solo aparecen en la lista las partidas que jugaste. Las partidas que juegues a partir de ahora se añaden solas.",
+              "Rien n'est importé tant que vous ne le demandez pas, et seules les parties que vous avez jouées apparaissent dans la liste. Les parties que vous jouerez désormais s'ajoutent toutes seules.",
             )
           : scan.older === 1
             ? tr("1 older replay in your folders isn't imported yet.", "1 replay mais antigo nas suas pastas ainda não foi importado.", "1 replay más antiguo de tus carpetas aún no se ha importado.", "1 replay plus ancien de vos dossiers n'est pas encore importé.")
             : tr(`${scan.older} older replays in your folders aren't imported yet.`, `${scan.older} replays mais antigos nas suas pastas ainda não foram importados.`, `${scan.older} replays más antiguos de tus carpetas aún no se han importado.`, `${scan.older} replays plus anciens de vos dossiers ne sont pas encore importés.`)}
       </p>
       <div className="filters">
-        {scan.older > 50 && (
+        {scan.older > 20 && (
           <button className="btn" disabled={asked} onClick={() => more(false)}>
             {scan.asked
-              ? tr("Import 50 more replays", "Importar mais 50 replays", "Importar 50 replays más", "Importer 50 replays de plus")
-              : tr("Import 50 replays", "Importar 50 replays", "Importar 50 replays", "Importer 50 replays")}
+              ? tr("Import 20 more replays", "Importar mais 20 replays", "Importar 20 replays más", "Importer 20 replays de plus")
+              : tr("Import 20 replays", "Importar 20 replays", "Importar 20 replays", "Importer 20 replays")}
           </button>
         )}
         <button className="btn" disabled={asked} onClick={() => more(true)}>

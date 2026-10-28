@@ -209,8 +209,8 @@ export function folderToAdd(picked: string): string {
   return picked;
 }
 
-/** How many older replays each "Import 50 replays" on the match list adds. */
-export const IMPORT_STEP = 50;
+/** How many older replays each "Import 20 replays" on the match list adds. */
+export const IMPORT_STEP = 20;
 
 export const DEFAULT_CONFIG: Config = {
   // Never guessed: you confirm the one found in your replays (apps/collector/src/firstrun.ts) or type it in Settings.

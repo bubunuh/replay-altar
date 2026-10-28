@@ -1,6 +1,6 @@
 // Which analysis the games in the data folder were made with. A version that reads or simulates
 // games differently bumps ANALYSIS_VERSION; its first start then starts the match list over, as on
-// a new install: nothing is read again by itself, the match list offers "Import 50 replays" and
+// a new install: nothing is read again by itself, the match list offers "Import 20 replays" and
 // "Import all replays (N)", and the games played from then on are imported by themselves.
 //
 // Nothing the player can't get back is lost. Kept: the settings, the battletag, the game data and

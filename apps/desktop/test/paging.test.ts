@@ -1,4 +1,4 @@
-// The match list in pages of 100 (renderer/paging.ts, used by pages/Matches.tsx).
+// The match list in pages of 50 (renderer/paging.ts, used by pages/Matches.tsx).
 import { describe, expect, test } from "vitest";
 import { changeList, NO_FILTER, PAGE_SIZE, pageOf } from "../src/renderer/paging.ts";
 
@@ -6,16 +6,16 @@ import { changeList, NO_FILTER, PAGE_SIZE, pageOf } from "../src/renderer/paging
 const games = (n: number) => Array.from({ length: n }, (_, i) => ({ key: `g${i}`, playedAt: new Date(Date.UTC(2026, 9, 27) - i * 3_600_000).toISOString() }));
 
 describe("match list pages", () => {
-  test("100 per page, newest first; the last page holds the rest", () => {
+  test("50 per page, newest first; the last page holds the rest", () => {
     const rows = games(5016);
-    expect(PAGE_SIZE).toBe(100);
+    expect(PAGE_SIZE).toBe(50);
     const first = pageOf(rows, 0);
-    expect(first).toMatchObject({ page: 0, pages: 51, from: 0 });
-    expect(first.rows).toHaveLength(100);
+    expect(first).toMatchObject({ page: 0, pages: 101, from: 0 });
+    expect(first.rows).toHaveLength(50);
     expect(first.rows[0].key).toBe("g0");
     expect(first.rows.every((g, i) => i === 0 || g.playedAt < first.rows[i - 1].playedAt)).toBe(true);
-    const last = pageOf(rows, 50);
-    expect(last).toMatchObject({ page: 50, from: 5000 });
+    const last = pageOf(rows, 100);
+    expect(last).toMatchObject({ page: 100, from: 5000 });
     expect(last.rows.map((g) => g.key)).toEqual(Array.from({ length: 16 }, (_, i) => `g${5000 + i}`));
   });
 
@@ -25,8 +25,8 @@ describe("match list pages", () => {
   });
 
   test("a page past the end (the filtered list got shorter) shows the last one", () => {
-    expect(pageOf(games(250), 7)).toMatchObject({ page: 2, from: 200 });
-    expect(pageOf(games(250), 7).rows).toHaveLength(50);
+    expect(pageOf(games(230), 7)).toMatchObject({ page: 4, from: 200 });
+    expect(pageOf(games(230), 7).rows).toHaveLength(30);
   });
 
   test("a filter or a search goes back to page 1; turning pages keeps the filters", () => {

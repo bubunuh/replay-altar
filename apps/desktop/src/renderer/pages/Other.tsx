@@ -400,10 +400,10 @@ function CollectorModes({ mode, onChange }: { mode: CollectorMode; onChange: (m:
       "off",
       tr("Off: only while this window is open", "Desligado: só enquanto esta janela estiver aberta", "Desactivado: solo mientras esta ventana esté abierta", "Désactivé : seulement quand cette fenêtre est ouverte"),
       tr(
-        "Nothing starts when you log in, and closing the window stops Replay Altar. The replays Warcraft III keeps in its Replays folder (and the Autosaved folder inside it) are imported the next time you open it; only LastReplay.w3g, which every game overwrites, can be missed.",
-        "Nada inicia quando você faz login, e fechar a janela encerra o Replay Altar. Os replays que o Warcraft III guarda na pasta Replays (e na pasta Autosaved dentro dela) são importados na próxima vez que você abri-lo; só o LastReplay.w3g, que cada partida sobrescreve, pode ficar de fora.",
-        "No se inicia nada al iniciar sesión, y al cerrar la ventana Replay Altar se detiene. Los replays que Warcraft III guarda en su carpeta Replays (y en la carpeta Autosaved que hay dentro) se importan la próxima vez que lo abras; solo se puede perder LastReplay.w3g, que cada partida sobrescribe.",
-        "Rien ne démarre à l'ouverture de session, et fermer la fenêtre arrête Replay Altar. Les replays que Warcraft III garde dans son dossier Replays (et dans le dossier Autosaved qu'il contient) sont importés à sa prochaine ouverture ; seul LastReplay.w3g, écrasé à chaque partie, peut manquer.",
+        "Replay Altar runs only while its window is open. New games are imported the next time you open it.",
+        "O Replay Altar só funciona com a janela aberta. As partidas novas são importadas na próxima vez que você abri-lo.",
+        "Replay Altar solo funciona con su ventana abierta. Las partidas nuevas se importan la próxima vez que lo abras.",
+        "Replay Altar ne fonctionne que quand sa fenêtre est ouverte. Les nouvelles parties sont importées à sa prochaine ouverture.",
       ),
     ],
     [

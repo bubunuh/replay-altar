@@ -1,7 +1,7 @@
 // The match list in pages (pages/Matches.tsx): thousands of table rows made every refresh slow.
 
 /** Games per page. */
-export const PAGE_SIZE = 100;
+export const PAGE_SIZE = 50;
 
 /** The games on page `page` (from 0; past the last page: the last one), and how many pages there are. */
 export function pageOf<T>(rows: T[], page: number, size = PAGE_SIZE): { page: number; pages: number; from: number; rows: T[] } {

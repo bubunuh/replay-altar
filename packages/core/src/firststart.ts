@@ -4,7 +4,7 @@
 // what you chose. Also the default of when the collector runs.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { dataDir, IMPORT_STEP, type CollectorMode, type Config } from "./config.ts";
+import { dataDir, type CollectorMode, type Config } from "./config.ts";
 import type { DB } from "./db.ts";
 
 export type FirstStart = {
@@ -58,13 +58,16 @@ export function firstStart(db: DB | null): FirstStart {
 
 /**
  * How many of the replays saved before the first start are imported (null: all of them). Nothing
- * until you ask on a new install; an updated copy keeps the newest IMPORT_STEP it imported by
- * itself before. Replays saved after the first start are always imported.
+ * until you ask on a new install; an updated copy keeps the newest 50 that 0.2.1 imported by
+ * itself on its first start. Replays saved after the first start are always imported.
  */
 export function importLimit(config: Config, start: FirstStart): number | null {
   if (config.importLimit === "all") return null;
-  return config.importLimit ?? (start.updated ? IMPORT_STEP : 0);
+  return config.importLimit ?? (start.updated ? FIRST_START_0_2_1 : 0);
 }
+
+/** How many replays 0.2.1's first start imported by itself. */
+const FIRST_START_0_2_1 = 50;
 
 /** When the collector runs: your choice in Settings, else DEFAULT_COLLECTOR_MODE. */
 export function collectorMode(config: Config): CollectorMode {

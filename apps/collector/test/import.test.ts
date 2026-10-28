@@ -69,7 +69,7 @@ describe("first start", () => {
     expect(result).toEqual({ found: 33, older: 30 });
   });
 
-  test("Import 50 replays / Import all: the newest older ones, then every one", () => {
+  test("Import 20 replays / Import all: the newest older ones, then every one", () => {
     const start = firstStart(null);
     const dir = folder(120, Date.parse(start.at) - 60_000);
     const fifty = scan(dir, new Date(start.at), importLimit(config({ importLimit: 50 }), start));
@@ -94,7 +94,7 @@ describe("first start", () => {
     const { scheduled, result } = scan(dir, new Date(start.at), importLimit(config(), start));
     expect(scheduled).toHaveLength(50);
     expect(result).toEqual({ found: 120, older: 70 });
-    // A limit raised before the update ("Import 50 more", "Import all") stays.
+    // A limit raised before the update ("Import 20 more", "Import all") stays.
     expect(importLimit(config({ importLimit: 100 }), start)).toBe(100);
     expect(importLimit(config({ importLimit: "all" }), start)).toBe(null);
   });
