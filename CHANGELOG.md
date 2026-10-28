@@ -5,7 +5,7 @@ What changes for players in each version. Work happens on `dev`; a version is ma
 part of a version: an installer ships only the app, the simulation engine and the published pro
 statistics (`data/`).
 
-## Unreleased (next version, 0.2.2)
+## 0.2.2 (release candidate)
 
 - **Nothing is imported until you ask** (tester feedback after 0.2.1): on the first start, if
   replays are found, the match list offers *Import 50 replays* and *Import all replays (N)*, and
