@@ -479,8 +479,11 @@ const scoreOn = (name: string, cal: Moment[], val: Moment[], spec: Spec) => {
   progress(`sensitivity, ${name}: ${sensitivity.at(-1)!.cv.toFixed(4)}`);
 };
 scoreOn("as fitted", calMoments, valMoments, finalBest.spec);
-if (finalBest.spec.keep.some((f) => ARMY.includes(f))) scoreOn("without the army value", calMoments, valMoments, { ...finalBest.spec, keep: finalBest.spec.keep.filter((f) => !ARMY.includes(f)) });
-for (const sigma of [500, 1000]) {
+const usesArmy = finalBest.spec.keep.some((f) => ARMY.includes(f));
+if (usesArmy) scoreOn("without the army value", calMoments, valMoments, { ...finalBest.spec, keep: finalBest.spec.keep.filter((f) => !ARMY.includes(f)) });
+// A model without the army value: what adding it back would give (the noise test below is moot).
+else scoreOn("with the army value ratio (log) added", calMoments, valMoments, { ...finalBest.spec, keep: [...finalBest.spec.keep, 1].sort((a, b) => a - b) });
+for (const sigma of usesArmy ? [500, 1000] : []) {
   const rand = mulberry32(sigma);
   const gauss = () => Math.sqrt(-2 * Math.log(1 - rand())) * Math.cos(2 * Math.PI * rand());
   const noisy = (s: Side): Side => ({ ...s, series: s.series.map((x) => ({ ...x, armyValue: Math.max(0, (x.armyValue ?? 0) + sigma * gauss()) })) });
