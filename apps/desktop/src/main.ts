@@ -17,6 +17,8 @@ import {
   collectorState,
   configPath,
   dataDir,
+  darwinLaunchAgent,
+  darwinLaunchAgentPath,
   detectedWarcraftDocuments,
   countMaps,
   mapFolders,
@@ -81,6 +83,21 @@ function ensureWindowsCollector(mode: CollectorMode): boolean {
     mkdirSync(dirname(files.launcher), { recursive: true });
     mkdirSync(dirname(files.log), { recursive: true });
     writeFileSync(files.launcher, launcher);
+    restartCollectorIfRunning();
+  }
+  collectorForWindow("opened", mode);
+  return true;
+}
+
+function ensureDarwinCollector(mode: CollectorMode): boolean {
+  if (process.platform !== "darwin" || !isInstalled()) return false;
+  const plist = darwinLaunchAgentPath();
+  const command = [process.execPath, join(projectRoot(), "collector/collector.mjs"), "collector"];
+  const agent = darwinLaunchAgent(command[0], command.slice(1));
+  const changed = !existsSync(plist) || readFileSync(plist, "utf8") !== agent;
+  if (changed) {
+    mkdirSync(dirname(plist), { recursive: true });
+    writeFileSync(plist, agent);
     restartCollectorIfRunning();
   }
   collectorForWindow("opened", mode);
@@ -273,7 +290,7 @@ if (cliAt >= 0) {
       // A collector waiting for Warcraft III wakes up while the window is open.
       markWindowOpen();
       const mode = modeNow();
-      managesCollector = ensureWindowsCollector(mode) || ensureAppImageCollector(mode) || ensureCheckoutCollector(mode);
+      managesCollector = ensureWindowsCollector(mode) || ensureAppImageCollector(mode) || ensureCheckoutCollector(mode) || ensureDarwinCollector(mode);
     }
     // Screenshot runs stay offline unless pointed at a test list of releases.
     if (!launch.screenshot || process.env.REPLAY_ALTAR_RELEASES_URL) {
