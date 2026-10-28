@@ -205,6 +205,16 @@ W3Champions' official numbers); what helped is in the list above.
 - **Review the evaluation curve and the coaching rules on the better data:** refit the win-chance
   model on the ~500 current-patch pro games and validate it on the ~3,000 tournament games, as for
   0.2.0; re-score every rule held out (docs/RULES.md) and revisit which are shown.
+- **The evaluation curve favours whoever plays against Undead:** it compares the players' worker
+  counts as they are, but Undead mine with 5 acolytes while ghouls cut the lumber, so a Human or
+  Orc always looks about 10 workers ahead (and the amount of units counts those workers too). On
+  the 0.2.2 pro and tournament games, a Human against Undead gets 59-62% on average at 10 and 15
+  minutes but won 51% of those games, an Orc 56-59% but won 49%, and the Undead side reads about
+  10 points too low; Human against Orc reads about 8 points low for the Human at 10 minutes.
+  Found on a user's HvU game recorded from the game's own numbers (`observer/check-strauss.jsonl`):
+  the curve said 75-90% all game, while the armies were close until the last fight. Fix: count
+  workers by race (ghouls cutting lumber, or the difference from each race's usual count), and
+  check that each matchup's average evaluation matches how often that side won.
 
 ## Later
 
