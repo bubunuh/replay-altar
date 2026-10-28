@@ -68,7 +68,7 @@ describe("map entries with misread start locations", () => {
   });
 
   test("at start, a misread entry is read again from its script, in WC3V's registry and the saved entries; a right one is untouched", () => {
-    expect(syncMapCache(data)).toEqual({ restored: 0, saved: 3, repaired: 2 });
+    expect(syncMapCache(data)).toEqual({ restored: 0, saved: 3, repaired: 2, completed: 0 });
     for (const maps of [readJson(CONFIG).maps, readJson(ENTRIES).mapConfiguration]) {
       expect(maps[`${hashed}.w3x`]).toEqual({ info: info(hashed), startingPositions: { "0": { x: -3328, y: 3072 }, "1": { x: 3392, y: -3584 } } });
       expect(maps["ShallowGrave ATR.w3x"]).toEqual({ info: info("ShallowGraveATR"), startingPositions: { "0": { x: -1280, y: 256 }, "1": { x: 1280, y: -256 } } });
@@ -82,7 +82,7 @@ describe("map entries with misread start locations", () => {
 
   test("nothing misread: nothing is written", () => {
     const before = [statSync(CONFIG).mtimeMs, statSync(ENTRIES).mtimeMs];
-    expect(syncMapCache(data)).toEqual({ restored: 0, saved: 0, repaired: 0 });
+    expect(syncMapCache(data)).toEqual({ restored: 0, saved: 0, repaired: 0, completed: 0 });
     expect([statSync(CONFIG).mtimeMs, statSync(ENTRIES).mtimeMs]).toEqual(before);
   });
 

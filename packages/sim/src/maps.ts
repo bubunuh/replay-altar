@@ -8,9 +8,10 @@
 // minimap as JSON and pictures, read by the match page) and an entry for the map in two shared
 // files (helpers/mapConfiguration.json, client/js/gameData.json).
 import { execFileSync } from "node:child_process";
-import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { gunzipSync, gzipSync } from "node:zlib";
 import { mapDataName } from "./mapname.ts";
 import { START_LOCATIONS, WC3V_DIR } from "./paths.ts";
 
@@ -186,6 +187,45 @@ function save(cache: string, name: string) {
   saveEntries(cache);
 }
 
+/**
+ * Finishes a map's client files that were left half-written. WC3V writes each one (wpm.json,
+ * doo.json, unit.json) in full, then gzips it in the background and deletes the plain file; a
+ * process that ends before the gzip is done leaves an empty or cut .gz next to the full .json
+ * (seen on a big 4-player map), and the match page's map then shows no start locations, creep
+ * camps or fights. The .gz is written again from the .json; a plain file next to a sound .gz is
+ * only a leftover and goes. Returns how many files it fixed. Never throws.
+ */
+export function completeClientFiles(dir: string): number {
+  if (!existsSync(dir)) return 0;
+  let fixed = 0;
+  for (const f of readdirSync(dir).filter((f) => f.endsWith(".json"))) {
+    const plain = join(dir, f);
+    try {
+      if (!sound(`${plain}.gz`)) {
+        const text = readFileSync(plain);
+        JSON.parse(text.toString("utf8"));
+        writeFileSync(`${plain}.gz`, gzipSync(text));
+        fixed++;
+      }
+      rmSync(plain, { force: true });
+    } catch {
+      // A plain file still being written, or not JSON: left for the next start.
+    }
+  }
+  return fixed;
+}
+
+/** A .gz that is there, not empty and reads to its end. */
+function sound(gz: string): boolean {
+  try {
+    if (!existsSync(gz) || statSync(gz).size === 0) return false;
+    gunzipSync(readFileSync(gz));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Copies one map's extracted data from the cache back into WC3V's folder. */
 function restore(cache: string, name: string) {
   const from = join(cache, name);
@@ -199,10 +239,14 @@ function restore(cache: string, name: string) {
  * misread repaired (repairStartLocations), and every map WC3V has into the cache (maps extracted
  * before the cache existed). Returns how many moved each way and how many entries were repaired.
  */
-export function syncMapCache(dataRoot: string): { restored: number; saved: number; repaired: number } {
+export function syncMapCache(dataRoot: string): { restored: number; saved: number; repaired: number; completed: number } {
   const cache = mapCacheDir(dataRoot);
   let restored = 0;
   let saved = 0;
+  let completed = 0;
+  if (existsSync(cache)) for (const name of readdirSync(cache)) completed += completeClientFiles(join(cache, name, "client"));
+  const clientMaps = join(WC3V_DIR, "client/maps");
+  if (existsSync(clientMaps)) for (const name of readdirSync(clientMaps)) completed += completeClientFiles(join(clientMaps, name));
   if (existsSync(cache)) {
     for (const name of readdirSync(cache)) {
       if (inCache(cache, name) && !inWc3v(name)) {
@@ -227,7 +271,7 @@ export function syncMapCache(dataRoot: string): { restored: number; saved: numbe
       if (existsSync(client) && readdirSync(client).some((f) => !existsSync(join(copy, f)))) cpSync(client, copy, { recursive: true });
     }
   }
-  return { restored, saved, repaired };
+  return { restored, saved, repaired, completed };
 }
 
 /**
@@ -238,6 +282,7 @@ export function refreshMapCache(dataRoot: string, mapFile: string) {
   const name = mapDataName(mapFile);
   const client = join(WC3V_DIR, "client/maps", name);
   const cache = mapCacheDir(dataRoot);
+  completeClientFiles(client);
   if (existsSync(client) && inCache(cache, name)) cpSync(client, join(cache, name, "client"), { recursive: true });
 }
 
