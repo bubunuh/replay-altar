@@ -66,7 +66,7 @@ near 1 here means "pros rarely do this either way", not that the advice is wrong
 | Rule | Fires when | Source | Pro wins / losses | Lift |
 |---|---|---|---|---|
 | `unused_spike` | 4 minutes after first reaching 50 food: no fight started, no expansion, no tier 3 | Warcraft 3 Gym; Grubby's 3360 | 1% / 1% | 1.5 |
-| `build_drift` | a confident library-build match with tier/expansion steps 8+ food later than pros on that build | build library | 2% / 3% | 1.2 |
+| `build_drift` | a confident library-build match with tier/expansion steps 8+ food later than pros on that build | build library | 2% / 2% | 0.9 |
 | `upgrades` | no attack or armor upgrade by 15:00 | pro data; Grubby: one attack upgrade around 50 food | 17% / 21% | 1.3 |
 | `mine_dry` | ≈ 11,500+ gold collected from one base and no expansion | Warcraft 3 Gym (Pit Lord guide) | 9% / 13% | 1.4 |
 | `goal_3360` | first hero level 3, second hero level 3 and 60 food later than 3 in 4 pros, or never in a long game | Grubby, Beginner's Guide #6 | 16% / 20% | 1.2 |

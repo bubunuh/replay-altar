@@ -4827,14 +4827,14 @@
   {
    "id": "grubby-036b-hu-bloody-beginner-am-mk-rifles",
    "name": "Bloody Beginner – Archmage Mountain King Rifles",
-   "players": 508,
-   "winRate": 0.4704724409448819,
-   "matchScore": 0.45571120689655176,
+   "players": 463,
+   "winRate": 0.4838012958963283,
+   "matchScore": 0.5454545454545454,
    "steps": [
     {
      "step": "build Altar of Kings",
      "guideFood": 5,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
@@ -4846,8 +4846,8 @@
     {
      "step": "hero Archmage",
      "guideFood": 10,
-     "proFood": 21,
-     "share": 0.9665354330708661
+     "proFood": 9,
+     "share": 0.9676025917926566
     },
     {
      "step": "train Footman",
@@ -4859,82 +4859,82 @@
      "step": "build Scout Tower",
      "guideFood": 19,
      "proFood": 18,
-     "share": 0.9311023622047244
+     "share": 0.9460043196544277
     },
     {
      "step": "build Arcane Tower",
      "guideFood": 21,
-     "proFood": 26,
-     "share": 0.90748031496063
+     "proFood": 25,
+     "share": 0.9287257019438445
     },
     {
      "step": "tech Keep",
      "guideFood": 27,
      "proFood": 28,
-     "share": 0.9980314960629921
+     "share": 0.9956803455723542
     },
     {
      "step": "build Blacksmith",
      "guideFood": 27,
      "proFood": 30,
-     "share": 0.702755905511811
+     "share": 0.7257019438444925
     },
     {
      "step": "build Arcane Vault",
      "guideFood": 29,
      "proFood": 30,
-     "share": 0.9291338582677166
+     "share": 0.9416846652267818
     },
     {
      "step": "train Rifleman",
      "guideFood": 29,
      "proFood": 28,
-     "share": 0.35236220472440943
+     "share": 0.35853131749460043
     },
     {
      "step": "hero Mountain King",
      "guideFood": 34,
-     "proFood": 34,
-     "share": 0.7539370078740157
+     "proFood": 30,
+     "share": 0.7948164146868251
     },
     {
      "step": "build Arcane Sanctum",
      "guideFood": 34,
-     "proFood": 33,
-     "share": 0.8759842519685039
+     "proFood": 34,
+     "share": 0.9049676025917927
     },
     {
      "step": "research Long Rifles",
      "guideFood": 45,
-     "proFood": 39,
-     "share": 0.2952755905511811
+     "proFood": 40,
+     "share": 0.3002159827213823
     },
     {
      "step": "research Black Gunpowder",
      "guideFood": 45,
      "proFood": 42,
-     "share": 0.25393700787401574
+     "share": 0.265658747300216
     },
     {
      "step": "train Priest",
      "guideFood": 45,
      "proFood": 35,
-     "share": 0.8405511811023622
+     "share": 0.8596112311015118
     }
    ]
   },
   {
    "id": "grubby-011-hu-am-straight-t1-fast-expo",
    "name": "Archmage Straight Tier 1 Fast Expand",
-   "players": 298,
-   "winRate": 0.5234899328859061,
-   "matchScore": 0.4413793103448276,
+   "players": 453,
+   "winRate": 0.5474613686534217,
+   "matchScore": 0.5199999999999999,
    "steps": [
     {
      "step": "build Altar of Kings",
      "guideFood": 6,
-     "proFood": 0,
-     "share": 1
+     "proFood": 5,
+     "share": 0.9977924944812362
     },
     {
      "step": "build Barracks",
@@ -4945,8 +4945,8 @@
     {
      "step": "hero Archmage",
      "guideFood": 10,
-     "proFood": 21,
-     "share": 0.7986577181208053
+     "proFood": 9,
+     "share": 0.9094922737306843
     },
     {
      "step": "train Footman",
@@ -4958,52 +4958,52 @@
      "step": "expand Town Hall",
      "guideFood": 25,
      "proFood": 30,
-     "share": 0.8557046979865772
+     "share": 0.8344370860927153
     },
     {
      "step": "build Scout Tower",
      "guideFood": 29,
      "proFood": 29,
-     "share": 1
+     "share": 0.9955849889624724
     },
     {
      "step": "build Arcane Tower",
      "guideFood": 29,
      "proFood": 30,
-     "share": 1
+     "share": 0.9955849889624724
     },
     {
      "step": "tech Keep",
      "guideFood": 40,
-     "proFood": 37,
-     "share": 0.8691275167785235
+     "proFood": 35,
+     "share": 0.9293598233995585
     },
     {
      "step": "build Blacksmith",
      "guideFood": 40,
-     "proFood": 40,
-     "share": 0.6409395973154363
+     "proFood": 39,
+     "share": 0.7439293598233996
     },
     {
      "step": "build Lumber Mill",
      "guideFood": 40,
-     "proFood": 39,
-     "share": 0.7248322147651006
+     "proFood": 37,
+     "share": 0.7969094922737306
     }
    ]
   },
   {
    "id": "grubby-007-hu-am-alchi-rifle-priest",
    "name": "Archmage Alchemist Rifle Priest",
-   "players": 278,
-   "winRate": 0.45323741007194246,
-   "matchScore": 0.467816091954023,
+   "players": 246,
+   "winRate": 0.45934959349593496,
+   "matchScore": 0.5586206896551724,
    "steps": [
     {
      "step": "build Altar of Kings",
      "guideFood": 6,
-     "proFood": 0,
-     "share": 0.9964028776978417
+     "proFood": 5,
+     "share": 0.9959349593495935
     },
     {
      "step": "build Barracks",
@@ -5014,8 +5014,8 @@
     {
      "step": "hero Archmage",
      "guideFood": 10,
-     "proFood": 21,
-     "share": 0.9532374100719424
+     "proFood": 9,
+     "share": 0.9512195121951219
     },
     {
      "step": "train Footman",
@@ -5032,175 +5032,208 @@
     {
      "step": "build Blacksmith",
      "guideFood": 24,
-     "proFood": 24,
-     "share": 0.7410071942446043
+     "proFood": 25,
+     "share": 0.7601626016260162
     },
     {
      "step": "build Scout Tower",
      "guideFood": 24,
      "proFood": 24,
-     "share": 0.8920863309352518
+     "share": 0.926829268292683
     },
     {
      "step": "build Lumber Mill",
      "guideFood": 24,
      "proFood": 27,
-     "share": 0.45323741007194246
+     "share": 0.5
     },
     {
      "step": "build Arcane Tower",
      "guideFood": 24,
-     "proFood": 25,
-     "share": 0.8848920863309353
+     "proFood": 24,
+     "share": 0.9146341463414634
     },
     {
      "step": "train Rifleman",
      "guideFood": 24,
      "proFood": 24,
-     "share": 0.5035971223021583
+     "share": 0.4959349593495935
     },
     {
      "step": "hero Goblin Alchemist",
      "guideFood": 27,
-     "proFood": 23,
-     "share": 0.07194244604316546
+     "proFood": 22,
+     "share": 0.06910569105691057
     },
     {
      "step": "build Arcane Sanctum",
      "guideFood": 27,
      "proFood": 29,
-     "share": 0.920863309352518
+     "share": 0.9105691056910569
     },
     {
      "step": "train Priest",
      "guideFood": 32,
-     "proFood": 32.5,
-     "share": 0.8992805755395683
+     "proFood": 32,
+     "share": 0.8861788617886179
     },
     {
      "step": "tech Castle",
      "guideFood": 40,
-     "proFood": 33,
-     "share": 0.3057553956834532
+     "proFood": 31.5,
+     "share": 0.3252032520325203
     },
     {
      "step": "hero Mountain King",
      "guideFood": 40,
-     "proFood": 33,
-     "share": 0.6258992805755396
+     "proFood": 26,
+     "share": 0.6626016260162602
+    }
+   ]
+  },
+  {
+   "id": "lp-hu-fast-altar",
+   "name": "Human Fast Altar (standard)",
+   "players": 182,
+   "winRate": 0.47802197802197804,
+   "matchScore": 0.5538461538461539,
+   "steps": [
+    {
+     "step": "build Altar of Kings",
+     "guideFood": 6,
+     "proFood": 5,
+     "share": 1
+    },
+    {
+     "step": "build Barracks",
+     "guideFood": 7,
+     "proFood": 6,
+     "share": 1
+    },
+    {
+     "step": "hero Archmage",
+     "guideFood": 10,
+     "proFood": 9,
+     "share": 0.9835164835164835
+    },
+    {
+     "step": "train Footman",
+     "guideFood": 16,
+     "proFood": 15,
+     "share": 1
     }
    ]
   },
   {
    "id": "gym-hu-mk-pally-mass-hawks-vs-ne",
    "name": "MK + Paladin Mass Dragonhawks vs Night Elf",
-   "players": 265,
-   "winRate": 0.6,
-   "matchScore": 0.4176470588235295,
+   "players": 169,
+   "winRate": 0.5798816568047337,
+   "matchScore": 0.4615384615384615,
    "steps": [
     {
      "step": "build Altar of Kings",
      "guideFood": 7,
-     "proFood": 0,
-     "share": 0.9962264150943396
+     "proFood": 5,
+     "share": 1
     },
     {
      "step": "build Barracks",
      "guideFood": 7,
      "proFood": 6,
-     "share": 0.9962264150943396
+     "share": 0.9940828402366864
     },
     {
      "step": "hero Mountain King",
      "guideFood": 11,
-     "proFood": 42,
-     "share": 0.6452830188679245
+     "proFood": 37,
+     "share": 0.7869822485207101
     },
     {
      "step": "train Footman",
      "guideFood": 16,
      "proFood": 15,
-     "share": 0.9962264150943396
+     "share": 0.9940828402366864
     },
     {
      "step": "expand Town Hall",
      "guideFood": 26,
      "proFood": 32,
-     "share": 0.9773584905660377
+     "share": 0.9822485207100592
     },
     {
      "step": "build Arcane Vault",
      "guideFood": 33,
-     "proFood": 36,
-     "share": 0.9924528301886792
+     "proFood": 35,
+     "share": 1
     },
     {
      "step": "tech Keep",
      "guideFood": 37,
-     "proFood": 37,
-     "share": 0.9849056603773585
+     "proFood": 36,
+     "share": 0.9822485207100592
     },
     {
      "step": "build Lumber Mill",
      "guideFood": 37,
      "proFood": 36,
-     "share": 0.9886792452830189
+     "share": 1
     },
     {
      "step": "build Scout Tower",
      "guideFood": 37,
      "proFood": 37,
-     "share": 0.9962264150943396
+     "share": 1
     },
     {
      "step": "build Scout Tower",
      "guideFood": 39,
      "proFood": 39,
-     "share": 0.9886792452830189
+     "share": 1
     },
     {
      "step": "build Guard Tower",
      "guideFood": 43,
      "proFood": 42,
-     "share": 0.8867924528301887
+     "share": 0.9171597633136095
     },
     {
      "step": "research Lumber Harvesting",
      "guideFood": 43,
      "proFood": 40,
-     "share": 0.7132075471698113
+     "share": 0.6923076923076923
     },
     {
      "step": "build Blacksmith",
      "guideFood": 45,
-     "proFood": 40,
-     "share": 0.9320754716981132
+     "proFood": 39,
+     "share": 0.9467455621301775
     },
     {
      "step": "hero Paladin",
      "guideFood": 45,
-     "proFood": 47,
-     "share": 0.2
+     "proFood": 42,
+     "share": 0.39644970414201186
     },
     {
      "step": "build Gryphon Aviary",
      "guideFood": 50,
      "proFood": 44,
-     "share": 0.35094339622641507
+     "share": 0.4437869822485207
     }
    ]
   },
   {
    "id": "grubby-019-hu-mk-fast-expo",
    "name": "Mountain King Fast Expand",
-   "players": 231,
-   "winRate": 0.5454545454545454,
-   "matchScore": 0.4333333333333334,
+   "players": 123,
+   "winRate": 0.4959349593495935,
+   "matchScore": 0.4903225806451614,
    "steps": [
     {
      "step": "build Altar of Kings",
      "guideFood": 6,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
@@ -5212,8 +5245,8 @@
     {
      "step": "hero Mountain King",
      "guideFood": 10,
-     "proFood": 39,
-     "share": 0.6277056277056277
+     "proFood": 34,
+     "share": 0.6504065040650406
     },
     {
      "step": "train Footman",
@@ -5225,64 +5258,64 @@
      "step": "expand Town Hall",
      "guideFood": 27,
      "proFood": 30,
-     "share": 0.8874458874458875
+     "share": 0.975609756097561
     },
     {
      "step": "build Scout Tower",
      "guideFood": 27,
      "proFood": 29,
-     "share": 0.9826839826839827
+     "share": 0.983739837398374
     },
     {
      "step": "tech Keep",
      "guideFood": 35,
      "proFood": 33,
-     "share": 1
+     "share": 0.983739837398374
     },
     {
      "step": "build Blacksmith",
      "guideFood": 35,
      "proFood": 35,
-     "share": 0.935064935064935
+     "share": 0.959349593495935
     },
     {
      "step": "build Lumber Mill",
      "guideFood": 35,
      "proFood": 33,
-     "share": 0.9393939393939394
+     "share": 0.959349593495935
     },
     {
      "step": "build Workshop",
      "guideFood": 40,
      "proFood": 40,
-     "share": 0.4675324675324675
+     "share": 0.5528455284552846
     },
     {
      "step": "build Arcane Sanctum",
      "guideFood": 40,
      "proFood": 40,
-     "share": 0.7402597402597403
+     "share": 0.7073170731707317
     },
     {
      "step": "build Arcane Sanctum",
      "guideFood": 40,
      "proFood": 40,
-     "share": 0.4199134199134199
+     "share": 0.4146341463414634
     },
     {
      "step": "tech Castle",
      "guideFood": 45,
-     "proFood": 39,
-     "share": 0.5238095238095238
+     "proFood": 41,
+     "share": 0.5121951219512195
     }
    ]
   },
   {
    "id": "lp-hu-fast-rifleman",
    "name": "Human Fast Rifleman",
-   "players": 43,
-   "winRate": 0.6046511627906976,
-   "matchScore": 0.5866666666666667,
+   "players": 49,
+   "winRate": 0.6122448979591837,
+   "matchScore": 0.6666666666666667,
    "steps": [
     {
      "step": "build Altar of Kings",
@@ -5305,8 +5338,8 @@
     {
      "step": "hero Paladin",
      "guideFood": 12,
-     "proFood": 21,
-     "share": 0.9534883720930233
+     "proFood": 11,
+     "share": 0.9591836734693877
     },
     {
      "step": "train Rifleman",
@@ -5318,16 +5351,16 @@
      "step": "tech Keep",
      "guideFood": 26,
      "proFood": 27,
-     "share": 0.9767441860465116
+     "share": 0.9795918367346939
     }
    ]
   },
   {
    "id": "gym-hu-dark-ranger-tower-rush-vs-ne",
    "name": "Dark Ranger Tower Rush vs Night Elf",
-   "players": 41,
-   "winRate": 0.43902439024390244,
-   "matchScore": 0.36969696969696975,
+   "players": 35,
+   "winRate": 0.5142857142857142,
+   "matchScore": 0.4000000000000001,
    "steps": [
     {
      "step": "build Barracks",
@@ -5338,26 +5371,26 @@
     {
      "step": "build Altar of Kings",
      "guideFood": 8,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
      "step": "train Footman",
      "guideFood": 10,
-     "proFood": 14,
+     "proFood": 12,
      "share": 1
     },
     {
      "step": "build Lumber Mill",
      "guideFood": 20,
      "proFood": 29,
-     "share": 0.975609756097561
+     "share": 0.9714285714285714
     },
     {
      "step": "hero Dark Ranger",
      "guideFood": 20,
      "proFood": 18,
-     "share": 0.21951219512195122
+     "share": 0.2571428571428571
     },
     {
      "step": "build Scout Tower",
@@ -5369,57 +5402,24 @@
      "step": "build Guard Tower",
      "guideFood": 31,
      "proFood": 31,
-     "share": 0.8536585365853658
+     "share": 0.8571428571428571
     },
     {
      "step": "build Guard Tower",
      "guideFood": 31,
      "proFood": 32,
-     "share": 0.7560975609756098
+     "share": 0.7714285714285715
     },
     {
      "step": "build Guard Tower",
      "guideFood": 34,
-     "proFood": 34,
-     "share": 0.926829268292683
+     "proFood": 35,
+     "share": 0.9142857142857143
     },
     {
      "step": "build Scout Tower",
      "guideFood": 36,
      "proFood": 35,
-     "share": 0.975609756097561
-    }
-   ]
-  },
-  {
-   "id": "lp-hu-fast-altar",
-   "name": "Human Fast Altar (standard)",
-   "players": 37,
-   "winRate": 0.4864864864864865,
-   "matchScore": 0.4000000000000001,
-   "steps": [
-    {
-     "step": "build Altar of Kings",
-     "guideFood": 6,
-     "proFood": 0,
-     "share": 1
-    },
-    {
-     "step": "build Barracks",
-     "guideFood": 7,
-     "proFood": 6,
-     "share": 1
-    },
-    {
-     "step": "hero Archmage",
-     "guideFood": 10,
-     "proFood": 22,
-     "share": 0.9459459459459459
-    },
-    {
-     "step": "train Footman",
-     "guideFood": 16,
-     "proFood": 15,
      "share": 1
     }
    ]
@@ -5427,9 +5427,9 @@
   {
    "id": "gym-hu-tower-rush-vs-orc",
    "name": "Human Tower Rush vs Orc",
-   "players": 28,
-   "winRate": 0.4642857142857143,
-   "matchScore": 0.35727272727272724,
+   "players": 14,
+   "winRate": 0.42857142857142855,
+   "matchScore": 0.41071428571428575,
    "steps": [
     {
      "step": "build Barracks",
@@ -5440,44 +5440,44 @@
     {
      "step": "build Altar of Kings",
      "guideFood": 8,
-     "proFood": 0,
+     "proFood": 6,
      "share": 1
     },
     {
      "step": "train Footman",
      "guideFood": 10,
-     "proFood": 14,
+     "proFood": 9.5,
      "share": 1
     },
     {
      "step": "build Lumber Mill",
      "guideFood": 18,
-     "proFood": 29.5,
-     "share": 0.8571428571428571
+     "proFood": 30,
+     "share": 0.9285714285714286
     },
     {
      "step": "hero Firelord",
      "guideFood": 20,
-     "proFood": 19.5,
-     "share": 0.21428571428571427
+     "proFood": 20,
+     "share": 0.35714285714285715
     },
     {
      "step": "build Scout Tower",
      "guideFood": 28,
-     "proFood": 28,
-     "share": 0.9642857142857143
+     "proFood": 28.5,
+     "share": 1
     },
     {
      "step": "build Guard Tower",
      "guideFood": 30,
      "proFood": 30,
-     "share": 0.6071428571428571
+     "share": 0.5714285714285714
     },
     {
      "step": "build Guard Tower",
      "guideFood": 31,
      "proFood": 31,
-     "share": 0.5714285714285714
+     "share": 0.5
     },
     {
      "step": "build Scout Tower",
@@ -5489,16 +5489,49 @@
      "step": "research Defend",
      "guideFood": 31,
      "proFood": 30,
-     "share": 0.6785714285714286
+     "share": 0.7142857142857143
+    }
+   ]
+  },
+  {
+   "id": "lp-hu-tavern-hero",
+   "name": "Human Tavern Hero",
+   "players": 14,
+   "winRate": 0.5,
+   "matchScore": 0.48615384615384616,
+   "steps": [
+    {
+     "step": "build Barracks",
+     "guideFood": 6,
+     "proFood": 5,
+     "share": 0.9285714285714286
+    },
+    {
+     "step": "build Altar of Kings",
+     "guideFood": 9,
+     "proFood": 7.5,
+     "share": 1
+    },
+    {
+     "step": "train Footman",
+     "guideFood": 12,
+     "proFood": 9,
+     "share": 0.9285714285714286
+    },
+    {
+     "step": "hero tavern",
+     "guideFood": 16,
+     "proFood": 18,
+     "share": 0.8571428571428571
     }
    ]
   },
   {
    "id": "grubby-040-hu-paladin-rifles-bloodmage",
    "name": "Paladin Mass Rifles",
-   "players": 17,
-   "winRate": 0.5882352941176471,
-   "matchScore": 0.5393939393939393,
+   "players": 9,
+   "winRate": 0.6666666666666666,
+   "matchScore": 0.664,
    "steps": [
     {
      "step": "build Altar of Kings",
@@ -5521,89 +5554,56 @@
     {
      "step": "hero Paladin",
      "guideFood": 12,
-     "proFood": 23,
-     "share": 0.8823529411764706
+     "proFood": 11,
+     "share": 1
     },
     {
      "step": "train Rifleman",
      "guideFood": 18,
      "proFood": 17,
-     "share": 0.9411764705882353
+     "share": 1
     },
     {
      "step": "tech Keep",
      "guideFood": 26,
-     "proFood": 27,
+     "proFood": 28,
      "share": 1
     },
     {
      "step": "build Arcane Tower",
      "guideFood": 26,
      "proFood": 27,
-     "share": 0.8823529411764706
+     "share": 0.7777777777777778
     },
     {
      "step": "research Black Gunpowder",
      "guideFood": 35,
      "proFood": 32,
-     "share": 0.8235294117647058
+     "share": 1
     },
     {
      "step": "hero Blood Mage",
      "guideFood": 38,
-     "proFood": 39,
+     "proFood": 35,
      "share": 1
     },
     {
      "step": "research Long Rifles",
      "guideFood": 38,
-     "proFood": 39,
-     "share": 0.9411764705882353
+     "proFood": 40,
+     "share": 1
     },
     {
      "step": "build Arcane Sanctum",
      "guideFood": 43,
      "proFood": 43,
-     "share": 0.5882352941176471
+     "share": 0.7777777777777778
     },
     {
      "step": "train Priest",
      "guideFood": 43,
      "proFood": 43,
-     "share": 0.47058823529411764
-    }
-   ]
-  },
-  {
-   "id": "lp-hu-tavern-hero",
-   "name": "Human Tavern Hero",
-   "players": 10,
-   "winRate": 0.5,
-   "matchScore": 0.4153846153846154,
-   "steps": [
-    {
-     "step": "build Barracks",
-     "guideFood": 6,
-     "proFood": 6,
-     "share": 0.9
-    },
-    {
-     "step": "build Altar of Kings",
-     "guideFood": 9,
-     "proFood": 7,
-     "share": 1
-    },
-    {
-     "step": "train Footman",
-     "guideFood": 12,
-     "proFood": 10,
-     "share": 0.9
-    },
-    {
-     "step": "hero tavern",
-     "guideFood": 16,
-     "proFood": 16.5,
-     "share": 0.8
+     "share": 0.7777777777777778
     }
    ]
   },
@@ -5612,7 +5612,7 @@
    "name": "Tinker No Barracks Tech to Dragonhawks",
    "players": 8,
    "winRate": 0.625,
-   "matchScore": 0.390625,
+   "matchScore": 0.42053571428571423,
    "steps": [
     {
      "step": "build Lumber Mill",
@@ -5623,7 +5623,7 @@
     {
      "step": "build Altar of Kings",
      "guideFood": 9,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
@@ -5701,79 +5701,16 @@
    ]
   },
   {
-   "id": "grubby-hu-bloodmage-fast-expo",
-   "name": "Blood Mage First Fast Expand",
-   "players": 4,
-   "winRate": 0,
-   "matchScore": 0.4357894736842105,
-   "steps": [
-    {
-     "step": "build Altar of Kings",
-     "guideFood": 6,
-     "proFood": 0,
-     "share": 1
-    },
-    {
-     "step": "build Barracks",
-     "guideFood": 7,
-     "proFood": 7,
-     "share": 1
-    },
-    {
-     "step": "hero Blood Mage",
-     "guideFood": 10,
-     "proFood": null,
-     "share": 0
-    },
-    {
-     "step": "train Footman",
-     "guideFood": 16,
-     "proFood": 16,
-     "share": 1
-    },
-    {
-     "step": "expand Town Hall",
-     "guideFood": 31,
-     "proFood": 30,
-     "share": 1
-    },
-    {
-     "step": "tech Keep",
-     "guideFood": 40,
-     "proFood": 36.5,
-     "share": 1
-    },
-    {
-     "step": "build Blacksmith",
-     "guideFood": 40,
-     "proFood": 39,
-     "share": 0.75
-    },
-    {
-     "step": "build Workshop",
-     "guideFood": 40,
-     "proFood": 43.5,
-     "share": 0.5
-    },
-    {
-     "step": "build Workshop",
-     "guideFood": 40,
-     "proFood": 42,
-     "share": 0.25
-    }
-   ]
-  },
-  {
    "id": "grubby-021-hu-am-2-rax-footmen-rush",
    "name": "Archmage Two Barracks Footmen Rush",
-   "players": 3,
-   "winRate": 0.6666666666666666,
-   "matchScore": 0.35238095238095235,
+   "players": 5,
+   "winRate": 0,
+   "matchScore": 0.46315789473684216,
    "steps": [
     {
      "step": "build Altar of Kings",
      "guideFood": 6,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
@@ -5785,13 +5722,13 @@
     {
      "step": "hero Archmage",
      "guideFood": 10,
-     "proFood": 22,
-     "share": 0.6666666666666666
+     "proFood": 9,
+     "share": 0.8
     },
     {
      "step": "train Footman",
      "guideFood": 16,
-     "proFood": 15,
+     "proFood": 14,
      "share": 1
     },
     {
@@ -5803,19 +5740,19 @@
     {
      "step": "research Defend",
      "guideFood": 26,
-     "proFood": 29.5,
-     "share": 0.6666666666666666
+     "proFood": 28,
+     "share": 0.6
     },
     {
      "step": "build Arcane Tower",
      "guideFood": 42,
-     "proFood": 44,
+     "proFood": 41,
      "share": 1
     },
     {
      "step": "build Arcane Vault",
      "guideFood": 42,
-     "proFood": 39,
+     "proFood": 40,
      "share": 1
     }
    ]
@@ -5827,33 +5764,46 @@
    "players": 234,
    "winRate": 0.47435897435897434,
    "food": [
-    21,
+    9,
     27,
-    35
-   ]
-  },
-  {
-   "plan": "Archmage > expand > Keep > Castle > Mountain King > Paladin",
-   "players": 171,
-   "winRate": 0.5497076023391813,
-   "food": [
-    21,
-    31,
-    36,
-    40,
-    43,
-    55
+    29
    ]
   },
   {
    "plan": "Archmage > Keep > Mountain King > expand",
-   "players": 157,
-   "winRate": 0.5222929936305732,
+   "players": 158,
+   "winRate": 0.5189873417721519,
    "food": [
-    22,
+    9,
     30,
-    35,
+    30,
+    42.5
+   ]
+  },
+  {
+   "plan": "Archmage > expand > Keep > Mountain King > Castle > Paladin",
+   "players": 104,
+   "winRate": 0.5192307692307693,
+   "food": [
+    9,
+    30,
+    36,
+    39,
+    42,
     43
+   ]
+  },
+  {
+   "plan": "Archmage > expand > Keep > Castle > Mountain King > Paladin",
+   "players": 94,
+   "winRate": 0.6170212765957447,
+   "food": [
+    9,
+    31.5,
+    36,
+    39,
+    39,
+    41
    ]
   },
   {
@@ -5861,9 +5811,21 @@
    "players": 92,
    "winRate": 0.5,
    "food": [
-    21,
+    9,
     27,
     29
+   ]
+  },
+  {
+   "plan": "Archmage > Keep > Mountain King > Castle > Paladin",
+   "players": 73,
+   "winRate": 0.4520547945205479,
+   "food": [
+    9,
+    28,
+    29,
+    36,
+    35
    ]
   },
   {
@@ -5871,33 +5833,21 @@
    "players": 71,
    "winRate": 0.5774647887323944,
    "food": [
-    21,
+    9,
     30,
     37,
     39
    ]
   },
   {
-   "plan": "Archmage > Keep > Castle > Mountain King > Paladin",
-   "players": 55,
-   "winRate": 0.43636363636363634,
-   "food": [
-    21,
-    28,
-    31,
-    33,
-    41
-   ]
-  },
-  {
    "plan": "Archmage > expand > Keep > Mountain King",
-   "players": 53,
-   "winRate": 0.6226415094339622,
+   "players": 54,
+   "winRate": 0.6296296296296297,
    "food": [
-    21,
+    9,
     29,
     36,
-    44
+    40
    ]
   },
   {
@@ -5905,54 +5855,42 @@
    "players": 43,
    "winRate": 0.3953488372093023,
    "food": [
-    21,
+    9,
     30
    ]
   },
   {
    "plan": "Archmage > expand > Keep",
-   "players": 40,
-   "winRate": 0.5,
+   "players": 39,
+   "winRate": 0.48717948717948717,
    "food": [
-    21,
-    29.5,
-    34.5
-   ]
-  },
-  {
-   "plan": "Archmage > Keep > Mountain King > Castle > Paladin",
-   "players": 32,
-   "winRate": 0.4375,
-   "food": [
-    21,
-    25.5,
-    32,
-    38.5,
-    46
+    9,
+    30,
+    34
    ]
   },
   {
    "plan": "Archmage > expand > Keep > Mountain King > Castle",
-   "players": 26,
-   "winRate": 0.6538461538461539,
+   "players": 31,
+   "winRate": 0.6129032258064516,
    "food": [
-    22,
-    29,
-    35,
-    44,
-    51.5
+    9,
+    30,
+    36,
+    37,
+    47
    ]
   },
   {
    "plan": "Archmage > Keep > Mountain King > expand > Castle",
-   "players": 25,
-   "winRate": 0.48,
+   "players": 24,
+   "winRate": 0.5,
    "food": [
-    22,
+    9,
     28,
-    34,
-    41,
-    56
+    29,
+    40.5,
+    56.5
    ]
   },
   {
@@ -5960,9 +5898,9 @@
    "players": 24,
    "winRate": 0.75,
    "food": [
-    21,
+    11,
     27,
-    42
+    35
    ]
   },
   {
@@ -5970,10 +5908,10 @@
    "players": 23,
    "winRate": 0.6521739130434783,
    "food": [
-    21,
-    27,
-    35,
-    46
+    9,
+    28,
+    29,
+    45
    ]
   },
   {
@@ -5981,22 +5919,23 @@
    "players": 22,
    "winRate": 0.5,
    "food": [
-    21,
+    9,
     28.5,
     33.5,
-    44
+    37
    ]
   },
   {
-   "plan": "Archmage > expand > Keep > Castle > Mountain King",
-   "players": 21,
-   "winRate": 0.5714285714285714,
+   "plan": "Archmage > expand > Keep > Castle > tavern hero > Paladin",
+   "players": 20,
+   "winRate": 0.4,
    "food": [
-    21,
-    32,
-    37,
-    41,
-    42
+    9,
+    31.5,
+    36.5,
+    40.5,
+    39,
+    43
    ]
   },
   {
@@ -6004,7 +5943,7 @@
    "players": 20,
    "winRate": 0.55,
    "food": [
-    21.5,
+    9,
     28,
     30,
     43
@@ -6015,21 +5954,8 @@
    "players": 19,
    "winRate": 0.21052631578947367,
    "food": [
-    22,
+    9,
     31
-   ]
-  },
-  {
-   "plan": "Archmage > expand > Keep > Castle > tavern hero > Paladin",
-   "players": 19,
-   "winRate": 0.42105263157894735,
-   "food": [
-    21,
-    32,
-    36,
-    41,
-    40,
-    57
    ]
   },
   {
@@ -6037,23 +5963,48 @@
    "players": 17,
    "winRate": 0.47058823529411764,
    "food": [
-    22,
+    9,
     29,
     35,
-    44
+    40
    ]
   },
   {
-   "plan": "Mountain King > expand > Keep > Castle > Blood Mage > Paladin",
-   "players": 15,
-   "winRate": 0.6,
+   "plan": "Archmage > Keep > Mountain King > Castle > Paladin > expand",
+   "players": 16,
+   "winRate": 0.5625,
    "food": [
-    22,
+    9,
+    26.5,
+    30,
     34,
-    35,
-    43,
-    43,
-    58
+    32,
+    48
+   ]
+  },
+  {
+   "plan": "Archmage > Keep > Castle > Mountain King > Paladin",
+   "players": 16,
+   "winRate": 0.375,
+   "food": [
+    9,
+    28.5,
+    28.5,
+    28.5,
+    29
+   ]
+  },
+  {
+   "plan": "Archmage > expand > Keep > tavern hero > Castle > Paladin",
+   "players": 14,
+   "winRate": 0.5714285714285714,
+   "food": [
+    9,
+    30,
+    34.5,
+    41,
+    46,
+    42.5
    ]
   },
   {
@@ -6061,57 +6012,18 @@
    "players": 14,
    "winRate": 0.2857142857142857,
    "food": [
-    21
-   ]
-  },
-  {
-   "plan": "Archmage > expand > Keep > Mountain King > Castle > Paladin",
-   "players": 14,
-   "winRate": 0.6428571428571429,
-   "food": [
-    21,
-    29,
-    33.5,
-    43,
-    43,
-    59
-   ]
-  },
-  {
-   "plan": "Archmage > expand > Keep > tavern hero > Castle > Paladin",
-   "players": 13,
-   "winRate": 0.6153846153846154,
-   "food": [
-    22,
-    30,
-    34,
-    41,
-    45,
-    52
-   ]
-  },
-  {
-   "plan": "Archmage > Keep > Castle > Mountain King > Paladin > expand",
-   "players": 13,
-   "winRate": 0.5384615384615384,
-   "food": [
-    22,
-    27,
-    30,
-    33,
-    47,
-    48
+    9
    ]
   },
   {
    "plan": "Paladin > Keep > Blood Mage > Castle",
-   "players": 13,
-   "winRate": 0.6153846153846154,
+   "players": 14,
+   "winRate": 0.5714285714285714,
    "food": [
-    23,
+    11,
     27,
-    42,
-    46
+    35,
+    45.5
    ]
   },
   {
@@ -6119,9 +6031,9 @@
    "players": 13,
    "winRate": 0.3076923076923077,
    "food": [
-    21,
+    9,
     26,
-    33
+    27
    ]
   },
   {
@@ -6129,11 +6041,11 @@
    "players": 12,
    "winRate": 0.6666666666666666,
    "food": [
-    19.5,
+    8.5,
     24.5,
     24,
     29,
-    41
+    31
    ]
   },
   {
@@ -6141,10 +6053,10 @@
    "players": 12,
    "winRate": 0.6666666666666666,
    "food": [
-    21,
+    9,
     31,
     38,
-    49,
+    41,
     65.5
    ]
   },
@@ -6153,9 +6065,9 @@
    "players": 11,
    "winRate": 0.2727272727272727,
    "food": [
-    22,
+    9,
     24,
-    37
+    29
    ]
   },
   {
@@ -6163,20 +6075,21 @@
    "players": 11,
    "winRate": 0.2727272727272727,
    "food": [
-    21,
+    9,
     30
    ]
   },
   {
-   "plan": "Archmage > expand > Keep > tavern hero > Castle",
+   "plan": "Archmage > expand > expand > Keep > Mountain King > Castle",
    "players": 10,
-   "winRate": 0.7,
+   "winRate": 0.3,
    "food": [
-    21,
-    29,
+    9,
+    32,
+    34,
     35,
-    40,
-    63
+    39.5,
+    47.5
    ]
   },
   {
@@ -6184,11 +6097,62 @@
    "players": 10,
    "winRate": 0.5,
    "food": [
-    21.5,
+    9,
     31,
-    36.5,
+    33,
     45.5,
     47
+   ]
+  },
+  {
+   "plan": "Archmage > expand > Keep > tavern hero > Castle",
+   "players": 9,
+   "winRate": 0.7777777777777778,
+   "food": [
+    9,
+    28,
+    35,
+    40,
+    63
+   ]
+  },
+  {
+   "plan": "Archmage > Keep > Mountain King > expand > Castle > Paladin",
+   "players": 8,
+   "winRate": 0.375,
+   "food": [
+    9,
+    29,
+    30.5,
+    37.5,
+    50,
+    53.5
+   ]
+  },
+  {
+   "plan": "Archmage > Keep > Mountain King > expand > expand > Castle",
+   "players": 8,
+   "winRate": 0.5,
+   "food": [
+    9,
+    28.5,
+    27.5,
+    34,
+    37.5,
+    51
+   ]
+  },
+  {
+   "plan": "Mountain King > expand > Keep > Blood Mage > Castle > Paladin",
+   "players": 8,
+   "winRate": 0.75,
+   "food": [
+    9,
+    32.5,
+    34.5,
+    42.5,
+    45,
+    48.5
    ]
   },
   {
@@ -6196,10 +6160,23 @@
    "players": 8,
    "winRate": 0.375,
    "food": [
-    22,
+    9,
     29,
     30.5,
     41
+   ]
+  },
+  {
+   "plan": "Mountain King > expand > Keep > Castle > Blood Mage > Paladin",
+   "players": 8,
+   "winRate": 0.5,
+   "food": [
+    9,
+    34.5,
+    36.5,
+    40,
+    40,
+    41.5
    ]
   },
   {
@@ -6207,9 +6184,9 @@
    "players": 7,
    "winRate": 0.5714285714285714,
    "food": [
-    23,
+    11,
     27,
-    41,
+    35,
     45,
     47
    ]
@@ -6219,36 +6196,36 @@
    "players": 7,
    "winRate": 0.5714285714285714,
    "food": [
-    21,
+    9,
     22,
     29,
     26,
-    38
+    29
    ]
   },
   {
-   "plan": "Archmage > expand > expand > Keep > Castle > Mountain King",
+   "plan": "Mountain King > expand > Keep > tavern hero > Castle > Blood Mage",
    "players": 7,
-   "winRate": 0.2857142857142857,
+   "winRate": 0.5714285714285714,
    "food": [
-    22,
-    34,
-    36,
-    37,
-    41,
-    41
+    9,
+    29,
+    38,
+    38,
+    43,
+    47
    ]
   },
   {
-   "plan": "Mountain King > expand > Keep > Castle > Paladin",
+   "plan": "Archmage > Keep > Mountain King > Castle > tavern hero",
    "players": 6,
    "winRate": 0.3333333333333333,
    "food": [
-    22,
-    31,
-    36,
-    36.5,
-    41
+    9,
+    22.5,
+    22.5,
+    35.5,
+    42
    ]
   },
   {
@@ -6256,7 +6233,7 @@
    "players": 6,
    "winRate": 0.8333333333333334,
    "food": [
-    21.5,
+    9,
     29,
     37.5,
     40.5,
@@ -6268,63 +6245,11 @@
    "players": 6,
    "winRate": 0.6666666666666666,
    "food": [
-    21,
+    9,
     28,
     29,
     39.5,
     45.5
-   ]
-  },
-  {
-   "plan": "Mountain King > expand > Keep > Castle > Paladin > Blood Mage",
-   "players": 6,
-   "winRate": 0.6666666666666666,
-   "food": [
-    21,
-    33.5,
-    38,
-    42,
-    43.5,
-    62.5
-   ]
-  },
-  {
-   "plan": "Archmage > expand > Keep > expand > Castle > Mountain King",
-   "players": 6,
-   "winRate": 0.16666666666666666,
-   "food": [
-    21,
-    27.5,
-    32,
-    37,
-    38.5,
-    41
-   ]
-  },
-  {
-   "plan": "Archmage > expand > Keep > Castle > Blood Mage > Paladin",
-   "players": 6,
-   "winRate": 0.6666666666666666,
-   "food": [
-    21,
-    28.5,
-    33.5,
-    36.5,
-    43.5,
-    64.5
-   ]
-  },
-  {
-   "plan": "Archmage > Keep > Mountain King > expand > expand > Castle",
-   "players": 6,
-   "winRate": 0.6666666666666666,
-   "food": [
-    22,
-    29,
-    33.5,
-    35.5,
-    39,
-    51
    ]
   },
   {
@@ -6334,7 +6259,7 @@
    "food": [
     19,
     25,
-    33.5
+    29.5
    ]
   },
   {
@@ -6342,62 +6267,11 @@
    "players": 6,
    "winRate": 0.5,
    "food": [
-    21.5,
+    9,
     27.5,
     30,
     33.5,
-    43
-   ]
-  },
-  {
-   "plan": "Archmage > Keep > Mountain King > Castle > Paladin > expand",
-   "players": 6,
-   "winRate": 0.5,
-   "food": [
-    21,
-    27,
-    38.5,
-    35.5,
-    49.5,
-    50
-   ]
-  },
-  {
-   "plan": "Archmage > Keep > expand > Mountain King > Castle > Paladin",
-   "players": 6,
-   "winRate": 0.8333333333333334,
-   "food": [
-    22,
-    29.5,
-    28.5,
-    36.5,
-    47.5,
-    59
-   ]
-  },
-  {
-   "plan": "Mountain King > expand > Keep > tavern hero > Castle > Blood Mage",
-   "players": 6,
-   "winRate": 0.6666666666666666,
-   "food": [
-    22,
-    29,
-    39,
-    38.5,
-    42.5,
-    62
-   ]
-  },
-  {
-   "plan": "Archmage > Keep > Mountain King > Castle > tavern hero",
-   "players": 5,
-   "winRate": 0.4,
-   "food": [
-    21,
-    24,
-    29,
-    37,
-    42
+    35
    ]
   },
   {
@@ -6405,23 +6279,10 @@
    "players": 5,
    "winRate": 0.2,
    "food": [
-    22,
+    9,
     30,
     32,
     38
-   ]
-  },
-  {
-   "plan": "Archmage > expand > Keep > Castle > Mountain King > expand",
-   "players": 5,
-   "winRate": 0.4,
-   "food": [
-    21,
-    29,
-    38,
-    42,
-    47,
-    44
    ]
   },
   {
@@ -6429,47 +6290,47 @@
    "players": 5,
    "winRate": 0.6,
    "food": [
-    22,
+    9,
     35,
     42,
-    48
+    41
    ]
   },
   {
-   "plan": "Mountain King > expand > Keep > Castle > Archmage > Paladin",
+   "plan": "Archmage > Keep > expand > Mountain King > Castle > Paladin",
    "players": 5,
-   "winRate": 0.6,
+   "winRate": 0.8,
    "food": [
-    21,
-    34,
-    36,
-    46,
-    45,
-    53
+    9,
+    24,
+    29,
+    29,
+    40,
+    46
    ]
   },
   {
-   "plan": "Archmage > Keep > Castle > Mountain King",
-   "players": 5,
-   "winRate": 0.6,
-   "food": [
-    22,
-    28,
-    32,
-    32
-   ]
-  },
-  {
-   "plan": "Archmage > expand > expand > Keep > Mountain King > Castle",
+   "plan": "Archmage > expand > Keep > Castle > Mountain King",
    "players": 5,
    "winRate": 0.4,
    "food": [
-    21,
+    9,
+    30,
+    36,
+    40,
+    40
+   ]
+  },
+  {
+   "plan": "Mountain King > expand > Keep > Castle > Blood Mage",
+   "players": 5,
+   "winRate": 0.4,
+   "food": [
+    9,
+    29,
     32,
-    33,
-    35,
-    46,
-    48
+    40,
+    42
    ]
   },
   {
@@ -6477,9 +6338,32 @@
    "players": 5,
    "winRate": 0.2,
    "food": [
-    22,
+    9,
     31,
     32
+   ]
+  },
+  {
+   "plan": "tavern hero > expand > Keep > Castle",
+   "players": 5,
+   "winRate": 0.4,
+   "food": [
+    18,
+    28,
+    37,
+    44
+   ]
+  },
+  {
+   "plan": "Mountain King > expand > Keep > Paladin > Castle",
+   "players": 5,
+   "winRate": 0.4,
+   "food": [
+    9,
+    32,
+    35,
+    35,
+    45
    ]
   },
   {
@@ -6487,38 +6371,25 @@
    "players": 4,
    "winRate": 0.75,
    "food": [
-    19,
+    8.5,
     26.5,
     25.5,
     30.5,
-    42,
+    35,
     47
    ]
   },
   {
-   "plan": "Archmage > expand > Keep > tavern hero > Castle > expand",
+   "plan": "Archmage > expand > Keep > expand > Castle > Mountain King",
    "players": 4,
-   "winRate": 0.75,
+   "winRate": 0,
    "food": [
-    21,
-    33,
-    36.5,
-    41,
-    44.5,
-    52
-   ]
-  },
-  {
-   "plan": "Archmage > Keep > Mountain King > expand > Castle > Paladin",
-   "players": 4,
-   "winRate": 0.5,
-   "food": [
-    21,
-    28.5,
-    33,
-    37.5,
-    45.5,
-    52
+    9,
+    29,
+    35,
+    37,
+    39,
+    39
    ]
   },
   {
@@ -6526,22 +6397,11 @@
    "players": 4,
    "winRate": 0.75,
    "food": [
-    22,
+    9,
     33,
     35.5,
-    47,
+    39.5,
     63.5
-   ]
-  },
-  {
-   "plan": "Mountain King > expand > Keep > Castle",
-   "players": 4,
-   "winRate": 0.25,
-   "food": [
-    22,
-    32.5,
-    33,
-    39
    ]
   },
   {
@@ -6549,7 +6409,7 @@
    "players": 4,
    "winRate": 0.5,
    "food": [
-    22,
+    9,
     32.5,
     33.5
    ]
@@ -6563,27 +6423,53 @@
    ]
   },
   {
+   "plan": "Mountain King > expand > Keep > Archmage > Castle > Paladin",
+   "players": 4,
+   "winRate": 0.75,
+   "food": [
+    9,
+    33,
+    34.5,
+    41,
+    49,
+    51
+   ]
+  },
+  {
+   "plan": "Paladin > Keep > Blood Mage > Castle > Mountain King",
+   "players": 4,
+   "winRate": 0.5,
+   "food": [
+    10,
+    27.5,
+    35,
+    43,
+    47
+   ]
+  },
+  {
    "plan": "Archmage > expand > expand > Keep > Blood Mage",
    "players": 4,
    "winRate": 0.25,
    "food": [
-    21.5,
+    9,
     30,
     28.5,
     31,
-    38.5
+    38
    ]
   },
   {
-   "plan": "Archmage > expand > Keep > Castle > tavern hero",
+   "plan": "Archmage > expand > Keep > Castle > Mountain King > expand",
    "players": 4,
-   "winRate": 0.75,
+   "winRate": 0.25,
    "food": [
-    21.5,
-    32.5,
-    35,
-    39.5,
-    39.5
+    9,
+    28.5,
+    36.5,
+    37.5,
+    37.5,
+    42.5
    ]
   },
   {
@@ -6591,7 +6477,7 @@
    "players": 4,
    "winRate": 0,
    "food": [
-    21,
+    9,
     30.5,
     33,
     38.5,
@@ -6599,37 +6485,14 @@
    ]
   },
   {
-   "plan": "tavern hero > expand > Keep > Castle",
-   "players": 4,
-   "winRate": 0.25,
-   "food": [
-    17.5,
-    32,
-    38,
-    44.5
-   ]
-  },
-  {
    "plan": "Archmage > Keep > Blood Mage > expand",
    "players": 4,
    "winRate": 0,
    "food": [
-    22,
+    9,
     31.5,
-    36.5,
+    31.5,
     46.5
-   ]
-  },
-  {
-   "plan": "Mountain King > expand > Keep > Castle > Blood Mage",
-   "players": 4,
-   "winRate": 0.5,
-   "food": [
-    21.5,
-    29,
-    35,
-    41.5,
-    46
    ]
   },
   {
@@ -6637,11 +6500,11 @@
    "players": 4,
    "winRate": 0.75,
    "food": [
-    17,
+    16.5,
     31,
     44
    ]
   }
  ],
- "at": "2026-10-27T22:38:58.277Z"
+ "at": "2026-10-28T07:25:54.589Z"
 }

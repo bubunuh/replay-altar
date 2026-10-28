@@ -53,7 +53,8 @@ statistics (`data/`).
   the game; real time above 80 food was 1 second per game, estimated 113). Food is now counted from
   the units alive: 3 off on average. This fixes the food charts, the time in upkeep and the gold it
   cost, 3-3-60 and the largest army, which now matches W3Champions' own number (the highest food
-  used, workers included; correlation 0.92, was 0.74).
+  used, workers included; correlation 0.92, was 0.74). The build-order comparison gives a hero's
+  food when it was ordered, as the guides do (an Archmage at 9 food, guide 10).
 - **Hero timelines:** a hero cancelled at the altar and ordered again later no longer appears on the hero chart, and in the build-order comparison, at the time of the cancelled order (and a Demon Hunter or Alchemist the simulation last saw transformed is found again).
 - **Games on some maps can be simulated again:** games on 60 maps, mostly the copies of ladder
   maps that some hosts save under a long code instead of the map's name (`Maps/dz/…`), plus a few

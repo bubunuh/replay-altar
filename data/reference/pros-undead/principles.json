@@ -1150,7 +1150,7 @@
     "p50": 36,
     "p75": 46,
     "p90": 55,
-    "mean": 39.209815950920245
+    "mean": 39.2159509202454
    },
    "wins": {
     "n": 421,
@@ -1168,7 +1168,7 @@
     "p50": 35.5,
     "p75": 45,
     "p90": 55,
-    "mean": 38.58629441624365
+    "mean": 38.598984771573605
    },
    "byBuild": {
     "Crypt before the altar + Ghoul opening + fast tech": {
@@ -1243,7 +1243,7 @@
      "p50": 36,
      "p75": 48,
      "p90": 56.70000000000002,
-     "mean": 39.651785714285715
+     "mean": 39.674107142857146
     }
    },
    "acrossBuilds": 1.2666666666666666,
@@ -4743,97 +4743,22 @@
  },
  "library": [
   {
-   "id": "grubby-031-ud-new-dreadlord-fast-expo",
-   "name": "New Dreadlord Fast Expand",
-   "players": 367,
-   "winRate": 0.5286103542234333,
-   "matchScore": 0.4416666666666666,
-   "steps": [
-    {
-     "step": "build Crypt",
-     "guideFood": 5,
-     "proFood": 0,
-     "share": 1
-    },
-    {
-     "step": "build Altar of Darkness",
-     "guideFood": 5,
-     "proFood": 0,
-     "share": 1
-    },
-    {
-     "step": "expand Necropolis",
-     "guideFood": 7,
-     "proFood": 33,
-     "share": 0.8991825613079019
-    },
-    {
-     "step": "train Ghoul",
-     "guideFood": 7,
-     "proFood": 8,
-     "share": 0.9918256130790191
-    },
-    {
-     "step": "build Tomb of Relics",
-     "guideFood": 9,
-     "proFood": 8,
-     "share": 1
-    },
-    {
-     "step": "hero Dreadlord",
-     "guideFood": 9,
-     "proFood": 19,
-     "share": 0.10626702997275204
-    },
-    {
-     "step": "train Ghoul",
-     "guideFood": 14,
-     "proFood": 13,
-     "share": 0.008174386920980926
-    },
-    {
-     "step": "expand Haunted Gold Mine",
-     "guideFood": 23,
-     "proFood": 27,
-     "share": 0.9863760217983651
-    },
-    {
-     "step": "build Nerubian Tower",
-     "guideFood": 29,
-     "proFood": 29,
-     "share": 0.9918256130790191
-    },
-    {
-     "step": "tech Halls of the Dead",
-     "guideFood": 35,
-     "proFood": 35,
-     "share": 0.9400544959128065
-    },
-    {
-     "step": "build Graveyard",
-     "guideFood": 35,
-     "proFood": 35,
-     "share": 0.9318801089918256
-    }
-   ]
-  },
-  {
    "id": "grubby-002-ud-dl-fast-expansion",
    "name": "Dreadlord Fast Expand",
-   "players": 343,
-   "winRate": 0.43440233236151604,
-   "matchScore": 0.46666666666666673,
+   "players": 357,
+   "winRate": 0.4565826330532213,
+   "matchScore": 0.5416666666666667,
    "steps": [
     {
      "step": "build Crypt",
      "guideFood": 5,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
      "step": "build Altar of Darkness",
      "guideFood": 7,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
@@ -4851,58 +4776,133 @@
     {
      "step": "hero Dreadlord",
      "guideFood": 11,
-     "proFood": 20,
-     "share": 0.10204081632653061
+     "proFood": 9.5,
+     "share": 0.09523809523809523
     },
     {
      "step": "expand Haunted Gold Mine",
      "guideFood": 23,
-     "proFood": 26,
-     "share": 0.8250728862973761
+     "proFood": 25,
+     "share": 0.7338935574229691
     },
     {
      "step": "build Nerubian Tower",
      "guideFood": 23,
      "proFood": 25,
-     "share": 0.967930029154519
+     "share": 0.9663865546218487
     },
     {
      "step": "build Graveyard",
      "guideFood": 26,
-     "proFood": 29,
-     "share": 0.9446064139941691
+     "proFood": 28,
+     "share": 0.9635854341736695
     },
     {
      "step": "build Spirit Tower",
      "guideFood": 29,
      "proFood": 31,
-     "share": 0.5801749271137027
+     "share": 0.5378151260504201
     },
     {
      "step": "tech Halls of the Dead",
      "guideFood": 29,
+     "proFood": 28,
+     "share": 0.9327731092436975
+    }
+   ]
+  },
+  {
+   "id": "grubby-031-ud-new-dreadlord-fast-expo",
+   "name": "New Dreadlord Fast Expand",
+   "players": 334,
+   "winRate": 0.5329341317365269,
+   "matchScore": 0.5131428571428571,
+   "steps": [
+    {
+     "step": "build Crypt",
+     "guideFood": 5,
+     "proFood": 5,
+     "share": 1
+    },
+    {
+     "step": "build Altar of Darkness",
+     "guideFood": 5,
+     "proFood": 5,
+     "share": 1
+    },
+    {
+     "step": "expand Necropolis",
+     "guideFood": 7,
+     "proFood": 33,
+     "share": 0.9161676646706587
+    },
+    {
+     "step": "train Ghoul",
+     "guideFood": 7,
+     "proFood": 8,
+     "share": 0.9880239520958084
+    },
+    {
+     "step": "build Tomb of Relics",
+     "guideFood": 9,
+     "proFood": 8,
+     "share": 1
+    },
+    {
+     "step": "hero Dreadlord",
+     "guideFood": 9,
+     "proFood": 9,
+     "share": 0.1377245508982036
+    },
+    {
+     "step": "train Ghoul",
+     "guideFood": 14,
+     "proFood": 13,
+     "share": 0.011976047904191617
+    },
+    {
+     "step": "expand Haunted Gold Mine",
+     "guideFood": 23,
+     "proFood": 27,
+     "share": 0.9880239520958084
+    },
+    {
+     "step": "build Nerubian Tower",
+     "guideFood": 29,
      "proFood": 29,
-     "share": 0.9183673469387755
+     "share": 0.9910179640718563
+    },
+    {
+     "step": "tech Halls of the Dead",
+     "guideFood": 35,
+     "proFood": 35,
+     "share": 0.9431137724550899
+    },
+    {
+     "step": "build Graveyard",
+     "guideFood": 35,
+     "proFood": 35,
+     "share": 0.9431137724550899
     }
    ]
   },
   {
    "id": "grubby-029-ud-2-crypt-ghoul-garg-fiend-vs-ne",
    "name": "Two Crypt Ghoul Gargoyle Fiend",
-   "players": 248,
-   "winRate": 0.5362903225806451,
-   "matchScore": 0.49282296650717705,
+   "players": 252,
+   "winRate": 0.49603174603174605,
+   "matchScore": 0.6190476190476191,
    "steps": [
     {
      "step": "build Altar of Darkness",
      "guideFood": 5,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
      "step": "build Crypt",
      "guideFood": 5,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
@@ -4920,58 +4920,58 @@
     {
      "step": "hero Death Knight",
      "guideFood": 10,
-     "proFood": 26,
-     "share": 0.7862903225806451
+     "proFood": 10,
+     "share": 0.9285714285714286
     },
     {
      "step": "tech Halls of the Dead",
      "guideFood": 25,
      "proFood": 24,
-     "share": 0.9798387096774194
+     "share": 0.996031746031746
     },
     {
      "step": "build Crypt",
      "guideFood": 25,
      "proFood": 26,
-     "share": 0.2056451612903226
+     "share": 0.23015873015873015
     },
     {
      "step": "build Graveyard",
      "guideFood": 25,
      "proFood": 26,
-     "share": 0.9637096774193549
+     "share": 1
     },
     {
      "step": "hero Lich",
      "guideFood": 21,
-     "proFood": 19,
-     "share": 0.7580645161290323
+     "proFood": 27,
+     "share": 0.8134920634920635
     },
     {
      "step": "train Gargoyle",
      "guideFood": 21,
      "proFood": 27,
-     "share": 0.21370967741935484
+     "share": 0.23809523809523808
     }
    ]
   },
   {
    "id": "gym-ud-fast-dk-fiends",
    "name": "Fast Death Knight with Fiends",
-   "players": 175,
-   "winRate": 0.41714285714285715,
-   "matchScore": 0.5266666666666666,
+   "players": 195,
+   "winRate": 0.4461538461538462,
+   "matchScore": 0.6714285714285714,
    "steps": [
     {
      "step": "build Altar of Darkness",
      "guideFood": 6,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
      "step": "build Crypt",
      "guideFood": 7,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
@@ -4983,8 +4983,8 @@
     {
      "step": "hero Death Knight",
      "guideFood": 8,
-     "proFood": 19,
-     "share": 0.9942857142857143
+     "proFood": 9.5,
+     "share": 0.9948717948717949
     },
     {
      "step": "build Graveyard",
@@ -5007,8 +5007,8 @@
     {
      "step": "train Crypt Fiend",
      "guideFood": 17,
-     "proFood": 25,
-     "share": 0.7028571428571428
+     "proFood": 23,
+     "share": 0.7128205128205128
     },
     {
      "step": "tech Halls of the Dead",
@@ -5019,46 +5019,46 @@
     {
      "step": "hero Lich",
      "guideFood": 25,
-     "proFood": 31,
-     "share": 0.8971428571428571
+     "proFood": 26,
+     "share": 0.9641025641025641
     },
     {
      "step": "tech Black Citadel",
      "guideFood": 30,
      "proFood": 29,
-     "share": 0.9885714285714285
+     "share": 0.9897435897435898
     },
     {
      "step": "build Slaughterhouse",
      "guideFood": 30,
      "proFood": 31,
-     "share": 0.9942857142857143
+     "share": 1
     },
     {
      "step": "hero tavern",
      "guideFood": 39,
      "proFood": 39,
-     "share": 0.88
+     "share": 0.8974358974358975
     },
     {
      "step": "item Orb of Corruption",
      "guideFood": 39,
      "proFood": 39,
-     "share": 0.8628571428571429
+     "share": 0.8666666666666667
     }
    ]
   },
   {
    "id": "lp-ud-fiend",
    "name": "Undead Fiend (standard)",
-   "players": 164,
-   "winRate": 0.5487804878048781,
-   "matchScore": 0.5,
+   "players": 113,
+   "winRate": 0.6194690265486725,
+   "matchScore": 0.6142857142857144,
    "steps": [
     {
      "step": "build Crypt",
      "guideFood": 6,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
@@ -5070,7 +5070,7 @@
     {
      "step": "build Altar of Darkness",
      "guideFood": 7,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
@@ -5088,14 +5088,14 @@
     {
      "step": "hero Death Knight",
      "guideFood": 9,
-     "proFood": 19,
+     "proFood": 10,
      "share": 1
     },
     {
      "step": "train Crypt Fiend",
      "guideFood": 9,
      "proFood": 32,
-     "share": 0.6036585365853658
+     "share": 0.5575221238938053
     },
     {
      "step": "tech Halls of the Dead",
@@ -5107,13 +5107,13 @@
      "step": "build Nerubian Tower",
      "guideFood": 23,
      "proFood": 23,
-     "share": 0.8597560975609756
+     "share": 0.911504424778761
     },
     {
      "step": "hero Lich",
      "guideFood": 30,
-     "proFood": 33,
-     "share": 0.9634146341463414
+     "proFood": 29,
+     "share": 0.9823008849557522
     },
     {
      "step": "build Slaughterhouse",
@@ -5130,46 +5130,151 @@
     {
      "step": "train Obsidian Statue",
      "guideFood": 35,
-     "proFood": 35,
-     "share": 0.9939024390243902
+     "proFood": 35.5,
+     "share": 0.9911504424778761
     },
     {
      "step": "train Banshee",
      "guideFood": 35,
-     "proFood": 50,
-     "share": 0.018292682926829267
+     "proFood": 46.5,
+     "share": 0.017699115044247787
     },
     {
      "step": "item Orb of Corruption",
      "guideFood": 45,
-     "proFood": 43,
-     "share": 0.9146341463414634
+     "proFood": 44,
+     "share": 0.9469026548672567
     },
     {
      "step": "hero tavern",
      "guideFood": 45,
      "proFood": 42,
-     "share": 0.8048780487804879
+     "share": 0.7699115044247787
+    }
+   ]
+  },
+  {
+   "id": "grubby-041-ud-easy-fast-tech",
+   "name": "Easy Undead Fast Tech",
+   "players": 109,
+   "winRate": 0.42201834862385323,
+   "matchScore": 0.7647058823529413,
+   "steps": [
+    {
+     "step": "build Altar of Darkness",
+     "guideFood": 5,
+     "proFood": 5,
+     "share": 1
+    },
+    {
+     "step": "build Crypt",
+     "guideFood": 7,
+     "proFood": 7,
+     "share": 1
+    },
+    {
+     "step": "build Tomb of Relics",
+     "guideFood": 8,
+     "proFood": 8,
+     "share": 1
+    },
+    {
+     "step": "hero Death Knight",
+     "guideFood": 8,
+     "proFood": 8,
+     "share": 0.944954128440367
+    },
+    {
+     "step": "build Graveyard",
+     "guideFood": 13,
+     "proFood": 13,
+     "share": 1
+    },
+    {
+     "step": "train Ghoul",
+     "guideFood": 13,
+     "proFood": 13,
+     "share": 1
+    },
+    {
+     "step": "item Rod of Necromancy",
+     "guideFood": 17,
+     "proFood": 17,
+     "share": 0.9908256880733946
+    },
+    {
+     "step": "build Nerubian Tower",
+     "guideFood": 17,
+     "proFood": 17,
+     "share": 0.7981651376146789
+    },
+    {
+     "step": "tech Halls of the Dead",
+     "guideFood": 17,
+     "proFood": 17,
+     "share": 1
+    },
+    {
+     "step": "train Crypt Fiend",
+     "guideFood": 17,
+     "proFood": 17,
+     "share": 0.8807339449541285
+    },
+    {
+     "step": "build Slaughterhouse",
+     "guideFood": 25,
+     "proFood": 26,
+     "share": 0.9357798165137615
+    },
+    {
+     "step": "hero Lich",
+     "guideFood": 25,
+     "proFood": 25,
+     "share": 0.8623853211009175
+    },
+    {
+     "step": "tech Black Citadel",
+     "guideFood": 25,
+     "proFood": 26,
+     "share": 0.8990825688073395
+    },
+    {
+     "step": "train Obsidian Statue",
+     "guideFood": 30,
+     "proFood": 30,
+     "share": 0.9174311926605505
+    },
+    {
+     "step": "item Orb of Corruption",
+     "guideFood": 39,
+     "proFood": 39,
+     "share": 0.7522935779816514
+    },
+    {
+     "step": "hero Crypt Lord",
+     "guideFood": 39,
+     "proFood": 35.5,
+     "share": 0.22018348623853212
     }
    ]
   },
   {
    "id": "grubby-006-ud-dk-lich-fiends-fast-t3",
    "name": "DK Lich Fiends Fast T3",
-   "players": 121,
-   "winRate": 0.48760330578512395,
-   "matchScore": 0.5333333333333332,
+   "players": 104,
+   "winRate": 0.4807692307692308,
+   "matchScore": 0.6428571428571429,
    "steps": [
     {
      "step": "build Altar of Darkness",
      "guideFood": 6,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
      "step": "build Crypt",
      "guideFood": 6,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
@@ -5187,13 +5292,13 @@
     {
      "step": "hero Death Knight",
      "guideFood": 10,
-     "proFood": 19,
-     "share": 0.9586776859504132
+     "proFood": 10,
+     "share": 0.9711538461538461
     },
     {
      "step": "build Graveyard",
      "guideFood": 17,
-     "proFood": 22,
+     "proFood": 22.5,
      "share": 1
     },
     {
@@ -5206,180 +5311,75 @@
      "step": "build Nerubian Tower",
      "guideFood": 17,
      "proFood": 20,
-     "share": 0.7355371900826446
+     "share": 0.7403846153846154
     },
     {
      "step": "train Crypt Fiend",
      "guideFood": 17,
-     "proFood": 23,
-     "share": 0.6033057851239669
+     "proFood": 22,
+     "share": 0.5288461538461539
     },
     {
      "step": "tech Black Citadel",
      "guideFood": 23,
-     "proFood": 24.5,
-     "share": 0.9421487603305785
+     "proFood": 24,
+     "share": 0.9615384615384616
     },
     {
      "step": "build Slaughterhouse",
      "guideFood": 23,
      "proFood": 26,
-     "share": 0.9504132231404959
+     "share": 0.9519230769230769
     },
     {
      "step": "hero Lich",
      "guideFood": 23,
-     "proFood": 27.5,
-     "share": 0.8429752066115702
+     "proFood": 23,
+     "share": 0.9134615384615384
     },
     {
      "step": "train Obsidian Statue",
      "guideFood": 28,
      "proFood": 29,
-     "share": 0.9338842975206612
+     "share": 0.9230769230769231
     },
     {
      "step": "item Orb of Corruption",
      "guideFood": 34,
      "proFood": 35,
-     "share": 0.7933884297520661
+     "share": 0.7788461538461539
     },
     {
      "step": "hero Dark Ranger",
      "guideFood": 34,
      "proFood": 35,
-     "share": 0.47107438016528924
-    }
-   ]
-  },
-  {
-   "id": "grubby-041-ud-easy-fast-tech",
-   "name": "Easy Undead Fast Tech",
-   "players": 120,
-   "winRate": 0.475,
-   "matchScore": 0.672077922077922,
-   "steps": [
-    {
-     "step": "build Altar of Darkness",
-     "guideFood": 5,
-     "proFood": 0,
-     "share": 1
-    },
-    {
-     "step": "build Crypt",
-     "guideFood": 7,
-     "proFood": 7,
-     "share": 1
-    },
-    {
-     "step": "build Tomb of Relics",
-     "guideFood": 8,
-     "proFood": 8,
-     "share": 1
-    },
-    {
-     "step": "hero Death Knight",
-     "guideFood": 8,
-     "proFood": 17,
-     "share": 0.9583333333333334
-    },
-    {
-     "step": "build Graveyard",
-     "guideFood": 13,
-     "proFood": 13,
-     "share": 1
-    },
-    {
-     "step": "train Ghoul",
-     "guideFood": 13,
-     "proFood": 13,
-     "share": 1
-    },
-    {
-     "step": "item Rod of Necromancy",
-     "guideFood": 17,
-     "proFood": 17,
-     "share": 1
-    },
-    {
-     "step": "build Nerubian Tower",
-     "guideFood": 17,
-     "proFood": 17,
-     "share": 0.7833333333333333
-    },
-    {
-     "step": "tech Halls of the Dead",
-     "guideFood": 17,
-     "proFood": 17,
-     "share": 1
-    },
-    {
-     "step": "train Crypt Fiend",
-     "guideFood": 17,
-     "proFood": 17,
-     "share": 0.8583333333333333
-    },
-    {
-     "step": "build Slaughterhouse",
-     "guideFood": 25,
-     "proFood": 26,
-     "share": 0.95
-    },
-    {
-     "step": "hero Lich",
-     "guideFood": 25,
-     "proFood": 31,
-     "share": 0.7916666666666666
-    },
-    {
-     "step": "tech Black Citadel",
-     "guideFood": 25,
-     "proFood": 26,
-     "share": 0.9083333333333333
-    },
-    {
-     "step": "train Obsidian Statue",
-     "guideFood": 30,
-     "proFood": 30,
-     "share": 0.9166666666666666
-    },
-    {
-     "step": "item Orb of Corruption",
-     "guideFood": 39,
-     "proFood": 39,
-     "share": 0.7333333333333333
-    },
-    {
-     "step": "hero Crypt Lord",
-     "guideFood": 39,
-     "proFood": 43,
-     "share": 0.175
+     "share": 0.47115384615384615
     }
    ]
   },
   {
    "id": "grubby-010-ud-lich-t1-tower-rush",
    "name": "Lich Tier 1 Tower Rush",
-   "players": 31,
-   "winRate": 0.45161290322580644,
-   "matchScore": 0.46206896551724147,
+   "players": 66,
+   "winRate": 0.5151515151515151,
+   "matchScore": 0.5522727272727272,
    "steps": [
     {
      "step": "build Crypt",
      "guideFood": 6,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
      "step": "build Graveyard",
      "guideFood": 6,
-     "proFood": 6,
-     "share": 0.4838709677419355
+     "proFood": 24,
+     "share": 0.5909090909090909
     },
     {
      "step": "build Altar of Darkness",
      "guideFood": 7,
-     "proFood": 6,
+     "proFood": 5,
      "share": 1
     },
     {
@@ -5397,38 +5397,146 @@
     {
      "step": "hero Lich",
      "guideFood": 9,
-     "proFood": 18,
-     "share": 0.16129032258064516
+     "proFood": 9,
+     "share": 0.7424242424242424
     },
     {
      "step": "train Crypt Fiend",
      "guideFood": 9,
      "proFood": 9,
-     "share": 0.16129032258064516
+     "share": 0.06060606060606061
     },
     {
      "step": "train Crypt Fiend",
      "guideFood": 17,
-     "proFood": 16,
-     "share": 0.22580645161290322
+     "proFood": 21,
+     "share": 0.22727272727272727
     },
     {
      "step": "item Rod of Necromancy",
      "guideFood": 20,
-     "proFood": 20,
+     "proFood": 19,
      "share": 1
     },
     {
      "step": "build Nerubian Tower",
      "guideFood": 24,
-     "proFood": 26,
-     "share": 0.9354838709677419
+     "proFood": 26.5,
+     "share": 0.9696969696969697
     },
     {
      "step": "build Spirit Tower",
      "guideFood": 24,
-     "proFood": 24,
-     "share": 0.25806451612903225
+     "proFood": 28,
+     "share": 0.22727272727272727
+    }
+   ]
+  },
+  {
+   "id": "gym-ud-fast-fiends-dk-vs-orc",
+   "name": "Fast Fiends and Death Knight",
+   "players": 39,
+   "winRate": 0.358974358974359,
+   "matchScore": 0.6434782608695652,
+   "steps": [
+    {
+     "step": "build Graveyard",
+     "guideFood": 6,
+     "proFood": 6,
+     "share": 1
+    },
+    {
+     "step": "build Crypt",
+     "guideFood": 6,
+     "proFood": 5,
+     "share": 1
+    },
+    {
+     "step": "build Altar of Darkness",
+     "guideFood": 7,
+     "proFood": 7,
+     "share": 1
+    },
+    {
+     "step": "train Ghoul",
+     "guideFood": 7,
+     "proFood": 7,
+     "share": 1
+    },
+    {
+     "step": "build Tomb of Relics",
+     "guideFood": 9,
+     "proFood": 9,
+     "share": 1
+    },
+    {
+     "step": "hero Death Knight",
+     "guideFood": 9,
+     "proFood": 10,
+     "share": 0.8974358974358975
+    },
+    {
+     "step": "train Crypt Fiend",
+     "guideFood": 9,
+     "proFood": 9,
+     "share": 0.6410256410256411
+    },
+    {
+     "step": "tech Halls of the Dead",
+     "guideFood": 23,
+     "proFood": 23,
+     "share": 1
+    },
+    {
+     "step": "hero Lich",
+     "guideFood": 28,
+     "proFood": 29,
+     "share": 0.6153846153846154
+    },
+    {
+     "step": "train Obsidian Statue",
+     "guideFood": 33,
+     "proFood": 33,
+     "share": 0.8974358974358975
+    }
+   ]
+  },
+  {
+   "id": "lp-ud-ghoul",
+   "name": "Undead Ghoul",
+   "players": 36,
+   "winRate": 0.3333333333333333,
+   "matchScore": 0.6142857142857142,
+   "steps": [
+    {
+     "step": "build Altar of Darkness",
+     "guideFood": 6,
+     "proFood": 5,
+     "share": 1
+    },
+    {
+     "step": "build Crypt",
+     "guideFood": 7,
+     "proFood": 5,
+     "share": 1
+    },
+    {
+     "step": "hero Death Knight",
+     "guideFood": 8,
+     "proFood": 9,
+     "share": 0.6666666666666666
+    },
+    {
+     "step": "train Ghoul",
+     "guideFood": 9,
+     "proFood": 8,
+     "share": 1
+    },
+    {
+     "step": "build Tomb of Relics",
+     "guideFood": 9,
+     "proFood": 8,
+     "share": 1
     }
    ]
   },
@@ -5437,76 +5545,76 @@
    "name": "DK Two Crypt Ghoul Rush",
    "players": 28,
    "winRate": 0.2857142857142857,
-   "matchScore": 0.4784615384615385,
+   "matchScore": 0.6285714285714286,
    "steps": [
     {
      "step": "build Crypt",
      "guideFood": 6,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
      "step": "build Altar of Darkness",
      "guideFood": 7,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
      "step": "train Ghoul",
      "guideFood": 7,
-     "proFood": 7,
+     "proFood": 7.5,
      "share": 1
     },
     {
      "step": "build Tomb of Relics",
      "guideFood": 9,
-     "proFood": 7,
+     "proFood": 7.5,
      "share": 1
     },
     {
      "step": "hero Death Knight",
      "guideFood": 11,
-     "proFood": 18,
-     "share": 0.42857142857142855
+     "proFood": 9.5,
+     "share": 0.35714285714285715
     },
     {
      "step": "build Crypt",
      "guideFood": 20,
-     "proFood": 20.5,
-     "share": 0.7857142857142857
+     "proFood": 21,
+     "share": 0.9642857142857143
     }
    ]
   },
   {
    "id": "gym-ud-ghoul-pull-vs-ne",
    "name": "Ghoul Pull Build vs Night Elf",
-   "players": 20,
-   "winRate": 0.5,
-   "matchScore": 0.4608695652173913,
+   "players": 23,
+   "winRate": 0.4782608695652174,
+   "matchScore": 0.6090909090909091,
    "steps": [
     {
      "step": "build Crypt",
      "guideFood": 6,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
      "step": "build Altar of Darkness",
      "guideFood": 6,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
      "step": "expand Necropolis",
      "guideFood": 7,
      "proFood": 7,
-     "share": 0.85
+     "share": 0.8695652173913043
     },
     {
      "step": "hero Death Knight",
      "guideFood": 7,
-     "proFood": 19.5,
-     "share": 0.8
+     "proFood": 7,
+     "share": 0.8260869565217391
     },
     {
      "step": "train Ghoul",
@@ -5517,8 +5625,8 @@
     {
      "step": "build Nerubian Tower",
      "guideFood": 14,
-     "proFood": 21,
-     "share": 0.7
+     "proFood": 22,
+     "share": 0.6956521739130435
     },
     {
      "step": "tech Halls of the Dead",
@@ -5529,115 +5637,46 @@
     {
      "step": "build Tomb of Relics",
      "guideFood": 24,
-     "proFood": 22.5,
+     "proFood": 22,
      "share": 1
     },
     {
      "step": "build Graveyard",
      "guideFood": 24,
      "proFood": 26,
-     "share": 1
+     "share": 0.9565217391304348
     },
     {
      "step": "build Crypt",
      "guideFood": 24,
-     "proFood": 25,
-     "share": 0.55
+     "proFood": 25.5,
+     "share": 0.5217391304347826
     },
     {
      "step": "train Gargoyle",
      "guideFood": 28,
      "proFood": 28,
-     "share": 0.55
-    }
-   ]
-  },
-  {
-   "id": "gym-ud-fast-fiends-dk-vs-orc",
-   "name": "Fast Fiends and Death Knight",
-   "players": 19,
-   "winRate": 0.2631578947368421,
-   "matchScore": 0.5565217391304347,
-   "steps": [
-    {
-     "step": "build Graveyard",
-     "guideFood": 6,
-     "proFood": 0,
-     "share": 1
-    },
-    {
-     "step": "build Crypt",
-     "guideFood": 6,
-     "proFood": 0,
-     "share": 1
-    },
-    {
-     "step": "build Altar of Darkness",
-     "guideFood": 7,
-     "proFood": 7,
-     "share": 1
-    },
-    {
-     "step": "train Ghoul",
-     "guideFood": 7,
-     "proFood": 7,
-     "share": 1
-    },
-    {
-     "step": "build Tomb of Relics",
-     "guideFood": 9,
-     "proFood": 9,
-     "share": 1
-    },
-    {
-     "step": "hero Death Knight",
-     "guideFood": 9,
-     "proFood": 21.5,
-     "share": 0.7368421052631579
-    },
-    {
-     "step": "train Crypt Fiend",
-     "guideFood": 9,
-     "proFood": 9,
-     "share": 0.9473684210526315
-    },
-    {
-     "step": "tech Halls of the Dead",
-     "guideFood": 23,
-     "proFood": 22,
-     "share": 1
-    },
-    {
-     "step": "hero Lich",
-     "guideFood": 28,
-     "proFood": 34,
-     "share": 0.15789473684210525
-    },
-    {
-     "step": "train Obsidian Statue",
-     "guideFood": 33,
-     "proFood": 34.5,
-     "share": 0.8421052631578947
+     "share": 0.5217391304347826
     }
    ]
   },
   {
    "id": "gym-ud-quick-1-zig-tech-gargoyles-vs-ne",
    "name": "Quick 1 Ziggurat Tech into Gargoyles",
-   "players": 17,
-   "winRate": 0.5294117647058824,
-   "matchScore": 0.5,
+   "players": 20,
+   "winRate": 0.5,
+   "matchScore": 0.61625,
    "steps": [
     {
      "step": "build Altar of Darkness",
      "guideFood": 6,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
      "step": "build Crypt",
      "guideFood": 7,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
@@ -5649,8 +5688,8 @@
     {
      "step": "hero Death Knight",
      "guideFood": 8,
-     "proFood": 18,
-     "share": 0.5882352941176471
+     "proFood": 9,
+     "share": 0.6
     },
     {
      "step": "train Ghoul",
@@ -5674,163 +5713,13 @@
      "step": "build Crypt",
      "guideFood": 19,
      "proFood": 20,
-     "share": 0.9411764705882353
+     "share": 0.7
     },
     {
      "step": "train Gargoyle",
      "guideFood": 23,
      "proFood": 21,
-     "share": 0.8235294117647058
-    }
-   ]
-  },
-  {
-   "id": "grubby-035-ud-bloody-beginner-dk-fiends",
-   "name": "Bloody Beginner – Death Knight Fiends",
-   "players": 15,
-   "winRate": 0.5333333333333333,
-   "matchScore": 0.48235294117647065,
-   "steps": [
-    {
-     "step": "build Crypt",
-     "guideFood": 6,
-     "proFood": 0,
-     "share": 1
-    },
-    {
-     "step": "build Graveyard",
-     "guideFood": 6,
-     "proFood": 24,
-     "share": 1
-    },
-    {
-     "step": "build Altar of Darkness",
-     "guideFood": 7,
-     "proFood": 0,
-     "share": 1
-    },
-    {
-     "step": "train Ghoul",
-     "guideFood": 7,
-     "proFood": 7,
-     "share": 1
-    },
-    {
-     "step": "build Tomb of Relics",
-     "guideFood": 9,
-     "proFood": 8,
-     "share": 1
-    },
-    {
-     "step": "hero Death Knight",
-     "guideFood": 9,
-     "proFood": 19,
-     "share": 0.9333333333333333
-    },
-    {
-     "step": "train Crypt Fiend",
-     "guideFood": 9,
-     "proFood": 31,
-     "share": 0.7333333333333333
-    },
-    {
-     "step": "tech Halls of the Dead",
-     "guideFood": 20,
-     "proFood": 20,
-     "share": 1
-    },
-    {
-     "step": "build Nerubian Tower",
-     "guideFood": 23,
-     "proFood": 22,
-     "share": 0.9333333333333333
-    },
-    {
-     "step": "hero Lich",
-     "guideFood": 30,
-     "proFood": 33,
-     "share": 0.9333333333333333
-    },
-    {
-     "step": "build Slaughterhouse",
-     "guideFood": 30,
-     "proFood": 32,
-     "share": 1
-    },
-    {
-     "step": "build Temple of the Damned",
-     "guideFood": 30,
-     "proFood": 34,
-     "share": 0.4666666666666667
-    },
-    {
-     "step": "tech Black Citadel",
-     "guideFood": 35,
-     "proFood": 32.5,
-     "share": 0.9333333333333333
-    },
-    {
-     "step": "train Obsidian Statue",
-     "guideFood": 35,
-     "proFood": 34,
-     "share": 1
-    },
-    {
-     "step": "train Banshee",
-     "guideFood": 35,
-     "proFood": 39.5,
-     "share": 0.26666666666666666
-    },
-    {
-     "step": "item Orb of Corruption",
-     "guideFood": 45,
-     "proFood": 40,
-     "share": 0.8666666666666667
-    },
-    {
-     "step": "hero tavern",
-     "guideFood": 45,
-     "proFood": 36,
-     "share": 0.4
-    }
-   ]
-  },
-  {
-   "id": "lp-ud-ghoul",
-   "name": "Undead Ghoul",
-   "players": 11,
-   "winRate": 0.18181818181818182,
-   "matchScore": 0.4769230769230769,
-   "steps": [
-    {
-     "step": "build Altar of Darkness",
-     "guideFood": 6,
-     "proFood": 0,
-     "share": 1
-    },
-    {
-     "step": "build Crypt",
-     "guideFood": 7,
-     "proFood": 0,
-     "share": 1
-    },
-    {
-     "step": "hero Death Knight",
-     "guideFood": 8,
-     "proFood": 19,
-     "share": 0.18181818181818182
-    },
-    {
-     "step": "train Ghoul",
-     "guideFood": 9,
-     "proFood": 8,
-     "share": 1
-    },
-    {
-     "step": "build Tomb of Relics",
-     "guideFood": 9,
-     "proFood": 8,
-     "share": 1
+     "share": 0.65
     }
    ]
   },
@@ -5839,12 +5728,12 @@
    "name": "DK Pit Lord Unholy Frenzy",
    "players": 8,
    "winRate": 0.75,
-   "matchScore": 0.5138528138528139,
+   "matchScore": 0.6348484848484849,
    "steps": [
     {
      "step": "build Altar of Darkness",
      "guideFood": 6,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
@@ -5862,13 +5751,13 @@
     {
      "step": "hero Death Knight",
      "guideFood": 8,
-     "proFood": 17,
-     "share": 1
+     "proFood": 8,
+     "share": 0.875
     },
     {
      "step": "build Graveyard",
      "guideFood": 13,
-     "proFood": 10.5,
+     "proFood": 10,
      "share": 1
     },
     {
@@ -5880,25 +5769,25 @@
     {
      "step": "tech Halls of the Dead",
      "guideFood": 17,
-     "proFood": 17,
+     "proFood": 16.5,
      "share": 1
     },
     {
      "step": "build Nerubian Tower",
      "guideFood": 17,
-     "proFood": 17,
-     "share": 0.625
+     "proFood": 18,
+     "share": 0.5
     },
     {
      "step": "train Crypt Fiend",
      "guideFood": 17,
      "proFood": 17,
-     "share": 0.875
+     "share": 1
     },
     {
      "step": "hero Pit Lord",
      "guideFood": 28,
-     "proFood": 24,
+     "proFood": 25,
      "share": 0.625
     },
     {
@@ -5916,7 +5805,7 @@
     {
      "step": "train Obsidian Statue",
      "guideFood": 33,
-     "proFood": 32,
+     "proFood": 31,
      "share": 0.875
     },
     {
@@ -5928,123 +5817,63 @@
     {
      "step": "tech Black Citadel",
      "guideFood": 40,
-     "proFood": 35,
-     "share": 1
+     "proFood": 37,
+     "share": 0.875
     }
    ]
   },
   {
-   "id": "grubby-024-ud-necromancer-shade-vs-orc",
-   "name": "Necromancer Shade",
+   "id": "lp-ud-lich-tower-rush",
+   "name": "Lich Tower Rush",
    "players": 3,
-   "winRate": 0,
-   "matchScore": 0.4424242424242425,
+   "winRate": 0.6666666666666666,
+   "matchScore": 0.5399999999999999,
    "steps": [
     {
-     "step": "build Altar of Darkness",
-     "guideFood": 5,
-     "proFood": 0,
+     "step": "build Crypt",
+     "guideFood": 6,
+     "proFood": 5,
      "share": 1
     },
     {
-     "step": "build Crypt",
+     "step": "build Graveyard",
+     "guideFood": 6,
+     "proFood": 6,
+     "share": 0.3333333333333333
+    },
+    {
+     "step": "build Altar of Darkness",
      "guideFood": 7,
-     "proFood": 0,
+     "proFood": 6,
      "share": 1
     },
     {
      "step": "build Tomb of Relics",
-     "guideFood": 8,
+     "guideFood": 9,
      "proFood": 8,
-     "share": 1
-    },
-    {
-     "step": "hero Death Knight",
-     "guideFood": 8,
-     "proFood": 12,
-     "share": 0.3333333333333333
-    },
-    {
-     "step": "build Graveyard",
-     "guideFood": 8,
-     "proFood": 12,
-     "share": 1
-    },
-    {
-     "step": "train Ghoul",
-     "guideFood": 8,
-     "proFood": 8,
-     "share": 1
-    },
-    {
-     "step": "tech Halls of the Dead",
-     "guideFood": 17,
-     "proFood": 14,
-     "share": 1
-    },
-    {
-     "step": "build Nerubian Tower",
-     "guideFood": 17,
-     "proFood": 19,
-     "share": 1
-    },
-    {
-     "step": "train Crypt Fiend",
-     "guideFood": 17,
-     "proFood": 12,
-     "share": 0.3333333333333333
-    },
-    {
-     "step": "build Slaughterhouse",
-     "guideFood": 26,
-     "proFood": 21,
-     "share": 1
-    },
-    {
-     "step": "build Temple of the Damned",
-     "guideFood": 26,
-     "proFood": 24,
-     "share": 0.6666666666666666
-    },
-    {
-     "step": "build Sacrificial Pit",
-     "guideFood": 26,
-     "proFood": null,
-     "share": 0
-    },
-    {
-     "step": "train Necromancer",
-     "guideFood": 26,
-     "proFood": 25.5,
-     "share": 0.6666666666666666
-    },
-    {
-     "step": "train Obsidian Statue",
-     "guideFood": 26,
-     "proFood": 25,
      "share": 1
     },
     {
      "step": "hero Lich",
-     "guideFood": 31,
-     "proFood": 41,
-     "share": 0.3333333333333333
-    },
-    {
-     "step": "research Creature Attack",
-     "guideFood": 38,
-     "proFood": 35,
-     "share": 0.3333333333333333
-    },
-    {
-     "step": "tech Black Citadel",
-     "guideFood": 46,
-     "proFood": 30.5,
+     "guideFood": 9,
+     "proFood": 9.5,
      "share": 0.6666666666666666
     },
     {
-     "step": "expand Haunted Gold Mine",
-     "guideFood": 50,
+     "step": "train Crypt Fiend",
+     "guideFood": 9,
+     "proFood": 12,
+     "share": 0.3333333333333333
+    },
+    {
+     "step": "build Nerubian Tower",
+     "guideFood": 20,
+     "proFood": 20,
+     "share": 1
+    },
+    {
+     "step": "build Spirit Tower",
+     "guideFood": 20,
      "proFood": null,
      "share": 0
     }
@@ -6053,27 +5882,27 @@
  ],
  "plans": [
   {
-   "plan": "Death Knight > Halls of the Dead > Black Citadel > Lich > tavern hero",
-   "players": 204,
-   "winRate": 0.5294117647058824,
+   "plan": "Death Knight > Halls of the Dead > Lich > Black Citadel > tavern hero",
+   "players": 123,
+   "winRate": 0.5121951219512195,
    "food": [
-    19,
-    23,
-    28,
-    32,
-    40
+    9,
+    22,
+    26,
+    31,
+    41
    ]
   },
   {
-   "plan": "Lich > Halls of the Dead > Black Citadel > Death Knight > tavern hero",
-   "players": 94,
-   "winRate": 0.6170212765957447,
+   "plan": "Death Knight > Halls of the Dead > Black Citadel > Lich > tavern hero",
+   "players": 104,
+   "winRate": 0.5192307692307693,
    "food": [
-    19,
-    25,
-    29,
-    33,
-    40
+    10,
+    23,
+    27,
+    27,
+    39
    ]
   },
   {
@@ -6081,112 +5910,160 @@
    "players": 59,
    "winRate": 0.5084745762711864,
    "food": [
-    17,
+    8,
     17,
     25,
     31,
-    45
+    37
    ]
   },
   {
-   "plan": "Death Knight > Halls of the Dead > Black Citadel > Lich > tavern hero > expand",
-   "players": 47,
-   "winRate": 0.574468085106383,
+   "plan": "Lich > Halls of the Dead > Death Knight > Black Citadel > tavern hero",
+   "players": 52,
+   "winRate": 0.5384615384615384,
    "food": [
-    19,
-    22,
+    10,
+    24.5,
+    27,
+    30.5,
+    40
+   ]
+  },
+  {
+   "plan": "Lich > Halls of the Dead > Black Citadel > Death Knight > tavern hero",
+   "players": 50,
+   "winRate": 0.68,
+   "food": [
+    10,
+    24,
     29,
-    33,
-    40,
-    49
+    28.5,
+    40
    ]
   },
   {
-   "plan": "Death Knight > Halls of the Dead > Black Citadel > Lich",
-   "players": 43,
-   "winRate": 0.37209302325581395,
+   "plan": "Death Knight > Halls of the Dead > Lich > Black Citadel",
+   "players": 33,
+   "winRate": 0.3939393939393939,
    "food": [
-    19,
+    10,
+    21,
+    25,
+    30
+   ]
+  },
+  {
+   "plan": "Death Knight > expand > Halls of the Dead > expand > Lich > Black Citadel",
+   "players": 29,
+   "winRate": 0.4827586206896552,
+   "food": [
+    10,
+    27,
+    34,
+    35,
+    34,
+    40
+   ]
+  },
+  {
+   "plan": "Death Knight > Halls of the Dead > Lich > Black Citadel > tavern hero > expand",
+   "players": 27,
+   "winRate": 0.48148148148148145,
+   "food": [
+    9,
     22,
-    28,
-    33
+    27,
+    31,
+    42,
+    52
    ]
   },
   {
-   "plan": "Death Knight > expand > Halls of the Dead > expand > Black Citadel > Lich",
-   "players": 43,
-   "winRate": 0.4883720930232558,
+   "plan": "Lich > expand > expand > Halls of the Dead > Death Knight > Black Citadel",
+   "players": 25,
+   "winRate": 0.48,
    "food": [
-    19,
-    28,
-    34,
-    34,
-    36,
+    9,
+    27,
+    32,
+    33,
+    42,
     45
    ]
   },
   {
    "plan": "Crypt Lord > Halls of the Dead > Black Citadel > Death Knight > Lich",
-   "players": 41,
-   "winRate": 0.3902439024390244,
+   "players": 25,
+   "winRate": 0.4,
    "food": [
-    19,
+    9,
     23,
+    26,
     27,
-    33,
-    44
+    38
    ]
   },
   {
-   "plan": "Lich > expand > Halls of the Dead > expand > Black Citadel > Death Knight",
-   "players": 41,
-   "winRate": 0.5365853658536586,
+   "plan": "Death Knight > Halls of the Dead > Black Citadel > Lich",
+   "players": 24,
+   "winRate": 0.375,
    "food": [
-    19,
+    9,
+    21,
     27,
-    34,
-    34,
-    38,
+    27
+   ]
+  },
+  {
+   "plan": "Death Knight > Halls of the Dead > Black Citadel > Lich > tavern hero > expand",
+   "players": 24,
+   "winRate": 0.5833333333333334,
+   "food": [
+    10,
+    21,
+    26.5,
+    26,
+    39,
     47
    ]
   },
   {
-   "plan": "Crypt Lord > expand > Halls of the Dead > expand > Black Citadel > Death Knight",
-   "players": 30,
-   "winRate": 0.6,
+   "plan": "Lich > expand > Halls of the Dead > expand > Death Knight > Black Citadel",
+   "players": 22,
+   "winRate": 0.5909090909090909,
    "food": [
-    19,
+    10,
+    26.5,
+    35,
+    37,
+    39,
+    41.5
+   ]
+  },
+  {
+   "plan": "Lich > expand > Halls of the Dead > expand > Black Citadel > Death Knight",
+   "players": 22,
+   "winRate": 0.5454545454545454,
+   "food": [
+    10,
     27,
-    34,
-    34.5,
-    38,
-    46
+    33.5,
+    33,
+    37,
+    37
    ]
   },
   {
-   "plan": "Lich > expand > expand > Halls of the Dead > Black Citadel > Death Knight",
-   "players": 29,
-   "winRate": 0.5172413793103449,
+   "plan": "Death Knight > Halls of the Dead > tavern hero > Black Citadel > Lich > expand",
+   "players": 22,
+   "winRate": 0.5909090909090909,
    "food": [
-    19,
-    26,
-    31,
-    33,
-    39,
-    45
-   ]
-  },
-  {
-   "plan": "Lich > Halls of the Dead > Black Citadel > Death Knight > tavern hero > expand",
-   "players": 25,
-   "winRate": 0.56,
-   "food": [
-    19,
-    24,
-    29,
-    33,
-    39,
-    50
+    8,
+    21,
+    26.5,
+    31.5,
+    40,
+    49
    ]
   },
   {
@@ -6194,7 +6071,7 @@
    "players": 22,
    "winRate": 0.5,
    "food": [
-    19,
+    10,
     25
    ]
   },
@@ -6203,73 +6080,75 @@
    "players": 22,
    "winRate": 0.5909090909090909,
    "food": [
-    19,
+    9,
     23,
     28,
     28.5,
-    46
+    38
    ]
   },
   {
-   "plan": "Lich > Halls of the Dead > Black Citadel > Death Knight",
+   "plan": "Crypt Lord > expand > Halls of the Dead > expand > Death Knight > Black Citadel",
    "players": 21,
-   "winRate": 0.47619047619047616,
+   "winRate": 0.5714285714285714,
    "food": [
-    19,
+    9,
+    26,
+    34,
+    33,
+    36,
+    41
+   ]
+  },
+  {
+   "plan": "Death Knight > expand > Halls of the Dead > expand > Black Citadel > Lich",
+   "players": 20,
+   "winRate": 0.5,
+   "food": [
+    10,
+    28,
+    33.5,
+    33.5,
+    35.5,
+    38.5
+   ]
+  },
+  {
+   "plan": "Crypt Lord > expand > Halls of the Dead > expand > Black Citadel > Death Knight",
+   "players": 20,
+   "winRate": 0.65,
+   "food": [
+    9.5,
+    27.5,
+    35,
+    34.5,
+    35.5,
+    37.5
+   ]
+  },
+  {
+   "plan": "Crypt Lord > expand > expand > Halls of the Dead > Death Knight > Black Citadel",
+   "players": 18,
+   "winRate": 0.5555555555555556,
+   "food": [
+    9,
+    25.5,
+    30,
+    30.5,
+    39,
+    45.5
+   ]
+  },
+  {
+   "plan": "Crypt Lord > Halls of the Dead > Death Knight > Black Citadel > Lich",
+   "players": 17,
+   "winRate": 0.35294117647058826,
+   "food": [
+    9,
     23,
     28,
-    32
-   ]
-  },
-  {
-   "plan": "Crypt Lord > expand > expand > Halls of the Dead > Black Citadel > Death Knight",
-   "players": 20,
-   "winRate": 0.45,
-   "food": [
-    19,
-    25,
     29,
-    30,
-    36.5,
-    44
-   ]
-  },
-  {
-   "plan": "Death Knight > Halls of the Dead > Lich > Black Citadel > tavern hero",
-   "players": 20,
-   "winRate": 0.4,
-   "food": [
-    17,
-    19,
-    31,
-    33,
-    42
-   ]
-  },
-  {
-   "plan": "Death Knight > Halls of the Dead > tavern hero > Black Citadel > Lich > expand",
-   "players": 20,
-   "winRate": 0.6,
-   "food": [
-    18.5,
-    21,
-    26.5,
-    31.5,
-    45,
-    49.5
-   ]
-  },
-  {
-   "plan": "Lich > expand > expand > Halls of the Dead > expand > Black Citadel",
-   "players": 18,
-   "winRate": 0.6111111111111112,
-   "food": [
-    19,
-    26.5,
-    32,
-    36,
-    36,
-    38.5
+    36
    ]
   },
   {
@@ -6277,57 +6156,68 @@
    "players": 16,
    "winRate": 0.4375,
    "food": [
-    20
+    9
    ]
   },
   {
-   "plan": "Death Knight > expand > expand > Halls of the Dead > expand > Black Citadel",
+   "plan": "Death Knight > expand > expand > Halls of the Dead > Lich > Black Citadel",
    "players": 16,
-   "winRate": 0.5,
+   "winRate": 0.3125,
    "food": [
-    19,
-    27,
-    32,
-    34,
+    9.5,
+    26.5,
+    30.5,
     34.5,
-    38.5
+    37.5,
+    45
    ]
   },
   {
-   "plan": "Death Knight > expand > expand > Halls of the Dead > Black Citadel > Lich",
+   "plan": "Lich > Halls of the Dead > Death Knight > Black Citadel",
+   "players": 15,
+   "winRate": 0.4,
+   "food": [
+    9,
+    24,
+    25,
+    29
+   ]
+  },
+  {
+   "plan": "Lich > Halls of the Dead > Death Knight > Black Citadel > tavern hero > expand",
    "players": 13,
-   "winRate": 0.38461538461538464,
+   "winRate": 0.5384615384615384,
    "food": [
-    19,
-    26,
-    31,
-    35,
-    41,
-    46
+    10,
+    24,
+    28,
+    29,
+    42,
+    50
    ]
   },
   {
-   "plan": "Death Knight > expand > expand > expand > Halls of the Dead > Black Citadel",
+   "plan": "Lich > Halls of the Dead > Black Citadel > Death Knight > tavern hero > expand",
    "players": 12,
-   "winRate": 0.16666666666666666,
+   "winRate": 0.5833333333333334,
    "food": [
-    19,
+    9.5,
+    23,
     27,
-    29.5,
-    31,
-    31,
-    35.5
+    28,
+    38.5,
+    50.5
    ]
   },
   {
-   "plan": "Death Knight > Halls of the Dead > Lich > Black Citadel",
+   "plan": "Lich > Halls of the Dead > Black Citadel > Death Knight",
    "players": 12,
-   "winRate": 0.3333333333333333,
+   "winRate": 0.6666666666666666,
    "food": [
-    17.5,
-    18,
-    30,
-    33.5
+    10,
+    23,
+    28,
+    28
    ]
   },
   {
@@ -6335,7 +6225,7 @@
    "players": 11,
    "winRate": 0.36363636363636365,
    "food": [
-    19,
+    9,
     26,
     31,
     33,
@@ -6344,12 +6234,25 @@
    ]
   },
   {
-   "plan": "Lich > expand > expand > Halls of the Dead > expand > expand",
+   "plan": "Crypt Lord > expand > expand > expand > Halls of the Dead > Death Knight",
    "players": 11,
-   "winRate": 0.2727272727272727,
+   "winRate": 0.5454545454545454,
    "food": [
-    19,
-    28,
+    10,
+    27,
+    29,
+    31,
+    31,
+    35
+   ]
+  },
+  {
+   "plan": "Lich > expand > expand > Halls of the Dead > expand > Death Knight",
+   "players": 11,
+   "winRate": 0.36363636363636365,
+   "food": [
+    9,
+    26,
     32,
     33,
     32,
@@ -6357,25 +6260,61 @@
    ]
   },
   {
+   "plan": "Death Knight > Halls of the Dead > Lich",
+   "players": 11,
+   "winRate": 0.6363636363636364,
+   "food": [
+    9,
+    22,
+    24
+   ]
+  },
+  {
    "plan": "Death Knight > Halls of the Dead",
    "players": 11,
    "winRate": 0.2727272727272727,
    "food": [
-    18,
+    9,
     23
    ]
   },
   {
-   "plan": "Crypt Lord > expand > expand > expand > Halls of the Dead > Black Citadel",
+   "plan": "Lich > expand > expand > Halls of the Dead > Black Citadel > Death Knight",
    "players": 10,
-   "winRate": 0.4,
+   "winRate": 0.7,
    "food": [
-    19,
-    26.5,
-    31,
-    33,
-    34,
-    39
+    9,
+    25.5,
+    30.5,
+    32,
+    33.5,
+    35
+   ]
+  },
+  {
+   "plan": "Lich > expand > expand > Halls of the Dead > expand > Black Citadel",
+   "players": 10,
+   "winRate": 0.7,
+   "food": [
+    9.5,
+    27,
+    31.5,
+    35.5,
+    35,
+    38.5
+   ]
+  },
+  {
+   "plan": "Lich > expand > expand > Halls of the Dead > expand > expand",
+   "players": 10,
+   "winRate": 0.3,
+   "food": [
+    9.5,
+    27,
+    30.5,
+    33.5,
+    33.5,
+    33.5
    ]
   },
   {
@@ -6383,47 +6322,25 @@
    "players": 9,
    "winRate": 0.6666666666666666,
    "food": [
-    18,
+    9,
     22,
     25,
     24,
-    40,
+    36,
     47
    ]
   },
   {
-   "plan": "Lich > Halls of the Dead > Black Citadel > Death Knight > Crypt Lord",
+   "plan": "Crypt Lord > expand > expand > Halls of the Dead > Black Citadel > Death Knight",
    "players": 9,
-   "winRate": 0.5555555555555556,
+   "winRate": 0.4444444444444444,
    "food": [
-    19,
-    23,
-    32,
-    32,
-    44
-   ]
-  },
-  {
-   "plan": "Dreadlord > expand > Halls of the Dead > expand > Black Citadel > Death Knight",
-   "players": 9,
-   "winRate": 0.5555555555555556,
-   "food": [
-    20,
-    27,
+    10,
+    25,
+    29,
+    30,
     34,
-    38,
-    36,
-    44
-   ]
-  },
-  {
-   "plan": "Death Knight > Halls of the Dead > Lich",
-   "players": 9,
-   "winRate": 0.5555555555555556,
-   "food": [
-    19,
-    23,
-    33
+    35
    ]
   },
   {
@@ -6431,35 +6348,23 @@
    "players": 9,
    "winRate": 0.7777777777777778,
    "food": [
-    17,
+    9,
     20,
     24,
     32
    ]
   },
   {
-   "plan": "Death Knight > Halls of the Dead > Black Citadel > Lich > Crypt Lord",
+   "plan": "Death Knight > expand > expand > Halls of the Dead > expand > Black Citadel",
    "players": 9,
-   "winRate": 0.3333333333333333,
+   "winRate": 0.4444444444444444,
    "food": [
-    17,
-    17,
-    26,
+    10,
+    27,
     31,
-    44
-   ]
-  },
-  {
-   "plan": "Death Knight > Halls of the Dead > expand > Black Citadel > Lich > tavern hero",
-   "players": 9,
-   "winRate": 0.6666666666666666,
-   "food": [
-    18,
-    24,
-    25,
-    29,
-    33,
-    42
+    35,
+    36,
+    37
    ]
   },
   {
@@ -6467,34 +6372,9 @@
    "players": 8,
    "winRate": 0.25,
    "food": [
-    19,
+    8.5,
     21.5,
     27
-   ]
-  },
-  {
-   "plan": "Lich > Halls of the Dead > Death Knight > Black Citadel > tavern hero",
-   "players": 8,
-   "winRate": 0.5,
-   "food": [
-    19,
-    23,
-    33.5,
-    33.5,
-    41.5
-   ]
-  },
-  {
-   "plan": "Crypt Lord > expand > Halls of the Dead > expand > Death Knight > Black Citadel",
-   "players": 8,
-   "winRate": 0.625,
-   "food": [
-    19,
-    26.5,
-    31.5,
-    31.5,
-    40,
-    40.5
    ]
   },
   {
@@ -6502,7 +6382,7 @@
    "players": 8,
    "winRate": 0.625,
    "food": [
-    19.5,
+    10,
     25.5,
     30.5,
     34.5,
@@ -6515,46 +6395,46 @@
    "players": 8,
    "winRate": 1,
    "food": [
-    19,
+    9,
     25.5
    ]
   },
   {
-   "plan": "Crypt Lord > Halls of the Dead > Black Citadel > Death Knight > Lich > expand",
+   "plan": "Death Knight > Halls of the Dead > expand > Lich > Black Citadel > tavern hero",
    "players": 8,
-   "winRate": 0.625,
+   "winRate": 0.5,
    "food": [
-    19,
-    24,
-    31.5,
-    35,
-    45,
-    49
-   ]
-  },
-  {
-   "plan": "Crypt Lord > expand > expand > Halls of the Dead > expand > Black Citadel",
-   "players": 8,
-   "winRate": 0.75,
-   "food": [
-    19,
+    8,
+    24.5,
     25,
-    31.5,
-    33,
-    35,
-    36
+    25,
+    30,
+    39
    ]
   },
   {
-   "plan": "Death Knight > Halls of the Dead > Black Citadel > Lich > expand > expand",
+   "plan": "Dreadlord > expand > Halls of the Dead > expand > Death Knight > Black Citadel",
    "players": 8,
-   "winRate": 0.625,
+   "winRate": 0.5,
    "food": [
-    19,
-    22,
-    27.5,
-    33,
-    40.5,
+    10,
+    27,
+    35,
+    37.5,
+    35,
+    39.5
+   ]
+  },
+  {
+   "plan": "Death Knight > Halls of the Dead > Lich > Black Citadel > expand > expand",
+   "players": 7,
+   "winRate": 0.5714285714285714,
+   "food": [
+    8,
+    24,
+    26,
+    30,
+    41,
     47
    ]
   },
@@ -6563,7 +6443,7 @@
    "players": 7,
    "winRate": 0.42857142857142855,
    "food": [
-    19,
+    10,
     27,
     31,
     34,
@@ -6576,46 +6456,20 @@
    "players": 7,
    "winRate": 0.14285714285714285,
    "food": [
-    19
+    10
    ]
   },
   {
-   "plan": "Death Knight > expand > expand > Halls of the Dead > Lich > Black Citadel",
-   "players": 7,
-   "winRate": 0.14285714285714285,
-   "food": [
-    18,
-    29,
-    30,
-    35,
-    42,
-    52
-   ]
-  },
-  {
-   "plan": "Crypt Lord > expand > expand > Halls of the Dead > Death Knight > Black Citadel",
-   "players": 7,
-   "winRate": 0.7142857142857143,
-   "food": [
-    19,
-    25,
-    31,
-    31,
-    48,
-    49
-   ]
-  },
-  {
-   "plan": "Death Knight > Halls of the Dead > Black Citadel > Lich > expand > tavern hero",
+   "plan": "Lich > expand > expand > expand > Halls of the Dead > Death Knight",
    "players": 7,
    "winRate": 0.42857142857142855,
    "food": [
-    19,
-    23,
-    27,
+    9,
+    26,
+    29,
     33,
-    44,
-    45
+    35,
+    30
    ]
   },
   {
@@ -6623,22 +6477,61 @@
    "players": 7,
    "winRate": 0,
    "food": [
-    19,
+    10,
     28,
     32
    ]
   },
   {
-   "plan": "Death Knight > Halls of the Dead > expand > expand > Black Citadel > Lich",
+   "plan": "Crypt Lord > expand > expand > Halls of the Dead > expand > Death Knight",
    "players": 7,
-   "winRate": 0.42857142857142855,
+   "winRate": 0.2857142857142857,
    "food": [
-    19,
+    9,
+    25,
+    30,
+    33,
+    35,
+    40
+   ]
+  },
+  {
+   "plan": "Death Knight > expand > expand > expand > Halls of the Dead > Lich",
+   "players": 7,
+   "winRate": 0.14285714285714285,
+   "food": [
+    10,
     27,
     29,
     29,
-    32,
+    31,
     34
+   ]
+  },
+  {
+   "plan": "Death Knight > expand > expand > Halls of the Dead > expand > Lich",
+   "players": 7,
+   "winRate": 0.5714285714285714,
+   "food": [
+    9,
+    28,
+    32,
+    32,
+    33,
+    41
+   ]
+  },
+  {
+   "plan": "Crypt Lord > expand > Halls of the Dead > Death Knight > Black Citadel > Lich",
+   "players": 7,
+   "winRate": 0.7142857142857143,
+   "food": [
+    9,
+    25,
+    27,
+    31,
+    46,
+    49
    ]
   },
   {
@@ -6646,7 +6539,7 @@
    "players": 7,
    "winRate": 0.2857142857142857,
    "food": [
-    19,
+    8,
     25,
     29,
     30,
@@ -6655,11 +6548,23 @@
    ]
   },
   {
+   "plan": "Death Knight > Halls of the Dead > Lich > Black Citadel > Crypt Lord",
+   "players": 7,
+   "winRate": 0.14285714285714285,
+   "food": [
+    8,
+    16,
+    22,
+    29,
+    36
+   ]
+  },
+  {
    "plan": "Crypt Lord > expand > expand > Halls of the Dead",
    "players": 7,
    "winRate": 0.5714285714285714,
    "food": [
-    19,
+    9,
     25,
     29,
     34
@@ -6670,8 +6575,20 @@
    "players": 7,
    "winRate": 0.42857142857142855,
    "food": [
-    19,
+    9,
     28
+   ]
+  },
+  {
+   "plan": "Lich > Halls of the Dead > Death Knight > Black Citadel > Crypt Lord",
+   "players": 7,
+   "winRate": 0.42857142857142855,
+   "food": [
+    9,
+    24,
+    27,
+    32,
+    39
    ]
   },
   {
@@ -6679,21 +6596,21 @@
    "players": 6,
    "winRate": 0.5,
    "food": [
-    19,
+    9.5,
     24.5
    ]
   },
   {
-   "plan": "Death Knight > expand > Halls of the Dead > expand > expand > Black Citadel",
+   "plan": "Crypt Lord > expand > expand > Halls of the Dead > expand > Black Citadel",
    "players": 6,
-   "winRate": 0.6666666666666666,
+   "winRate": 0.8333333333333334,
    "food": [
-    19,
-    26,
-    34.5,
-    34,
-    33.5,
-    39.5
+    9.5,
+    25.5,
+    32,
+    33,
+    35,
+    35
    ]
   },
   {
@@ -6701,35 +6618,9 @@
    "players": 6,
    "winRate": 0.16666666666666666,
    "food": [
-    19,
+    9.5,
     24.5,
     25
-   ]
-  },
-  {
-   "plan": "expand > Death Knight > Halls of the Dead > Black Citadel > Lich > tavern hero",
-   "players": 6,
-   "winRate": 0.5,
-   "food": [
-    7.5,
-    18,
-    22,
-    28.5,
-    33.5,
-    43
-   ]
-  },
-  {
-   "plan": "Dreadlord > expand > expand > Halls of the Dead > expand > expand",
-   "players": 6,
-   "winRate": 0.5,
-   "food": [
-    19,
-    21.5,
-    23,
-    30,
-    37.5,
-    37.5
    ]
   },
   {
@@ -6737,30 +6628,32 @@
    "players": 6,
    "winRate": 0.6666666666666666,
    "food": [
-    19,
+    9.5,
     21,
     32.5
    ]
   },
   {
-   "plan": "Lich > Halls of the Dead > Death Knight > Black Citadel",
+   "plan": "Crypt Lord > Halls of the Dead > Death Knight > Black Citadel > Lich > expand",
    "players": 6,
-   "winRate": 0.6666666666666666,
+   "winRate": 0.8333333333333334,
    "food": [
-    18.5,
-    23.5,
-    32,
-    36.5
+    9,
+    22.5,
+    27.5,
+    32.5,
+    38,
+    49.5
    ]
   },
   {
-   "plan": "Death Knight > Halls of the Dead > Black Citadel > Lich > expand",
+   "plan": "Death Knight > Halls of the Dead > Lich > Black Citadel > expand",
    "players": 5,
-   "winRate": 0.2,
+   "winRate": 0,
    "food": [
-    18,
+    9,
     23,
-    31,
+    27,
     32,
     45
    ]
@@ -6770,36 +6663,23 @@
    "players": 5,
    "winRate": 0.4,
    "food": [
-    17,
+    8,
     21,
     28,
     28
    ]
   },
   {
-   "plan": "Lich > expand > expand > Halls of the Dead > Death Knight > Black Citadel",
+   "plan": "Death Knight > Halls of the Dead > Black Citadel > Lich > expand > tavern hero",
    "players": 5,
    "winRate": 0.6,
    "food": [
-    19,
+    10,
+    21,
     27,
-    32,
-    32,
-    54,
-    48
-   ]
-  },
-  {
-   "plan": "Dreadlord > expand > expand > Halls of the Dead > expand > Black Citadel",
-   "players": 5,
-   "winRate": 0.8,
-   "food": [
-    20,
-    25,
-    28,
-    37,
-    35,
-    44
+    27,
+    38,
+    41
    ]
   },
   {
@@ -6807,36 +6687,23 @@
    "players": 5,
    "winRate": 0.6,
    "food": [
-    19,
+    9,
     26,
     31,
     32
    ]
   },
   {
-   "plan": "Crypt Lord > expand > expand > Halls of the Dead > expand > Death Knight",
+   "plan": "Death Knight > expand > expand > expand > Halls of the Dead > Black Citadel",
    "players": 5,
    "winRate": 0.2,
    "food": [
-    19,
-    26,
+    10,
+    28,
     30,
-    33,
-    35,
-    46
-   ]
-  },
-  {
-   "plan": "Dreadlord > expand > expand > Halls of the Dead > Black Citadel > Death Knight",
-   "players": 5,
-   "winRate": 1,
-   "food": [
-    19,
-    27,
-    32,
-    37,
-    44,
-    54
+    31,
+    31,
+    32
    ]
   },
   {
@@ -6844,11 +6711,11 @@
    "players": 5,
    "winRate": 0.4,
    "food": [
-    18,
+    9,
     24,
     29,
-    33,
-    46
+    30,
+    39
    ]
   },
   {
@@ -6856,9 +6723,47 @@
    "players": 5,
    "winRate": 0.4,
    "food": [
-    19,
+    9,
     25,
     31
+   ]
+  },
+  {
+   "plan": "Death Knight > Halls of the Dead > expand > expand > Lich > Black Citadel",
+   "players": 5,
+   "winRate": 0.4,
+   "food": [
+    9,
+    27,
+    29,
+    29,
+    29,
+    36
+   ]
+  },
+  {
+   "plan": "Death Knight > Halls of the Dead > Black Citadel > Lich > Crypt Lord",
+   "players": 5,
+   "winRate": 0.4,
+   "food": [
+    8,
+    17,
+    26,
+    26,
+    40
+   ]
+  },
+  {
+   "plan": "Dreadlord > expand > expand > Halls of the Dead > expand > expand",
+   "players": 5,
+   "winRate": 0.6,
+   "food": [
+    9,
+    21,
+    23,
+    30,
+    37,
+    37
    ]
   },
   {
@@ -6866,35 +6771,22 @@
    "players": 5,
    "winRate": 0.2,
    "food": [
-    19,
+    10,
     23,
     27
    ]
   },
   {
-   "plan": "Lich > Halls of the Dead > Black Citadel > Death Knight > Black Citadel > tavern hero",
+   "plan": "Lich > Halls of the Dead > Death Knight > Black Citadel > Black Citadel > tavern hero",
    "players": 5,
    "winRate": 0.2,
    "food": [
-    19,
+    8,
     23,
-    30,
+    25,
     30,
     31,
     40
-   ]
-  },
-  {
-   "plan": "Death Knight > expand > Halls of the Dead > expand > Lich > Black Citadel",
-   "players": 4,
-   "winRate": 0.25,
-   "food": [
-    19,
-    26.5,
-    34,
-    30,
-    42,
-    47
    ]
   },
   {
@@ -6902,20 +6794,59 @@
    "players": 4,
    "winRate": 0.5,
    "food": [
-    18.5
+    9
    ]
   },
   {
-   "plan": "Death Knight > Halls of the Dead > Black Citadel > Lich > Crypt Lord > expand",
+   "plan": "Crypt Lord > Halls of the Dead > Black Citadel > Death Knight > Lich > expand",
    "players": 4,
-   "winRate": 0.25,
+   "winRate": 0.5,
    "food": [
-    17,
-    18,
-    26.5,
-    30.5,
-    44,
-    49.5
+    9,
+    24.5,
+    28.5,
+    29.5,
+    38,
+    43
+   ]
+  },
+  {
+   "plan": "Dreadlord > expand > Halls of the Dead > expand > Black Citadel > Death Knight",
+   "players": 4,
+   "winRate": 0.5,
+   "food": [
+    10,
+    27.5,
+    36,
+    37,
+    40,
+    41.5
+   ]
+  },
+  {
+   "plan": "Death Knight > expand > Halls of the Dead > expand > expand > Black Citadel",
+   "players": 4,
+   "winRate": 0.5,
+   "food": [
+    10,
+    25.5,
+    35,
+    34,
+    32,
+    39.5
+   ]
+  },
+  {
+   "plan": "Dreadlord > expand > expand > Halls of the Dead > Black Citadel > Death Knight",
+   "players": 4,
+   "winRate": 1,
+   "food": [
+    10,
+    27.5,
+    32,
+    36.5,
+    42.5,
+    50
    ]
   },
   {
@@ -6923,7 +6854,7 @@
    "players": 4,
    "winRate": 0.25,
    "food": [
-    19,
+    8.5,
     27,
     30
    ]
@@ -6933,9 +6864,35 @@
    "players": 4,
    "winRate": 0.25,
    "food": [
-    18,
+    8.5,
     21.5,
     27.5
+   ]
+  },
+  {
+   "plan": "Death Knight > expand > Halls of the Dead > Lich > Black Citadel > tavern hero",
+   "players": 4,
+   "winRate": 0.5,
+   "food": [
+    8.5,
+    22,
+    28,
+    30.5,
+    36,
+    42
+   ]
+  },
+  {
+   "plan": "Dreadlord > expand > expand > Halls of the Dead > expand > Death Knight",
+   "players": 4,
+   "winRate": 0.5,
+   "food": [
+    9.5,
+    26.5,
+    34.5,
+    38,
+    37.5,
+    39.5
    ]
   },
   {
@@ -6943,20 +6900,8 @@
    "players": 4,
    "winRate": 0,
    "food": [
-    19,
+    8.5,
     27.5
-   ]
-  },
-  {
-   "plan": "expand > Death Knight > Halls of the Dead > Black Citadel > Lich",
-   "players": 4,
-   "winRate": 0.25,
-   "food": [
-    9.5,
-    18.5,
-    23,
-    39.5,
-    38.5
    ]
   },
   {
@@ -6964,7 +6909,7 @@
    "players": 4,
    "winRate": 0.5,
    "food": [
-    18.5,
+    9.5,
     25.5,
     28.5,
     26.5,
@@ -6973,42 +6918,29 @@
    ]
   },
   {
-   "plan": "Death Knight > Halls of the Dead > Black Citadel > Lich > Black Citadel > tavern hero",
+   "plan": "Death Knight > Halls of the Dead > Black Citadel > Lich > expand > expand",
    "players": 4,
-   "winRate": 0,
+   "winRate": 0.75,
    "food": [
-    19,
-    23.5,
+    10,
+    23,
     28,
-    31,
-    29,
-    40
+    27,
+    36.5,
+    41
    ]
   },
   {
-   "plan": "Lich > expand > expand > expand > Halls of the Dead > Black Citadel",
+   "plan": "Death Knight > Halls of the Dead > Lich > expand > Black Citadel > expand",
    "players": 4,
-   "winRate": 0.5,
+   "winRate": 0.75,
    "food": [
-    19,
-    25.5,
-    30.5,
-    31.5,
-    33.5,
-    35
-   ]
-  },
-  {
-   "plan": "Death Knight > Halls of the Dead > Lich > Black Citadel > tavern hero > expand",
-   "players": 4,
-   "winRate": 0,
-   "food": [
-    17,
-    17,
-    29.5,
-    30.5,
-    42.5,
-    53.5
+    9,
+    21,
+    24,
+    37,
+    43,
+    45.5
    ]
   },
   {
@@ -7016,48 +6948,50 @@
    "players": 4,
    "winRate": 0.5,
    "food": [
-    19,
+    9.5,
     33.5,
     38
    ]
   },
   {
-   "plan": "Death Knight > Halls of the Dead > expand > Lich > Black Citadel > expand",
+   "plan": "Death Knight > expand > expand > Halls of the Dead > Black Citadel > Lich",
    "players": 4,
-   "winRate": 0.5,
+   "winRate": 0.25,
    "food": [
-    19,
-    25,
-    28,
-    33,
-    34.5,
-    32
+    9.5,
+    24,
+    32.5,
+    35,
+    39.5,
+    39.5
    ]
   },
   {
-   "plan": "Crypt Lord > expand > Halls of the Dead > expand",
-   "players": 4,
-   "winRate": 0.5,
-   "food": [
-    19,
-    31.5,
-    39,
-    39
-   ]
-  },
-  {
-   "plan": "Crypt Lord > expand > Halls of the Dead > Black Citadel > Death Knight > Lich",
+   "plan": "Death Knight > Halls of the Dead > Lich > Black Citadel > Dreadlord > expand",
    "players": 4,
    "winRate": 0.75,
    "food": [
-    19,
-    26.5,
-    33.5,
-    43,
-    46,
-    47.5
+    9,
+    21,
+    26,
+    30,
+    37,
+    47
+   ]
+  },
+  {
+   "plan": "expand > Death Knight > Halls of the Dead > Black Citadel > Lich > tavern hero",
+   "players": 4,
+   "winRate": 0.75,
+   "food": [
+    7,
+    7,
+    22,
+    28,
+    27,
+    42
    ]
   }
  ],
- "at": "2026-10-27T22:38:59.887Z"
+ "at": "2026-10-28T07:25:56.199Z"
 }

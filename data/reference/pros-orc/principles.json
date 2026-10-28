@@ -4189,14 +4189,14 @@
   {
    "id": "gym-orc-fs-hh-2-burrow-tech",
    "name": "Far Seer Headhunter 2 Burrow Tech",
-   "players": 413,
-   "winRate": 0.49878934624697335,
-   "matchScore": 0.46363636363636357,
+   "players": 352,
+   "winRate": 0.5085227272727273,
+   "matchScore": 0.5684210526315789,
    "steps": [
     {
      "step": "build Altar of Storms",
      "guideFood": 6,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
@@ -4208,8 +4208,8 @@
     {
      "step": "hero Far Seer",
      "guideFood": 10,
-     "proFood": 17,
-     "share": 0.8934624697336562
+     "proFood": 8,
+     "share": 0.9147727272727273
     },
     {
      "step": "build Barracks",
@@ -4221,477 +4221,39 @@
      "step": "train Troll Headhunter",
      "guideFood": 17,
      "proFood": 17,
-     "share": 0.9927360774818402
+     "share": 0.9971590909090909
     },
     {
      "step": "tech Stronghold",
      "guideFood": 21,
      "proFood": 21,
-     "share": 0.9830508474576272
+     "share": 0.9886363636363636
     },
     {
      "step": "build Voodoo Lounge",
      "guideFood": 29,
-     "proFood": 25,
-     "share": 1
+     "proFood": 26,
+     "share": 0.9971590909090909
     },
     {
      "step": "hero Tauren Chieftain",
      "guideFood": 34,
-     "proFood": 33,
-     "share": 0.5956416464891041
-    }
-   ]
-  },
-  {
-   "id": "grubby-005-orc-fs-sh-rax-beastiary",
-   "name": "Far Seer Shadow Hunter Barracks Beastiary",
-   "players": 222,
-   "winRate": 0.4009009009009009,
-   "matchScore": 0.4736842105263158,
-   "steps": [
-    {
-     "step": "build Altar of Storms",
-     "guideFood": 6,
-     "proFood": 0,
-     "share": 1
-    },
-    {
-     "step": "build Barracks",
-     "guideFood": 8,
-     "proFood": null,
-     "share": 0
-    },
-    {
-     "step": "hero Far Seer",
-     "guideFood": 10,
-     "proFood": 19,
-     "share": 0.1891891891891892
-    },
-    {
-     "step": "train Grunt",
-     "guideFood": 16,
-     "proFood": 15,
-     "share": 0.9864864864864865
-    },
-    {
-     "step": "build Voodoo Lounge",
-     "guideFood": 19,
-     "proFood": 18,
-     "share": 1
-    },
-    {
-     "step": "tech Stronghold",
-     "guideFood": 23,
-     "proFood": 20,
-     "share": 1
-    },
-    {
-     "step": "hero Shadow Hunter",
-     "guideFood": 29,
-     "proFood": 30,
-     "share": 0.8513513513513513
-    },
-    {
-     "step": "build Beastiary",
-     "guideFood": 29,
-     "proFood": 28,
-     "share": 0.8513513513513513
-    },
-    {
-     "step": "build War Mill",
-     "guideFood": 29,
      "proFood": 29,
-     "share": 0.8738738738738738
-    }
-   ]
-  },
-  {
-   "id": "grubby-037-orc-orc-for-beginners",
-   "name": "Orc for Beginners – Blademaster Shadow Hunter Tier 2 Expand",
-   "players": 161,
-   "winRate": 0.36024844720496896,
-   "matchScore": 0.43999999999999995,
-   "steps": [
-    {
-     "step": "build Altar of Storms",
-     "guideFood": 5,
-     "proFood": 0,
-     "share": 1
-    },
-    {
-     "step": "build Barracks",
-     "guideFood": 7,
-     "proFood": null,
-     "share": 0
-    },
-    {
-     "step": "hero Blademaster",
-     "guideFood": 10,
-     "proFood": 19,
-     "share": 0.906832298136646
-    },
-    {
-     "step": "build Voodoo Lounge",
-     "guideFood": 16,
-     "proFood": 14,
-     "share": 0.9937888198757764
-    },
-    {
-     "step": "train Grunt",
-     "guideFood": 16,
-     "proFood": 15,
-     "share": 0.7453416149068323
-    },
-    {
-     "step": "tech Stronghold",
-     "guideFood": 20,
-     "proFood": 19,
-     "share": 1
-    },
-    {
-     "step": "train Grunt",
-     "guideFood": 20,
-     "proFood": 25,
-     "share": 0.031055900621118012
-    },
-    {
-     "step": "build War Mill",
-     "guideFood": 20,
-     "proFood": 19,
-     "share": 0.8757763975155279
-    },
-    {
-     "step": "hero Shadow Hunter",
-     "guideFood": 26,
-     "proFood": 28,
-     "share": 0.8819875776397516
-    },
-    {
-     "step": "build Beastiary",
-     "guideFood": 31,
-     "proFood": 26,
-     "share": 0.906832298136646
-    },
-    {
-     "step": "train Raider",
-     "guideFood": 31,
-     "proFood": 31,
-     "share": 0.6770186335403726
-    },
-    {
-     "step": "expand Great Hall",
-     "guideFood": 34,
-     "proFood": 36,
-     "share": 0.33540372670807456
-    },
-    {
-     "step": "research Armor",
-     "guideFood": 34,
-     "proFood": 39,
-     "share": 0.08695652173913043
-    }
-   ]
-  },
-  {
-   "id": "grubby-027-orc-fs-firelord-rush",
-   "name": "Far Seer Firelord Rush",
-   "players": 137,
-   "winRate": 0.43795620437956206,
-   "matchScore": 0.36842105263157887,
-   "steps": [
-    {
-     "step": "build Altar of Storms",
-     "guideFood": 6,
-     "proFood": 0,
-     "share": 1
-    },
-    {
-     "step": "hero Far Seer",
-     "guideFood": 10,
-     "proFood": 16,
-     "share": 0.6788321167883211
-    },
-    {
-     "step": "tech Stronghold",
-     "guideFood": 17,
-     "proFood": 16,
-     "share": 0.9927007299270073
-    },
-    {
-     "step": "build Barracks",
-     "guideFood": 17,
-     "proFood": null,
-     "share": 0
-    },
-    {
-     "step": "build War Mill",
-     "guideFood": 17,
-     "proFood": 16,
-     "share": 1
-    },
-    {
-     "step": "build Voodoo Lounge",
-     "guideFood": 17,
-     "proFood": 16,
-     "share": 0.9562043795620438
-    },
-    {
-     "step": "train Grunt",
-     "guideFood": 17,
-     "proFood": 15,
-     "share": 0.3795620437956204
-    },
-    {
-     "step": "train Troll Headhunter",
-     "guideFood": 17,
-     "proFood": 18,
-     "share": 0.46715328467153283
-    },
-    {
-     "step": "build Watch Tower",
-     "guideFood": 23,
-     "proFood": 26,
-     "share": 0.40875912408759124
-    },
-    {
-     "step": "hero Firelord",
-     "guideFood": 25,
-     "proFood": 23.5,
-     "share": 0.24817518248175183
-    }
-   ]
-  },
-  {
-   "id": "grubby-033-orc-bloody-beginner-fs-grunts",
-   "name": "Bloody Beginner – Far Seer Grunts",
-   "players": 134,
-   "winRate": 0.48507462686567165,
-   "matchScore": 0.5018518518518519,
-   "steps": [
-    {
-     "step": "build Altar of Storms",
-     "guideFood": 6,
-     "proFood": 0,
-     "share": 1
-    },
-    {
-     "step": "build Barracks",
-     "guideFood": 8,
-     "proFood": null,
-     "share": 0
-    },
-    {
-     "step": "hero Far Seer",
-     "guideFood": 10,
-     "proFood": 19,
-     "share": 0.12686567164179105
-    },
-    {
-     "step": "train Grunt",
-     "guideFood": 16,
-     "proFood": 15,
-     "share": 0.9776119402985075
-    },
-    {
-     "step": "build Voodoo Lounge",
-     "guideFood": 19,
-     "proFood": 15,
-     "share": 1
-    },
-    {
-     "step": "tech Stronghold",
-     "guideFood": 23,
-     "proFood": 20,
-     "share": 1
-    },
-    {
-     "step": "hero Shadow Hunter",
-     "guideFood": 29,
-     "proFood": 31,
-     "share": 0.9029850746268657
-    },
-    {
-     "step": "build Beastiary",
-     "guideFood": 29,
-     "proFood": 28,
-     "share": 0.9925373134328358
-    },
-    {
-     "step": "build Tauren Totem",
-     "guideFood": 29,
-     "proFood": 29,
-     "share": 0.9104477611940298
-    },
-    {
-     "step": "train Raider",
-     "guideFood": 34,
-     "proFood": 33,
-     "share": 0.9776119402985075
-    },
-    {
-     "step": "train Spirit Walker",
-     "guideFood": 34,
-     "proFood": null,
-     "share": 0
-    },
-    {
-     "step": "build War Mill",
-     "guideFood": 40,
-     "proFood": 39,
-     "share": 0.9328358208955224
-    },
-    {
-     "step": "train Kodo Beast",
-     "guideFood": 46,
-     "proFood": 45,
-     "share": 0.7388059701492538
-    },
-    {
-     "step": "research Armor",
-     "guideFood": 50,
-     "proFood": 49,
-     "share": 0.17164179104477612
-    }
-   ]
-  },
-  {
-   "id": "grubby-009-orc-bm-sh-grunt-raider-shaman",
-   "name": "Blademaster Shadow Hunter Grunt Raider Shaman",
-   "players": 120,
-   "winRate": 0.4583333333333333,
-   "matchScore": 0.45833333333333337,
-   "steps": [
-    {
-     "step": "build Altar of Storms",
-     "guideFood": 6,
-     "proFood": 0,
-     "share": 1
-    },
-    {
-     "step": "build Barracks",
-     "guideFood": 8,
-     "proFood": null,
-     "share": 0
-    },
-    {
-     "step": "hero Blademaster",
-     "guideFood": 10,
-     "proFood": 19,
-     "share": 0.7916666666666666
-    },
-    {
-     "step": "train Grunt",
-     "guideFood": 16,
-     "proFood": 15,
-     "share": 0.95
-    },
-    {
-     "step": "build Voodoo Lounge",
-     "guideFood": 19,
-     "proFood": 16,
-     "share": 1
-    },
-    {
-     "step": "tech Stronghold",
-     "guideFood": 20,
-     "proFood": 20,
-     "share": 1
-    },
-    {
-     "step": "hero Shadow Hunter",
-     "guideFood": 31,
-     "proFood": 31,
-     "share": 0.8416666666666667
-    },
-    {
-     "step": "build Spirit Lodge",
-     "guideFood": 31,
-     "proFood": 30,
-     "share": 0.7416666666666667
-    },
-    {
-     "step": "build Beastiary",
-     "guideFood": 36,
-     "proFood": 33,
-     "share": 0.7333333333333333
-    },
-    {
-     "step": "train Shaman",
-     "guideFood": 36,
-     "proFood": 33,
-     "share": 0.7
-    },
-    {
-     "step": "train Raider",
-     "guideFood": 40,
-     "proFood": 38,
-     "share": 0.5916666666666667
-    },
-    {
-     "step": "build War Mill",
-     "guideFood": 40,
-     "proFood": 35,
-     "share": 0.85
-    }
-   ]
-  },
-  {
-   "id": "lp-orc-headhunter",
-   "name": "Orc Headhunter",
-   "players": 94,
-   "winRate": 0.5106382978723404,
-   "matchScore": 0.4,
-   "steps": [
-    {
-     "step": "build Altar of Storms",
-     "guideFood": 6,
-     "proFood": 0,
-     "share": 1
-    },
-    {
-     "step": "build War Mill",
-     "guideFood": 9,
-     "proFood": 8,
-     "share": 1
-    },
-    {
-     "step": "build Barracks",
-     "guideFood": 10,
-     "proFood": null,
-     "share": 0
-    },
-    {
-     "step": "hero Far Seer",
-     "guideFood": 10,
-     "proFood": 17,
-     "share": 0.648936170212766
-    },
-    {
-     "step": "train Troll Headhunter",
-     "guideFood": 17,
-     "proFood": 17,
-     "share": 0.8404255319148937
-    },
-    {
-     "step": "tech Stronghold",
-     "guideFood": 21,
-     "proFood": 20,
-     "share": 0.8936170212765957
+     "share": 0.7017045454545454
     }
    ]
   },
   {
    "id": "grubby-orc-tri-hero-grunt-raider-kodo-vs-ud",
    "name": "Tri-Hero Grunt Raider Kodo vs Undead",
-   "players": 93,
-   "winRate": 0.43010752688172044,
-   "matchScore": 0.43636363636363634,
+   "players": 215,
+   "winRate": 0.46511627906976744,
+   "matchScore": 0.55,
    "steps": [
     {
      "step": "build Altar of Storms",
      "guideFood": 6,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
@@ -4703,19 +4265,19 @@
     {
      "step": "hero Blademaster",
      "guideFood": 10,
-     "proFood": 18.5,
-     "share": 0.7741935483870968
+     "proFood": 9,
+     "share": 0.9813953488372092
     },
     {
      "step": "train Grunt",
      "guideFood": 16,
      "proFood": 15,
-     "share": 0.7311827956989247
+     "share": 0.8790697674418605
     },
     {
      "step": "build Voodoo Lounge",
      "guideFood": 19,
-     "proFood": 16,
+     "proFood": 15,
      "share": 1
     },
     {
@@ -4727,52 +4289,298 @@
     {
      "step": "hero Shadow Hunter",
      "guideFood": 20,
-     "proFood": 29,
-     "share": 0.8064516129032258
+     "proFood": 24,
+     "share": 0.9069767441860465
     },
     {
      "step": "build Beastiary",
      "guideFood": 31,
-     "proFood": 30,
-     "share": 0.8817204301075269
+     "proFood": 28,
+     "share": 0.8558139534883721
     },
     {
      "step": "tech Fortress",
      "guideFood": 31,
      "proFood": 30,
-     "share": 0.7419354838709677
+     "share": 0.5953488372093023
     },
     {
      "step": "build War Mill",
      "guideFood": 31,
      "proFood": 30,
-     "share": 0.967741935483871
+     "share": 0.958139534883721
     },
     {
      "step": "train Raider",
      "guideFood": 31,
-     "proFood": 30,
-     "share": 0.5483870967741935
+     "proFood": 31,
+     "share": 0.5953488372093023
     },
     {
      "step": "hero Tauren Chieftain",
      "guideFood": 41,
-     "proFood": 40,
-     "share": 0.6774193548387096
+     "proFood": 36,
+     "share": 0.4186046511627907
     }
    ]
   },
   {
-   "id": "grubby-025-orc-fs-tc-bloodlust",
-   "name": "Far Seer Tauren Chieftain Bloodlust",
-   "players": 82,
-   "winRate": 0.5121951219512195,
-   "matchScore": 0.43809523809523804,
+   "id": "grubby-037-orc-orc-for-beginners",
+   "name": "Orc for Beginners – Blademaster Shadow Hunter Tier 2 Expand",
+   "players": 215,
+   "winRate": 0.34418604651162793,
+   "matchScore": 0.582608695652174,
+   "steps": [
+    {
+     "step": "build Altar of Storms",
+     "guideFood": 5,
+     "proFood": 5,
+     "share": 1
+    },
+    {
+     "step": "build Barracks",
+     "guideFood": 7,
+     "proFood": null,
+     "share": 0
+    },
+    {
+     "step": "hero Blademaster",
+     "guideFood": 10,
+     "proFood": 9,
+     "share": 0.986046511627907
+    },
+    {
+     "step": "build Voodoo Lounge",
+     "guideFood": 16,
+     "proFood": 15,
+     "share": 1
+    },
+    {
+     "step": "train Grunt",
+     "guideFood": 16,
+     "proFood": 15,
+     "share": 0.9348837209302325
+    },
+    {
+     "step": "tech Stronghold",
+     "guideFood": 20,
+     "proFood": 20,
+     "share": 1
+    },
+    {
+     "step": "train Grunt",
+     "guideFood": 20,
+     "proFood": 21,
+     "share": 0.013953488372093023
+    },
+    {
+     "step": "build War Mill",
+     "guideFood": 20,
+     "proFood": 23,
+     "share": 0.7813953488372093
+    },
+    {
+     "step": "hero Shadow Hunter",
+     "guideFood": 26,
+     "proFood": 25,
+     "share": 0.9534883720930233
+    },
+    {
+     "step": "build Beastiary",
+     "guideFood": 31,
+     "proFood": 28,
+     "share": 0.9395348837209302
+    },
+    {
+     "step": "train Raider",
+     "guideFood": 31,
+     "proFood": 31,
+     "share": 0.8418604651162791
+    },
+    {
+     "step": "expand Great Hall",
+     "guideFood": 34,
+     "proFood": 38,
+     "share": 0.3302325581395349
+    },
+    {
+     "step": "research Armor",
+     "guideFood": 34,
+     "proFood": 39,
+     "share": 0.09302325581395349
+    }
+   ]
+  },
+  {
+   "id": "lp-orc-altar",
+   "name": "Orc Fast Altar (standard)",
+   "players": 178,
+   "winRate": 0.46629213483146065,
+   "matchScore": 0.5062745098039216,
    "steps": [
     {
      "step": "build Altar of Storms",
      "guideFood": 6,
-     "proFood": 0,
+     "proFood": 5,
+     "share": 1
+    },
+    {
+     "step": "build Barracks",
+     "guideFood": 8,
+     "proFood": null,
+     "share": 0
+    },
+    {
+     "step": "hero Blademaster",
+     "guideFood": 10,
+     "proFood": 9,
+     "share": 1
+    },
+    {
+     "step": "train Grunt",
+     "guideFood": 17,
+     "proFood": 15,
+     "share": 0.6292134831460674
+    },
+    {
+     "step": "build Voodoo Lounge",
+     "guideFood": 17,
+     "proFood": 14,
+     "share": 1
+    },
+    {
+     "step": "tech Stronghold",
+     "guideFood": 20,
+     "proFood": 19,
+     "share": 1
+    }
+   ]
+  },
+  {
+   "id": "lp-orc-headhunter",
+   "name": "Orc Headhunter",
+   "players": 129,
+   "winRate": 0.5503875968992248,
+   "matchScore": 0.5199999999999999,
+   "steps": [
+    {
+     "step": "build Altar of Storms",
+     "guideFood": 6,
+     "proFood": 5,
+     "share": 1
+    },
+    {
+     "step": "build War Mill",
+     "guideFood": 9,
+     "proFood": 8,
+     "share": 1
+    },
+    {
+     "step": "build Barracks",
+     "guideFood": 10,
+     "proFood": null,
+     "share": 0
+    },
+    {
+     "step": "hero Far Seer",
+     "guideFood": 10,
+     "proFood": 9,
+     "share": 0.9069767441860465
+    },
+    {
+     "step": "train Troll Headhunter",
+     "guideFood": 17,
+     "proFood": 17,
+     "share": 0.9767441860465116
+    },
+    {
+     "step": "tech Stronghold",
+     "guideFood": 21,
+     "proFood": 20,
+     "share": 0.8992248062015504
+    }
+   ]
+  },
+  {
+   "id": "grubby-027-orc-fs-firelord-rush",
+   "name": "Far Seer Firelord Rush",
+   "players": 99,
+   "winRate": 0.45454545454545453,
+   "matchScore": 0.4666666666666667,
+   "steps": [
+    {
+     "step": "build Altar of Storms",
+     "guideFood": 6,
+     "proFood": 5,
+     "share": 1
+    },
+    {
+     "step": "hero Far Seer",
+     "guideFood": 10,
+     "proFood": 9,
+     "share": 0.7878787878787878
+    },
+    {
+     "step": "tech Stronghold",
+     "guideFood": 17,
+     "proFood": 16,
+     "share": 1
+    },
+    {
+     "step": "build Barracks",
+     "guideFood": 17,
+     "proFood": null,
+     "share": 0
+    },
+    {
+     "step": "build War Mill",
+     "guideFood": 17,
+     "proFood": 16,
+     "share": 1
+    },
+    {
+     "step": "build Voodoo Lounge",
+     "guideFood": 17,
+     "proFood": 17,
+     "share": 0.9494949494949495
+    },
+    {
+     "step": "train Grunt",
+     "guideFood": 17,
+     "proFood": 15,
+     "share": 0.37373737373737376
+    },
+    {
+     "step": "train Troll Headhunter",
+     "guideFood": 17,
+     "proFood": 18,
+     "share": 0.5151515151515151
+    },
+    {
+     "step": "build Watch Tower",
+     "guideFood": 23,
+     "proFood": 26,
+     "share": 0.43434343434343436
+    },
+    {
+     "step": "hero Firelord",
+     "guideFood": 25,
+     "proFood": 23,
+     "share": 0.30303030303030304
+    }
+   ]
+  },
+  {
+   "id": "grubby-005-orc-fs-sh-rax-beastiary",
+   "name": "Far Seer Shadow Hunter Barracks Beastiary",
+   "players": 91,
+   "winRate": 0.45054945054945056,
+   "matchScore": 0.5599999999999999,
+   "steps": [
+    {
+     "step": "build Altar of Storms",
+     "guideFood": 6,
+     "proFood": 5,
      "share": 1
     },
     {
@@ -4784,71 +4592,65 @@
     {
      "step": "hero Far Seer",
      "guideFood": 10,
-     "proFood": 18,
-     "share": 0.6585365853658537
+     "proFood": 9,
+     "share": 0.6593406593406593
     },
     {
      "step": "train Grunt",
-     "guideFood": 17,
+     "guideFood": 16,
      "proFood": 15,
-     "share": 0.8048780487804879
-    },
-    {
-     "step": "tech Stronghold",
-     "guideFood": 20,
-     "proFood": 20,
      "share": 1
     },
     {
      "step": "build Voodoo Lounge",
-     "guideFood": 20,
-     "proFood": 21,
+     "guideFood": 19,
+     "proFood": 20,
      "share": 1
     },
     {
-     "step": "hero Tauren Chieftain",
-     "guideFood": 26,
-     "proFood": 30,
-     "share": 0.5121951219512195
+     "step": "tech Stronghold",
+     "guideFood": 23,
+     "proFood": 22,
+     "share": 1
     },
     {
-     "step": "build Spirit Lodge",
-     "guideFood": 26,
-     "proFood": 26,
-     "share": 0.7682926829268293
+     "step": "hero Shadow Hunter",
+     "guideFood": 29,
+     "proFood": 28,
+     "share": 0.6813186813186813
+    },
+    {
+     "step": "build Beastiary",
+     "guideFood": 29,
+     "proFood": 29,
+     "share": 0.8791208791208791
     },
     {
      "step": "build War Mill",
-     "guideFood": 26,
-     "proFood": 20,
-     "share": 0.8902439024390244
-    },
-    {
-     "step": "tech Fortress",
-     "guideFood": 31,
-     "proFood": 30,
-     "share": 0.7804878048780488
+     "guideFood": 29,
+     "proFood": 28,
+     "share": 0.8571428571428571
     }
    ]
   },
   {
    "id": "gym-orc-fs-fast-tech-no-barracks-vs-hu",
    "name": "Far Seer Fast Tech without Barracks",
-   "players": 82,
-   "winRate": 0.3902439024390244,
-   "matchScore": 0.4555555555555556,
+   "players": 85,
+   "winRate": 0.4117647058823529,
+   "matchScore": 0.56,
    "steps": [
     {
      "step": "build Altar of Storms",
      "guideFood": 6,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
      "step": "hero Far Seer",
      "guideFood": 10,
-     "proFood": 17,
-     "share": 0.7317073170731707
+     "proFood": 9,
+     "share": 0.8705882352941177
     },
     {
      "step": "tech Stronghold",
@@ -4865,40 +4667,190 @@
     {
      "step": "train Grunt",
      "guideFood": 17,
-     "proFood": 15,
-     "share": 0.8170731707317073
+     "proFood": 15.5,
+     "share": 0.8235294117647058
     },
     {
      "step": "build Voodoo Lounge",
      "guideFood": 20,
-     "proFood": 20,
+     "proFood": 21,
      "share": 1
     },
     {
      "step": "build Spirit Lodge",
      "guideFood": 28,
-     "proFood": 28,
-     "share": 0.7195121951219512
+     "proFood": 29,
+     "share": 0.6823529411764706
     },
     {
      "step": "build Beastiary",
      "guideFood": 28,
      "proFood": 27,
-     "share": 0.9634146341463414
+     "share": 0.9882352941176471
+    }
+   ]
+  },
+  {
+   "id": "grubby-025-orc-fs-tc-bloodlust",
+   "name": "Far Seer Tauren Chieftain Bloodlust",
+   "players": 78,
+   "winRate": 0.5384615384615384,
+   "matchScore": 0.5733201581027667,
+   "steps": [
+    {
+     "step": "build Altar of Storms",
+     "guideFood": 6,
+     "proFood": 5,
+     "share": 1
+    },
+    {
+     "step": "build Barracks",
+     "guideFood": 8,
+     "proFood": null,
+     "share": 0
+    },
+    {
+     "step": "hero Far Seer",
+     "guideFood": 10,
+     "proFood": 8,
+     "share": 0.8589743589743589
+    },
+    {
+     "step": "train Grunt",
+     "guideFood": 17,
+     "proFood": 15,
+     "share": 0.8333333333333334
+    },
+    {
+     "step": "tech Stronghold",
+     "guideFood": 20,
+     "proFood": 20,
+     "share": 1
+    },
+    {
+     "step": "build Voodoo Lounge",
+     "guideFood": 20,
+     "proFood": 22,
+     "share": 1
+    },
+    {
+     "step": "hero Tauren Chieftain",
+     "guideFood": 26,
+     "proFood": 26,
+     "share": 0.8461538461538461
+    },
+    {
+     "step": "build Spirit Lodge",
+     "guideFood": 26,
+     "proFood": 26,
+     "share": 0.6794871794871795
+    },
+    {
+     "step": "build War Mill",
+     "guideFood": 26,
+     "proFood": 16,
+     "share": 0.9487179487179487
+    },
+    {
+     "step": "tech Fortress",
+     "guideFood": 31,
+     "proFood": 30,
+     "share": 0.7307692307692307
+    }
+   ]
+  },
+  {
+   "id": "grubby-009-orc-bm-sh-grunt-raider-shaman",
+   "name": "Blademaster Shadow Hunter Grunt Raider Shaman",
+   "players": 77,
+   "winRate": 0.4675324675324675,
+   "matchScore": 0.55,
+   "steps": [
+    {
+     "step": "build Altar of Storms",
+     "guideFood": 6,
+     "proFood": 5,
+     "share": 1
+    },
+    {
+     "step": "build Barracks",
+     "guideFood": 8,
+     "proFood": null,
+     "share": 0
+    },
+    {
+     "step": "hero Blademaster",
+     "guideFood": 10,
+     "proFood": 9,
+     "share": 0.974025974025974
+    },
+    {
+     "step": "train Grunt",
+     "guideFood": 16,
+     "proFood": 16,
+     "share": 0.8961038961038961
+    },
+    {
+     "step": "build Voodoo Lounge",
+     "guideFood": 19,
+     "proFood": 19,
+     "share": 1
+    },
+    {
+     "step": "tech Stronghold",
+     "guideFood": 20,
+     "proFood": 20,
+     "share": 1
+    },
+    {
+     "step": "hero Shadow Hunter",
+     "guideFood": 31,
+     "proFood": 27,
+     "share": 0.8831168831168831
+    },
+    {
+     "step": "build Spirit Lodge",
+     "guideFood": 31,
+     "proFood": 30,
+     "share": 0.7532467532467533
+    },
+    {
+     "step": "build Beastiary",
+     "guideFood": 36,
+     "proFood": 34,
+     "share": 0.7532467532467533
+    },
+    {
+     "step": "train Shaman",
+     "guideFood": 36,
+     "proFood": 33,
+     "share": 0.6493506493506493
+    },
+    {
+     "step": "train Raider",
+     "guideFood": 40,
+     "proFood": 38,
+     "share": 0.5194805194805194
+    },
+    {
+     "step": "build War Mill",
+     "guideFood": 40,
+     "proFood": 37,
+     "share": 0.8571428571428571
     }
    ]
   },
   {
    "id": "grubby-039-orc-fs-mass-wyverns",
    "name": "Far Seer Mass Wyverns",
-   "players": 66,
-   "winRate": 0.7272727272727273,
-   "matchScore": 0.4649122807017544,
+   "players": 56,
+   "winRate": 0.6071428571428571,
+   "matchScore": 0.5719565217391305,
    "steps": [
     {
      "step": "build Altar of Storms",
      "guideFood": 5,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
@@ -4910,14 +4862,14 @@
     {
      "step": "hero Far Seer",
      "guideFood": 10,
-     "proFood": 19,
-     "share": 0.696969696969697
+     "proFood": 9,
+     "share": 0.8035714285714286
     },
     {
      "step": "train Grunt",
      "guideFood": 17,
      "proFood": 15,
-     "share": 0.9393939393939394
+     "share": 0.9464285714285714
     },
     {
      "step": "tech Stronghold",
@@ -4941,27 +4893,72 @@
      "step": "build Beastiary",
      "guideFood": 32,
      "proFood": 31,
-     "share": 0.8181818181818182
+     "share": 0.875
     },
     {
      "step": "train Wind Rider",
      "guideFood": 32,
      "proFood": 31.5,
-     "share": 0.36363636363636365
+     "share": 0.35714285714285715
+    }
+   ]
+  },
+  {
+   "id": "gym-orc-two-burrow-tech-grunts",
+   "name": "Two Burrow Tech with Grunts",
+   "players": 53,
+   "winRate": 0.39622641509433965,
+   "matchScore": 0.5058823529411766,
+   "steps": [
+    {
+     "step": "build Altar of Storms",
+     "guideFood": 6,
+     "proFood": 5,
+     "share": 1
+    },
+    {
+     "step": "build Barracks",
+     "guideFood": 8,
+     "proFood": null,
+     "share": 0
+    },
+    {
+     "step": "hero Blademaster",
+     "guideFood": 10,
+     "proFood": 9,
+     "share": 0.9622641509433962
+    },
+    {
+     "step": "train Grunt",
+     "guideFood": 16,
+     "proFood": 15,
+     "share": 0.9811320754716981
+    },
+    {
+     "step": "build Voodoo Lounge",
+     "guideFood": 19,
+     "proFood": 21,
+     "share": 1
+    },
+    {
+     "step": "tech Stronghold",
+     "guideFood": 23,
+     "proFood": 22,
+     "share": 0.9811320754716981
     }
    ]
   },
   {
    "id": "gym-orc-1-burrow-barracks-shop-before-tech",
    "name": "1 Burrow, Barracks and Shop before Tech",
-   "players": 59,
-   "winRate": 0.3220338983050847,
-   "matchScore": 0.4266666666666666,
+   "players": 40,
+   "winRate": 0.325,
+   "matchScore": 0.518552036199095,
    "steps": [
     {
      "step": "build Altar of Storms",
      "guideFood": 5,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
@@ -4973,40 +4970,196 @@
     {
      "step": "hero Far Seer",
      "guideFood": 10,
-     "proFood": 17,
-     "share": 0.22033898305084745
+     "proFood": 9,
+     "share": 0.925
     },
     {
      "step": "build Voodoo Lounge",
      "guideFood": 16,
-     "proFood": 15,
-     "share": 0.9661016949152542
+     "proFood": 16,
+     "share": 0.925
     },
     {
      "step": "train Grunt",
      "guideFood": 16,
-     "proFood": 15,
-     "share": 0.9661016949152542
+     "proFood": 16,
+     "share": 0.625
     },
     {
      "step": "tech Stronghold",
      "guideFood": 20,
-     "proFood": 20,
-     "share": 0.9830508474576272
+     "proFood": 17,
+     "share": 0.975
+    }
+   ]
+  },
+  {
+   "id": "grubby-033-orc-bloody-beginner-fs-grunts",
+   "name": "Bloody Beginner – Far Seer Grunts",
+   "players": 35,
+   "winRate": 0.4,
+   "matchScore": 0.5692307692307693,
+   "steps": [
+    {
+     "step": "build Altar of Storms",
+     "guideFood": 6,
+     "proFood": 5,
+     "share": 1
+    },
+    {
+     "step": "build Barracks",
+     "guideFood": 8,
+     "proFood": null,
+     "share": 0
+    },
+    {
+     "step": "hero Far Seer",
+     "guideFood": 10,
+     "proFood": 9,
+     "share": 0.2857142857142857
+    },
+    {
+     "step": "train Grunt",
+     "guideFood": 16,
+     "proFood": 15.5,
+     "share": 0.9714285714285714
+    },
+    {
+     "step": "build Voodoo Lounge",
+     "guideFood": 19,
+     "proFood": 18,
+     "share": 1
+    },
+    {
+     "step": "tech Stronghold",
+     "guideFood": 23,
+     "proFood": 21,
+     "share": 1
+    },
+    {
+     "step": "hero Shadow Hunter",
+     "guideFood": 29,
+     "proFood": 26,
+     "share": 0.7428571428571429
+    },
+    {
+     "step": "build Beastiary",
+     "guideFood": 29,
+     "proFood": 29,
+     "share": 1
+    },
+    {
+     "step": "build Tauren Totem",
+     "guideFood": 29,
+     "proFood": 30,
+     "share": 0.8571428571428571
+    },
+    {
+     "step": "train Raider",
+     "guideFood": 34,
+     "proFood": 34,
+     "share": 1
+    },
+    {
+     "step": "train Spirit Walker",
+     "guideFood": 34,
+     "proFood": null,
+     "share": 0
+    },
+    {
+     "step": "build War Mill",
+     "guideFood": 40,
+     "proFood": 39,
+     "share": 1
+    },
+    {
+     "step": "train Kodo Beast",
+     "guideFood": 46,
+     "proFood": 45,
+     "share": 0.8285714285714286
+    },
+    {
+     "step": "research Armor",
+     "guideFood": 50,
+     "proFood": 48,
+     "share": 0.2
+    }
+   ]
+  },
+  {
+   "id": "grubby-020-orc-fs-2-rax-proxy-hh",
+   "name": "Far Seer Two Barracks Proxy Headhunters",
+   "players": 11,
+   "winRate": 0.6363636363636364,
+   "matchScore": 0.4454545454545455,
+   "steps": [
+    {
+     "step": "build Altar of Storms",
+     "guideFood": 6,
+     "proFood": 5,
+     "share": 1
+    },
+    {
+     "step": "hero Far Seer",
+     "guideFood": 10,
+     "proFood": 9,
+     "share": 0.9090909090909091
+    },
+    {
+     "step": "build War Mill",
+     "guideFood": 16,
+     "proFood": 8,
+     "share": 1
+    },
+    {
+     "step": "build Barracks",
+     "guideFood": 16,
+     "proFood": null,
+     "share": 0
+    },
+    {
+     "step": "build Barracks",
+     "guideFood": 16,
+     "proFood": null,
+     "share": 0
+    },
+    {
+     "step": "train Troll Headhunter",
+     "guideFood": 16,
+     "proFood": 16.5,
+     "share": 0.9090909090909091
+    },
+    {
+     "step": "build Voodoo Lounge",
+     "guideFood": 24,
+     "proFood": 24,
+     "share": 1
+    },
+    {
+     "step": "research Ranged Attack",
+     "guideFood": 30,
+     "proFood": 29,
+     "share": 0.5454545454545454
+    },
+    {
+     "step": "build Watch Tower",
+     "guideFood": 30,
+     "proFood": 30,
+     "share": 0.9090909090909091
     }
    ]
   },
   {
    "id": "grubby-013-orc-sh-t3-fast-hh-caster",
    "name": "Shadow Hunter to Tier 3, Fast Headhunters and Casters",
-   "players": 16,
-   "winRate": 0.6875,
-   "matchScore": 0.35005561735261403,
+   "players": 4,
+   "winRate": 0.5,
+   "matchScore": 0.3964895635673624,
    "steps": [
     {
      "step": "build War Mill",
      "guideFood": 8,
-     "proFood": 8,
+     "proFood": 7.5,
      "share": 1
     },
     {
@@ -5018,7 +5171,7 @@
     {
      "step": "build Altar of Storms",
      "guideFood": 10,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
@@ -5030,217 +5183,64 @@
     {
      "step": "hero Shadow Hunter",
      "guideFood": 13,
-     "proFood": 38.5,
-     "share": 0.625
+     "proFood": 34,
+     "share": 0.75
     },
     {
      "step": "tech Stronghold",
      "guideFood": 26,
-     "proFood": 23,
+     "proFood": 27,
      "share": 1
     },
     {
      "step": "build Voodoo Lounge",
      "guideFood": 30,
-     "proFood": 25,
-     "share": 1
-    },
-    {
-     "step": "research Ranged Attack",
-     "guideFood": 30,
-     "proFood": 30.5,
-     "share": 0.75
-    },
-    {
-     "step": "tech Fortress",
-     "guideFood": 36,
-     "proFood": 36,
-     "share": 1
-    },
-    {
-     "step": "build Spirit Lodge",
-     "guideFood": 36,
-     "proFood": 37,
-     "share": 0.9375
-    },
-    {
-     "step": "train Shaman",
-     "guideFood": 38,
-     "proFood": 36,
-     "share": 0.3125
-    },
-    {
-     "step": "hero Tauren Chieftain",
-     "guideFood": 42,
-     "proFood": 46,
-     "share": 0.5
-    }
-   ]
-  },
-  {
-   "id": "gym-orc-two-burrow-tech-grunts",
-   "name": "Two Burrow Tech with Grunts",
-   "players": 14,
-   "winRate": 0.7857142857142857,
-   "matchScore": 0.40625,
-   "steps": [
-    {
-     "step": "build Altar of Storms",
-     "guideFood": 6,
-     "proFood": 0,
-     "share": 1
-    },
-    {
-     "step": "build Barracks",
-     "guideFood": 8,
-     "proFood": null,
-     "share": 0
-    },
-    {
-     "step": "hero Blademaster",
-     "guideFood": 10,
-     "proFood": 19,
-     "share": 0.6428571428571429
-    },
-    {
-     "step": "train Grunt",
-     "guideFood": 16,
-     "proFood": 15,
-     "share": 1
-    },
-    {
-     "step": "build Voodoo Lounge",
-     "guideFood": 19,
-     "proFood": 20,
-     "share": 1
-    },
-    {
-     "step": "tech Stronghold",
-     "guideFood": 23,
-     "proFood": 22,
-     "share": 1
-    }
-   ]
-  },
-  {
-   "id": "grubby-020-orc-fs-2-rax-proxy-hh",
-   "name": "Far Seer Two Barracks Proxy Headhunters",
-   "players": 12,
-   "winRate": 0.5,
-   "matchScore": 0.36277056277056285,
-   "steps": [
-    {
-     "step": "build Altar of Storms",
-     "guideFood": 6,
-     "proFood": 0,
-     "share": 1
-    },
-    {
-     "step": "hero Far Seer",
-     "guideFood": 10,
-     "proFood": 16,
-     "share": 0.9166666666666666
-    },
-    {
-     "step": "build War Mill",
-     "guideFood": 16,
-     "proFood": 14,
-     "share": 1
-    },
-    {
-     "step": "build Barracks",
-     "guideFood": 16,
-     "proFood": null,
-     "share": 0
-    },
-    {
-     "step": "build Barracks",
-     "guideFood": 16,
-     "proFood": null,
-     "share": 0
-    },
-    {
-     "step": "train Troll Headhunter",
-     "guideFood": 16,
-     "proFood": 16,
-     "share": 0.9166666666666666
-    },
-    {
-     "step": "build Voodoo Lounge",
-     "guideFood": 24,
      "proFood": 24.5,
      "share": 1
     },
     {
      "step": "research Ranged Attack",
      "guideFood": 30,
-     "proFood": 30,
-     "share": 0.5833333333333334
-    },
-    {
-     "step": "build Watch Tower",
-     "guideFood": 30,
-     "proFood": 30,
+     "proFood": 29,
      "share": 0.75
-    }
-   ]
-  },
-  {
-   "id": "lp-orc-altar",
-   "name": "Orc Fast Altar (standard)",
-   "players": 10,
-   "winRate": 0.6,
-   "matchScore": 0.3354166666666667,
-   "steps": [
+    },
     {
-     "step": "build Altar of Storms",
-     "guideFood": 6,
-     "proFood": 0,
+     "step": "tech Fortress",
+     "guideFood": 36,
+     "proFood": 37.5,
      "share": 1
     },
     {
-     "step": "build Barracks",
-     "guideFood": 8,
-     "proFood": null,
-     "share": 0
-    },
-    {
-     "step": "hero Blademaster",
-     "guideFood": 10,
-     "proFood": 16.5,
+     "step": "build Spirit Lodge",
+     "guideFood": 36,
+     "proFood": 38.5,
      "share": 1
     },
     {
-     "step": "train Grunt",
-     "guideFood": 17,
-     "proFood": 17.5,
-     "share": 0.6
+     "step": "train Shaman",
+     "guideFood": 38,
+     "proFood": 47,
+     "share": 0.25
     },
     {
-     "step": "build Voodoo Lounge",
-     "guideFood": 17,
-     "proFood": 9,
-     "share": 1
-    },
-    {
-     "step": "tech Stronghold",
-     "guideFood": 20,
-     "proFood": 17,
-     "share": 1
+     "step": "hero Tauren Chieftain",
+     "guideFood": 42,
+     "proFood": 41,
+     "share": 0.75
     }
    ]
   },
   {
    "id": "grubby-001-orc-tc-mass-zerkers",
    "name": "TC Mass Zerkers",
-   "players": 5,
-   "winRate": 0.4,
-   "matchScore": 0.3428571428571428,
+   "players": 3,
+   "winRate": 0.3333333333333333,
+   "matchScore": 0.3818181818181818,
    "steps": [
     {
      "step": "build Altar of Storms",
      "guideFood": 6,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
@@ -5259,7 +5259,7 @@
      "step": "hero Tauren Chieftain",
      "guideFood": 9,
      "proFood": 12,
-     "share": 0.2
+     "share": 0.3333333333333333
     },
     {
      "step": "build Barracks",
@@ -5270,7 +5270,7 @@
     {
      "step": "train Troll Headhunter",
      "guideFood": 15,
-     "proFood": 13,
+     "proFood": 12,
      "share": 1
     },
     {
@@ -5282,14 +5282,14 @@
     {
      "step": "research Ranged Attack",
      "guideFood": 33,
-     "proFood": 32,
-     "share": 0.2
+     "proFood": null,
+     "share": 0
     },
     {
      "step": "tech Stronghold",
      "guideFood": 35,
      "proFood": 27.5,
-     "share": 0.8
+     "share": 0.6666666666666666
     }
    ]
   }
@@ -5297,178 +5297,189 @@
  "plans": [
   {
    "plan": "Blademaster > Stronghold > Shadow Hunter",
-   "players": 200,
-   "winRate": 0.33,
+   "players": 209,
+   "winRate": 0.3253588516746411,
    "food": [
-    19,
+    9,
     20,
-    30
+    25
    ]
   },
   {
    "plan": "Blademaster > Stronghold > Shadow Hunter > expand",
-   "players": 121,
-   "winRate": 0.4297520661157025,
+   "players": 124,
+   "winRate": 0.43548387096774194,
    "food": [
+    9,
     20,
-    20,
-    30,
-    45
+    25,
+    44
    ]
   },
   {
    "plan": "Far Seer > Stronghold > tavern hero",
-   "players": 106,
-   "winRate": 0.6415094339622641,
+   "players": 121,
+   "winRate": 0.6198347107438017,
    "food": [
-    18,
-    21,
-    29
+    9,
+    20,
+    28
    ]
   },
   {
    "plan": "Far Seer > Stronghold > Tauren Chieftain > expand",
-   "players": 103,
-   "winRate": 0.5339805825242718,
+   "players": 118,
+   "winRate": 0.5254237288135594,
    "food": [
-    17,
+    8,
     21,
-    33,
+    27,
     40
    ]
   },
   {
-   "plan": "Blademaster > Stronghold > Fortress > Shadow Hunter > Tauren Chieftain",
-   "players": 73,
-   "winRate": 0.4520547945205479,
+   "plan": "Blademaster > Stronghold > Shadow Hunter > Fortress > Tauren Chieftain",
+   "players": 107,
+   "winRate": 0.411214953271028,
    "food": [
-    19,
+    9,
     20,
+    25,
     29,
+    35
+   ]
+  },
+  {
+   "plan": "Blademaster > Stronghold > Shadow Hunter > Fortress",
+   "players": 94,
+   "winRate": 0.5,
+   "food": [
+    9,
+    19,
+    24,
+    31.5
+   ]
+  },
+  {
+   "plan": "Far Seer > Stronghold > Shadow Hunter > Fortress > Tauren Chieftain",
+   "players": 64,
+   "winRate": 0.515625,
+   "food": [
+    9,
+    20,
+    26,
     31,
-    42
+    37
    ]
   },
   {
    "plan": "Far Seer > Stronghold > Tauren Chieftain",
-   "players": 50,
-   "winRate": 0.4,
+   "players": 57,
+   "winRate": 0.3684210526315789,
    "food": [
-    18,
+    9,
     20,
-    34
-   ]
-  },
-  {
-   "plan": "Far Seer > Stronghold > Fortress > Shadow Hunter > Tauren Chieftain",
-   "players": 44,
-   "winRate": 0.45454545454545453,
-   "food": [
-    18,
-    20,
-    31,
-    31,
-    45
+    28
    ]
   },
   {
    "plan": "Blademaster > Stronghold > tavern hero",
-   "players": 44,
-   "winRate": 0.5454545454545454,
+   "players": 46,
+   "winRate": 0.5217391304347826,
    "food": [
-    19,
+    9,
     19,
     25
    ]
   },
   {
-   "plan": "Blademaster > Stronghold > Shadow Hunter > Fortress",
-   "players": 43,
-   "winRate": 0.5348837209302325,
+   "plan": "Far Seer > Stronghold > Tauren Chieftain > Fortress",
+   "players": 38,
+   "winRate": 0.5526315789473685,
    "food": [
-    19,
+    9,
     20,
-    31,
-    41
+    27,
+    35.5
    ]
   },
   {
-   "plan": "Blademaster > Stronghold > Fortress > Shadow Hunter",
-   "players": 41,
-   "winRate": 0.36585365853658536,
+   "plan": "Far Seer > Stronghold > Tauren Chieftain > Fortress > Shadow Hunter",
+   "players": 38,
+   "winRate": 0.47368421052631576,
    "food": [
-    19,
-    20,
-    28,
-    29
+    9,
+    21,
+    29,
+    32,
+    38
+   ]
+  },
+  {
+   "plan": "Far Seer > Stronghold > Shadow Hunter",
+   "players": 38,
+   "winRate": 0.42105263157894735,
+   "food": [
+    9,
+    20.5,
+    26.5
    ]
   },
   {
    "plan": "Far Seer > Stronghold > Tauren Chieftain > expand > expand",
-   "players": 32,
-   "winRate": 0.40625,
+   "players": 34,
+   "winRate": 0.38235294117647056,
    "food": [
-    18,
+    8,
     20,
-    32,
+    28,
+    39.5,
+    45.5
+   ]
+  },
+  {
+   "plan": "Far Seer > Stronghold > Shadow Hunter > Fortress",
+   "players": 32,
+   "winRate": 0.375,
+   "food": [
+    9,
+    19,
+    21,
+    31
+   ]
+  },
+  {
+   "plan": "Blademaster > Stronghold > Shadow Hunter > expand > expand",
+   "players": 30,
+   "winRate": 0.26666666666666666,
+   "food": [
+    9,
+    19,
+    25,
     40,
     46
    ]
   },
   {
-   "plan": "Far Seer > Stronghold > Shadow Hunter",
-   "players": 30,
-   "winRate": 0.43333333333333335,
-   "food": [
-    19,
-    21,
-    33
-   ]
-  },
-  {
    "plan": "Blademaster > Stronghold > Fortress",
-   "players": 29,
-   "winRate": 0.5172413793103449,
-   "food": [
-    17,
-    18,
-    29
-   ]
-  },
-  {
-   "plan": "Far Seer > Stronghold > Fortress > Tauren Chieftain > Shadow Hunter",
-   "players": 29,
-   "winRate": 0.41379310344827586,
-   "food": [
-    17,
-    21,
-    32,
-    32,
-    45
-   ]
-  },
-  {
-   "plan": "Blademaster > Stronghold > Shadow Hunter > expand > expand",
    "players": 28,
-   "winRate": 0.25,
+   "winRate": 0.5,
    "food": [
-    19,
-    19,
-    30,
-    40,
-    45.5
+    9,
+    18,
+    29.5
    ]
   },
   {
-   "plan": "Blademaster > Stronghold > Shadow Hunter > Fortress > Tauren Chieftain",
-   "players": 27,
-   "winRate": 0.37037037037037035,
+   "plan": "Far Seer > Stronghold > tavern hero > Fortress > Shadow Hunter",
+   "players": 24,
+   "winRate": 0.4583333333333333,
    "food": [
-    17,
-    20,
-    30,
-    30,
-    42
+    9,
+    21,
+    29,
+    34,
+    36
    ]
   },
   {
@@ -5476,46 +5487,35 @@
    "players": 23,
    "winRate": 0.2608695652173913,
    "food": [
-    17,
+    9,
     21,
     28,
-    32
-   ]
-  },
-  {
-   "plan": "Far Seer > Stronghold > Tauren Chieftain > Fortress",
-   "players": 22,
-   "winRate": 0.45454545454545453,
-   "food": [
-    18,
-    20.5,
-    33,
-    39
-   ]
-  },
-  {
-   "plan": "Far Seer > Stronghold > tavern hero > Fortress > Shadow Hunter",
-   "players": 22,
-   "winRate": 0.5,
-   "food": [
-    19,
-    21,
-    29,
-    34,
-    43
+    31
    ]
   },
   {
    "plan": "Far Seer > Stronghold > Tauren Chieftain > expand > expand > expand",
-   "players": 16,
-   "winRate": 0.4375,
+   "players": 19,
+   "winRate": 0.42105263157894735,
    "food": [
-    17.5,
+    8,
     20,
-    33.5,
+    28,
     38,
-    43.5,
-    43.5
+    43,
+    44
+   ]
+  },
+  {
+   "plan": "Blademaster > Stronghold > Shadow Hunter > Fortress > tavern hero",
+   "players": 17,
+   "winRate": 0.47058823529411764,
+   "food": [
+    9,
+    20,
+    25,
+    33,
+    43
    ]
   },
   {
@@ -5523,7 +5523,7 @@
    "players": 16,
    "winRate": 0.625,
    "food": [
-    17.5,
+    9,
     21
    ]
   },
@@ -5532,107 +5532,64 @@
    "players": 16,
    "winRate": 0.5,
    "food": [
-    16
+    8.5
    ]
   },
   {
-   "plan": "Stronghold > Far Seer > tavern hero",
-   "players": 15,
-   "winRate": 0.4666666666666667,
+   "plan": "Blademaster > Stronghold > Shadow Hunter > Fortress > Tauren Chieftain > expand",
+   "players": 14,
+   "winRate": 0.7857142857142857,
    "food": [
-    16,
-    16,
-    22
-   ]
-  },
-  {
-   "plan": "Stronghold > Far Seer > Fortress > Shadow Hunter",
-   "players": 15,
-   "winRate": 0.5333333333333333,
-   "food": [
-    16,
-    16,
-    21,
-    21
-   ]
-  },
-  {
-   "plan": "Stronghold > Blademaster > Fortress > Shadow Hunter > Tauren Chieftain",
-   "players": 15,
-   "winRate": 0.3333333333333333,
-   "food": [
-    16,
-    16,
-    21,
-    21,
+    8,
+    19.5,
+    25,
+    27,
+    37,
     47
    ]
   },
   {
-   "plan": "Stronghold > Blademaster > Fortress > Shadow Hunter",
-   "players": 14,
-   "winRate": 0.5,
-   "food": [
-    16,
-    16,
-    20.5,
-    22
-   ]
-  },
-  {
-   "plan": "Far Seer > Stronghold > Fortress > Tauren Chieftain",
-   "players": 12,
-   "winRate": 0.6666666666666666,
-   "food": [
-    17,
-    19.5,
-    32.5,
-    35
-   ]
-  },
-  {
-   "plan": "Blademaster > Stronghold > Fortress > Shadow Hunter > Tauren Chieftain > expand",
-   "players": 12,
-   "winRate": 0.6666666666666666,
-   "food": [
-    19,
-    21,
-    29,
-    31.5,
-    44.5,
-    48
-   ]
-  },
-  {
    "plan": "Far Seer > Stronghold > Tauren Chieftain > expand > Fortress",
-   "players": 11,
-   "winRate": 0.5454545454545454,
+   "players": 14,
+   "winRate": 0.5714285714285714,
    "food": [
-    17,
+    9,
     21,
-    31,
-    39,
-    42
+    25.5,
+    39.5,
+    42.5
    ]
   },
   {
-   "plan": "Far Seer > Stronghold > Fortress > Shadow Hunter",
-   "players": 11,
-   "winRate": 0.45454545454545453,
+   "plan": "Blademaster > Stronghold > Fortress > Shadow Hunter > Tauren Chieftain",
+   "players": 13,
+   "winRate": 0.38461538461538464,
    "food": [
-    19,
-    21,
-    32,
-    32
+    9,
+    20,
+    23,
+    24,
+    37
    ]
   },
   {
    "plan": "Blademaster > Stronghold",
-   "players": 10,
-   "winRate": 0.2,
+   "players": 11,
+   "winRate": 0.2727272727272727,
    "food": [
-    20,
+    9,
     20
+   ]
+  },
+  {
+   "plan": "Blademaster > Stronghold > Fortress > Shadow Hunter",
+   "players": 11,
+   "winRate": 0.36363636363636365,
+   "food": [
+    9,
+    18,
+    18,
+    19
    ]
   },
   {
@@ -5640,22 +5597,21 @@
    "players": 10,
    "winRate": 0.5,
    "food": [
-    18.5,
+    8,
     20,
     25.5,
     31.5
    ]
   },
   {
-   "plan": "Far Seer > Stronghold > Shadow Hunter > Fortress > Tauren Chieftain",
+   "plan": "Far Seer > Stronghold > Shadow Hunter > expand",
    "players": 10,
    "winRate": 0.6,
    "food": [
-    17.5,
+    8,
     19,
-    31.5,
-    38,
-    47.5
+    25,
+    41.5
    ]
   },
   {
@@ -5663,215 +5619,117 @@
    "players": 9,
    "winRate": 0.5555555555555556,
    "food": [
-    19,
+    9,
     22,
     29
    ]
   },
   {
-   "plan": "Far Seer > Stronghold > Tauren Chieftain > Fortress > Shadow Hunter",
-   "players": 9,
-   "winRate": 0.5555555555555556,
-   "food": [
-    17,
-    20,
-    31,
-    32,
-    46
-   ]
-  },
-  {
-   "plan": "Far Seer > Stronghold > expand > Tauren Chieftain",
-   "players": 9,
-   "winRate": 0.6666666666666666,
-   "food": [
-    18,
-    21,
-    33,
-    33
-   ]
-  },
-  {
-   "plan": "Blademaster > Stronghold > Shadow Hunter > Fortress > tavern hero",
+   "plan": "Far Seer > Stronghold > Tauren Chieftain > expand > expand > Fortress",
    "players": 9,
    "winRate": 0.3333333333333333,
    "food": [
-    19,
-    19,
-    33,
-    35,
-    43
-   ]
-  },
-  {
-   "plan": "Stronghold > Blademaster > Shadow Hunter",
-   "players": 9,
-   "winRate": 0.2222222222222222,
-   "food": [
-    16,
-    16,
-    26
-   ]
-  },
-  {
-   "plan": "Far Seer > Stronghold > Shadow Hunter > Fortress",
-   "players": 9,
-   "winRate": 0.2222222222222222,
-   "food": [
-    18,
-    21,
-    33,
-    37
-   ]
-  },
-  {
-   "plan": "Stronghold > Far Seer > Shadow Hunter",
-   "players": 8,
-   "winRate": 0.375,
-   "food": [
-    16,
-    16,
-    27
-   ]
-  },
-  {
-   "plan": "Far Seer > Stronghold > Shadow Hunter > expand",
-   "players": 8,
-   "winRate": 0.5,
-   "food": [
-    18,
-    19.5,
-    33,
-    41.5
-   ]
-  },
-  {
-   "plan": "Blademaster > Stronghold > Fortress > Shadow Hunter > tavern hero",
-   "players": 7,
-   "winRate": 0.5714285714285714,
-   "food": [
-    19,
+    8,
     20,
-    30,
-    31,
-    41
-   ]
-  },
-  {
-   "plan": "Far Seer > Stronghold > Tauren Chieftain > expand > expand > Fortress",
-   "players": 7,
-   "winRate": 0.42857142857142855,
-   "food": [
-    19,
-    21,
-    33,
-    39,
-    45,
+    26,
+    37,
+    40,
     50
    ]
   },
   {
    "plan": "Far Seer > Stronghold > tavern hero > Fortress > Tauren Chieftain",
-   "players": 7,
-   "winRate": 0.5714285714285714,
+   "players": 9,
+   "winRate": 0.4444444444444444,
    "food": [
-    18,
+    9,
     21,
     27,
     31,
-    47
+    38
    ]
   },
   {
-   "plan": "Stronghold > Far Seer > Tauren Chieftain",
-   "players": 7,
-   "winRate": 0.14285714285714285,
+   "plan": "Far Seer > Stronghold > Tauren Chieftain > Fortress > Shadow Hunter > expand",
+   "players": 8,
+   "winRate": 0.625,
    "food": [
-    16,
-    16,
-    30
-   ]
-  },
-  {
-   "plan": "Stronghold > Far Seer > Tauren Chieftain > expand",
-   "players": 7,
-   "winRate": 0.2857142857142857,
-   "food": [
-    16,
-    16,
+    8,
+    19.5,
     28,
-    47
-   ]
-  },
-  {
-   "plan": "Blademaster > Stronghold > Shadow Hunter > expand > expand > expand",
-   "players": 7,
-   "winRate": 0.5714285714285714,
-   "food": [
-    20,
-    20,
-    31,
-    41,
-    43,
+    32,
+    37.5,
     48
    ]
   },
   {
-   "plan": "Stronghold > Blademaster > Shadow Hunter > Fortress",
-   "players": 7,
-   "winRate": 0.7142857142857143,
+   "plan": "Blademaster > Stronghold > Shadow Hunter > expand > expand > expand",
+   "players": 8,
+   "winRate": 0.5,
    "food": [
-    16,
-    16,
-    21,
-    43
-   ]
-  },
-  {
-   "plan": "Stronghold > Far Seer > Fortress > Shadow Hunter > Tauren Chieftain",
-   "players": 7,
-   "winRate": 0.5714285714285714,
-   "food": [
-    16,
-    16,
-    28,
-    28,
-    43
+    9,
+    20,
+    24,
+    40,
+    42,
+    47.5
    ]
   },
   {
    "plan": "Far Seer > Stronghold > tavern hero > expand",
-   "players": 6,
-   "winRate": 0.5,
+   "players": 7,
+   "winRate": 0.5714285714285714,
    "food": [
-    18.5,
-    20.5,
-    28.5,
-    46.5
-   ]
-  },
-  {
-   "plan": "Far Seer > Stronghold > Fortress > Tauren Chieftain > Shadow Hunter > expand",
-   "players": 6,
-   "winRate": 0.6666666666666666,
-   "food": [
-    16,
+    9,
     20,
-    31.5,
-    32,
-    43.5,
-    49
+    28,
+    48
    ]
   },
   {
-   "plan": "Stronghold > Far Seer > Tauren Chieftain > Fortress",
-   "players": 6,
-   "winRate": 0.6666666666666666,
+   "plan": "Far Seer > Stronghold > Shadow Hunter > Fortress > expand",
+   "players": 7,
+   "winRate": 0.42857142857142855,
    "food": [
-    15.5,
-    15.5,
-    21,
-    35
+    8,
+    19,
+    26,
+    36,
+    46
+   ]
+  },
+  {
+   "plan": "Blademaster > Stronghold > Tauren Chieftain > Fortress",
+   "players": 7,
+   "winRate": 0.14285714285714285,
+   "food": [
+    9,
+    19,
+    25,
+    30
+   ]
+  },
+  {
+   "plan": "Blademaster > Stronghold > Tauren Chieftain > expand",
+   "players": 7,
+   "winRate": 0.5714285714285714,
+   "food": [
+    9,
+    20,
+    25,
+    41
+   ]
+  },
+  {
+   "plan": "Blademaster > Stronghold > Shadow Hunter > Fortress > expand",
+   "players": 6,
+   "winRate": 0.8333333333333334,
+   "food": [
+    9,
+    20,
+    26.5,
+    34.5,
+    50
    ]
   },
   {
@@ -5879,11 +5737,11 @@
    "players": 6,
    "winRate": 0.6666666666666666,
    "food": [
-    19,
+    9,
     21,
     27,
     36.5,
-    38
+    34
    ]
   },
   {
@@ -5891,21 +5749,32 @@
    "players": 6,
    "winRate": 0.3333333333333333,
    "food": [
-    19,
+    9,
     20,
-    31
+    25.5
    ]
   },
   {
-   "plan": "Stronghold > Far Seer > Shadow Hunter > Fortress > Tauren Chieftain",
+   "plan": "Far Seer > Stronghold > Fortress > Shadow Hunter",
    "players": 6,
    "winRate": 0.6666666666666666,
    "food": [
-    16,
-    16,
-    21.5,
-    37.5,
-    48.5
+    9,
+    16.5,
+    16.5,
+    19.5
+   ]
+  },
+  {
+   "plan": "Far Seer > Stronghold > Fortress > Tauren Chieftain > Shadow Hunter",
+   "players": 6,
+   "winRate": 0.16666666666666666,
+   "food": [
+    8.5,
+    21,
+    27,
+    27,
+    33
    ]
   },
   {
@@ -5913,59 +5782,48 @@
    "players": 6,
    "winRate": 1,
    "food": [
-    18,
+    8.5,
     21,
     29.5,
     30.5,
-    42.5
+    38
    ]
   },
   {
-   "plan": "Blademaster > Stronghold > expand > Fortress > Shadow Hunter > expand",
+   "plan": "Far Seer > Stronghold > Shadow Hunter > expand > expand",
    "players": 6,
-   "winRate": 0.6666666666666666,
+   "winRate": 0.16666666666666666,
    "food": [
-    17,
-    21.5,
-    26,
+    9,
+    19.5,
+    28,
+    37.5,
+    50
+   ]
+  },
+  {
+   "plan": "Far Seer > Stronghold > Shadow Hunter > Fortress > Tauren Chieftain > expand",
+   "players": 5,
+   "winRate": 1,
+   "food": [
+    8,
+    19,
+    25,
     32,
-    33.5,
-    35.5
+    39,
+    50
    ]
   },
   {
    "plan": "Blademaster > Stronghold > Shadow Hunter > expand > Fortress",
-   "players": 6,
-   "winRate": 0.3333333333333333,
+   "players": 5,
+   "winRate": 0.2,
    "food": [
+    9,
     19,
-    19,
-    29.5,
-    39.5,
+    25,
+    40,
     49
-   ]
-  },
-  {
-   "plan": "Far Seer > Stronghold > Shadow Hunter > Fortress > expand",
-   "players": 5,
-   "winRate": 0.6,
-   "food": [
-    19,
-    19,
-    31,
-    38,
-    47
-   ]
-  },
-  {
-   "plan": "Blademaster > Stronghold > Tauren Chieftain > expand",
-   "players": 5,
-   "winRate": 0.6,
-   "food": [
-    19,
-    21,
-    30,
-    41
    ]
   },
   {
@@ -5973,21 +5831,22 @@
    "players": 4,
    "winRate": 0.75,
    "food": [
-    18,
+    9,
     21,
     28.5
    ]
   },
   {
-   "plan": "Blademaster > Stronghold > Shadow Hunter > Fortress > expand",
+   "plan": "Blademaster > Stronghold > Shadow Hunter > expand > expand > Fortress",
    "players": 4,
-   "winRate": 0.75,
+   "winRate": 0.5,
    "food": [
-    19,
-    20,
-    31,
-    38,
-    50.5
+    9,
+    20.5,
+    25.5,
+    34.5,
+    39,
+    46.5
    ]
   },
   {
@@ -5995,70 +5854,47 @@
    "players": 4,
    "winRate": 0.75,
    "food": [
-    17,
+    8,
     17.5,
     25,
     51.5
    ]
   },
   {
-   "plan": "Far Seer > Stronghold > Fortress > Shadow Hunter > Tauren Chieftain > expand",
+   "plan": "Far Seer > Stronghold > tavern hero > expand > Fortress",
+   "players": 4,
+   "winRate": 0.5,
+   "food": [
+    9,
+    20,
+    26,
+    41.5,
+    49
+   ]
+  },
+  {
+   "plan": "Blademaster > Stronghold > Shadow Hunter > expand > Fortress > Tauren Chieftain",
    "players": 4,
    "winRate": 1,
    "food": [
-    18,
+    8.5,
+    18.5,
+    22.5,
+    37,
+    45.5,
+    52
+   ]
+  },
+  {
+   "plan": "Far Seer > Stronghold > Fortress > Shadow Hunter > Tauren Chieftain",
+   "players": 4,
+   "winRate": 0.25,
+   "food": [
+    9,
     20,
-    33,
-    34,
-    46,
-    45
-   ]
-  },
-  {
-   "plan": "Blademaster > expand > Stronghold > expand > Fortress > Shadow Hunter",
-   "players": 4,
-   "winRate": 0.75,
-   "food": [
-    16,
-    21.5,
-    23,
-    29,
-    33,
-    38.5
-   ]
-  },
-  {
-   "plan": "Blademaster > Stronghold > Tauren Chieftain > Fortress",
-   "players": 4,
-   "winRate": 0,
-   "food": [
-    18,
-    18,
-    30,
-    33
-   ]
-  },
-  {
-   "plan": "Stronghold > Blademaster > Shadow Hunter > Fortress > Tauren Chieftain",
-   "players": 4,
-   "winRate": 0.25,
-   "food": [
-    16,
-    16,
-    21.5,
-    27.5,
-    42.5
-   ]
-  },
-  {
-   "plan": "Stronghold > Far Seer > Shadow Hunter > Fortress",
-   "players": 4,
-   "winRate": 0.25,
-   "food": [
-    15.5,
-    15.5,
-    21.5,
-    27.5
+    26.5,
+    26.5,
+    35
    ]
   },
   {
@@ -6066,13 +5902,13 @@
    "players": 4,
    "winRate": 0.5,
    "food": [
-    19.5,
+    8.5,
     20,
-    31,
+    24.5,
     36,
     40.5
    ]
   }
  ],
- "at": "2026-10-27T22:38:59.081Z"
+ "at": "2026-10-28T07:25:55.399Z"
 }

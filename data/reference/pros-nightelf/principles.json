@@ -4954,14 +4954,14 @@
   {
    "id": "gym-ne-fast-bears-dh-naga",
    "name": "Fast Bears → DH + Naga",
-   "players": 743,
-   "winRate": 0.5693135935397039,
-   "matchScore": 0.5727272727272728,
+   "players": 817,
+   "winRate": 0.5446756425948592,
+   "matchScore": 0.6782608695652174,
    "steps": [
     {
      "step": "build Altar of Elders",
      "guideFood": 5,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
@@ -4973,14 +4973,14 @@
     {
      "step": "hero Demon Hunter",
      "guideFood": 9,
-     "proFood": 19,
-     "share": 0.7967698519515478
+     "proFood": 8,
+     "share": 0.8310893512851897
     },
     {
      "step": "train Archer",
      "guideFood": 15,
      "proFood": 14,
-     "share": 1
+     "share": 0.9987760097919217
     },
     {
      "step": "tech Tree of Ages",
@@ -4992,51 +4992,51 @@
      "step": "build Hunter's Hall",
      "guideFood": 25,
      "proFood": 26,
-     "share": 0.9394347240915208
+     "share": 0.9473684210526315
     },
     {
      "step": "hero Naga Sea Witch",
      "guideFood": 25,
      "proFood": 27,
-     "share": 0.6191117092866757
+     "share": 0.6230110159118727
     },
     {
      "step": "build Ancient of Lore",
      "guideFood": 30,
      "proFood": 30,
-     "share": 0.8694481830417228
+     "share": 0.8837209302325582
     },
     {
      "step": "tech Tree of Eternity",
      "guideFood": 31,
      "proFood": 30,
-     "share": 0.7981157469717362
+     "share": 0.7882496940024479
     },
     {
      "step": "build Ancient of Wonders",
      "guideFood": 29,
      "proFood": 29,
-     "share": 0.9340511440107672
+     "share": 0.9204406364749081
     },
     {
      "step": "train Druid of the Claw",
      "guideFood": 28,
      "proFood": 32,
-     "share": 0.6271870794078062
+     "share": 0.6144430844553244
     }
    ]
   },
   {
    "id": "gym-ne-dh-keeper-dryads-bears-vs-orc",
    "name": "DH Keeper → Dryads Bears",
-   "players": 225,
-   "winRate": 0.5022222222222222,
-   "matchScore": 0.5571428571428572,
+   "players": 192,
+   "winRate": 0.515625,
+   "matchScore": 0.6792857142857143,
    "steps": [
     {
      "step": "build Altar of Elders",
      "guideFood": 5,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
@@ -5048,8 +5048,8 @@
     {
      "step": "hero Demon Hunter",
      "guideFood": 9,
-     "proFood": 20,
-     "share": 0.7333333333333333
+     "proFood": 9,
+     "share": 0.8958333333333334
     },
     {
      "step": "train Archer",
@@ -5067,144 +5067,138 @@
      "step": "build Hunter's Hall",
      "guideFood": 27,
      "proFood": 26,
-     "share": 0.9955555555555555
+     "share": 0.9947916666666666
     },
     {
      "step": "build Ancient of Wonders",
      "guideFood": 27,
-     "proFood": 27,
-     "share": 0.9822222222222222
+     "proFood": 28,
+     "share": 0.9791666666666666
     },
     {
      "step": "hero Keeper of the Grove",
      "guideFood": 26,
-     "proFood": 27,
-     "share": 0.72
+     "proFood": 25,
+     "share": 0.7083333333333334
     },
     {
      "step": "build Ancient of Lore",
      "guideFood": 26,
      "proFood": 27,
-     "share": 0.9733333333333334
+     "share": 0.984375
     },
     {
      "step": "build Ancient of Lore",
      "guideFood": 26,
      "proFood": 31,
-     "share": 0.5288888888888889
+     "share": 0.5572916666666666
     },
     {
      "step": "item Staff of Preservation",
      "guideFood": 31,
-     "proFood": 34,
-     "share": 0.5066666666666667
+     "proFood": 35,
+     "share": 0.5
     },
     {
      "step": "train Dryad",
      "guideFood": 31,
      "proFood": 30,
-     "share": 0.9466666666666667
+     "share": 0.9739583333333334
     },
     {
      "step": "tech Tree of Eternity",
      "guideFood": 37,
-     "proFood": 34,
-     "share": 0.7822222222222223
+     "proFood": 32,
+     "share": 0.8333333333333334
     },
     {
      "step": "train Druid of the Claw",
      "guideFood": 39,
      "proFood": 37,
-     "share": 0.6666666666666666
+     "share": 0.7552083333333334
     }
    ]
   },
   {
-   "id": "grubby-ne-warden-fast-tech",
-   "name": "Warden Domination 1: Fast Tech",
-   "players": 161,
-   "winRate": 0.4720496894409938,
-   "matchScore": 0.553846153846154,
+   "id": "grubby-023-ne-safe-semi-fast-expo-vs-orc",
+   "name": "Safe Semi Fast Expand vs Orc",
+   "players": 119,
+   "winRate": 0.6302521008403361,
+   "matchScore": 0.6173913043478261,
    "steps": [
     {
      "step": "build Altar of Elders",
      "guideFood": 5,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
      "step": "build Ancient of War",
      "guideFood": 8,
-     "proFood": 7,
+     "proFood": 6,
      "share": 1
     },
     {
-     "step": "hero Warden",
+     "step": "hero Keeper of the Grove",
      "guideFood": 10,
-     "proFood": 19,
-     "share": 0.22981366459627328
+     "proFood": 8,
+     "share": 0.8739495798319328
     },
     {
      "step": "train Archer",
      "guideFood": 15,
-     "proFood": 15,
-     "share": 1
-    },
-    {
-     "step": "tech Tree of Ages",
-     "guideFood": 26,
-     "proFood": 23,
+     "proFood": 14,
      "share": 1
     },
     {
      "step": "build Hunter's Hall",
-     "guideFood": 26,
-     "proFood": 26,
-     "share": 1
+     "guideFood": 19,
+     "proFood": 19,
+     "share": 0.9495798319327731
     },
     {
-     "step": "build Ancient of Lore",
-     "guideFood": 26,
-     "proFood": 26,
-     "share": 1
+     "step": "tech Tree of Ages",
+     "guideFood": 20,
+     "proFood": 21,
+     "share": 0.9663865546218487
     },
     {
-     "step": "build Ancient of Lore",
-     "guideFood": 26,
+     "step": "train Huntress",
+     "guideFood": 20,
+     "proFood": 20,
+     "share": 0.865546218487395
+    },
+    {
+     "step": "hero Goblin Alchemist",
+     "guideFood": 29,
+     "proFood": 29,
+     "share": 0.5546218487394958
+    },
+    {
+     "step": "expand Tree of Life",
+     "guideFood": 37,
      "proFood": 28,
-     "share": 0.6211180124223602
+     "share": 0.6722689075630253
     },
     {
-     "step": "tech Tree of Eternity",
-     "guideFood": 26,
-     "proFood": 28,
-     "share": 0.8944099378881988
-    },
-    {
-     "step": "train Dryad",
-     "guideFood": 28,
-     "proFood": 28,
-     "share": 0.9627329192546584
-    },
-    {
-     "step": "train Druid of the Claw",
-     "guideFood": 38,
-     "proFood": 36,
-     "share": 0.7950310559006211
+     "step": "build Ancient of War",
+     "guideFood": 36,
+     "proFood": 34,
+     "share": 0.5966386554621849
     }
    ]
   },
   {
    "id": "grubby-ne-warden-fast-expo",
    "name": "Warden Domination 2: Fast Expand",
-   "players": 128,
-   "winRate": 0.515625,
-   "matchScore": 0.4937254901960785,
+   "players": 98,
+   "winRate": 0.5204081632653061,
+   "matchScore": 0.5666666666666667,
    "steps": [
     {
      "step": "build Altar of Elders",
      "guideFood": 5,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
@@ -5216,8 +5210,8 @@
     {
      "step": "hero Warden",
      "guideFood": 10,
-     "proFood": 19,
-     "share": 0.1171875
+     "proFood": 9,
+     "share": 0.29591836734693877
     },
     {
      "step": "train Archer",
@@ -5229,102 +5223,108 @@
      "step": "expand Tree of Life",
      "guideFood": 25,
      "proFood": 25,
-     "share": 0.8203125
+     "share": 0.826530612244898
     },
     {
      "step": "tech Tree of Ages",
      "guideFood": 28,
      "proFood": 26,
-     "share": 0.9765625
+     "share": 0.9387755102040817
     },
     {
      "step": "build Hunter's Hall",
      "guideFood": 30,
      "proFood": 29,
-     "share": 0.9375
+     "share": 0.9489795918367347
     }
    ]
   },
   {
-   "id": "grubby-023-ne-safe-semi-fast-expo-vs-orc",
-   "name": "Safe Semi Fast Expand vs Orc",
-   "players": 118,
-   "winRate": 0.6440677966101694,
-   "matchScore": 0.5055727554179568,
+   "id": "grubby-ne-warden-fast-tech",
+   "name": "Warden Domination 1: Fast Tech",
+   "players": 98,
+   "winRate": 0.5408163265306123,
+   "matchScore": 0.6113095238095237,
    "steps": [
     {
      "step": "build Altar of Elders",
      "guideFood": 5,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
      "step": "build Ancient of War",
      "guideFood": 8,
-     "proFood": 6.5,
+     "proFood": 7,
      "share": 1
     },
     {
-     "step": "hero Keeper of the Grove",
+     "step": "hero Warden",
      "guideFood": 10,
-     "proFood": 19,
-     "share": 0.711864406779661
+     "proFood": 9,
+     "share": 0.6020408163265306
     },
     {
      "step": "train Archer",
      "guideFood": 15,
      "proFood": 14,
-     "share": 0.9830508474576272
-    },
-    {
-     "step": "build Hunter's Hall",
-     "guideFood": 19,
-     "proFood": 19,
-     "share": 0.9576271186440678
+     "share": 1
     },
     {
      "step": "tech Tree of Ages",
-     "guideFood": 20,
-     "proFood": 21,
-     "share": 0.8898305084745762
+     "guideFood": 26,
+     "proFood": 24,
+     "share": 1
     },
     {
-     "step": "train Huntress",
-     "guideFood": 20,
-     "proFood": 20,
-     "share": 0.8813559322033898
+     "step": "build Hunter's Hall",
+     "guideFood": 26,
+     "proFood": 26,
+     "share": 1
     },
     {
-     "step": "hero Goblin Alchemist",
-     "guideFood": 29,
-     "proFood": 29,
-     "share": 0.5338983050847458
+     "step": "build Ancient of Lore",
+     "guideFood": 26,
+     "proFood": 26,
+     "share": 1
     },
     {
-     "step": "expand Tree of Life",
-     "guideFood": 37,
+     "step": "build Ancient of Lore",
+     "guideFood": 26,
+     "proFood": 27.5,
+     "share": 0.5714285714285714
+    },
+    {
+     "step": "tech Tree of Eternity",
+     "guideFood": 26,
      "proFood": 28,
-     "share": 0.6271186440677966
+     "share": 0.8877551020408163
     },
     {
-     "step": "build Ancient of War",
-     "guideFood": 36,
-     "proFood": 33,
-     "share": 0.6949152542372882
+     "step": "train Dryad",
+     "guideFood": 28,
+     "proFood": 27,
+     "share": 0.9591836734693877
+    },
+    {
+     "step": "train Druid of the Claw",
+     "guideFood": 38,
+     "proFood": 35,
+     "share": 0.7244897959183674
     }
    ]
   },
   {
    "id": "grubby-034-ne-bloody-beginner-dh-archer",
    "name": "Bloody Beginner – Demon Hunter Archer",
-   "players": 97,
-   "winRate": 0.5670103092783505,
-   "matchScore": 0.5304347826086957,
+   "players": 94,
+   "winRate": 0.5531914893617021,
+   "matchScore": 0.6258241758241758,
    "steps": [
     {
      "step": "build Altar of Elders",
      "guideFood": 5,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
@@ -5336,8 +5336,8 @@
     {
      "step": "hero Demon Hunter",
      "guideFood": 9,
-     "proFood": 20,
-     "share": 0.6391752577319587
+     "proFood": 9,
+     "share": 0.6702127659574468
     },
     {
      "step": "train Archer",
@@ -5355,63 +5355,114 @@
      "step": "build Hunter's Hall",
      "guideFood": 30,
      "proFood": 29,
-     "share": 0.9896907216494846
+     "share": 0.9787234042553191
     },
     {
      "step": "build Ancient of Wonders",
      "guideFood": 30,
-     "proFood": 31,
-     "share": 0.8969072164948454
+     "proFood": 32,
+     "share": 0.9148936170212766
     },
     {
      "step": "build Ancient of Lore",
      "guideFood": 29,
      "proFood": 31,
-     "share": 0.9381443298969072
+     "share": 0.9680851063829787
     },
     {
      "step": "build Ancient of Lore",
      "guideFood": 29,
      "proFood": 33,
-     "share": 0.6494845360824743
+     "share": 0.648936170212766
     },
     {
      "step": "hero Keeper of the Grove",
      "guideFood": 29,
-     "proFood": 30,
-     "share": 0.4948453608247423
+     "proFood": 28,
+     "share": 0.5638297872340425
     },
     {
      "step": "research Improved Bows",
      "guideFood": 32,
-     "proFood": 32,
-     "share": 0.28865979381443296
+     "proFood": 32.5,
+     "share": 0.2765957446808511
     },
     {
      "step": "train Dryad",
      "guideFood": 34,
      "proFood": 33,
-     "share": 0.8762886597938144
+     "share": 0.8617021276595744
     },
     {
      "step": "tech Tree of Eternity",
      "guideFood": 40,
      "proFood": 37,
-     "share": 0.7525773195876289
+     "share": 0.7978723404255319
+    }
+   ]
+  },
+  {
+   "id": "grubby-008-ne-kotg-fast-expand",
+   "name": "Keeper Fast Expand",
+   "players": 74,
+   "winRate": 0.527027027027027,
+   "matchScore": 0.55,
+   "steps": [
+    {
+     "step": "build Altar of Elders",
+     "guideFood": 5,
+     "proFood": 5,
+     "share": 1
+    },
+    {
+     "step": "build Ancient of War",
+     "guideFood": 8,
+     "proFood": 7,
+     "share": 1
+    },
+    {
+     "step": "hero Keeper of the Grove",
+     "guideFood": 10,
+     "proFood": 9,
+     "share": 0.8513513513513513
+    },
+    {
+     "step": "train Archer",
+     "guideFood": 15,
+     "proFood": 15,
+     "share": 0.9864864864864865
+    },
+    {
+     "step": "expand Tree of Life",
+     "guideFood": 25,
+     "proFood": 25,
+     "share": 0.8378378378378378
+    },
+    {
+     "step": "tech Tree of Ages",
+     "guideFood": 28,
+     "proFood": 25,
+     "share": 1
+    },
+    {
+     "step": "build Ancient of Wind",
+     "guideFood": 40,
+     "proFood": 36,
+     "share": 0.581081081081081
     }
    ]
   },
   {
    "id": "grubby-038-ne-beginner-build",
    "name": "Night Elf Beginner Build",
-   "players": 81,
-   "winRate": 0.5679012345679012,
-   "matchScore": 0.5111111111111111,
+   "players": 61,
+   "winRate": 0.5737704918032787,
+   "matchScore": 0.5642857142857143,
    "steps": [
     {
      "step": "build Altar of Elders",
      "guideFood": 5,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
@@ -5423,8 +5474,8 @@
     {
      "step": "hero Demon Hunter",
      "guideFood": 10,
-     "proFood": 20,
-     "share": 0.5679012345679012
+     "proFood": 9,
+     "share": 0.5737704918032787
     },
     {
      "step": "train Archer",
@@ -5435,239 +5486,203 @@
     {
      "step": "tech Tree of Ages",
      "guideFood": 27,
-     "proFood": 24,
+     "proFood": 25,
      "share": 1
     },
     {
      "step": "build Hunter's Hall",
      "guideFood": 33,
      "proFood": 30,
-     "share": 0.9753086419753086
+     "share": 1
     },
     {
      "step": "build Ancient of Wonders",
      "guideFood": 33,
      "proFood": 35,
-     "share": 0.9876543209876543
+     "share": 0.9836065573770492
     },
     {
      "step": "hero Keeper of the Grove",
      "guideFood": 32,
-     "proFood": 20,
-     "share": 0.41975308641975306
+     "proFood": 9,
+     "share": 0.32786885245901637
     },
     {
      "step": "build Ancient of Lore",
      "guideFood": 37,
      "proFood": 37,
-     "share": 0.9382716049382716
+     "share": 0.9836065573770492
     },
     {
      "step": "build Ancient of Lore",
      "guideFood": 37,
      "proFood": 37,
-     "share": 0.7160493827160493
+     "share": 0.7868852459016393
     },
     {
      "step": "research Improved Bows",
      "guideFood": 35,
      "proFood": 34,
-     "share": 0.48148148148148145
+     "share": 0.4426229508196721
     },
     {
      "step": "item Staff of Preservation",
      "guideFood": 41,
-     "proFood": 41,
-     "share": 0.7407407407407407
+     "proFood": 40,
+     "share": 0.7049180327868853
     },
     {
      "step": "tech Tree of Eternity",
      "guideFood": 41,
      "proFood": 37,
-     "share": 0.8888888888888888
+     "share": 0.8524590163934426
     },
     {
      "step": "research Strength of the Wild",
      "guideFood": 50,
-     "proFood": 48,
-     "share": 0.2962962962962963
+     "proFood": 48.5,
+     "share": 0.29508196721311475
     }
    ]
   },
   {
-   "id": "grubby-042-ne-early-expansion-beginner",
-   "name": "Elf Early Expansion Beginner Guide",
-   "players": 69,
-   "winRate": 0.43478260869565216,
-   "matchScore": 0.4434782608695652,
+   "id": "lp-ne-fast-altar",
+   "name": "Night Elf Fast Altar (standard)",
+   "players": 50,
+   "winRate": 0.44,
+   "matchScore": 0.5916666666666667,
    "steps": [
     {
      "step": "build Altar of Elders",
      "guideFood": 5,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
      "step": "build Ancient of War",
-     "guideFood": 7,
-     "proFood": 7,
-     "share": 0.9855072463768116
-    },
-    {
-     "step": "hero Keeper of the Grove",
-     "guideFood": 10,
-     "proFood": 19,
-     "share": 0.2608695652173913
-    },
-    {
-     "step": "train Archer",
-     "guideFood": 16,
-     "proFood": 15,
-     "share": 0.9710144927536232
-    },
-    {
-     "step": "build Hunter's Hall",
-     "guideFood": 21,
-     "proFood": 20,
-     "share": 0.9855072463768116
-    },
-    {
-     "step": "expand Tree of Life",
-     "guideFood": 22,
-     "proFood": 30.5,
-     "share": 0.4057971014492754
-    },
-    {
-     "step": "build Ancient of War",
-     "guideFood": 23,
-     "proFood": 21,
-     "share": 0.9130434782608695
-    },
-    {
-     "step": "train Huntress",
-     "guideFood": 22,
-     "proFood": 21,
-     "share": 0.9130434782608695
-    },
-    {
-     "step": "build Ancient Protector",
-     "guideFood": 28,
-     "proFood": 30,
-     "share": 0.8260869565217391
-    },
-    {
-     "step": "tech Tree of Ages",
-     "guideFood": 38,
-     "proFood": 36,
-     "share": 0.5797101449275363
-    },
-    {
-     "step": "research Improved Bows",
-     "guideFood": 50,
-     "proFood": 42.5,
-     "share": 0.11594202898550725
-    },
-    {
-     "step": "research Moon Glaive",
-     "guideFood": 50,
-     "proFood": 42,
-     "share": 0.2028985507246377
-    },
-    {
-     "step": "build Ancient of Lore",
-     "guideFood": 50,
-     "proFood": 41,
-     "share": 0.2608695652173913
-    }
-   ]
-  },
-  {
-   "id": "grubby-028-ne-tri-hero-dott-vs-orc",
-   "name": "Tri-Hero Druids of the Talon",
-   "players": 48,
-   "winRate": 0.4166666666666667,
-   "matchScore": 0.4946778711484594,
-   "steps": [
-    {
-     "step": "build Altar of Elders",
-     "guideFood": 5,
-     "proFood": 0,
-     "share": 1
-    },
-    {
-     "step": "build Ancient of War",
-     "guideFood": 8,
+     "guideFood": 6,
      "proFood": 6,
      "share": 1
     },
     {
      "step": "hero Demon Hunter",
      "guideFood": 10,
-     "proFood": 20,
-     "share": 0.7083333333333334
+     "proFood": 8,
+     "share": 0.72
     },
     {
      "step": "train Archer",
      "guideFood": 16,
      "proFood": 14,
+     "share": 0.82
+    }
+   ]
+  },
+  {
+   "id": "grubby-042-ne-early-expansion-beginner",
+   "name": "Elf Early Expansion Beginner Guide",
+   "players": 47,
+   "winRate": 0.425531914893617,
+   "matchScore": 0.4962962962962964,
+   "steps": [
+    {
+     "step": "build Altar of Elders",
+     "guideFood": 5,
+     "proFood": 5,
      "share": 1
+    },
+    {
+     "step": "build Ancient of War",
+     "guideFood": 7,
+     "proFood": 7,
+     "share": 0.9787234042553191
+    },
+    {
+     "step": "hero Keeper of the Grove",
+     "guideFood": 10,
+     "proFood": 8,
+     "share": 0.3404255319148936
+    },
+    {
+     "step": "train Archer",
+     "guideFood": 16,
+     "proFood": 14,
+     "share": 0.9574468085106383
+    },
+    {
+     "step": "build Hunter's Hall",
+     "guideFood": 21,
+     "proFood": 20,
+     "share": 1
+    },
+    {
+     "step": "expand Tree of Life",
+     "guideFood": 22,
+     "proFood": 28,
+     "share": 0.425531914893617
+    },
+    {
+     "step": "build Ancient of War",
+     "guideFood": 23,
+     "proFood": 21,
+     "share": 0.8936170212765957
+    },
+    {
+     "step": "train Huntress",
+     "guideFood": 22,
+     "proFood": 21,
+     "share": 0.9148936170212766
+    },
+    {
+     "step": "build Ancient Protector",
+     "guideFood": 28,
+     "proFood": 28,
+     "share": 0.8723404255319149
     },
     {
      "step": "tech Tree of Ages",
-     "guideFood": 21,
-     "proFood": 20,
-     "share": 1
+     "guideFood": 38,
+     "proFood": 36,
+     "share": 0.6382978723404256
     },
     {
-     "step": "hero Beastmaster",
-     "guideFood": 21,
-     "proFood": 20,
-     "share": 0.4166666666666667
+     "step": "research Improved Bows",
+     "guideFood": 50,
+     "proFood": 35,
+     "share": 0.10638297872340426
     },
     {
-     "step": "build Ancient of Wind",
-     "guideFood": 21,
-     "proFood": 23,
-     "share": 0.6458333333333334
+     "step": "research Moon Glaive",
+     "guideFood": 50,
+     "proFood": 42,
+     "share": 0.2553191489361702
     },
     {
-     "step": "tech Tree of Eternity",
-     "guideFood": 21,
-     "proFood": 24,
-     "share": 0.6875
-    },
-    {
-     "step": "build Ancient of Wind",
-     "guideFood": 26,
-     "proFood": 26,
-     "share": 0.6666666666666666
-    },
-    {
-     "step": "build Ancient of Wonders",
-     "guideFood": 26,
-     "proFood": 26,
-     "share": 1
+     "step": "build Ancient of Lore",
+     "guideFood": 50,
+     "proFood": 38.5,
+     "share": 0.2978723404255319
     }
    ]
   },
   {
    "id": "grubby-003-ne-kotg-mass-huntresses",
    "name": "Keeper Mass Huntresses",
-   "players": 43,
-   "winRate": 0.4883720930232558,
-   "matchScore": 0.5166666666666667,
+   "players": 42,
+   "winRate": 0.5,
+   "matchScore": 0.6066666666666667,
    "steps": [
     {
      "step": "build Altar of Elders",
      "guideFood": 5,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
      "step": "hero Keeper of the Grove",
      "guideFood": 10,
-     "proFood": 19,
-     "share": 0.09302325581395349
+     "proFood": 8.5,
+     "share": 0.09523809523809523
     },
     {
      "step": "build Hunter's Hall",
@@ -5685,27 +5700,96 @@
      "step": "build Ancient of War",
      "guideFood": 18,
      "proFood": 18,
-     "share": 0.9534883720930233
+     "share": 0.9523809523809523
     },
     {
      "step": "train Huntress",
      "guideFood": 17,
      "proFood": 18,
-     "share": 0.9767441860465116
+     "share": 0.9761904761904762
     }
    ]
   },
   {
-   "id": "grubby-008-ne-kotg-fast-expand",
-   "name": "Keeper Fast Expand",
-   "players": 32,
-   "winRate": 0.5,
-   "matchScore": 0.4449579831932773,
+   "id": "grubby-028-ne-tri-hero-dott-vs-orc",
+   "name": "Tri-Hero Druids of the Talon",
+   "players": 40,
+   "winRate": 0.375,
+   "matchScore": 0.6047619047619048,
    "steps": [
     {
      "step": "build Altar of Elders",
      "guideFood": 5,
-     "proFood": 0,
+     "proFood": 5,
+     "share": 1
+    },
+    {
+     "step": "build Ancient of War",
+     "guideFood": 8,
+     "proFood": 6,
+     "share": 1
+    },
+    {
+     "step": "hero Demon Hunter",
+     "guideFood": 10,
+     "proFood": 9,
+     "share": 0.75
+    },
+    {
+     "step": "train Archer",
+     "guideFood": 16,
+     "proFood": 14,
+     "share": 1
+    },
+    {
+     "step": "tech Tree of Ages",
+     "guideFood": 21,
+     "proFood": 20,
+     "share": 1
+    },
+    {
+     "step": "hero Beastmaster",
+     "guideFood": 21,
+     "proFood": 20,
+     "share": 0.5
+    },
+    {
+     "step": "build Ancient of Wind",
+     "guideFood": 21,
+     "proFood": 22,
+     "share": 0.625
+    },
+    {
+     "step": "tech Tree of Eternity",
+     "guideFood": 21,
+     "proFood": 23,
+     "share": 0.8
+    },
+    {
+     "step": "build Ancient of Wind",
+     "guideFood": 26,
+     "proFood": 25,
+     "share": 0.575
+    },
+    {
+     "step": "build Ancient of Wonders",
+     "guideFood": 26,
+     "proFood": 24,
+     "share": 1
+    }
+   ]
+  },
+  {
+   "id": "grubby-022-ne-dh-safe-archers",
+   "name": "Safe and Easy Demon Hunter Archers",
+   "players": 40,
+   "winRate": 0.65,
+   "matchScore": 0.6184313725490196,
+   "steps": [
+    {
+     "step": "build Altar of Elders",
+     "guideFood": 5,
+     "proFood": 5,
      "share": 1
     },
     {
@@ -5715,48 +5799,87 @@
      "share": 1
     },
     {
-     "step": "hero Keeper of the Grove",
+     "step": "hero Demon Hunter",
      "guideFood": 10,
-     "proFood": 19,
-     "share": 0.5
+     "proFood": 9,
+     "share": 0.9
     },
     {
      "step": "train Archer",
-     "guideFood": 15,
-     "proFood": 14,
-     "share": 0.96875
-    },
-    {
-     "step": "expand Tree of Life",
-     "guideFood": 25,
-     "proFood": 26,
-     "share": 0.84375
-    },
-    {
-     "step": "tech Tree of Ages",
-     "guideFood": 28,
-     "proFood": 25,
+     "guideFood": 16,
+     "proFood": 15,
      "share": 1
     },
     {
-     "step": "build Ancient of Wind",
-     "guideFood": 40,
-     "proFood": 38,
-     "share": 0.65625
+     "step": "tech Tree of Ages",
+     "guideFood": 26,
+     "proFood": 24.5,
+     "share": 1
+    },
+    {
+     "step": "hero Naga Sea Witch",
+     "guideFood": 36,
+     "proFood": 33,
+     "share": 0.675
+    }
+   ]
+  },
+  {
+   "id": "lp-ne-fast-huntress",
+   "name": "Night Elf Fast Huntress",
+   "players": 36,
+   "winRate": 0.4444444444444444,
+   "matchScore": 0.5833333333333334,
+   "steps": [
+    {
+     "step": "build Altar of Elders",
+     "guideFood": 5,
+     "proFood": 5,
+     "share": 1
+    },
+    {
+     "step": "hero Keeper of the Grove",
+     "guideFood": 10,
+     "proFood": 8.5,
+     "share": 0.2222222222222222
+    },
+    {
+     "step": "build Ancient of War",
+     "guideFood": 17,
+     "proFood": 7,
+     "share": 0.9722222222222222
+    },
+    {
+     "step": "build Hunter's Hall",
+     "guideFood": 17,
+     "proFood": 19,
+     "share": 1
+    },
+    {
+     "step": "build Ancient of War",
+     "guideFood": 18,
+     "proFood": 20,
+     "share": 0.9722222222222222
+    },
+    {
+     "step": "train Huntress",
+     "guideFood": 20,
+     "proFood": 20,
+     "share": 1
     }
    ]
   },
   {
    "id": "grubby-026-ne-kotg-naga-archer-rush",
    "name": "Keeper Naga Archer Rush",
-   "players": 26,
-   "winRate": 0.5,
-   "matchScore": 0.4666666666666667,
+   "players": 24,
+   "winRate": 0.5833333333333334,
+   "matchScore": 0.5277777777777777,
    "steps": [
     {
      "step": "build Altar of Elders",
      "guideFood": 5,
-     "proFood": 0,
+     "proFood": 5,
      "share": 1
     },
     {
@@ -5768,13 +5891,13 @@
     {
      "step": "hero Keeper of the Grove",
      "guideFood": 10,
-     "proFood": 20,
-     "share": 0.23076923076923078
+     "proFood": 8.5,
+     "share": 0.5833333333333334
     },
     {
      "step": "train Archer",
      "guideFood": 16,
-     "proFood": 15,
+     "proFood": 14,
      "share": 1
     },
     {
@@ -5787,142 +5910,19 @@
      "step": "hero Naga Sea Witch",
      "guideFood": 35,
      "proFood": 33,
-     "share": 0.8846153846153846
+     "share": 0.875
     },
     {
      "step": "research Improved Bows",
      "guideFood": 35,
      "proFood": 35,
-     "share": 0.9615384615384616
+     "share": 0.9166666666666666
     },
     {
      "step": "build Ancient of War",
      "guideFood": 40,
      "proFood": 37,
-     "share": 0.5769230769230769
-    }
-   ]
-  },
-  {
-   "id": "lp-ne-fast-huntress",
-   "name": "Night Elf Fast Huntress",
-   "players": 22,
-   "winRate": 0.45454545454545453,
-   "matchScore": 0.5083333333333333,
-   "steps": [
-    {
-     "step": "build Altar of Elders",
-     "guideFood": 5,
-     "proFood": 0,
-     "share": 1
-    },
-    {
-     "step": "hero Keeper of the Grove",
-     "guideFood": 10,
-     "proFood": 20,
-     "share": 0.045454545454545456
-    },
-    {
-     "step": "build Ancient of War",
-     "guideFood": 17,
-     "proFood": 7,
-     "share": 0.9545454545454546
-    },
-    {
-     "step": "build Hunter's Hall",
-     "guideFood": 17,
-     "proFood": 19,
-     "share": 1
-    },
-    {
-     "step": "build Ancient of War",
-     "guideFood": 18,
-     "proFood": 20,
-     "share": 0.9545454545454546
-    },
-    {
-     "step": "train Huntress",
-     "guideFood": 20,
-     "proFood": 20,
-     "share": 1
-    }
-   ]
-  },
-  {
-   "id": "lp-ne-fast-altar",
-   "name": "Night Elf Fast Altar (standard)",
-   "players": 22,
-   "winRate": 0.4090909090909091,
-   "matchScore": 0.4174242424242425,
-   "steps": [
-    {
-     "step": "build Altar of Elders",
-     "guideFood": 5,
-     "proFood": 0,
-     "share": 1
-    },
-    {
-     "step": "build Ancient of War",
-     "guideFood": 6,
-     "proFood": 6,
-     "share": 1
-    },
-    {
-     "step": "hero Demon Hunter",
-     "guideFood": 10,
-     "proFood": 19,
-     "share": 0.4090909090909091
-    },
-    {
-     "step": "train Archer",
-     "guideFood": 16,
-     "proFood": 14,
-     "share": 0.5909090909090909
-    }
-   ]
-  },
-  {
-   "id": "grubby-022-ne-dh-safe-archers",
-   "name": "Safe and Easy Demon Hunter Archers",
-   "players": 17,
-   "winRate": 0.5294117647058824,
-   "matchScore": 0.47692307692307684,
-   "steps": [
-    {
-     "step": "build Altar of Elders",
-     "guideFood": 5,
-     "proFood": 0,
-     "share": 1
-    },
-    {
-     "step": "build Ancient of War",
-     "guideFood": 8,
-     "proFood": 7,
-     "share": 1
-    },
-    {
-     "step": "hero Demon Hunter",
-     "guideFood": 10,
-     "proFood": 19.5,
-     "share": 0.47058823529411764
-    },
-    {
-     "step": "train Archer",
-     "guideFood": 16,
-     "proFood": 15,
-     "share": 1
-    },
-    {
-     "step": "tech Tree of Ages",
-     "guideFood": 26,
-     "proFood": 24,
-     "share": 1
-    },
-    {
-     "step": "hero Naga Sea Witch",
-     "guideFood": 36,
-     "proFood": 33,
-     "share": 0.5294117647058824
+     "share": 0.5416666666666666
     }
    ]
   },
@@ -5990,32 +5990,21 @@
    "players": 209,
    "winRate": 0.5933014354066986,
    "food": [
-    20,
+    9,
     22,
     27,
     32
    ]
   },
   {
-   "plan": "Demon Hunter > Tree of Ages > Tree of Eternity > Keeper of the Grove",
-   "players": 115,
-   "winRate": 0.5043478260869565,
-   "food": [
-    20,
-    21,
-    30,
-    30
-   ]
-  },
-  {
    "plan": "Demon Hunter > Tree of Ages > Keeper of the Grove > Tree of Eternity",
-   "players": 77,
-   "winRate": 0.5454545454545454,
+   "players": 189,
+   "winRate": 0.5291005291005291,
    "food": [
-    19,
+    9,
     21,
-    30,
-    32
+    26,
+    31
    ]
   },
   {
@@ -6023,7 +6012,7 @@
    "players": 73,
    "winRate": 0.5616438356164384,
    "food": [
-    19,
+    8,
     22,
     27,
     31,
@@ -6035,7 +6024,7 @@
    "players": 65,
    "winRate": 0.5230769230769231,
    "food": [
-    19,
+    8,
     21,
     27
    ]
@@ -6045,7 +6034,7 @@
    "players": 44,
    "winRate": 0.5454545454545454,
    "food": [
-    19
+    9
    ]
   },
   {
@@ -6053,7 +6042,7 @@
    "players": 35,
    "winRate": 0.6,
    "food": [
-    20,
+    8,
     22,
     26,
     26,
@@ -6065,7 +6054,7 @@
    "players": 34,
    "winRate": 0.4411764705882353,
    "food": [
-    19.5,
+    8,
     22,
     30
    ]
@@ -6075,10 +6064,22 @@
    "players": 32,
    "winRate": 0.53125,
    "food": [
-    19,
+    8.5,
     21,
     26.5,
     27.5
+   ]
+  },
+  {
+   "plan": "Demon Hunter > Tree of Ages > Keeper of the Grove > Tree of Eternity > expand",
+   "players": 30,
+   "winRate": 0.5666666666666667,
+   "food": [
+    8,
+    22,
+    26,
+    30,
+    49
    ]
   },
   {
@@ -6086,7 +6087,7 @@
    "players": 29,
    "winRate": 0.5172413793103449,
    "food": [
-    19,
+    8,
     21,
     25,
     27,
@@ -6098,7 +6099,7 @@
    "players": 25,
    "winRate": 0.68,
    "food": [
-    20,
+    9,
     21,
     27,
     32,
@@ -6108,14 +6109,14 @@
   },
   {
    "plan": "Keeper of the Grove > expand > Tree of Ages > tavern hero > Tree of Eternity",
-   "players": 24,
-   "winRate": 0.7916666666666666,
+   "players": 23,
+   "winRate": 0.8260869565217391,
    "food": [
-    19,
+    8,
     22,
     25,
     31,
-    41
+    40
    ]
   },
   {
@@ -6123,7 +6124,7 @@
    "players": 23,
    "winRate": 0.6521739130434783,
    "food": [
-    19,
+    8,
     21,
     27,
     28,
@@ -6135,21 +6136,10 @@
    "players": 21,
    "winRate": 0.2857142857142857,
    "food": [
-    19,
+    9,
     21,
     28,
     28
-   ]
-  },
-  {
-   "plan": "Keeper of the Grove > Tree of Ages > tavern hero > Tree of Eternity",
-   "players": 21,
-   "winRate": 0.47619047619047616,
-   "food": [
-    20,
-    22,
-    29,
-    33
    ]
   },
   {
@@ -6157,34 +6147,31 @@
    "players": 21,
    "winRate": 0.5238095238095238,
    "food": [
-    19,
+    9,
     25,
     35
    ]
   },
   {
-   "plan": "Demon Hunter > Tree of Ages > Tree of Eternity > Keeper of the Grove > expand",
-   "players": 19,
-   "winRate": 0.5789473684210527,
+   "plan": "Keeper of the Grove > Tree of Ages > tavern hero > Tree of Eternity",
+   "players": 20,
+   "winRate": 0.5,
    "food": [
-    19,
+    9,
     22,
-    30,
-    30,
-    49
+    29.5,
+    35
    ]
   },
   {
-   "plan": "Demon Hunter > Tree of Ages > expand > tavern hero > Tree of Eternity > expand",
-   "players": 17,
-   "winRate": 0.5882352941176471,
+   "plan": "Keeper of the Grove > Tree of Ages > Demon Hunter > Tree of Eternity",
+   "players": 18,
+   "winRate": 0.6666666666666666,
    "food": [
-    19,
-    23,
-    26,
-    26,
-    36,
-    50
+    8.5,
+    20,
+    27.5,
+    33
    ]
   },
   {
@@ -6192,7 +6179,7 @@
    "players": 17,
    "winRate": 0.47058823529411764,
    "food": [
-    20,
+    8,
     22
    ]
   },
@@ -6201,9 +6188,9 @@
    "players": 17,
    "winRate": 0.47058823529411764,
    "food": [
-    19,
+    9,
     21,
-    28
+    24
    ]
   },
   {
@@ -6211,7 +6198,7 @@
    "players": 17,
    "winRate": 0.7058823529411765,
    "food": [
-    19,
+    8,
     21,
     28,
     34,
@@ -6219,21 +6206,24 @@
    ]
   },
   {
+   "plan": "Demon Hunter > Tree of Ages > expand > tavern hero > Tree of Eternity > expand",
+   "players": 15,
+   "winRate": 0.6,
+   "food": [
+    8,
+    22,
+    26,
+    26,
+    36,
+    50
+   ]
+  },
+  {
    "plan": "Demon Hunter",
    "players": 15,
    "winRate": 0.26666666666666666,
    "food": [
-    19
-   ]
-  },
-  {
-   "plan": "Warden > Tree of Ages > Tree of Eternity",
-   "players": 14,
-   "winRate": 0.7142857142857143,
-   "food": [
-    19,
-    23,
-    27
+    8
    ]
   },
   {
@@ -6241,7 +6231,17 @@
    "players": 13,
    "winRate": 0.38461538461538464,
    "food": [
-    20
+    9
+   ]
+  },
+  {
+   "plan": "Warden > Tree of Ages > Tree of Eternity",
+   "players": 13,
+   "winRate": 0.6923076923076923,
+   "food": [
+    8,
+    23,
+    27
    ]
   },
   {
@@ -6249,7 +6249,7 @@
    "players": 13,
    "winRate": 0.6923076923076923,
    "food": [
-    20,
+    8,
     23,
     27,
     31,
@@ -6261,7 +6261,7 @@
    "players": 13,
    "winRate": 0.5384615384615384,
    "food": [
-    20,
+    9,
     23,
     26,
     26
@@ -6272,7 +6272,7 @@
    "players": 12,
    "winRate": 0.5,
    "food": [
-    19,
+    8,
     20.5,
     25,
     30,
@@ -6280,23 +6280,11 @@
    ]
   },
   {
-   "plan": "Demon Hunter > Tree of Ages > Keeper of the Grove > Tree of Eternity > expand",
-   "players": 11,
-   "winRate": 0.5454545454545454,
-   "food": [
-    20,
-    22,
-    30,
-    31,
-    49
-   ]
-  },
-  {
    "plan": "Demon Hunter > expand > Tree of Ages > expand > tavern hero > Tree of Eternity",
    "players": 11,
    "winRate": 0.2727272727272727,
    "food": [
-    20,
+    9,
     21,
     25,
     27,
@@ -6309,21 +6297,10 @@
    "players": 11,
    "winRate": 0.36363636363636365,
    "food": [
-    19,
+    8,
     22,
     24,
     30
-   ]
-  },
-  {
-   "plan": "Warden > Tree of Ages > Tree of Eternity > expand",
-   "players": 11,
-   "winRate": 0.36363636363636365,
-   "food": [
-    19,
-    23,
-    28,
-    45
    ]
   },
   {
@@ -6331,7 +6308,7 @@
    "players": 10,
    "winRate": 0.5,
    "food": [
-    19.5,
+    9,
     22.5,
     25,
     24.5,
@@ -6340,11 +6317,24 @@
    ]
   },
   {
+   "plan": "Keeper of the Grove > expand > Tree of Ages > tavern hero > Tree of Eternity > Priestess of the Moon",
+   "players": 10,
+   "winRate": 0.3,
+   "food": [
+    9,
+    22,
+    24,
+    32,
+    37,
+    53.5
+   ]
+  },
+  {
    "plan": "Demon Hunter > expand > Tree of Ages > tavern hero > Tree of Eternity > expand",
    "players": 10,
    "winRate": 0.2,
    "food": [
-    20,
+    9,
     22.5,
     26,
     27.5,
@@ -6367,7 +6357,7 @@
    "players": 10,
    "winRate": 0.8,
    "food": [
-    20,
+    9,
     21.5,
     29.5,
     29,
@@ -6380,7 +6370,7 @@
    "players": 10,
    "winRate": 0.4,
    "food": [
-    19,
+    8,
     22.5,
     26.5,
     31
@@ -6391,23 +6381,21 @@
    "players": 10,
    "winRate": 0.4,
    "food": [
-    19.5,
+    9,
     23,
     26.5,
     31.5
    ]
   },
   {
-   "plan": "Keeper of the Grove > expand > Tree of Ages > tavern hero > Tree of Eternity > Priestess of the Moon",
-   "players": 9,
-   "winRate": 0.3333333333333333,
+   "plan": "Warden > Tree of Ages > Tree of Eternity > expand",
+   "players": 10,
+   "winRate": 0.4,
    "food": [
-    20,
-    22,
-    24,
-    32,
-    36,
-    54
+    8,
+    23,
+    28.5,
+    46.5
    ]
   },
   {
@@ -6422,38 +6410,16 @@
    ]
   },
   {
-   "plan": "Keeper of the Grove > Tree of Ages > Demon Hunter > Tree of Eternity",
-   "players": 9,
-   "winRate": 0.5555555555555556,
-   "food": [
-    19,
-    20,
-    33,
-    35
-   ]
-  },
-  {
    "plan": "Demon Hunter > Tree of Ages > tavern hero > Tree of Eternity > Keeper of the Grove > expand",
    "players": 9,
    "winRate": 0.6666666666666666,
    "food": [
-    20,
+    8,
     21,
     26,
     29,
-    43,
+    36,
     45
-   ]
-  },
-  {
-   "plan": "Keeper of the Grove > Tree of Ages > Tree of Eternity > Demon Hunter",
-   "players": 9,
-   "winRate": 0.7777777777777778,
-   "food": [
-    19,
-    20,
-    32,
-    31
    ]
   },
   {
@@ -6461,7 +6427,7 @@
    "players": 8,
    "winRate": 0.75,
    "food": [
-    19,
+    8,
     21.5,
     25,
     27,
@@ -6470,11 +6436,32 @@
    ]
   },
   {
+   "plan": "Priestess of the Moon > Tree of Ages",
+   "players": 8,
+   "winRate": 0.375,
+   "food": [
+    9,
+    33
+   ]
+  },
+  {
+   "plan": "Demon Hunter > Tree of Ages > expand > Keeper of the Grove > Tree of Eternity",
+   "players": 8,
+   "winRate": 0.25,
+   "food": [
+    9,
+    21.5,
+    26,
+    25,
+    31
+   ]
+  },
+  {
    "plan": "Keeper of the Grove > Tree of Ages > tavern hero > expand",
    "players": 8,
    "winRate": 0.875,
    "food": [
-    19,
+    8,
     20.5,
     28.5,
     32.5
@@ -6485,12 +6472,12 @@
    "players": 8,
    "winRate": 0.75,
    "food": [
-    19,
+    8,
     21.5,
     26,
     27.5,
     32,
-    61.5
+    49
    ]
   },
   {
@@ -6498,7 +6485,7 @@
    "players": 8,
    "winRate": 0.5,
    "food": [
-    19.5,
+    9,
     21,
     26.5,
     26.5,
@@ -6506,20 +6493,11 @@
    ]
   },
   {
-   "plan": "Priestess of the Moon > Tree of Ages",
-   "players": 7,
-   "winRate": 0.42857142857142855,
-   "food": [
-    20,
-    34
-   ]
-  },
-  {
    "plan": "Keeper of the Grove > expand > Tree of Ages > tavern hero > Tree of Eternity > expand",
    "players": 7,
    "winRate": 0.5714285714285714,
    "food": [
-    19,
+    8,
     21,
     22,
     31,
@@ -6532,7 +6510,7 @@
    "players": 7,
    "winRate": 0.7142857142857143,
    "food": [
-    19,
+    8,
     21,
     26,
     29,
@@ -6544,7 +6522,7 @@
    "players": 7,
    "winRate": 0.7142857142857143,
    "food": [
-    20,
+    9,
     22,
     27,
     37,
@@ -6556,10 +6534,23 @@
    "players": 7,
    "winRate": 0.7142857142857143,
    "food": [
-    20,
+    9,
     23,
     28,
     29
+   ]
+  },
+  {
+   "plan": "Demon Hunter > Tree of Ages > Keeper of the Grove > Tree of Eternity > expand > expand",
+   "players": 7,
+   "winRate": 0.5714285714285714,
+   "food": [
+    8,
+    21,
+    26,
+    30,
+    46,
+    50
    ]
   },
   {
@@ -6567,10 +6558,10 @@
    "players": 7,
    "winRate": 0.5714285714285714,
    "food": [
-    19,
+    8,
     22,
     24,
-    34,
+    29,
     37
    ]
   },
@@ -6579,11 +6570,11 @@
    "players": 7,
    "winRate": 0.42857142857142855,
    "food": [
-    20,
+    9,
     21,
     26,
     28,
-    40
+    31
    ]
   },
   {
@@ -6603,22 +6594,10 @@
    "players": 6,
    "winRate": 0.3333333333333333,
    "food": [
-    20,
+    9,
     24.5,
     30,
     42
-   ]
-  },
-  {
-   "plan": "Demon Hunter > Tree of Ages > expand > Keeper of the Grove > Tree of Eternity",
-   "players": 6,
-   "winRate": 0.3333333333333333,
-   "food": [
-    20,
-    21.5,
-    26,
-    30,
-    31.5
    ]
   },
   {
@@ -6626,7 +6605,7 @@
    "players": 6,
    "winRate": 0.8333333333333334,
    "food": [
-    19,
+    8.5,
     21.5,
     27,
     41
@@ -6637,7 +6616,7 @@
    "players": 6,
    "winRate": 0.16666666666666666,
    "food": [
-    19.5,
+    8.5,
     24
    ]
   },
@@ -6646,7 +6625,7 @@
    "players": 6,
    "winRate": 0.3333333333333333,
    "food": [
-    19,
+    8,
     21,
     26
    ]
@@ -6656,7 +6635,7 @@
    "players": 6,
    "winRate": 0.3333333333333333,
    "food": [
-    20,
+    9,
     22.5,
     28,
     34.5,
@@ -6669,10 +6648,10 @@
    "players": 6,
    "winRate": 0.6666666666666666,
    "food": [
-    19,
+    8,
     21.5,
     24.5,
-    31.5,
+    25,
     41
    ]
   },
@@ -6681,10 +6660,22 @@
    "players": 6,
    "winRate": 0.3333333333333333,
    "food": [
-    19,
+    9,
     20.5,
     26.5,
     39
+   ]
+  },
+  {
+   "plan": "Keeper of the Grove > Tree of Ages > tavern hero > Tree of Eternity > Priestess of the Moon",
+   "players": 6,
+   "winRate": 0.3333333333333333,
+   "food": [
+    9,
+    21.5,
+    28,
+    35,
+    35.5
    ]
   },
   {
@@ -6692,7 +6683,7 @@
    "players": 5,
    "winRate": 0.6,
    "food": [
-    19,
+    8,
     25,
     28,
     36
@@ -6703,7 +6694,7 @@
    "players": 5,
    "winRate": 0.6,
    "food": [
-    19,
+    8,
     22,
     29,
     31,
@@ -6716,24 +6707,38 @@
    "players": 5,
    "winRate": 0.8,
    "food": [
-    19,
+    8,
     22,
     26,
     35,
-    41,
+    37,
     45
    ]
   },
   {
-   "plan": "Warden > expand > Tree of Ages > tavern hero > Tree of Eternity",
+   "plan": "Demon Hunter > Tree of Ages > expand > tavern hero > Tree of Eternity > Priestess of the Moon",
    "players": 5,
    "winRate": 0.6,
    "food": [
-    20,
+    8,
+    23,
+    27,
+    28,
+    32,
+    56
+   ]
+  },
+  {
+   "plan": "Demon Hunter > Tree of Ages > expand > tavern hero > Tree of Eternity > Keeper of the Grove",
+   "players": 5,
+   "winRate": 0.4,
+   "food": [
+    8,
     22,
     25,
-    27,
-    32
+    24,
+    34,
+    47
    ]
   },
   {
@@ -6741,7 +6746,7 @@
    "players": 5,
    "winRate": 0.6,
    "food": [
-    19,
+    8,
     22,
     22,
     27,
@@ -6766,7 +6771,7 @@
    "players": 5,
    "winRate": 0.6,
    "food": [
-    19,
+    8,
     22,
     29,
     29
@@ -6777,10 +6782,10 @@
    "players": 5,
    "winRate": 0.4,
    "food": [
-    19,
+    9,
     22,
     24,
-    32
+    27
    ]
   },
   {
@@ -6788,7 +6793,7 @@
    "players": 5,
    "winRate": 0.8,
    "food": [
-    20,
+    9,
     24,
     25,
     27,
@@ -6801,23 +6806,10 @@
    "players": 5,
    "winRate": 0.6,
    "food": [
-    19,
+    9,
     25,
     26,
     36,
-    46
-   ]
-  },
-  {
-   "plan": "Demon Hunter > Tree of Ages > Tree of Eternity > Keeper of the Grove > expand > expand",
-   "players": 5,
-   "winRate": 0.4,
-   "food": [
-    19,
-    21,
-    30,
-    29,
-    45,
     46
    ]
   },
@@ -6826,12 +6818,12 @@
    "players": 5,
    "winRate": 0.8,
    "food": [
-    19,
+    8,
     23,
     28,
     31,
     39,
-    51
+    46
    ]
   },
   {
@@ -6839,7 +6831,7 @@
    "players": 5,
    "winRate": 0.2,
    "food": [
-    19,
+    8,
     19,
     25,
     30,
@@ -6852,24 +6844,12 @@
    "players": 5,
    "winRate": 0.4,
    "food": [
-    20,
+    9,
     21,
     25,
     24,
-    43,
+    31,
     45
-   ]
-  },
-  {
-   "plan": "Keeper of the Grove > Tree of Ages > tavern hero > Tree of Eternity > Priestess of the Moon",
-   "players": 5,
-   "winRate": 0.4,
-   "food": [
-    20,
-    22,
-    29,
-    36,
-    46
    ]
   },
   {
@@ -6889,7 +6869,7 @@
    "players": 4,
    "winRate": 0.25,
    "food": [
-    20,
+    9,
     22.5,
     28,
     28.5
@@ -6900,7 +6880,7 @@
    "players": 4,
    "winRate": 0.75,
    "food": [
-    19.5,
+    9,
     22,
     27,
     28,
@@ -6912,7 +6892,7 @@
    "players": 4,
    "winRate": 0.75,
    "food": [
-    19,
+    8.5,
     19.5,
     24,
     31.5,
@@ -6920,53 +6900,27 @@
    ]
   },
   {
-   "plan": "Demon Hunter > Tree of Ages > expand > tavern hero > Tree of Eternity > Priestess of the Moon",
-   "players": 4,
-   "winRate": 0.5,
-   "food": [
-    19,
-    22.5,
-    26.5,
-    28,
-    32,
-    61
-   ]
-  },
-  {
    "plan": "Demon Hunter > Tree of Ages > tavern hero > Tree of Eternity > Priestess of the Moon",
    "players": 4,
    "winRate": 0.75,
    "food": [
-    20,
+    9,
     22,
     30,
     34.5,
-    48.5
+    40
    ]
   },
   {
-   "plan": "Keeper of the Grove > Tree of Ages > Tree of Eternity > Demon Hunter > tavern hero",
+   "plan": "Warden > expand > Tree of Ages > tavern hero > Tree of Eternity",
    "players": 4,
-   "winRate": 0.25,
+   "winRate": 0.75,
    "food": [
-    19,
-    20,
-    26,
-    28.5,
-    37
-   ]
-  },
-  {
-   "plan": "Demon Hunter > Tree of Ages > expand > tavern hero > Tree of Eternity > Keeper of the Grove",
-   "players": 4,
-   "winRate": 0.5,
-   "food": [
-    19.5,
+    9,
     21.5,
-    25,
     24.5,
-    32.5,
-    51.5
+    27,
+    31.5
    ]
   },
   {
@@ -6974,11 +6928,11 @@
    "players": 4,
    "winRate": 0.75,
    "food": [
-    19.5,
+    8.5,
     20.5,
     29.5,
     32.5,
-    45
+    38
    ]
   },
   {
@@ -6986,7 +6940,7 @@
    "players": 4,
    "winRate": 0.5,
    "food": [
-    19,
+    8,
     23.5,
     26,
     30,
@@ -6998,20 +6952,8 @@
    "players": 4,
    "winRate": 0.5,
    "food": [
-    19,
+    8.5,
     24.5
-   ]
-  },
-  {
-   "plan": "Keeper of the Grove > Tree of Ages > expand > expand > Demon Hunter",
-   "players": 4,
-   "winRate": 0.5,
-   "food": [
-    19.5,
-    24,
-    27.5,
-    30,
-    32.5
    ]
   },
   {
@@ -7019,9 +6961,9 @@
    "players": 4,
    "winRate": 0.75,
    "food": [
-    19,
+    8.5,
     21.5,
-    28,
+    25,
     37,
     41
    ]
@@ -7031,7 +6973,7 @@
    "players": 4,
    "winRate": 0.25,
    "food": [
-    20,
+    9,
     23.5,
     26.5,
     25.5,
@@ -7043,7 +6985,7 @@
    "players": 4,
    "winRate": 0.75,
    "food": [
-    19
+    8
    ]
   },
   {
@@ -7051,7 +6993,7 @@
    "players": 4,
    "winRate": 0.5,
    "food": [
-    19,
+    8,
     22,
     26.5,
     27,
@@ -7063,7 +7005,7 @@
    "players": 4,
    "winRate": 0.25,
    "food": [
-    19,
+    8,
     20.5,
     25,
     24.5,
@@ -7076,7 +7018,7 @@
    "players": 4,
    "winRate": 0.5,
    "food": [
-    19.5,
+    9,
     21,
     24,
     28,
@@ -7089,11 +7031,11 @@
    "players": 4,
    "winRate": 0.25,
    "food": [
-    19,
+    9,
     28,
     31
    ]
   }
  ],
- "at": "2026-10-27T22:39:00.675Z"
+ "at": "2026-10-28T07:25:56.986Z"
 }
