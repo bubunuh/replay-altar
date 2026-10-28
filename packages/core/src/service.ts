@@ -7,6 +7,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { dataDir, type CollectorMode } from "./config.ts";
+import { isInstalled, projectRoot } from "./root.ts";
 
 export const SERVICE = "replay-altar-collector.service";
 const RUN_KEY = "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run";
@@ -17,8 +18,13 @@ const LAUNCH_AGENTS_DIR = "Library/LaunchAgents";
 
 export const darwinLaunchAgentPath = () => join(homedir(), LAUNCH_AGENTS_DIR, "replay-altar-collector.plist");
 
+export function darwinCollectorCommand(): string[] {
+  if (isInstalled()) return [process.execPath, join(projectRoot(), "collector/collector.mjs"), "collector"];
+  return [join(homedir(), ".local/bin/replay-altar"), "collector"];
+}
+
 /** A macOS LaunchAgent plist that starts the collector at login. */
-export function darwinLaunchAgent(binary: string, args: string[] = []): string {
+export function darwinLaunchAgent(binary: string, args: string[] = [], runAtLoad = true): string {
   const xml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
   return [
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
@@ -32,7 +38,7 @@ export function darwinLaunchAgent(binary: string, args: string[] = []): string {
     ...[binary, ...args].map((arg) => `  <string>${xml(arg)}</string>`),
     "  </array>",
     "  <key>RunAtLoad</key>",
-    "  <true/>",
+    runAtLoad ? "  <true/>" : "  <false/>",
     "  <key>KeepAlive</key>",
     "  <false/>",
     "</dict>",
@@ -181,30 +187,10 @@ function setLogin(on: boolean) {
  */
 export function startCollector(atLogin: boolean) {
   if (darwin) {
-    if (atLogin) enableCollector();
-    else disableCollector();
-    return;
-  }
-  if (!windows) systemctl("daemon-reload"); // the unit file may have just been (re)written
-  setLogin(atLogin);
-  if (!windows) return systemctl("start", SERVICE);
-  startOnWindows();
-}
-
-/** Stop the collector now (the window closed and it shouldn't keep running); login unchanged. */
-export function stopCollector() {
-  if (darwin) return disableCollector();
-  if (!windows) return systemctl("stop", SERVICE);
-  stopOnWindows();
-}
-
-/** Start now and at every login. */
-export function enableCollector() {
-  if (darwin) {
     const plist = darwinLaunchAgentPath();
-    const launchPath = join(homedir(), ".local/bin/replay-altar");
-    const agent = darwinLaunchAgent(launchPath, ["collector"]);
-    if (dryRun()) return console.log(`  (skipped) launchctl load ${plist}`);
+    const [binary, ...args] = darwinCollectorCommand();
+    const agent = darwinLaunchAgent(binary, args, atLogin);
+    if (dryRun()) return console.log(`  (skipped) launchctl ${atLogin ? "load" : "load"} ${plist}`);
     mkdirSync(dirname(plist), { recursive: true });
     writeFileSync(plist, agent);
     const uid = process.getuid?.() ?? 0;
@@ -215,6 +201,33 @@ export function enableCollector() {
     }
     return;
   }
+  if (!windows) systemctl("daemon-reload"); // the unit file may have just been (re)written
+  setLogin(atLogin);
+  if (!windows) return systemctl("start", SERVICE);
+  startOnWindows();
+}
+
+/** Stop the collector now (the window closed and it shouldn't keep running); login unchanged. */
+export function stopCollector() {
+  if (darwin) {
+    const plist = darwinLaunchAgentPath();
+    if (dryRun()) return console.log(`  (skipped) launchctl unload ${plist}`);
+    const uid = process.getuid?.() ?? 0;
+    try {
+      execFileSync("launchctl", ["bootout", `gui/${uid}`, plist], { stdio: "inherit" });
+    } catch {
+      execFileSync("launchctl", ["unload", "-w", plist], { stdio: "inherit" });
+    }
+    rmSync(plist, { force: true });
+    return;
+  }
+  if (!windows) return systemctl("stop", SERVICE);
+  stopOnWindows();
+}
+
+/** Start now and at every login. */
+export function enableCollector() {
+  if (darwin) return startCollector(true);
   if (!windows) {
     systemctl("daemon-reload");
     return systemctl("enable", "--now", SERVICE);
@@ -251,8 +264,11 @@ export function disableCollector() {
  * the window closes, an "off" collector stops (a "game" one goes back to waiting by itself).
  */
 export function collectorForWindow(moment: "opened" | "setting changed" | "closed", mode: CollectorMode) {
-  if (moment !== "closed") return darwin ? (mode === "off" ? disableCollector() : enableCollector()) : startCollector(mode !== "off");
-  if (mode === "off") stopCollector();
+  if (moment !== "closed") {
+    if (darwin) return startCollector(mode !== "off");
+    return startCollector(mode !== "off");
+  }
+  if (mode === "off") return stopCollector();
 }
 
 /** After a settings change: the collector reads its settings at start. */
