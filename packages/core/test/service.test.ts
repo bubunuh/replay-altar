@@ -5,7 +5,8 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const linux = process.platform !== "win32";
+const linux = process.platform === "linux";
+const darwin = process.platform === "darwin";
 let printed: string[] = [];
 let saved: string | undefined;
 beforeEach(() => {
@@ -43,6 +44,30 @@ describe.skipIf(!linux)("the collector service and the window (Linux)", () => {
     collectorForWindow("setting changed", "off");
     expect(printed).toContain(run("disable", SERVICE));
     expect(printed).not.toContain(run("stop", SERVICE));
+  });
+});
+
+describe.skipIf(!darwin)("the collector service and the window (macOS)", () => {
+  test("off: the window disables the LaunchAgent and stops the collector when the window closes", () => {
+    collectorForWindow("opened", "off");
+    expect(printed.some((line) => line.startsWith("(skipped) launchctl unload "))).toBe(true);
+    printed = [];
+    collectorForWindow("closed", "off");
+    expect(printed.some((line) => line.startsWith("(skipped) systemctl --user stop "))).toBe(false);
+  });
+
+  test.each(["game", "always"] as const)("%s: the LaunchAgent loads and stays active while the window is open", (mode) => {
+    collectorForWindow("opened", mode);
+    expect(printed.some((line) => line.startsWith("(skipped) launchctl load "))).toBe(true);
+    printed = [];
+    collectorForWindow("closed", mode);
+    expect(printed).toEqual([]);
+  });
+
+  test("changed to off in Settings: unloads the LaunchAgent without stopping immediately", () => {
+    collectorForWindow("setting changed", "off");
+    expect(printed.some((line) => line.startsWith("(skipped) launchctl unload "))).toBe(true);
+    expect(printed.some((line) => line.startsWith("(skipped) systemctl --user stop "))).toBe(false);
   });
 });
 

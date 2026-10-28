@@ -7,7 +7,7 @@ import { chmodSync, copyFileSync, existsSync, mkdirSync, readdirSync, readFileSy
 import { homedir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import { collectorFiles, collectorMode, configPath, dataDir, disableCollector, linuxUnit, loadConfig, projectRoot, SERVICE, startCollector, windowsLauncher } from "@replay-altar/core";
+import { collectorFiles, collectorMode, configPath, dataDir, disableCollector, enableCollector, linuxUnit, loadConfig, projectRoot, SERVICE, startCollector, windowsLauncher } from "@replay-altar/core";
 
 const home = homedir();
 const windows = process.platform === "win32";

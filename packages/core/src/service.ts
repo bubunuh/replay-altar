@@ -180,6 +180,11 @@ function setLogin(on: boolean) {
  * also takes it out of the login (Linux: the unit disabled; Windows: no Run entry).
  */
 export function startCollector(atLogin: boolean) {
+  if (darwin) {
+    if (atLogin) enableCollector();
+    else disableCollector();
+    return;
+  }
   if (!windows) systemctl("daemon-reload"); // the unit file may have just been (re)written
   setLogin(atLogin);
   if (!windows) return systemctl("start", SERVICE);
@@ -188,6 +193,7 @@ export function startCollector(atLogin: boolean) {
 
 /** Stop the collector now (the window closed and it shouldn't keep running); login unchanged. */
 export function stopCollector() {
+  if (darwin) return disableCollector();
   if (!windows) return systemctl("stop", SERVICE);
   stopOnWindows();
 }
