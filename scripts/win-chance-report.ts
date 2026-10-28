@@ -82,7 +82,7 @@ function weightsFigure(): string {
       return k[j].weight * (1 - f) + k[j + 1].weight * f;
     };
     const line = minutes.map((m) => `${x(m).toFixed(1)},${y((sigmoid(w.sd * weightAtMinute(m)) - 0.5) * 100).toFixed(1)}`).join(" ");
-    return `<g><text x="${ox + L}" y="${oy + 14}" font-size="11.5" font-weight="600" fill="${COLORS.ink}">${esc(w.feature)}</text>
+    return `<g><text x="${ox + L}" y="${oy + 14}" font-size="11.5" font-weight="600" fill="${COLORS.ink}">${esc(word(w.feature))}</text>
 <line x1="${x(1)}" x2="${x(30)}" y1="${y(0)}" y2="${y(0)}" stroke="${COLORS.muted}"/>
 ${[ymax, -ymax].map((v) => `<line x1="${x(1)}" x2="${x(30)}" y1="${y(v)}" y2="${y(v)}" stroke="${COLORS.grid}"/><text x="${ox + L - 4}" y="${y(v) + 3}" text-anchor="end" font-size="9" fill="${COLORS.muted}">${v > 0 ? "+" : "−"}${Math.abs(v)}</text>`).join("")}
 ${[1, 10, 20, 30].map((m) => `<text x="${x(m)}" y="${oy + T + ph + 12}" text-anchor="middle" font-size="9" fill="${COLORS.muted}">${m}'</text>`).join("")}
@@ -110,7 +110,9 @@ function sigmoid(z: number) {
 const sens = (name: string) => R.sensitivity.find((s) => s.name.startsWith(name));
 const asFitted = sens("as fitted")!, noArmy = sens("without"), withArmy = sens("with the army value"), noise500 = sens("army value with extra noise (sd 500"), noise1000 = sens("army value with extra noise (sd 1000");
 // The chosen model's inputs in the summary's words.
-const INPUT_WORDS: Record<string, string> = { "army value": "army", "army value ratio (log)": "army", "food used": "food used", workers: "workers", "hero experience": "hero experience", "heroes alive": "heroes alive", bases: "expansions", "resources lost": "resources lost", upgrades: "upgrades", tier: "tier" };
+/** The model's input names as the app shows them ("food used" is "amount of units" there). */
+const word = (f: string) => (f === "food used" ? "amount of units" : f);
+const INPUT_WORDS: Record<string, string> = { "army value": "army", "army value ratio (log)": "army", "food used": "amount of units", workers: "workers", "hero experience": "hero experience", "heroes alive": "heroes alive", bases: "expansions", "resources lost": "resources lost", upgrades: "upgrades", tier: "tier" };
 const inputWords = [...new Set(best.keep.map((k) => INPUT_WORDS[k] ?? k))];
 const inputsText = `${inputWords.slice(0, -1).join(", ")} and ${inputWords.at(-1)}`;
 const knotsText = best.basis === "curve" ? "1, 5, 10, 15, 22 and 30 minutes" : "";
@@ -144,7 +146,7 @@ const html = `<!doctype html>
 
 <h2>2. Data</h2>
 <h3>2.1 What a replay holds</h3>
-<p>A Warcraft III replay records only the players' commands (the game is deterministic and replays it), never the state of the game: no unit positions, no hit points, no deaths. Replay Altar reconstructs the state with WC3V, an open-source simulation of replays, with 26 changes of its own (<code>patches/wc3v/</code>, proposed upstream). The main one: WC3V reads the selection lists the replay does record (when a player changes selection, the replay lists every unit that was selected, already without the dead ones), so it knows which units exist and when they die, instead of inferring deaths from units that stop receiving orders; a train order with several buildings selected trains in each of them (for Night Elf, in the first one only). Train orders the game refused never count as units, and Militia count as workers, not army. Food used is counted from the units that exist, as the game counts it (WC3V's own counter never took the dead off). Against Warcraft III's own unit counts on 102 recorded player-games (51 games, 15 of them never used to develop the simulation), the reconstructed army value is typically off by about 20% from minute 3 on (root mean square; 32% with the simulation of the previous version) and food used by 3 food on an average of 40; the estimated difference between the two players' armies correlates 0.91 with the real one (0.69) (<code>docs/DATA.md</code>, “How accurate the estimates are”).</p>
+<p>A Warcraft III replay records only the players' commands (the game is deterministic and replays it), never the state of the game: no unit positions, no hit points, no deaths. Replay Altar reconstructs the state with WC3V, an open-source simulation of replays, with 26 changes of its own (<code>patches/wc3v/</code>, proposed upstream). The main one: WC3V reads the selection lists the replay does record (when a player changes selection, the replay lists every unit that was selected, already without the dead ones), so it knows which units exist and when they die, instead of inferring deaths from units that stop receiving orders; a train order with several buildings selected trains in each of them (for Night Elf, in the first one only). Train orders the game refused never count as units, and Militia count as workers, not army. Food used is counted from the units that exist, as the game counts it (WC3V's own counter never took the dead off). Against Warcraft III's own unit counts on 102 recorded player-games (51 games, 15 of them never used to develop the simulation), the reconstructed army value is typically off by about 20% from minute 3 on (root mean square; 32% with the simulation of the previous version) and the amount of units (food in use) by 3 food on an average of 40; the estimated difference between the two players' armies correlates 0.91 with the real one (0.69) (<code>docs/DATA.md</code>, “How accurate the estimates are”).</p>
 <h3>2.2 Calibration set (fitting and model choice)</h3>
 <p>${R.calibration.games} 1v1 games by curated pro players on the current patch (3.0): ${calSources.w3info} tournament games from <a href="https://warcraft3.info/replays/">warcraft3.info</a> (players with a curated profile, at least 3 minutes, at most 20 games per player) and ${calSources.w3c} W3Champions ladder games by players rated 2400 or more, collected earlier in the same way. They were collected per race (about 200 games each); a game between two pros of different races sits in two collections and is counted once. A game is used when its simulation ran to the end and its winner is known from the replay. That gives ${R.calibration.moments.toLocaleString("en")} moments (Section 3).</p>
 <h3>2.3 Validation set (scoring only)</h3>
@@ -162,7 +164,7 @@ const html = `<!doctype html>
 <tr><td>tier</td><td>tier 2 and tier 3 finished (0–2)</td><td class="n">—</td></tr>
 <tr><td>resources spent</td><td>gold + lumber spent so far</td><td class="n">/1000</td></tr>
 <tr><td>resources lost</td><td>gold + lumber of units lost so far (heroes excluded)</td><td class="n">/1000</td></tr>
-<tr><td>food used</td><td>food in use</td><td class="n">/10</td></tr>
+<tr><td>amount of units</td><td>food in use (army and workers, as the game counts them)</td><td class="n">/10</td></tr>
 <tr><td>highest hero level</td><td>level of the highest hero</td><td class="n">—</td></tr>
 <tr><td>heroes alive</td><td>heroes that have appeared minus those dead and not yet revived</td><td class="n">—</td></tr>
 <tr><td>hero deaths</td><td>hero deaths so far</td><td class="n">—</td></tr>
@@ -181,7 +183,7 @@ const html = `<!doctype html>
 
 <h2>5. Results</h2>
 <table><tr><th>Model</th><th>Differences kept</th><th class="n">Log loss, pro games (CV)</th><th class="n">Log loss, validation</th><th class="n">Brier, validation</th></tr>
-${R.models.map((m) => `<tr class="${m.best ? "best" : ""}"><td>${esc(m.label)}${m.basis === "curve" || m.lambda !== 0.01 ? ` (ridge ${m.lambda})` : ""}${m.best ? " — chosen" : ""}</td><td>${esc(m.keep.join(", "))}</td><td class="n">${f4(m.cv)}</td><td class="n">${f4(m.validation)}</td><td class="n">${f4(m.brier)}</td></tr>`).join("\n")}
+${R.models.map((m) => `<tr class="${m.best ? "best" : ""}"><td>${esc(m.label)}${m.basis === "curve" || m.lambda !== 0.01 ? ` (ridge ${m.lambda})` : ""}${m.best ? " — chosen" : ""}</td><td>${esc(m.keep.map(word).join(", "))}</td><td class="n">${f4(m.cv)}</td><td class="n">${f4(m.validation)}</td><td class="n">${f4(m.brier)}</td></tr>`).join("\n")}
 <tr><td>Boosted trees (${R.trees.trees} trees of depth ${R.trees.depth})</td><td>all ${R.features.length}, and the game time</td><td class="n">${f4(R.trees.cv)}</td><td class="n">${f4(R.trees.validation)}</td><td class="n">${f4(R.trees.brier)}</td></tr>
 <tr><td>Coin flip</td><td></td><td class="n">0.6931</td><td class="n">0.6931</td><td class="n">0.2500</td></tr></table>
 <p>The chosen model is the one with the lowest cross-validated log loss on the pro games. On the validation set it beats the first model by ${signed(R.bootstrap.bestMinusFirst.diff)} log loss (95% interval from resampling games: ${signed(R.bootstrap.bestMinusFirst.lo)} to ${signed(R.bootstrap.bestMinusFirst.hi)}). Boosted trees do ${R.bootstrap.treesMinusBest.lo > 0 ? "worse" : "no better"}: ${signed(R.bootstrap.treesMinusBest.diff)} on the validation set (${signed(R.bootstrap.treesMinusBest.lo)} to ${signed(R.bootstrap.treesMinusBest.hi)}) and ${signed(R.trees.cv - best.cv)} on the pro games. The logistic model is also small (${best.keep.length} curves) and lets each swing be explained difference by difference.</p>
@@ -206,11 +208,11 @@ ${R.byMatchup.map((r) => `<tr><td>${r.key}</td><td class="n">${r.games}</td><td 
 <h3>5.4 What weighs most</h3>
 <figure>${weightsFigure()}<figcaption>Figure 3. For each difference the chosen model uses: the change in win chance, in percentage points, for a lead of one standard deviation of that difference (across all calibration moments), at each minute, with the others even. The leads overlap (a bigger army usually comes with more experience), so the panels are read together, not one by one.</figcaption></figure>
 <table><tr><th>A lead of one standard deviation in…</th><th class="n">One standard deviation</th><th class="n">at 5:00</th><th class="n">at 10:00</th><th class="n">at 15:00</th></tr>
-${R.weights.map((w) => `<tr><td>${esc(w.feature)}</td><td class="n">${w.sd.toFixed(2)}</td>${w.effect.map((e) => `<td class="n">${e.points >= 0 ? "+" : "−"}${Math.abs(Math.round(e.points * 100))} pts</td>`).join("")}</tr>`).join("\n")}</table>
+${R.weights.map((w) => `<tr><td>${esc(word(w.feature))}</td><td class="n">${w.sd.toFixed(2)}</td>${w.effect.map((e) => `<td class="n">${e.points >= 0 ? "+" : "−"}${Math.abs(Math.round(e.points * 100))} pts</td>`).join("")}</tr>`).join("\n")}</table>
 <p>Resources lost carries a negative weight, as it should (losing more is worse). Upgrades weigh slightly against early on, when research competes with units for the same resources, and for the player from about minute 8. The standard deviation column is in the scaled units of Section 3.</p>
 
 ${withArmy ? `<h3>5.5 The army value</h3>
-<p>The army value is the least certain input (Section 2.1). The chosen model does not use it: since food used is counted from the units the way the game counts it, food used (army and workers together, without valuing them) did as well on the pro games, and the backward selection of Section 4 dropped the army value as making the model no worse. Adding the army value ratio back to the chosen model:</p>
+<p>The army value is the least certain input (Section 2.1). The chosen model does not use it: since the amount of units (food in use) is counted from the units the way the game counts it, it (army and workers together, without valuing them) did as well on the pro games, and the backward selection of Section 4 dropped the army value as making the model no worse. Adding the army value ratio back to the chosen model:</p>
 <table><tr><th>Model</th><th class="n">Log loss, pro games (CV)</th><th class="n">Log loss, validation</th></tr>
 <tr><td>As chosen</td><td class="n">${f4(asFitted.cv)}</td><td class="n">${asFitted.validation === null ? "—" : f4(asFitted.validation)}</td></tr>
 <tr><td>With the army value ratio (log) added</td><td class="n">${f4(withArmy.cv)}</td><td class="n">${withArmy.validation === null ? "—" : f4(withArmy.validation)}</td></tr></table>

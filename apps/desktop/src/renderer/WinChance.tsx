@@ -28,7 +28,7 @@ const featureName = (f: number) =>
     "tier",
     tr("resources spent", "recursos gastos", "recursos gastados", "ressources dépensées"),
     tr("losses", "perdas", "pérdidas", "pertes"),
-    tr("food used", "food usado", "food usado", "food utilisée"),
+    tr("amount of units", "quantidade de unidades", "cantidad de unidades", "nombre d'unités"),
     tr("highest hero level", "nível do herói mais alto", "nivel del héroe más alto", "niveau du meilleur héros"),
     tr("heroes alive", "heróis vivos", "héroes vivos", "héros en vie"),
     tr("hero deaths", "mortes de heróis", "muertes de héroes", "morts de héros"),

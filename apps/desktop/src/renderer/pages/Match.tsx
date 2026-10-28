@@ -109,11 +109,11 @@ function GameCharts({ record, refMp, refLabel }: { record: GameRecord; refMp: Ma
   const workers = useMemo(() => timeLines(both((s) => s.workers), undefined, bandOf(refMp?.curves.workers, refLabel)), [mine, theirs, refMp, me?.name, opp?.name]);
   const supplyFor = (series: SimSample[], mineColor: boolean, band: Band | null = null) =>
     timeLines((t) => [
-      { name: tr("food used", "food usado", "food usado", "food utilisée"), color: mineColor ? t.series1 : t.series2, points: series.map((s) => [s.t, s.foodUsed] as [number, number]), step: true },
+      { name: tr("amount of units", "quantidade de unidades", "cantidad de unidades", "nombre d'unités"), color: mineColor ? t.series1 : t.series2, points: series.map((s) => [s.t, s.foodUsed] as [number, number]), step: true },
       // Cap in the main text colour so it stays distinct from the grey pro reference.
       { name: tr("food cap", "limite de food", "límite de food", "limite de food"), color: t.ink, points: series.map((s) => [s.t, Math.min(100, s.foodMax)] as [number, number]), step: true, muted: true },
     ], undefined, band);
-  const mySupply = useMemo(() => supplyFor(mine, true, bandOf(refMp?.curves.food, tr(`${refLabel} food used`, `${refLabel}: food usado`, `food usado: ${refLabel}`, `food utilisée : ${refLabel}`))), [mine, refMp]);
+  const mySupply = useMemo(() => supplyFor(mine, true, bandOf(refMp?.curves.food, tr(`${refLabel} amount of units`, `${refLabel}: quantidade de unidades`, `cantidad de unidades: ${refLabel}`, `nombre d'unités : ${refLabel}`))), [mine, refMp]);
   const oppSupply = useMemo(() => supplyFor(theirs, false), [theirs]);
   const apm = useMemo(
     () =>
@@ -196,12 +196,12 @@ function GameCharts({ record, refMp, refLabel }: { record: GameRecord; refMp: Ma
           </div>
           <div>
             <h3 className="chart-title">{tr("Supply", "Food", "Food", "Food")}: {shortName(me?.name ?? tr("You", "Você", "Tú", "Vous"))}</h3>
-            <Chart option={mySupply} height={200} label={tr("Your food used against food cap", "Seu food usado contra o limite de food", "Tu food usado contra tu límite de food", "Votre food utilisée par rapport à votre limite de food")} />
+            <Chart option={mySupply} height={200} label={tr("Your amount of units (in food) against your food cap", "Sua quantidade de unidades (em food) contra o seu limite de food", "Tu cantidad de unidades (en food) contra tu límite de food", "Votre nombre d'unités (en food) par rapport à votre limite de food")} />
           </div>
           {opp && (
             <div>
               <h3 className="chart-title">{tr("Supply", "Food", "Food", "Food")}: {shortName(opp.name)}</h3>
-              <Chart option={oppSupply} height={200} label={tr("Opponent food used against food cap", "Food usado do oponente contra o limite de food", "Food usado del rival contra su límite de food", "Food utilisée de l'adversaire par rapport à sa limite de food")} />
+              <Chart option={oppSupply} height={200} label={tr("Opponent's amount of units (in food) against their food cap", "Quantidade de unidades do oponente (em food) contra o limite de food dele", "Cantidad de unidades del rival (en food) contra su límite de food", "Nombre d'unités de l'adversaire (en food) par rapport à sa limite de food")} />
             </div>
           )}
         </div>

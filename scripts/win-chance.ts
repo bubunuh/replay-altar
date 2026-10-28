@@ -20,6 +20,9 @@ import { gamedataDir, loadCosts } from "@replay-altar/sim";
 import { basis, diffs, FEATURES, KNOTS_MIN, sideOf, sigmoid, START_MS, STEP_MS, weightAt, winCurve, type ResearchTimes, type Side, type SwingEvent, type WinModel } from "@replay-altar/rules/winchance";
 import { fightLabel } from "@replay-altar/rules/series";
 
+/** Input names as the app shows them ("food used" is "amount of units" there). */
+const inputName = (name: string) => (name === "food used" ? "amount of units" : name);
+
 const costs = loadCosts(gamedataDir(paths().root));
 const RESEARCH: ResearchTimes = Object.fromEntries(Object.entries(costs.upgrades).map(([code, u]) => [code, [u.timeBase, u.timeMod]]));
 const CALIBRATION = ["pros", "pros-orc", "pros-undead", "pros-nightelf"];
@@ -378,7 +381,7 @@ out("| Model | Differences | Log loss, calibration (cross-validated) | Log loss,
 out("|---|---|---|---|---|");
 for (const f of finals) {
   const v = predsOn(f.model, valMoments);
-  out(`| ${label(f.spec)}${f.spec.basis === "curve" ? ` (ridge ${f.spec.lambda})` : ""}${f === finalBest ? " **(best)**" : ""} | ${f.spec.keep.map((i) => FEATURES[i]).join(", ")} | ${f.loss.toFixed(4)} | ${valMoments.length ? lossOf(v).toFixed(4) : "–"} | ${valMoments.length ? brierOf(v).toFixed(4) : "–"} |`);
+  out(`| ${label(f.spec)}${f.spec.basis === "curve" ? ` (ridge ${f.spec.lambda})` : ""}${f === finalBest ? " **(best)**" : ""} | ${f.spec.keep.map((i) => inputName(FEATURES[i])).join(", ")} | ${f.loss.toFixed(4)} | ${valMoments.length ? lossOf(v).toFixed(4) : "–"} | ${valMoments.length ? brierOf(v).toFixed(4) : "–"} |`);
 }
 out(`| Boosted trees (${bestTrees.spec.trees} trees of depth ${bestTrees.spec.depth}) | all ${FEATURES.length}, and the game time | ${bestTrees.loss.toFixed(4)} | ${valMoments.length ? lossOf(valTrees).toFixed(4) : "–"} | ${valMoments.length ? brierOf(valTrees).toFixed(4) : "–"} |`);
 out(`| Coin flip | | 0.6931 | 0.6931 | 0.2500 |`);
@@ -447,7 +450,7 @@ finalBest.spec.keep.forEach((f, k) => {
     const e = sigmoid(sd[f] * weightOf(finalBest.model, k, t)) - 0.5;
     return `${e >= 0 ? "+" : ""}${Math.round(e * 100)} pts`;
   };
-  out(`| ${FEATURES[f]} | ${eff(300_000)} | ${eff(600_000)} | ${eff(900_000)} |`);
+  out(`| ${inputName(FEATURES[f])} | ${eff(300_000)} | ${eff(600_000)} | ${eff(900_000)} |`);
 });
 out();
 out("(A typical step is one standard deviation of that difference across all moments. The leads overlap, so read these together, not one by one.)");
@@ -615,7 +618,7 @@ for (const row of mine) {
         .join(" · ")}\n\n` +
         curve.swings
           .map((s) => {
-            const moved = s.drivers.map((d) => `${FEATURES[d.feature]} (${d.favours === "me" ? "in your favour" : "in theirs"})`).join(", ");
+            const moved = s.drivers.map((d) => `${inputName(FEATURES[d.feature])} (${d.favours === "me" ? "in your favour" : "in theirs"})`).join(", ");
             const events = s.events.map(event).join("; ");
             return `- ${mmss(s.from)}–${mmss(s.to)}: ${pct(s.pFrom)} → ${pct(s.pTo)}. Moved by: ${moved || "many small changes"}.${events ? ` Then: ${events}.` : ""}`;
           })
