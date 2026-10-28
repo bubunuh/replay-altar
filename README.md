@@ -124,6 +124,10 @@ Player names in these screenshots are replaced with placeholders.
 
 ![Charts of one game over time, both players against the pro median](docs/images/charts.png)
 
+**The map of a game:** click the map in a report to open it large. Fights are circles (bigger = more resources lost; green: you likely won it, red: likely lost, grey: about even), and each player's creeping is numbered in the order the camps were cleared. Each layer can be switched off.
+
+![The large map of one game: gold mines, shops and creep camps, the fights as circles sized by the resources lost, and both players' creeping paths numbered in order](docs/images/map.png)
+
 **Performance**
 
 ![Win rate, recurring problems and win rates by matchup, map and game length](docs/images/performance.png)
