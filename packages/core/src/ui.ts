@@ -1,5 +1,7 @@
 // The parser-free subset of core used by the desktop app (no w3gjs in its bundle).
 export * from "./config.ts";
+export * from "./firststart.ts";
+export * from "./analysis.ts";
 export * from "./db.ts";
 export * from "./gamedata.ts";
 export * from "./metrics.ts";

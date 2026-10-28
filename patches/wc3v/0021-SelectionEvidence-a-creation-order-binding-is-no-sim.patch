@@ -1,0 +1,111 @@
+From b93cad450fd552f34ad96d59ddbbb753e9fb0da0 Mon Sep 17 00:00:00 2001
+From: bubunuh <76405364+bubunuh@users.noreply.github.com>
+Date: Tue, 27 Oct 2026 02:52:05 +0100
+Subject: [PATCH 21/21] SelectionEvidence: a creation-order binding is no
+ simulation hint
+
+Player.bindHandlesByCreationOrder (config.handleOrderBinding, off by
+default) ties handles to units by the same creation order HandleBinder
+aligns on. Taken as a simulation tie, its guess skipped HandleBinder's
+checks (a unit made after the handle was listed, twin handles) and got the
+tie bonus, so with the flag on a handle could stay with the unit that
+binder chose although the lists fit another one. Its ties are now neither
+a hint nor a counter-clock anchor; HandleBinder alone decides. Nothing
+changes with the flag off.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ lib/SelectionEvidence.js         | 16 ++++++++++++++--
+ tests/selection-evidence.test.js | 28 ++++++++++++++++++++++++++++
+ 2 files changed, 42 insertions(+), 2 deletions(-)
+
+diff --git a/lib/SelectionEvidence.js b/lib/SelectionEvidence.js
+index d6f67e5..90dd41f 100644
+--- a/lib/SelectionEvidence.js
++++ b/lib/SelectionEvidence.js
+@@ -62,6 +62,18 @@ class SelectionEvidence {
+     return `${itemId1}/${itemId2}`;
+   }
+ 
++  // The tie the simulation made, as a hint for HandleBinder (and an anchor of
++  // its counter clock). Not one made by Player.bindHandlesByCreationOrder
++  // (config.handleOrderBinding): that is the same creation-order guess
++  // HandleBinder makes with more to go on (the types and lifetimes the lists
++  // show, every unit at once). Taken as a hint it would skip HandleBinder's
++  // checks and outvote it; left out, HandleBinder alone decides who the
++  // handle is.
++  _simulationHandle (unit) {
++    if (unit.boundByCreationOrder) return null;
++    return this._unitHandle(unit);
++  }
++
+   _born (unit) {
+     if (unit.trainedTime != null) return unit.trainedTime;
+     return unit.spawnTime || 0;
+@@ -92,7 +104,7 @@ class SelectionEvidence {
+       const pl = resolved.get(Number(player.id));
+       if (!pl) continue;
+       for (const unit of this._candidates(player)) {
+-        const key = this._unitHandle(unit);
++        const key = this._simulationHandle(unit);
+         const h = key && pl.handles.get(key);
+         if (!h || !h.types.length) continue;
+         const forms = this._forms(unit);
+@@ -148,7 +160,7 @@ class SelectionEvidence {
+       born: this._born(unit),
+       earliest: this._earliest(unit),
+       worker: !!(unit.meta && unit.meta.worker),
+-      handle: this._unitHandle(unit)
++      handle: this._simulationHandle(unit)
+     }));
+     this.stats.units += entries.length;
+ 
+diff --git a/tests/selection-evidence.test.js b/tests/selection-evidence.test.js
+index 4811afd..d29aff5 100644
+--- a/tests/selection-evidence.test.js
++++ b/tests/selection-evidence.test.js
+@@ -7,6 +7,8 @@
+  *   2. a trained unit the lists never show is flagged selectionUnlisted
+  *   3. a handle the lists type as an army unit nobody took becomes a unit
+  *   4. a foreign handle (only ever clicked alone) is not bound or added
++ *   5. a handle Player.bindHandlesByCreationOrder gave the wrong unit goes to
++ *      the unit the lists fit, not to both
+  *
+  * Run: `node tests/selection-evidence.test.js`
+  */
+@@ -99,6 +101,32 @@ check('a typed army handle nobody took becomes a unit, an enemy click does not',
+   assert.strictEqual(added[0].selectionLife.handle, '12/9000');
+ });
+ 
++check('a creation-order binding is no hint: the handle goes to the unit that fits', () => {
++  const eventTimer = new EventTimer();
++  const trained = (type, t) => {
++    const unit = new Unit(eventTimer, null, null, type, false);
++    unit.spawnTime = t - 20000;
++    unit.trainedTime = t;
++    return unit;
++  };
++  const early = trained('hfoo', 60000);
++  // trained long after the handle was first listed, yet bound to it by
++  // creation order during the simulation (config.handleOrderBinding)
++  const late = trained('hfoo', 120000);
++  late.registerItemIds('20', '2000');
++  late.boundByCreationOrder = true;
++  const player = { id: 1, units: [early, late], eventTimer, startingPosition: { x: 0, y: 0 } };
++
++  const L = new SelectionLedger();
++  L.selectionChange(1, 70000, SELECT, [u(10, 1000), u(20, 2000)]);
++  L.selectSubgroup(1, 70000, 'Hpal', 10, 1000);
++  L.order(1, 71000, 0xD0003);
++
++  new SelectionEvidence({ selectionLedger: L, players: { 1: player } }).run();
++  assert.strictEqual(early.selectionLife && early.selectionLife.handle, '20/2000');
++  assert.strictEqual(late.selectionLife, undefined);
++});
++
+ if (failures) {
+   console.log(`\n${failures} failure(s)`);
+   process.exit(1);
+-- 
+2.56.0
+

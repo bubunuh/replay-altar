@@ -1,0 +1,39 @@
+From ae1ed9f054d637a8aaf3e75b1012206cd4e76049 Mon Sep 17 00:00:00 2001
+From: bubunuh <76405364+bubunuh@users.noreply.github.com>
+Date: Sun, 25 Oct 2026 00:18:54 +0200
+Subject: [PATCH 07/21] DeathInference: keep workers on their old rules
+ entirely
+
+Workers leave the selection lists inside a gold mine or a burrow, and raiders
+click on them up to the harass that kills them, so a later listing must not
+overrule a battle that caught a worker either. With this, the worker counts are
+exactly what they were before the selection evidence (dev worker error 1.45 ->
+1.42, the starting value).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ lib/DeathInference.js | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/lib/DeathInference.js b/lib/DeathInference.js
+index 4bad28d..399f1c2 100644
+--- a/lib/DeathInference.js
++++ b/lib/DeathInference.js
+@@ -168,10 +168,10 @@ class DeathInference {
+       ? unit.path[unit.path.length - 1]
+       : null;
+     // A unit the game listed later than its path's last sample was alive then.
+-    // Not for a worker the lists end: workers leave the lists when they enter a
+-    // gold mine or burrow too, so that end is no death of its own, but neither
+-    // does a late listing then outweigh a battle that caught it.
+-    const listedLast = life && !(isWorker && life.death) ? life.last : -Infinity;
++    // Not workers: they leave the lists inside a gold mine or a burrow, and are
++    // selected and clicked on (by raiders) right up to the harass that kills
++    // them, so for them the lists say too little either way.
++    const listedLast = life && !isWorker ? life.last : -Infinity;
+     const lastActivity = Math.max(
+       lastSample ? lastSample.gameTime : (unit.spawnTime || 0),
+       listedLast
+-- 
+2.56.0
+

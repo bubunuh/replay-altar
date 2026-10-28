@@ -7,6 +7,8 @@
 // rates calibrated on real games (scripts/calibrate-economy.ts).
 import { RACES, type GameRecord, type Metrics, type RaceCode, type SimSample } from "@replay-altar/core";
 import { costOf, type CostTables } from "./costs.ts";
+import { diedAt } from "./deaths.ts";
+import { foodInUse, type FoodUnit } from "./food.ts";
 
 // --- WC3V output (only the fields we read) -------------------------------------------------
 type WUnit = {
@@ -15,7 +17,7 @@ type WUnit = {
   spawnTime?: number | null;
   trainedTime?: number | null;
   constructionStartTime?: number | null;
-  lostState?: { state: string; since: number } | null;
+  lostState?: { state: string; since: number; source?: string } | null;
   levelStream?: { gameTime: number; newLevel: number }[];
 };
 type WEvent = {
@@ -111,11 +113,24 @@ const UPGRADED_FROM: Record<string, string> = {
  * purchase. WC3V's unit list is not used for this: it only knows units someone selected, so it
  * misses most farms, and in some replays it places the starting hall and workers late enough
  * to look like purchases. Caveat: cancelled orders are still counted.
+ *
+ * Heroes: w3gjs leaves hero train orders out of its lists, so `heroes` are the heroes the player
+ * had (they learned a skill), at the time each was ordered (else its training time before it
+ * learned its first skill); a cancelled hero never learns one. The first is free. Against
+ * W3Champions' gold collected on 176 player-games, spending - 500 went from 7.5% to 2.3% below it
+ * on median (mean error 11.7% → 9.5%).
  */
-export function spendFromOrders(build: GameRecord["players"][number]["build"], costs: CostTables): Amount[] {
+export function spendFromOrders(build: GameRecord["players"][number]["build"], costs: CostTables, heroes: GameRecord["players"][number]["heroes"] = []): Amount[] {
   const spend: Amount[] = [];
   const researchLevel = new Map<string, number>();
-  let heroes = 0;
+  const ordered = heroes
+    .map((h) => ({ code: h.code, t: h.orderedMs ?? Math.max(0, (h.levelUps?.[0] ?? 0) - (costOf(costs, h.code).buildMs || 55_000)) }))
+    .sort((a, b) => a.t - b.t);
+  for (const h of ordered.slice(1)) {
+    const c = costOf(costs, h.code);
+    spend.push({ t: h.t, gold: c.gold, lumber: c.lumber });
+  }
+  let heroCount = 0;
   for (const b of build) {
     if (b.kind === "upgrade") {
       const u = costs.upgrades[b.code];
@@ -129,8 +144,8 @@ export function spendFromOrders(build: GameRecord["players"][number]["build"], c
     } else {
       const c = costOf(costs, b.code);
       if (c.isHero) {
-        heroes++;
-        if (heroes === 1) continue; // the first hero is free
+        // Hero orders in the build list (not from w3gjs): only when no heroes were passed.
+        if (ordered.length || ++heroCount === 1) continue; // the first hero is free
       }
       const parent = UPGRADED_FROM[b.code];
       if (parent) {
@@ -141,11 +156,11 @@ export function spendFromOrders(build: GameRecord["players"][number]["build"], c
       }
     }
   }
-  return spend;
+  return spend.sort((a, b) => a.t - b.t);
 }
 
-/** `deathsOf`: when each of a player's units died (deaths.ts); without it, WC3V's own guess. */
-export function buildTimelines(o: WOutput, record: GameRecord, costs: CostTables, deathsOf?: (playerId: number) => Map<object, number | null>): Timeline[] {
+/** `o` without the units that never existed (deaths.ts, withoutNeverMade). */
+export function buildTimelines(o: WOutput, record: GameRecord, costs: CostTables): Timeline[] {
   const endMs = record.game.durationMs;
   const out: Timeline[] = [];
   for (const rp of record.players) {
@@ -161,13 +176,11 @@ export function buildTimelines(o: WOutput, record: GameRecord, costs: CostTables
     const firstSpawn = Math.min(...units.map((u) => u.spawnTime ?? Infinity));
     const isStarting = (u: WUnit) => (u.spawnTime ?? Infinity) <= firstSpawn + 1000;
 
-    const spend = spendFromOrders(rp.build, costs);
+    const spend = spendFromOrders(rp.build, costs, rp.heroes);
     const losses: Amount[] = [];
-    // WC3V infers deaths; most come back as "possiblyLost" rather than "lost". Like WC3V's own
-    // charts we count both, so losses (and trades) are estimates; deaths.ts corrects them with the
-    // replay's selection lists when it can.
-    const deaths = deathsOf?.(rp.playerId);
-    const diedAt = (u: WUnit) => (deaths ? (deaths.get(u) ?? null) : u.lostState?.state === "lost" || u.lostState?.state === "possiblyLost" ? u.lostState.since : null);
+    // WC3V infers deaths, most of them from the replay's selection lists; many come back as
+    // "possiblyLost" rather than "lost". Like WC3V's own charts we count both, so losses (and
+    // trades) are estimates.
     for (const u of units) {
       const t = diedAt(u);
       if (t === null || costOf(costs, u.itemId).isHero) continue;
@@ -194,9 +207,20 @@ export function buildTimelines(o: WOutput, record: GameRecord, costs: CostTables
     };
 
     const events = (p.eventStream ?? []).filter((e) => e.gameTime <= endMs).sort((a, b) => a.gameTime - b.gameTime);
-    const food = events
+    // Food used from the units that existed (food.ts); WC3V's own counter never takes off the
+    // units that died. Food max stays WC3V's, raised to the food used where it misses a farm.
+    const supply = events
       .filter((e) => typeof e.supplyUsed === "number" && typeof e.supplyMax === "number")
-      .map((e) => ({ t: e.gameTime, used: e.supplyUsed!, max: e.supplyMax! }));
+      .map((e) => ({ t: e.gameTime, max: e.supplyMax! }));
+    const used = foodInUse((p.units ?? []) as FoodUnit[], rp.heroes, costs).filter((s) => s.t <= endMs);
+    const food = supply.length
+      ? [...new Set([...supply.map((s) => s.t), ...used.map((s) => s.t)])]
+          .sort((a, b) => a - b)
+          .map((t) => {
+            const u = stepAt(used, t).used;
+            return { t, used: u, max: Math.max(u, stepAt(supply, t).max) };
+          })
+      : [];
     const workers = events
       .filter((e) => e.workers)
       .map((e) => ({ t: e.gameTime, total: e.workers!.totalWorkers, onBuild: e.workers!.onBuild ?? 0, ghoulsOnLumber: e.workers!.ghoulsOnLumber ?? 0 }));

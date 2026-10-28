@@ -95,11 +95,13 @@ function becauseFor(f: Finding, c: Ctx): string[] {
 
 /**
  * The rules the Findings card shows: those that fire clearly more often in losses than in wins,
- * the whole 95% range of their lift above 1, on 3,388 held-out player-games (docs/RULES.md,
- * 2026-10-23). The others still run (scripts/eval-findings.ts scores them) but stay hidden until
+ * the whole 95% range of their lift above 1, on 3,532 held-out player-games scored on 0.2.2's
+ * simulation with food counted from the units (docs/RULES.md, 2026-10-27; no_items also passes but
+ * fires in under 1% of games; upkeep passed only on WC3V's food counter). The others still run
+ * (scripts/eval-findings.ts scores them) but stay hidden until
  * they can be tuned per skill level.
  */
-export const SHOWN_RULES = new Set(["fights", "heroes", "hero_deaths", "expansion", "out_expanded", "workers_lost", "no_sustain", "mine_dry", "floating", "upgrades", "supply"]);
+export const SHOWN_RULES = new Set(["fights", "heroes", "hero_deaths", "expansion", "out_expanded", "workers_lost", "no_sustain", "mine_dry", "upgrades", "goal_3360"]);
 
 /**
  * Every rule that fires, most costly first: the shown rules, plus the hotkeys check (shown whenever

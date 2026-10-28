@@ -1,0 +1,172 @@
+From 54bbe173d89fac4898b18fe4ac6d364e73f8d017 Mon Sep 17 00:00:00 2001
+From: bubunuh <76405364+bubunuh@users.noreply.github.com>
+Date: Tue, 27 Oct 2026 15:23:32 +0100
+Subject: [PATCH 24/25] Player: a shift-add's PreSubselection adds to the
+ selection
+
+PreSubselection names the units the player picked, not always the whole
+new selection: on a click or drag (a select after a deselect in the same
+tick) the two are the same, but on a shift-add it names only what the
+shift-click or shift-drag covered, and the units already selected stay.
+bcb5b6c took the list as the whole selection every time, so a shift-add
+dropped the rest of the selection; a following click on the remaining
+unit's portrait (deselect only) then left nothing selected, and an order
+on that empty selection crashed the parse (Spirit Tower upgrade from a
+Ziggurat, Player.useAbilityNoTarget).
+
+Graded against the deselect list of the next click, which names the whole
+selection: taking the list whole on shift-adds is right 94.1% of the time,
+adding it 95.4% (dev games; 90.3% / 91.4% on 200 regression games of
+builds >= 6116), and orders arriving on an empty selection drop from 627
+to 380 on the dev games. Dev army value error 76.45 -> 76.32, types
+0.688 -> 0.685.
+
+tests/selection-presub.test.js drives Player.changeSelection and
+preSubselection with hand-built actions.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ lib/Player.js                  |  15 ++++-
+ tests/selection-presub.test.js | 101 +++++++++++++++++++++++++++++++++
+ 2 files changed, 113 insertions(+), 3 deletions(-)
+ create mode 100644 tests/selection-presub.test.js
+
+diff --git a/lib/Player.js b/lib/Player.js
+index df80df6..664cceb 100644
+--- a/lib/Player.js
++++ b/lib/Player.js
+@@ -2741,12 +2741,21 @@ const Player = class {
+       }
+     }
+ 
+-    // The game listed the whole new selection (PreSubselection): that is the
+-    // selection, whatever the merge rule above guessed.
++    // PreSubselection names the units the player picked: on a click or drag
++    // (a select after a deselect in the same tick) that is the whole new
++    // selection, whatever the merge rule above guessed. On a shift-add it is
++    // only the picked units, the ones the shift-drag or shift-click covered,
++    // and the units already selected stay: graded against the deselect lists
++    // of the next click (they name the whole selection), taking it as the
++    // whole selection there was right 94.1% of the time, adding it 95.4%
++    // (dev games; 90.3% / 91.4% on 200 regression games). Taken whole, it
++    // dropped the rest of the selection and a later deselect could leave
++    // nothing selected under an order.
+     const listed = this._takePreSubselection();
+     if (listed) {
+       const old = this.selection.units;
+-      const kept = old.filter(u => listed.some(l => utils.isEqualUnitItemId(l, u)));
++      const isListed = (u) => listed.some(l => utils.isEqualUnitItemId(l, u));
++      const kept = afterDeselectInBlock ? old.filter(isListed) : old;
+       const units = kept.concat(listed.filter(l => !kept.some(u => utils.isEqualUnitItemId(l, u))));
+       this.selection = new SubGroup(units.length, units);
+     }
+diff --git a/tests/selection-presub.test.js b/tests/selection-presub.test.js
+new file mode 100644
+index 0000000..99d23dd
+--- /dev/null
++++ b/tests/selection-presub.test.js
+@@ -0,0 +1,101 @@
++/*
++ * selection-presub.test.js — how Player reads PreSubselection lists into its
++ * selection, on hand-built actions (no replay needed).
++ *
++ * Covers:
++ *   1. a click (deselect then select in one tick) takes the list as the
++ *      whole new selection
++ *   2. a shift-add keeps the units already selected and adds the listed ones
++ *   3. a shift-added unit deselected again leaves the rest selected
++ *
++ * Run: `node tests/selection-presub.test.js`
++ */
++
++const assert = require('assert');
++const logManager = require('../helpers/logManager');
++logManager.setTestMode(true);
++logManager.setProductionMode(true);
++logManager.setLogger('selection-presub-test');
++
++const EventTimer = require('../lib/EventTimer');
++const Player = require('../lib/Player');
++
++let failures = 0;
++function check (label, fn) {
++  try {
++    fn();
++    console.log(`  ✓ ${label}`);
++  } catch (err) {
++    failures++;
++    console.log(`  ✗ ${label}`);
++    console.log(`    ${err.stack.split('\n').slice(0, 3).join('\n    ')}`);
++  }
++}
++
++const SELECT = 1, DESELECT = 2;
++
++// handles: a Ziggurat, a ghoul, two acolytes
++const ZIG = [ 100, 900 ], GHOUL = [ 200, 901 ], ACO1 = [ 300, 902 ], ACO2 = [ 400, 903 ];
++
++function makePlayer () {
++  const world = {
++    findPossibleUnitByItemIds: () => null,
++    addPlayerPossibleUnit: () => {}
++  };
++  const eventTimer = new EventTimer();
++  const player = new Player(1, { teamId: 0, raceFlag: 8 }, { map: {} }, eventTimer, world, false);
++
++  return {
++    player,
++    at: (gameTime) => { eventTimer.timer.gameTime = gameTime; },
++    pre: (...units) => units.forEach(([ a, b ]) => player.preSubselection({ objectId1: a, objectId2: b })),
++    sel: (selectMode, ...units) => player.changeSelection({
++      selectMode,
++      numberUnits: units.length,
++      actions: units.map(([ a, b ]) => ({ itemId1: a, itemId2: b }))
++    }),
++    selected: () => player.selection.units.map(u => u.itemId1).sort((a, b) => a - b)
++  };
++}
++
++console.log('[PreSubselection and the selection]');
++
++check('a click takes the list as the whole selection', () => {
++  const p = makePlayer();
++  p.at(1000); p.pre(ACO1, ACO2); p.sel(SELECT, ACO1, ACO2);
++  p.at(2000); p.pre(GHOUL); p.sel(DESELECT, ACO1, ACO2); p.sel(SELECT, GHOUL);
++  assert.deepStrictEqual(p.selected(), [ 200 ]);
++});
++
++check('a shift-add keeps the units already selected', () => {
++  const p = makePlayer();
++  p.at(1000); p.pre(ZIG); p.sel(SELECT, ZIG);
++  // shift-click on a ghoul: the list names only the ghoul
++  p.at(2000); p.pre(GHOUL); p.sel(SELECT, GHOUL);
++  assert.deepStrictEqual(p.selected(), [ 100, 200 ]);
++});
++
++check('a shift-drag over selected and new units adds the new ones', () => {
++  const p = makePlayer();
++  p.at(1000); p.pre(ZIG, ACO1); p.sel(DESELECT, GHOUL); p.sel(SELECT, ZIG, ACO1);
++  // the box covers ACO1 (selected already) and ACO2 (new); only ACO2 is in the select
++  p.at(2000); p.pre(ACO1, ACO2); p.sel(SELECT, ACO2);
++  assert.deepStrictEqual(p.selected(), [ 100, 300, 400 ]);
++});
++
++check('deselecting the shift-added unit leaves the rest selected', () => {
++  const p = makePlayer();
++  p.at(1000); p.pre(ZIG); p.sel(SELECT, ZIG);
++  p.at(2000); p.pre(GHOUL); p.sel(SELECT, GHOUL);
++  // a click on the Ziggurat's portrait: the list names it, the ghoul is deselected
++  p.at(3000); p.pre(ZIG); p.sel(DESELECT, GHOUL);
++  assert.deepStrictEqual(p.selected(), [ 100 ]);
++});
++
++console.log('');
++if (failures) {
++  console.log(`FAILED — ${failures} check(s)`);
++  process.exit(1);
++} else {
++  console.log('OK — all checks passed');
++}
+-- 
+2.56.0
+

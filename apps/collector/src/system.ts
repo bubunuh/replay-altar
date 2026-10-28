@@ -11,13 +11,14 @@ export { isWarcraftRunning };
 
 const POLL_MS = 5000;
 
-export function watchWarcraft(onStart: () => void, onStop: () => void) {
-  let running = isWarcraftRunning();
+/** Calls onStart / onStop when the game appears or goes, and `onTick` after every look. */
+export function watchWarcraft(onStart: () => void, onStop: () => void, running = isWarcraftRunning(), onTick: () => void = () => {}) {
   return setInterval(() => {
     const now = isWarcraftRunning();
     if (now && !running) onStart();
     if (!now && running) onStop();
     running = now;
+    onTick();
   }, POLL_MS);
 }
 

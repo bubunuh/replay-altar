@@ -1,0 +1,122 @@
+From bcb5b6c217b69b15786d550bb633dddc12f2a720 Mon Sep 17 00:00:00 2001
+From: bubunuh <76405364+bubunuh@users.noreply.github.com>
+Date: Sun, 25 Oct 2026 01:31:42 +0200
+Subject: [PATCH 16/21] Take the selection the game lists (PreSubselection)
+ during the simulation
+
+From build 6116 on the game names every unit of a new selection in
+PreSubselection actions right before the change, hotkey recalls included.
+WC3V ignored them, so a recalled group was its own stale copy (dead units
+kept getting orders and walking around the map) and a mouse selection was
+whatever its empirical merge rule guessed. Player now collects the list per
+tick, and a hotkey recall or a select takes it as the new selection (and the
+recalled group as the group), keeping WC3V's order for the units it already
+had there, since the first unit leads the subgroup logic.
+
+Dead units drop out of the groups and stop moving on the map. The scores
+barely move, as liveness already comes from the lists (dev army value error
+79.6 -> 80.0, worker error 1.42 -> 1.41, battle loss attribution unchanged).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ lib/Player.js        | 56 ++++++++++++++++++++++++++++++++++++++++++++
+ lib/PlayerManager.js |  2 +-
+ 2 files changed, 57 insertions(+), 1 deletion(-)
+
+diff --git a/lib/Player.js b/lib/Player.js
+index 198bd84..df80df6 100644
+--- a/lib/Player.js
++++ b/lib/Player.js
+@@ -2741,6 +2741,16 @@ const Player = class {
+       }
+     }
+ 
++    // The game listed the whole new selection (PreSubselection): that is the
++    // selection, whatever the merge rule above guessed.
++    const listed = this._takePreSubselection();
++    if (listed) {
++      const old = this.selection.units;
++      const kept = old.filter(u => listed.some(l => utils.isEqualUnitItemId(l, u)));
++      const units = kept.concat(listed.filter(l => !kept.some(u => utils.isEqualUnitItemId(l, u))));
++      this.selection = new SubGroup(units.length, units);
++    }
++
+     if (hasUnregisteredUnitFlag) {
+       this.selection.hasUnregisteredUnit = true;
+     }
+@@ -4507,6 +4517,25 @@ const Player = class {
+   selectGroupHotkey (action) {
+     const { groupNumber } = action;
+ 
++    // The game listed the group as it really is (PreSubselection): dead units
++    // already gone, and units WC3V has not met yet in it. Take that list.
++    let listed = this._takePreSubselection();
++    if (listed) {
++      // keep the group's own order (its first unit leads the subgroup logic)
++      const old = (this.groupSelections[groupNumber] && this.groupSelections[groupNumber].units) || [];
++      const isListed = (u) => listed.some(l => utils.isEqualUnitItemId(l, u));
++      const kept = old.filter(isListed);
++      listed = kept.concat(listed.filter(l => !kept.some(u => utils.isEqualUnitItemId(l, u))));
++      const group = new SubGroup(listed.length, listed);
++      group.setFromHotkey = true;
++      this.groupSelections[groupNumber] = group;
++      const selection = new SubGroup(listed.length, listed.map(u => ({ ...u })));
++      selection.setFromHotkey = true;
++      this.selection = selection;
++      this.lastSelectedGroupNumber = groupNumber;
++      return;
++    }
++
+     if (this.groupSelections[groupNumber]) {
+       // todo: add group deselectAll
+       const { 
+@@ -5324,6 +5353,33 @@ const Player = class {
+     });
+   }
+ 
++  //
++  // ActionBlock method
++  // PreSubselection (0x1B): from build 6116 on, the game names every unit of
++  // the new selection, one action per unit, right before the selection change
++  // (hotkey recalls included). Collected per tick for the action that follows.
++  //
++  preSubselection (action) {
++    const { objectId1, objectId2 } = action;
++    if (objectId1 == null || objectId2 == null) return;
++    const { gameTime } = this.eventTimer.timer;
++    if (!this._preSub || this._preSub.gameTime !== gameTime) {
++      this._preSub = { gameTime, units: [] };
++    }
++    if (!this._preSub.units.some(u => u.itemId1 === objectId1 && u.itemId2 === objectId2)) {
++      this._preSub.units.push({ itemId1: objectId1, itemId2: objectId2 });
++    }
++    this.handlePreSubselection(action);
++  }
++
++  // The PreSubselection list of the current tick, once.
++  _takePreSubselection () {
++    const pre = this._preSub;
++    this._preSub = null;
++    if (!pre || pre.gameTime !== this.eventTimer.timer.gameTime || !pre.units.length) return null;
++    return pre.units;
++  }
++
+   handlePreSubselection (action) {
+     const { objectId1, objectId2 } = action;
+     if (!objectId1 || !objectId2) return;
+diff --git a/lib/PlayerManager.js b/lib/PlayerManager.js
+index ce484f4..176633c 100644
+--- a/lib/PlayerManager.js
++++ b/lib/PlayerManager.js
+@@ -493,7 +493,7 @@ const PlayerManager = class {
+         player.useAbilityTwoTargets(action);
+       break;
+       case "PreSubselection":
+-        // Handled implicitly — transport unloads detected via selection changes
++        player.preSubselection(action);
+       break;
+       default:
+         // named but not dispatched — log as unhandled
+-- 
+2.56.0
+

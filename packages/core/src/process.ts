@@ -1,9 +1,13 @@
 // Is the game running? Used by the collector and the desktop app. Linux reads /proc (the game
 // runs under Wine/Proton); Windows asks tasklist.
 import { execFileSync } from "node:child_process";
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 
 export function isWarcraftRunning(): boolean {
+  // Dev/test: the game "runs" while this file exists (a fake game process would also be seen by
+  // any other Replay Altar on the computer).
+  const fake = process.env.REPLAY_ALTAR_FAKE_WARCRAFT;
+  if (fake) return existsSync(fake);
   return process.platform === "win32" ? runningOnWindows() : runningUnderWine();
 }
 

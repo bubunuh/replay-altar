@@ -1,0 +1,36 @@
+From 4bda5d4d3ea901250d0364af5b8fc43738334f35 Mon Sep 17 00:00:00 2001
+From: bubunuh <76405364+bubunuh@users.noreply.github.com>
+Date: Sun, 25 Oct 2026 01:35:00 +0200
+Subject: [PATCH 18/21] DeathInference: a ghoul rallied to the trees is no
+ unlisted phantom
+
+A ghoul trained from a crypt rallied onto the trees walks off to work on its
+own and may never be selected; the lists never naming it is no sign that the
+order was refused. Units WC3V saw sent to harvest (harvestConfident) are no
+longer counted as never made.
+
+Dev games: Undead army value error 70 -> 62, all 78 -> 76.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ lib/DeathInference.js | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/lib/DeathInference.js b/lib/DeathInference.js
+index 434d950..3059db1 100644
+--- a/lib/DeathInference.js
++++ b/lib/DeathInference.js
+@@ -253,7 +253,10 @@ class DeathInference {
+     // 3b. A trained unit the player's selection lists never show, long after
+     //     it was due: most likely an order the game refused (no gold, no food)
+     //     or a cancelled one. Whatever path it has belongs to another unit.
++    //     Not a ghoul its building's rally sent to the trees: it goes to work
++    //     without ever being selected.
+     if (unit.selectionUnlisted && !isWorker && unit.trainedTime != null &&
++        !unit.harvestConfident &&
+         gameEnd - unit.trainedTime >= LOST_MS) {
+       return {
+         state: 'possiblyLost',
+-- 
+2.56.0
+

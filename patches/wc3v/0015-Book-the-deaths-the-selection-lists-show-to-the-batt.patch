@@ -1,0 +1,147 @@
+From 7dd08c3ac45033b501e06060b50204c77078ec46 Mon Sep 17 00:00:00 2001
+From: bubunuh <76405364+bubunuh@users.noreply.github.com>
+Date: Sun, 25 Oct 2026 01:24:23 +0200
+Subject: [PATCH 15/21] Book the deaths the selection lists show to the battle
+ they happened in
+
+A unit the lists show dying between two listings, while its owner fought a
+battle in that window, died in that battle: DeathInference now anchors the
+death there (killedInBattleId, the death time inside the overlap) and
+BattleSummary counts it among that battle's losses even when the battle's
+own outcome list (units seen near the fight on their paths) missed it.
+
+Also fix _killersFor: it read battle._participantsByPlayer, which
+BattleDetector does not build (it exports `participants`), so killerPlayerIds
+was always null.
+
+Measured on the dev games (battle window losses against the observer's
+alive-count drops over the same window, army units): mean error per
+battle-player 118 -> 99 gold+lumber, battles with >= 300 real losses where
+WC3V names the wrong side (or neither) as the loser 61% -> 41%.
+Army value error unchanged (80).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ lib/BattleSummary.js  | 18 +++++++++++++++++-
+ lib/DeathInference.js | 41 ++++++++++++++++++++++++++++++++++-------
+ 2 files changed, 51 insertions(+), 8 deletions(-)
+
+diff --git a/lib/BattleSummary.js b/lib/BattleSummary.js
+index 484ead3..d32c931 100644
+--- a/lib/BattleSummary.js
++++ b/lib/BattleSummary.js
+@@ -74,6 +74,16 @@ class BattleSummary {
+       }
+     }
+ 
++    // Units whose death DeathInference anchored to a battle they were not
++    // seen near (the selection lists show them die during it).
++    this.anchoredByBattle = new Map();
++    for (const [uuid, u] of uuidToUnit) {
++      const id = u.lostState && u.lostState.killedInBattleId;
++      if (!id) continue;
++      if (!this.anchoredByBattle.has(id)) this.anchoredByBattle.set(id, []);
++      this.anchoredByBattle.get(id).push(uuid);
++    }
++
+     for (const battle of this.battles) {
+       this.stats.battlesScanned++;
+       battle.summary = this._summarizeBattle(battle, uuidToUnit, uuidToPlayer);
+@@ -104,7 +114,13 @@ class BattleSummary {
+     let hasLosses = false;
+     let hasHeroDeath = false;
+ 
+-    for (const o of (battle.unitOutcomes || [])) {
++    const outcomes = (battle.unitOutcomes || []).slice();
++    const seen = new Set(outcomes.map(o => o.unitUuid));
++    for (const uuid of (this.anchoredByBattle.get(battle.id) || [])) {
++      if (!seen.has(uuid)) outcomes.push({ unitUuid: uuid, status: 'possiblyDead' });
++    }
++
++    for (const o of outcomes) {
+       const unit = uuidToUnit.get(o.unitUuid);
+       if (!unit) continue;
+       const player = uuidToPlayer.get(o.unitUuid);
+diff --git a/lib/DeathInference.js b/lib/DeathInference.js
+index 303dcec..434d950 100644
+--- a/lib/DeathInference.js
++++ b/lib/DeathInference.js
+@@ -36,6 +36,8 @@ const LOST_MS = 120 * 1000;         // silent this long → lost (last resort)
+ // A unit the selection lists track and that they haven't named for this long:
+ // players list their army many times a minute, so it is gone.
+ const LISTED_LOST_MS = 60 * 1000;
++// A death the lists show this close to a battle of the owner's is one of its losses.
++const BATTLE_DEATH_SLACK_MS = 10 * 1000;
+ 
+ // Rough XP table (WC3 doesn't give big XP for non-creep PvP kills).
+ function estimateXpReward (unit) {
+@@ -85,6 +87,7 @@ class DeathInference {
+     // Walk every player's units.
+     const allPlayers = Object.values(this.playerManager.players || {});
+     for (const player of allPlayers) {
++      this._ownerId = player.id != null ? Number(player.id) : null;
+       const units = (player.units || []).concat(player.destroyedSummons || []);
+       for (const unit of units) {
+         if (!unit) continue;
+@@ -156,13 +159,15 @@ class DeathInference {
+     const life = unit.selectionLife || null;
+     const isWorker = !!(unit.meta && unit.meta.worker);
+     if (life && life.death && !isWorker) {
++      // A fight of the owner's during the window is where it died: when.
++      const fight = this._battleDuring(life.death.from, life.death.at);
+       return {
+         state: 'lost',
+-        since: selectionDeathTime(life.death),
++        since: fight ? fight.at : selectionDeathTime(life.death),
+         confidence: life.death.kind === 'deselected' ? 90 : 75,
+         source: 'selection',
+-        killedInBattleId: null,
+-        killerPlayerIds: null,
++        killedInBattleId: fight ? fight.battle.id : null,
++        killerPlayerIds: fight ? this._killersFor(fight.battle, unit) : null,
+         xpAwarded: estimateXpReward(unit)
+       };
+     }
+@@ -303,13 +308,35 @@ class DeathInference {
+     return end;
+   }
+ 
++  // The battle of the current owner's that overlaps a death window (from, at]
++  // the most (a point window: that contains it), and the death time inside
++  // the overlap.
++  _battleDuring (from, at) {
++    let best = null;
++    for (const b of this.battles) {
++      if (!(b.participants || []).some(p => Number(p.playerId) === this._ownerId)) continue;
++      const lo = Math.max(from, b.startTime - BATTLE_DEATH_SLACK_MS);
++      const hi = Math.min(at, b.endTime + BATTLE_DEATH_SLACK_MS);
++      if (hi < lo) continue;
++      if (!best || hi - lo > best.hi - best.lo) best = { battle: b, lo, hi };
++    }
++    if (!best) return null;
++    return { battle: best.battle, at: Math.round((best.lo + best.hi) / 2) };
++  }
++
+   // Who killed this unit? The enemy players who participated in the battle.
+   _killersFor (battle, unit) {
+-    if (!battle || !battle._participantsByPlayer) return null;
+-    const myPlayer = unit._registryOwnerPlayerId;
+-    const myTeam = unit._registryOwnerTeamId;
++    if (!battle) return null;
++    // BattleDetector exports its participants as a list; _participantsByPlayer
++    // is an older shape, kept for callers that still build it.
++    const participantIds = battle._participantsByPlayer
++      ? Object.keys(battle._participantsByPlayer)
++      : (battle.participants || []).map(p => p.playerId);
++    if (!participantIds.length) return null;
++    const myPlayer = unit._registryOwnerPlayerId != null ? unit._registryOwnerPlayerId : this._ownerId;
++    const myTeam = unit._registryOwnerTeamId != null ? unit._registryOwnerTeamId : this._teamOf(myPlayer);
+     const killers = [];
+-    for (const playerId of Object.keys(battle._participantsByPlayer)) {
++    for (const playerId of participantIds) {
+       const pid = Number(playerId);
+       if (pid === myPlayer) continue;
+       // teamId comparison: same team can't kill.
+-- 
+2.56.0
+

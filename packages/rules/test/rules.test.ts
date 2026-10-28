@@ -120,6 +120,14 @@ describe("build library", () => {
     expect(deviations(m)).toContain("no Arcane Vault (build: 29 food)");
     expect(m.score).toBeGreaterThan(0.6);
   });
+  test("a hero's step is at its order, with the food in use then", async () => {
+    const { keyEvents } = await import("../src/builds.ts");
+    const series = [{ t: 0, foodUsed: 5 }, { t: 50_000, foodUsed: 10 }, { t: 110_000, foodUsed: 18 }] as SimSample[];
+    const p = { playerId: 1, race: "H", build: [{ ms: 5_000, kind: "building", code: "halt", name: "Altar of Kings" }], heroes: [{ code: "Hamg", name: "Archmage", levelUps: [130_000], orderedMs: 58_000 }] };
+    const r = { players: [p], sim: { status: "ok", players: [{ playerId: 1, series, heroes: [{ code: "Hamg", appearAt: 113_000 }] }] } } as unknown as GameRecord;
+    const events = keyEvents(r, r.players[0]);
+    expect(events.map((e) => [e.code, e.ms, e.food])).toEqual([["halt", 5_000, 5], ["Hamg", 58_000, 10]]);
+  });
 });
 
 describe("milestones", () => {

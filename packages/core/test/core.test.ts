@@ -1,13 +1,15 @@
 // Runs against the real replays in fixtures/replays: replay1 is a W3Champions game, the others
 // Battle.net ladder games; replay2 and replay4 are wins, replay3 a loss.
 import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, utimesSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { beforeAll, describe, expect, test } from "vitest";
 import {
+  appDirs,
   researchLevels,
   heroXpAt,
   levelUpTimes,
+  playerLevelUps,
   classify,
   computeMetrics,
   DEFAULT_CONFIG,
@@ -116,6 +118,67 @@ describe.skipIf(files.length === 0)("classification of edited replays", () => {
   });
 });
 
+describe.skipIf(files.length === 0)("damaged replays (missing first selections)", () => {
+  const withActions = (actions: RawReplay["actions"]) => {
+    const raw = clone(W3C);
+    raw.actions = actions;
+    return raw;
+  };
+  const ids = () => raw1Players().map((p) => String(p.id));
+  const raw1Players = () => raws.get(W3C)!.output.players;
+  test("no fixture is flagged: every player's first orders follow a selection", () => {
+    for (const f of files) {
+      const c = classify(raws.get(f)!, ME);
+      expect(c.replayProblem, f).toBeNull();
+      expect(c.rules.find((x) => x.rule === "replay.first_selections")?.passed, f).toBe(true);
+    }
+  });
+  test("orders at the very start before any selection mark the replay damaged, and it stays analyzed", () => {
+    const [a, b] = ids();
+    const c = classify(withActions({ [a]: { firstSelectionMs: 8911, firstOrderMs: 30, ordersBeforeSelection: 15, skillMenuMs: [], tomeMs: [], heroOrders: [] }, [b]: { firstSelectionMs: 61, firstOrderMs: 900, ordersBeforeSelection: 0, skillMenuMs: [], tomeMs: [], heroOrders: [] } }), ME);
+    expect(c.replayProblem).toBe("missing_first_selections");
+    expect(c.analyzed).toBe(true);
+    expect(c.rules.find((x) => x.rule === "replay.first_selections")).toMatchObject({ passed: false });
+  });
+  test("a worker trained from the hall selected at the start, before the first selection, is normal", () => {
+    const [a, b] = ids();
+    const c = classify(withActions({ [a]: { firstSelectionMs: 1681, firstOrderMs: 1410, ordersBeforeSelection: 1, skillMenuMs: [], tomeMs: [], heroOrders: [] }, [b]: { firstSelectionMs: 61, firstOrderMs: 900, ordersBeforeSelection: 0, skillMenuMs: [], tomeMs: [], heroOrders: [] } }), ME);
+    expect(c.replayProblem).toBeNull();
+  });
+  test("raw files from before the check are not judged", () => {
+    const c = classify(withActions(undefined), ME);
+    expect(c.replayProblem).toBeNull();
+    expect(c.rules.some((x) => x.rule === "replay.first_selections")).toBe(false);
+  });
+});
+
+describe.skipIf(files.length === 0)("cut-short replays (FloTV recordings)", () => {
+  test("a file cut anywhere still parses, up to its last complete record", async () => {
+    const buf = readFileSync(join(FIXTURES, W3C));
+    const quiet = console.error;
+    console.error = () => {}; // w3gjs logs the actions it can't read in the last, partial record
+    try {
+      for (let cut = 50; cut < buf.length - 2000; cut += 211) {
+        const raw = await parseReplay(buf.subarray(0, buf.length - cut));
+        expect(raw.truncated, `cut ${cut}`).toBeTruthy();
+        expect(raw.output.duration).toBe(raw.truncated!.atMs);
+      }
+    } finally {
+      console.error = quiet;
+    }
+  });
+  test("a cut-short replay says where it ends and stays analyzed; complete ones aren't flagged", async () => {
+    const buf = readFileSync(join(FIXTURES, "replay3.w3g"));
+    const raw = await parseReplay(buf.subarray(0, buf.length - 200_000));
+    expect(raw.truncated).toEqual({ atMs: raw.output.duration, headerDurationMs: raws.get("replay3.w3g")!.output.duration });
+    expect(raw.output.duration).toBeLessThan(raws.get("replay3.w3g")!.output.duration - 300_000);
+    const c = classify(raw, ME);
+    expect(c.replayProblem).toBe("truncated");
+    expect(c.analyzed).toBe(true);
+    for (const f of files) expect(raws.get(f)!.truncated, f).toBeNull();
+  });
+});
+
 describe.skipIf(files.length === 0)("metrics", () => {
   test("replay3: Human timings come from the order stream", () => {
     const raw = raws.get("replay3.w3g")!;
@@ -148,6 +211,38 @@ describe("hero experience", () => {
     // ultimate only from level 6.
     const seq = [pick(1, "AHhb"), pick(2, "AHad"), pick(3, "AHhb"), pick(4, "AHre"), pick(5, "AHad"), pick(6, "AHhb"), pick(7, "AHhb"), pick(8, "AHre")];
     expect(levelUpTimes(seq)).toEqual([1, 2, 3, 5, 6, 8]);
+  });
+  // Retraining cases from real replays (times in seconds; official levels from W3Champions).
+  const pick = (s: number, value: string) => ({ type: "ability" as const, time: s * 1000, value });
+  const retrain = (s: number) => ({ type: "retraining" as const, time: s * 1000 });
+  const ms = (...s: number[]) => s.map((x) => x * 1000);
+  test("w3gjs's retraining mark inserted before a real level-up: placed by its time, the level-up counts", () => {
+    // Archmage: levels at 125, 179, 632, 797; Tome bought at 839 and 4 points re-spent. Official: level 4.
+    const order = [pick(125.5, "AHwe"), pick(178.6, "AHab"), pick(632.4, "AHwe"), retrain(839.4), pick(797.2, "AHab"), pick(840.2, "AHbz"), pick(840.3, "AHbz"), pick(840.5, "AHab"), pick(840.7, "AHab")];
+    expect(levelUpTimes(order)).toHaveLength(4);
+    expect(playerLevelUps([{ abilityOrder: order }], { skillMenuMs: ms(125.4, 178.5, 632.3, 797.1, 840.1), tomeMs: ms(839.4) })[0]).toEqual(ms(125.5, 178.6, 632.4, 797.2));
+  });
+  test("clicks beyond the refunded points in the re-spend session were refused", () => {
+    // Archmage level 5, Tome at 1183.7, six clicks for five points, Mass Teleport at 1308. Official: level 6.
+    const order = [pick(125.9, "AHwe"), pick(157, "AHab"), pick(210.2, "AHwe"), pick(505.2, "AHab"), pick(824.5, "AHwe"), pick(824.7, "AHwe"), retrain(1183.7), pick(1186, "AHbz"), pick(1186.1, "AHbz"), pick(1186.2, "AHbz"), pick(1186.6, "AHab"), pick(1186.7, "AHab"), pick(1186.9, "AHab"), pick(1308.3, "AHmt")];
+    expect(levelUpTimes(order)).toHaveLength(7); // the fallback counts the refused click
+    expect(playerLevelUps([{ abilityOrder: order }], { skillMenuMs: ms(125.8, 156.9, 210.1, 505.1, 824.4, 1185.9, 1308.2), tomeMs: ms(1183.7) })[0]).toHaveLength(6);
+  });
+  test("a retraining w3gjs didn't mark is found from the tome and the re-spend session", () => {
+    // Tome bought at 890, used at 1031: five points re-spent within a second.
+    const order = [pick(125.6, "AHwe"), pick(167, "AHab"), pick(278.2, "AHwe"), pick(481.1, "AHab"), pick(1016.7, "AHwe"), pick(1031.5, "AHbz"), pick(1031.6, "AHbz"), pick(1031.8, "AHbz"), pick(1032, "AHab"), pick(1032.2, "AHab")];
+    expect(levelUpTimes(order)).toHaveLength(9);
+    expect(playerLevelUps([{ abilityOrder: order }], { skillMenuMs: ms(125.5, 166.9, 277.5, 480.8, 1016, 1031.4), tomeMs: ms(890) })[0]).toHaveLength(5);
+  });
+  test("re-spent points over two openings of the menu within a minute are re-picks; the ultimate after them is level 6", () => {
+    const order = [pick(165.2, "AEsh"), pick(237.8, "AEbl"), pick(426.8, "AEsh"), pick(520.1, "AEbl"), pick(729.1, "AEsh"), pick(1067.1, "AEfk"), pick(1067.3, "AEfk"), pick(1067.4, "AEfk"), pick(1105.5, "AEbl"), pick(1533.5, "AEsv")];
+    const levels = playerLevelUps([{ abilityOrder: order }], { skillMenuMs: ms(165.1, 237.8, 426.4, 519.3, 728.8, 1067, 1105, 1533.4), tomeMs: ms(1066.2) })[0];
+    expect(levels).toEqual(ms(165.2, 237.8, 426.8, 520.1, 729.1, 1533.5));
+  });
+  test("a tome bought before a single level-up isn't a retraining, and other heroes are untouched", () => {
+    const am = [pick(120, "AHwe"), pick(200, "AHab"), pick(400, "AHwe")];
+    const mk = [pick(300, "AHtb"), pick(500, "AHbh")];
+    expect(playerLevelUps([{ abilityOrder: am }, { abilityOrder: mk }], { skillMenuMs: ms(119, 199, 299, 399, 499), tomeMs: ms(390) })).toEqual([ms(120, 200, 400), ms(300, 500)]);
   });
   test("exact at level-ups, linear in between", () => {
     const levels = [60_000, 200_000, 400_000]; // level 1, 2, 3
@@ -195,6 +290,16 @@ describe("time of game", () => {
   });
 });
 
+describe("platform defaults", () => {
+  test("macOS uses Application Support for app data and config", () => {
+    if (process.platform !== "darwin") return;
+    expect(appDirs()).toEqual({
+      data: join(homedir(), "Library/Application Support"),
+      config: join(homedir(), "Library/Application Support"),
+    });
+  });
+});
+
 describe.skipIf(files.length === 0)("ingest", () => {
   const root = mkdtempSync(join(tmpdir(), "replay-altar-test-"));
   const paths = {
@@ -224,6 +329,18 @@ describe.skipIf(files.length === 0)("ingest", () => {
     for (const f of files) expect((await ingestFile(ctx, join(inbox, f))).status, f).toBe("new");
     expect(db.prepare("SELECT COUNT(*) n FROM games").get()).toEqual({ n: files.length });
     expect(readdirSync(join(paths.archive, "2026/10")).length).toBe(files.length);
+  });
+
+  test("every hero has its train order, before it learned its first skill (altar heroes a training time before)", () => {
+    for (const f of readdirSync(paths.games)) {
+      const r = JSON.parse(readFileSync(join(paths.games, f), "utf8")) as { players: { heroes: { code: string; orderedMs?: number | null; levelUps: number[] }[] }[] };
+      for (const h of r.players.flatMap((p) => p.heroes)) {
+        expect(h.orderedMs, `${f} ${h.code}`).toBeTypeOf("number");
+        const wait = h.levelUps[0] - h.orderedMs!;
+        expect(wait, `${f} ${h.code}`).toBeGreaterThanOrEqual(0);
+        if (!h.code.startsWith("N")) expect(wait, `${f} ${h.code}`).toBeGreaterThanOrEqual(55_000);
+      }
+    }
   });
 
   test("ingesting the same file again does nothing", async () => {

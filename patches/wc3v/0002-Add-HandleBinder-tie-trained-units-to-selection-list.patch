@@ -1,0 +1,295 @@
+From a9dc2a920c80232d37dfc0910224add8195466ab Mon Sep 17 00:00:00 2001
+From: bubunuh <76405364+bubunuh@users.noreply.github.com>
+Date: Sun, 25 Oct 2026 00:11:23 +0200
+Subject: [PATCH 02/21] Add HandleBinder: tie trained units to selection-list
+ handles
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+WC3V knows what a player trained and when, but ties a unit to its handle (the
+objectId pair the actions use) only in special cases, e.g. when it is the
+first unit of a selected subgroup; about a quarter of the army units on a test
+set never got one. The second number of a handle is the game's object
+allocation counter, which only grows, so handles sort by creation just like
+WC3V's training times do.
+
+HandleBinder keeps the ties the simulation made where the lists agree on the
+type, and aligns the remaining units to the unclaimed handles with an
+order-preserving alignment (a diff-style dynamic program): a handle with a
+known type only takes a unit of that type or one of its forms, a unit is never
+tied to a handle listed well before it was trained, and among alignments with
+as many pairs the one whose training times best fit a monotone counter → time
+fit wins.
+
+Pure module, tests in tests/handle-binder.test.js. Not wired in yet.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ lib/HandleBinder.js         | 139 ++++++++++++++++++++++++++++++++++++
+ tests/handle-binder.test.js | 107 +++++++++++++++++++++++++++
+ 2 files changed, 246 insertions(+)
+ create mode 100644 lib/HandleBinder.js
+ create mode 100644 tests/handle-binder.test.js
+
+diff --git a/lib/HandleBinder.js b/lib/HandleBinder.js
+new file mode 100644
+index 0000000..a16ee20
+--- /dev/null
++++ b/lib/HandleBinder.js
+@@ -0,0 +1,139 @@
++/**
++ * HandleBinder — ties the units WC3V trained to the handles the replay's selection lists show.
++ *
++ * WC3V knows what a player trained and when; the selection lists (SelectionLedger) know which
++ * handles the player had and how long each lived, but rarely which unit type a handle is (only
++ * the first unit of a selected subgroup gets its type written). The handle's second number is
++ * the game's object allocation counter, so handles sort by creation. Both sides are ordered by
++ * creation, so the units WC3V could not tie to a handle are aligned to the handles nobody claimed
++ * with an order-preserving alignment (like a diff): a handle whose type is known only takes a
++ * unit of that type (or a form it morphs to/from), a unit is never tied to a handle the game
++ * listed before the unit existed, and among alignments with as many pairs, the one whose
++ * creation times fit the counters best wins.
++ */
++
++// Forms of one unit that keep its handle: toggled forms (Bear / Crow Form,
++// Burrow, Ethereal Form, Stone Form, Metamorphosis), Destroyer Form, militia,
++// and the Headhunter the Berserker upgrade turns into a Berserker.
++const FORM_CLASSES = [
++  ['edoc', 'edcm'], ['edot', 'edtm'], ['ucry', 'ucrm'], ['ospw', 'ospm'], ['uobs', 'ubsp'],
++  ['hpea', 'hmil'], ['ugar', 'ugrm'], ['Edem', 'Edmm'], ['ohun', 'otbk']
++];
++const formClassOf = new Map();
++for (const cls of FORM_CLASSES) for (const id of cls) formClassOf.set(id, cls[0]);
++const formClass = (id) => formClassOf.get(id) || id;
++
++// A unit may be listed a little before WC3V thinks it finished training (WC3V's training clock
++// is an estimate); beyond this, the handle cannot be that unit.
++const LISTED_BEFORE_TRAINED_SLACK_MS = 20 * 1000;
++// Weight of the creation-time misfit (per second) against one more pair.
++const TIME_COST_PER_S = 0.002;
++const TYPED_BONUS = 0.5;
++
++class HandleBinder {
++  // units: [{ id, type, forms:Set, born, handle (key or null) }]
++  // handles: Map key -> ledger handle ({ key, counter, first, types:[{type}] })
++  // anchors: [{ counter, born }] (optional) for the counter -> creation time fit
++  static bind (units, handles, anchors = []) {
++    const fit = HandleBinder.counterClock(anchors);
++    const result = new Map();       // unit id -> handle key
++    const taken = new Set();
++
++    // 1. keep the ties WC3V made when they agree with what the lists say
++    for (const u of units) {
++      if (!u.handle) continue;
++      const h = handles.get(u.handle);
++      if (!h) continue;
++      if (h.types.length && !h.types.some(x => HandleBinder.formMatches(u, x.type))) continue;
++      if (taken.has(u.handle)) continue;
++      result.set(u.id, u.handle);
++      taken.add(u.handle);
++    }
++
++    // 2. align the rest by creation order
++    const us = units.filter(u => !result.has(u.id)).sort((a, b) => a.born - b.born);
++    const hs = [...handles.values()].filter(h => !taken.has(h.key)).sort((a, b) => a.counter - b.counter);
++    const n = us.length, m = hs.length;
++    if (!n || !m) return result;
++
++    const gain = (u, h) => {
++      if (u.born > h.first + LISTED_BEFORE_TRAINED_SLACK_MS) return null;
++      let g = 1;
++      if (h.types.length) {
++        if (!h.types.some(x => HandleBinder.formMatches(u, x.type))) return null;
++        g += TYPED_BONUS;
++      } else if (u.typedOnly) {
++        return null;
++      }
++      const est = fit ? fit(h.counter) : null;
++      if (est != null) g -= Math.min(0.9, TIME_COST_PER_S * Math.abs(u.born - est) / 1000);
++      return g;
++    };
++
++    // dp[i][j]: best total over the first i units and first j handles
++    const W = m + 1;
++    const dp = new Float64Array((n + 1) * W);
++    const how = new Uint8Array((n + 1) * W);   // 0 skip unit, 1 skip handle, 2 pair
++    for (let i = 1; i <= n; i++) {
++      for (let j = 1; j <= m; j++) {
++        let best = dp[(i - 1) * W + j], b = 0;
++        const sh = dp[i * W + j - 1];
++        if (sh > best) { best = sh; b = 1; }
++        const g = gain(us[i - 1], hs[j - 1]);
++        if (g !== null) {
++          const pr = dp[(i - 1) * W + j - 1] + g;
++          if (pr > best) { best = pr; b = 2; }
++        }
++        dp[i * W + j] = best;
++        how[i * W + j] = b;
++      }
++    }
++    let i = n, j = m;
++    while (i > 0 && j > 0) {
++      const b = how[i * W + j];
++      if (b === 2) { result.set(us[i - 1].id, hs[j - 1].key); i--; j--; }
++      else if (b === 1) j--;
++      else i--;
++    }
++    return result;
++  }
++
++  static formMatches (unit, type) {
++    const c = formClass(type);
++    for (const f of unit.forms) if (formClass(f) === c) return true;
++    return false;
++  }
++
++  // Monotone fit of creation time against the allocation counter (pool-adjacent violators),
++  // interpolated between anchors.
++  static counterClock (anchors) {
++    const pts = anchors.filter(a => a.counter != null && a.born != null)
++      .sort((a, b) => a.counter - b.counter);
++    if (pts.length < 3) return null;
++    const blocks = [];
++    for (const p of pts) {
++      blocks.push({ sum: p.born, n: 1, lo: p.counter, hi: p.counter });
++      while (blocks.length > 1) {
++        const a = blocks[blocks.length - 2], b = blocks[blocks.length - 1];
++        if (a.sum / a.n <= b.sum / b.n) break;
++        blocks.splice(blocks.length - 2, 2, { sum: a.sum + b.sum, n: a.n + b.n, lo: a.lo, hi: b.hi });
++      }
++    }
++    const xs = blocks.map(b => (b.lo + b.hi) / 2), ys = blocks.map(b => b.sum / b.n);
++    return (c) => {
++      if (c <= xs[0]) return ys[0];
++      if (c >= xs[xs.length - 1]) return ys[ys.length - 1];
++      let lo = 0, hi = xs.length - 1;
++      while (hi - lo > 1) {
++        const mid = (lo + hi) >> 1;
++        if (xs[mid] <= c) lo = mid; else hi = mid;
++      }
++      const f = (c - xs[lo]) / ((xs[hi] - xs[lo]) || 1);
++      return ys[lo] + f * (ys[hi] - ys[lo]);
++    };
++  }
++}
++
++HandleBinder.formClass = formClass;
++
++module.exports = HandleBinder;
+diff --git a/tests/handle-binder.test.js b/tests/handle-binder.test.js
+new file mode 100644
+index 0000000..582b103
+--- /dev/null
++++ b/tests/handle-binder.test.js
+@@ -0,0 +1,107 @@
++/*
++ * handle-binder.test.js — pure unit tests for HandleBinder.
++ *
++ * Covers:
++ *   1. ties the simulation made are kept when the lists agree, dropped when
++ *      the lists name another type
++ *   2. untied units are aligned to unclaimed handles in creation order,
++ *      typed handles only take their type (or a form of it)
++ *   3. no unit is tied to a handle the game listed before the unit existed
++ *   4. the counter → creation time fit is monotone
++ *
++ * Run: `node tests/handle-binder.test.js`
++ */
++
++const assert = require('assert');
++const HandleBinder = require('../lib/HandleBinder');
++
++let failures = 0;
++function check (label, fn) {
++  try {
++    fn();
++    console.log(`  ✓ ${label}`);
++  } catch (err) {
++    failures++;
++    console.log(`  ✗ ${label}`);
++    console.log(`    ${err.message}`);
++  }
++}
++
++const unit = (id, type, born, handle = null, forms = [type]) => ({ id, type, born, handle, forms: new Set(forms) });
++const handle = (key, first, types = []) => ({
++  key, counter: Number(key.split('/')[1]), first, types: types.map(type => ({ t: first, type }))
++});
++const handles = (...hs) => new Map(hs.map(h => [h.key, h]));
++
++console.log('[ties the simulation made]');
++
++check('a tie whose handle the lists typed the same is kept', () => {
++  const ties = HandleBinder.bind([unit(1, 'hfoo', 1000, '5/500')], handles(handle('5/500', 2000, ['hfoo'])));
++  assert.strictEqual(ties.get(1), '5/500');
++});
++
++check('a tie whose handle the lists typed otherwise is dropped and redone', () => {
++  const ties = HandleBinder.bind(
++    [unit(1, 'hrif', 1000, '5/500')],
++    handles(handle('5/500', 2000, ['hfoo']), handle('6/600', 3000, ['hrif'])));
++  assert.strictEqual(ties.get(1), '6/600');
++});
++
++check('a form of the unit counts as its type', () => {
++  const ties = HandleBinder.bind([unit(1, 'edoc', 1000, '5/500')], handles(handle('5/500', 2000, ['edcm'])));
++  assert.strictEqual(ties.get(1), '5/500');
++});
++
++console.log('[alignment]');
++
++check('untied units take unclaimed handles in creation order', () => {
++  const us = [unit(1, 'hrif', 10000), unit(2, 'hrif', 30000), unit(3, 'hrif', 50000)];
++  const hs = handles(handle('7/900', 60000), handle('8/700', 60000), handle('9/800', 60000));
++  const ties = HandleBinder.bind(us, hs);
++  assert.strictEqual(ties.get(1), '8/700');
++  assert.strictEqual(ties.get(2), '9/800');
++  assert.strictEqual(ties.get(3), '7/900');
++});
++
++check('a typed handle only takes a unit of its type', () => {
++  const us = [unit(1, 'hfoo', 10000), unit(2, 'hrif', 12000)];
++  const hs = handles(handle('1/100', 20000, ['hrif']), handle('2/200', 20000));
++  const ties = HandleBinder.bind(us, hs);
++  assert.strictEqual(ties.get(2), '1/100');
++  assert.strictEqual(ties.get(1), undefined);   // order: hfoo was made first, its handle would sort first
++});
++
++check('no unit is tied to a handle listed long before the unit was trained', () => {
++  const ties = HandleBinder.bind([unit(1, 'hfoo', 200000)], handles(handle('1/100', 20000)));
++  assert.strictEqual(ties.size, 0);
++});
++
++check('with anchors, the creation time the counter implies picks among handles', () => {
++  const anchors = [{ counter: 1000, born: 10000 }, { counter: 2000, born: 20000 }, { counter: 3000, born: 30000 }];
++  const us = [unit(1, 'hfoo', 20000)];
++  const hs = handles(handle('1/1000', 40000), handle('2/2000', 40000), handle('3/3000', 40000));
++  const ties = HandleBinder.bind(us, hs, anchors);
++  assert.strictEqual(ties.get(1), '2/2000');
++});
++
++console.log('[counter clock]');
++
++check('the fit is monotone and interpolates', () => {
++  const fit = HandleBinder.counterClock([
++    { counter: 100, born: 1000 }, { counter: 200, born: 3000 }, { counter: 300, born: 2000 },
++    { counter: 400, born: 4000 }
++  ]);
++  assert.ok(fit(100) <= fit(200) && fit(200) <= fit(300) && fit(300) <= fit(400));
++  assert.ok(Math.abs(fit(350) - (fit(300) + fit(400)) / 2) < 1e-6);
++  assert.strictEqual(fit(50), fit(100));
++});
++
++check('too few anchors: no fit', () => {
++  assert.strictEqual(HandleBinder.counterClock([{ counter: 1, born: 1 }]), null);
++});
++
++if (failures) {
++  console.log(`\n${failures} failure(s)`);
++  process.exit(1);
++}
++console.log('\nall passed');
+-- 
+2.56.0
+

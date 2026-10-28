@@ -20,6 +20,9 @@ import { gamedataDir, loadCosts } from "@replay-altar/sim";
 import { basis, diffs, FEATURES, KNOTS_MIN, sideOf, sigmoid, START_MS, STEP_MS, weightAt, winCurve, type ResearchTimes, type Side, type SwingEvent, type WinModel } from "@replay-altar/rules/winchance";
 import { fightLabel } from "@replay-altar/rules/series";
 
+/** Input names as the app shows them ("food used" is "amount of units" there). */
+const inputName = (name: string) => (name === "food used" ? "amount of units" : name);
+
 const costs = loadCosts(gamedataDir(paths().root));
 const RESEARCH: ResearchTimes = Object.fromEntries(Object.entries(costs.upgrades).map(([code, u]) => [code, [u.timeBase, u.timeMod]]));
 const CALIBRATION = ["pros", "pros-orc", "pros-undead", "pros-nightelf"];
@@ -378,7 +381,7 @@ out("| Model | Differences | Log loss, calibration (cross-validated) | Log loss,
 out("|---|---|---|---|---|");
 for (const f of finals) {
   const v = predsOn(f.model, valMoments);
-  out(`| ${label(f.spec)}${f.spec.basis === "curve" ? ` (ridge ${f.spec.lambda})` : ""}${f === finalBest ? " **(best)**" : ""} | ${f.spec.keep.map((i) => FEATURES[i]).join(", ")} | ${f.loss.toFixed(4)} | ${valMoments.length ? lossOf(v).toFixed(4) : "–"} | ${valMoments.length ? brierOf(v).toFixed(4) : "–"} |`);
+  out(`| ${label(f.spec)}${f.spec.basis === "curve" ? ` (ridge ${f.spec.lambda})` : ""}${f === finalBest ? " **(best)**" : ""} | ${f.spec.keep.map((i) => inputName(FEATURES[i])).join(", ")} | ${f.loss.toFixed(4)} | ${valMoments.length ? lossOf(v).toFixed(4) : "–"} | ${valMoments.length ? brierOf(v).toFixed(4) : "–"} |`);
 }
 out(`| Boosted trees (${bestTrees.spec.trees} trees of depth ${bestTrees.spec.depth}) | all ${FEATURES.length}, and the game time | ${bestTrees.loss.toFixed(4)} | ${valMoments.length ? lossOf(valTrees).toFixed(4) : "–"} | ${valMoments.length ? brierOf(valTrees).toFixed(4) : "–"} |`);
 out(`| Coin flip | | 0.6931 | 0.6931 | 0.2500 |`);
@@ -447,7 +450,7 @@ finalBest.spec.keep.forEach((f, k) => {
     const e = sigmoid(sd[f] * weightOf(finalBest.model, k, t)) - 0.5;
     return `${e >= 0 ? "+" : ""}${Math.round(e * 100)} pts`;
   };
-  out(`| ${FEATURES[f]} | ${eff(300_000)} | ${eff(600_000)} | ${eff(900_000)} |`);
+  out(`| ${inputName(FEATURES[f])} | ${eff(300_000)} | ${eff(600_000)} | ${eff(900_000)} |`);
 });
 out();
 out("(A typical step is one standard deviation of that difference across all moments. The leads overlap, so read these together, not one by one.)");
@@ -479,8 +482,11 @@ const scoreOn = (name: string, cal: Moment[], val: Moment[], spec: Spec) => {
   progress(`sensitivity, ${name}: ${sensitivity.at(-1)!.cv.toFixed(4)}`);
 };
 scoreOn("as fitted", calMoments, valMoments, finalBest.spec);
-if (finalBest.spec.keep.some((f) => ARMY.includes(f))) scoreOn("without the army value", calMoments, valMoments, { ...finalBest.spec, keep: finalBest.spec.keep.filter((f) => !ARMY.includes(f)) });
-for (const sigma of [500, 1000]) {
+const usesArmy = finalBest.spec.keep.some((f) => ARMY.includes(f));
+if (usesArmy) scoreOn("without the army value", calMoments, valMoments, { ...finalBest.spec, keep: finalBest.spec.keep.filter((f) => !ARMY.includes(f)) });
+// A model without the army value: what adding it back would give (the noise test below is moot).
+else scoreOn("with the army value ratio (log) added", calMoments, valMoments, { ...finalBest.spec, keep: [...finalBest.spec.keep, 1].sort((a, b) => a - b) });
+for (const sigma of usesArmy ? [500, 1000] : []) {
   const rand = mulberry32(sigma);
   const gauss = () => Math.sqrt(-2 * Math.log(1 - rand())) * Math.cos(2 * Math.PI * rand());
   const noisy = (s: Side): Side => ({ ...s, series: s.series.map((x) => ({ ...x, armyValue: Math.max(0, (x.armyValue ?? 0) + sigma * gauss()) })) });
@@ -517,7 +523,8 @@ const results = {
   generatedAt: new Date().toISOString(),
   commit,
   calibration: { games: calUsed.size, moments: calMoments.length },
-  validation: { ...valCounts, scored: valUsed.size, moments: valMoments.length },
+  // usable: simulated with a known winner (before games with unreadable numbers are left out).
+  validation: { ...valCounts, usable: new Set(validation.flatMap((g) => momentsOf(g)).map((m) => m.game)).size, scored: valUsed.size, moments: valMoments.length },
   features: FEATURES,
   models: scored.map((c) => ({ label: label(c.spec), keep: c.spec.keep.map((f) => FEATURES[f]), basis: c.spec.basis, matchup: c.spec.matchup, lambda: c.spec.lambda, cv: c.loss, validation: valMoments.length ? lossOf(predsOn(finals.find((f) => f.spec === c.spec)!.model, valMoments)) : null, brier: valMoments.length ? brierOf(predsOn(finals.find((f) => f.spec === c.spec)!.model, valMoments)) : null, best: c.spec === best.spec })),
   trees: { trees: bestTrees.spec.trees, depth: bestTrees.spec.depth, cv: bestTrees.loss, validation: valMoments.length ? lossOf(valTrees) : null, brier: valMoments.length ? brierOf(valTrees) : null },
@@ -611,7 +618,7 @@ for (const row of mine) {
         .join(" · ")}\n\n` +
         curve.swings
           .map((s) => {
-            const moved = s.drivers.map((d) => `${FEATURES[d.feature]} (${d.favours === "me" ? "in your favour" : "in theirs"})`).join(", ");
+            const moved = s.drivers.map((d) => `${inputName(FEATURES[d.feature])} (${d.favours === "me" ? "in your favour" : "in theirs"})`).join(", ");
             const events = s.events.map(event).join("; ");
             return `- ${mmss(s.from)}–${mmss(s.to)}: ${pct(s.pFrom)} → ${pct(s.pTo)}. Moved by: ${moved || "many small changes"}.${events ? ` Then: ${events}.` : ""}`;
           })

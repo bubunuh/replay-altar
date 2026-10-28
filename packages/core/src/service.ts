@@ -1,10 +1,14 @@
-// The collector as a background service that starts at login. Linux: a systemd user unit.
-// Windows: a hidden launcher script (collector.vbs) in the user's Run key, with the running
-// collector's pid in collector.pid (no admin rights needed for either).
+// The collector as a background service. Linux: a systemd user unit. Windows: a hidden launcher
+// script (collector.vbs), with the running collector's pid in collector.pid (no admin rights
+// needed for either). It starts at login (the unit enabled; the launcher in the user's Run key)
+// unless Settings → Behaviour says to run it only with the window ("off"), in which case the
+// window starts it and stops it when it closes. The window marks itself open in window.pid, so a
+// collector waiting for Warcraft III ("game") wakes up for it too.
 import { execFileSync, spawn } from "node:child_process";
-import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
-import { dataDir } from "./config.ts";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { dirname, join } from "node:path";
+import { dataDir, type CollectorMode } from "./config.ts";
 
 export const SERVICE = "replay-altar-collector.service";
 const RUN_KEY = "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run";
@@ -15,7 +19,15 @@ export const collectorFiles = () => ({
   launcher: join(dataDir(), "bin/collector.vbs"),
   pid: join(dataDir(), "collector.pid"),
   log: join(dataDir(), "logs/collector.log"),
+  /** The window's pid while it is open. */
+  windowPid: join(dataDir(), "window.pid"),
 });
+
+/** The Linux user unit's file, as install and the AppImage write it. */
+export const linuxUnitFile = () => join(homedir(), ".config/systemd/user", SERVICE);
+
+/** Is the collector set up as a service on this computer (by an install, the AppImage or the Windows app)? */
+export const collectorInstalled = () => existsSync(windows ? collectorFiles().launcher : linuxUnitFile());
 
 // REPLAY_ALTAR_NO_SYSTEMD=1 (tests): write files only, never touch the running user session.
 const dryRun = () => !!process.env.REPLAY_ALTAR_NO_SYSTEMD;
@@ -29,15 +41,6 @@ const systemctl = (...args: string[]) => {
   }
 };
 
-const reg = (...args: string[]) => {
-  if (dryRun()) return console.log(`  (skipped) reg ${args.join(" ")}`);
-  try {
-    execFileSync("reg", args, { stdio: "ignore", windowsHide: true });
-  } catch {
-    // e.g. deleting a value that is not there
-  }
-};
-
 /** The collector's pid while it runs (Windows), from the file it writes at start. */
 function runningPid(): number | null {
   const file = collectorFiles().pid;
@@ -48,6 +51,42 @@ function runningPid(): number | null {
     return pid;
   } catch {
     return null;
+  }
+}
+
+const alive = (pid: number) => {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (e) {
+    return (e as NodeJS.ErrnoException).code === "EPERM";
+  }
+};
+
+/** Called by the window: a collector waiting for Warcraft III wakes up while it is open. */
+export function markWindowOpen() {
+  const file = collectorFiles().windowPid;
+  mkdirSync(dirname(file), { recursive: true });
+  writeFileSync(file, String(process.pid));
+}
+
+/** The window is closing (or crashed and restarted: only its own mark is removed). */
+export function markWindowClosed() {
+  const file = collectorFiles().windowPid;
+  try {
+    if (readFileSync(file, "utf8") === String(process.pid)) rmSync(file);
+  } catch {
+    // not there
+  }
+}
+
+/** Is Replay Altar's window open? (window.pid names a running process.) */
+export function isWindowOpen(): boolean {
+  try {
+    const pid = Number(readFileSync(collectorFiles().windowPid, "utf8"));
+    return pid > 0 && alive(pid);
+  } catch {
+    return false;
   }
 }
 
@@ -80,6 +119,7 @@ function stopOnWindows() {
   if (dryRun()) return console.log("  (skipped) stop the collector");
   const pid = runningPid();
   if (!pid) return;
+  // Not its whole process tree (taskkill /T): a window the collector opened is one of its children.
   try {
     process.kill(pid);
   } catch {
@@ -88,21 +128,58 @@ function stopOnWindows() {
   rmSync(collectorFiles().pid, { force: true });
 }
 
+/** The command that makes the collector start at every login, or no longer (`on` false). */
+export function loginCommand(on: boolean, platform: NodeJS.Platform = process.platform): string[] {
+  if (platform !== "win32") return ["systemctl", "--user", on ? "enable" : "disable", SERVICE];
+  return on ? ["reg", "add", RUN_KEY, "/v", RUN_VALUE, "/t", "REG_SZ", "/d", `wscript.exe "${collectorFiles().launcher}"`, "/f"] : ["reg", "delete", RUN_KEY, "/v", RUN_VALUE, "/f"];
+}
+
+function setLogin(on: boolean) {
+  const [cmd, ...args] = loginCommand(on);
+  if (dryRun()) return console.log(`  (skipped) ${[cmd, ...args].join(" ")}`);
+  try {
+    execFileSync(cmd, args, { stdio: windows ? "ignore" : "inherit", windowsHide: true });
+  } catch {
+    // e.g. deleting a Run entry that is not there
+  }
+}
+
+/**
+ * Start the collector now (if it isn't running) and at every login only when `atLogin`; false
+ * also takes it out of the login (Linux: the unit disabled; Windows: no Run entry).
+ */
+export function startCollector(atLogin: boolean) {
+  if (!windows) systemctl("daemon-reload"); // the unit file may have just been (re)written
+  setLogin(atLogin);
+  if (!windows) return systemctl("start", SERVICE);
+  startOnWindows();
+}
+
+/** Stop the collector now (the window closed and it shouldn't keep running); login unchanged. */
+export function stopCollector() {
+  if (!windows) return systemctl("stop", SERVICE);
+  stopOnWindows();
+}
+
 /** Start now and at every login. */
 export function enableCollector() {
-  if (!windows) {
-    systemctl("daemon-reload");
-    return systemctl("enable", "--now", SERVICE);
-  }
-  reg("add", RUN_KEY, "/v", RUN_VALUE, "/t", "REG_SZ", "/d", `wscript.exe "${collectorFiles().launcher}"`, "/f");
-  startOnWindows();
+  startCollector(true);
 }
 
 /** Stop now and not at login. */
 export function disableCollector() {
-  if (!windows) return systemctl("disable", "--now", SERVICE);
-  reg("delete", RUN_KEY, "/v", RUN_VALUE, "/f");
-  stopOnWindows();
+  setLogin(false);
+  stopCollector();
+}
+
+/**
+ * What the window does with the collector, by when it should run (Settings → Behaviour): when the
+ * window opens or the setting changes, the collector runs, and starts at login unless "off"; when
+ * the window closes, an "off" collector stops (a "game" one goes back to waiting by itself).
+ */
+export function collectorForWindow(moment: "opened" | "setting changed" | "closed", mode: CollectorMode) {
+  if (moment !== "closed") return startCollector(mode !== "off");
+  if (mode === "off") stopCollector();
 }
 
 /** After a settings change: the collector reads its settings at start. */

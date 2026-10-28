@@ -1,0 +1,58 @@
+From 3f9f1ddfa1b033fb216b0e5180b408f76109f96d Mon Sep 17 00:00:00 2001
+From: bubunuh <76405364+bubunuh@users.noreply.github.com>
+Date: Sun, 25 Oct 2026 01:07:06 +0200
+Subject: [PATCH 12/21] HandleBinder: start units in the order the game makes
+ them
+
+Units WC3V made at the same moment were aligned in arbitrary order. For the
+start units that matters: the game makes the Undead Ghoul before the three
+Acolytes, so whenever the Ghoul sorted after them it could not take its own
+handle, and the start Ghoul was tied to some later handle (or none) in most
+Undead games. Equal training times now put non-workers first.
+
+Dev games: army value error 93 -> 89 (Undead 104 -> 86).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ lib/HandleBinder.js      | 5 +++--
+ lib/SelectionEvidence.js | 1 +
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/lib/HandleBinder.js b/lib/HandleBinder.js
+index 0e62c4c..72dede6 100644
+--- a/lib/HandleBinder.js
++++ b/lib/HandleBinder.js
+@@ -45,7 +45,7 @@ const TWIN_COUNTER_GAP = 30;
+ const TWIN_BORN_MS = 1500;
+ 
+ class HandleBinder {
+-  // units:   [{ id, forms: Set, earliest, born, handle }] — a unit came out in
++  // units:   [{ id, forms: Set, earliest, born, handle, worker }] — a unit came out in
+   //          [earliest, born] (born: WC3V's training time, or the summon time);
+   //          handle: the key WC3V tied it to during the simulation, or null
+   // handles: Map key -> ledger handle ({ key, counter, first, types: [{ type }] })
+@@ -58,7 +58,8 @@ class HandleBinder {
+     const result = new Map();
+ 
+     // creation order on both sides
+-    const us = [...units].sort((a, b) => a.born - b.born);
++    // (the start units: the game makes a Ghoul before the Acolytes)
++    const us = [...units].sort((a, b) => (a.born - b.born) || ((a.worker ? 1 : 0) - (b.worker ? 1 : 0)));
+     const hs = [...handles.values()].sort((a, b) => a.counter - b.counter);
+     const n = us.length, m = hs.length;
+     if (!n || !m) return result;
+diff --git a/lib/SelectionEvidence.js b/lib/SelectionEvidence.js
+index 7b1d1cc..a0bbbe2 100644
+--- a/lib/SelectionEvidence.js
++++ b/lib/SelectionEvidence.js
+@@ -141,6 +141,7 @@ class SelectionEvidence {
+       forms: this._forms(unit),
+       born: this._born(unit),
+       earliest: this._earliest(unit),
++      worker: !!(unit.meta && unit.meta.worker),
+       handle: this._unitHandle(unit)
+     }));
+     this.stats.units += entries.length;
+-- 
+2.56.0
+

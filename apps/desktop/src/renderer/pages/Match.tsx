@@ -109,11 +109,11 @@ function GameCharts({ record, refMp, refLabel }: { record: GameRecord; refMp: Ma
   const workers = useMemo(() => timeLines(both((s) => s.workers), undefined, bandOf(refMp?.curves.workers, refLabel)), [mine, theirs, refMp, me?.name, opp?.name]);
   const supplyFor = (series: SimSample[], mineColor: boolean, band: Band | null = null) =>
     timeLines((t) => [
-      { name: tr("food used", "food usado", "food usado", "food utilisée"), color: mineColor ? t.series1 : t.series2, points: series.map((s) => [s.t, s.foodUsed] as [number, number]), step: true },
+      { name: tr("amount of units", "quantidade de unidades", "cantidad de unidades", "nombre d'unités"), color: mineColor ? t.series1 : t.series2, points: series.map((s) => [s.t, s.foodUsed] as [number, number]), step: true },
       // Cap in the main text colour so it stays distinct from the grey pro reference.
       { name: tr("food cap", "limite de food", "límite de food", "limite de food"), color: t.ink, points: series.map((s) => [s.t, Math.min(100, s.foodMax)] as [number, number]), step: true, muted: true },
     ], undefined, band);
-  const mySupply = useMemo(() => supplyFor(mine, true, bandOf(refMp?.curves.food, tr(`${refLabel} food used`, `${refLabel}: food usado`, `food usado: ${refLabel}`, `food utilisée : ${refLabel}`))), [mine, refMp]);
+  const mySupply = useMemo(() => supplyFor(mine, true, bandOf(refMp?.curves.food, tr(`${refLabel} amount of units`, `${refLabel}: quantidade de unidades`, `cantidad de unidades: ${refLabel}`, `nombre d'unités : ${refLabel}`))), [mine, refMp]);
   const oppSupply = useMemo(() => supplyFor(theirs, false), [theirs]);
   const apm = useMemo(
     () =>
@@ -196,12 +196,12 @@ function GameCharts({ record, refMp, refLabel }: { record: GameRecord; refMp: Ma
           </div>
           <div>
             <h3 className="chart-title">{tr("Supply", "Food", "Food", "Food")}: {shortName(me?.name ?? tr("You", "Você", "Tú", "Vous"))}</h3>
-            <Chart option={mySupply} height={200} label={tr("Your food used against food cap", "Seu food usado contra o limite de food", "Tu food usado contra tu límite de food", "Votre food utilisée par rapport à votre limite de food")} />
+            <Chart option={mySupply} height={200} label={tr("Your amount of units (in food) against your food cap", "Sua quantidade de unidades (em food) contra o seu limite de food", "Tu cantidad de unidades (en food) contra tu límite de food", "Votre nombre d'unités (en food) par rapport à votre limite de food")} />
           </div>
           {opp && (
             <div>
               <h3 className="chart-title">{tr("Supply", "Food", "Food", "Food")}: {shortName(opp.name)}</h3>
-              <Chart option={oppSupply} height={200} label={tr("Opponent food used against food cap", "Food usado do oponente contra o limite de food", "Food usado del rival contra su límite de food", "Food utilisée de l'adversaire par rapport à sa limite de food")} />
+              <Chart option={oppSupply} height={200} label={tr("Opponent's amount of units (in food) against their food cap", "Quantidade de unidades do oponente (em food) contra o limite de food dele", "Cantidad de unidades del rival (en food) contra su límite de food", "Nombre d'unités de l'adversaire (en food) par rapport à sa limite de food")} />
             </div>
           )}
         </div>
@@ -372,6 +372,28 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
                 </button>
               )}
             </div>
+            {r.classification.replayProblem === "missing_first_selections" && (
+              <p className="analyzer-warning">
+                ⚠{" "}
+                {tr(
+                  "This replay file is damaged: it lacks the players' first selection at the start of the game, a fault seen in some W3Champions (FLO) replays. Warcraft III plays it back wrong from the start, so rewatching it shows a different game. Replay Altar reads the players' orders, which are all there, so the numbers here are as accurate as usual (checked against W3Champions' own end-of-game numbers); only the moments to rewatch won't match what Warcraft III shows.",
+                  "Este arquivo de replay está danificado: falta a primeira seleção dos jogadores no início da partida, um defeito visto em alguns replays do W3Champions (FLO). O Warcraft III reproduz ele errado desde o início, então assistir de novo mostra outra partida. O Replay Altar lê as ordens dos jogadores, que estão todas lá, então os números aqui são tão precisos quanto de costume (conferido com os números de fim de partida do próprio W3Champions); só os momentos para rever não vão bater com o que o Warcraft III mostra.",
+                  "Este archivo de replay está dañado: le falta la primera selección de los jugadores al inicio de la partida, un defecto visto en algunos replays de W3Champions (FLO). Warcraft III lo reproduce mal desde el principio, así que al volver a verlo se ve otra partida. Replay Altar lee las órdenes de los jugadores, que están todas, así que los números de aquí son tan precisos como siempre (comprobado con los números de fin de partida del propio W3Champions); solo los momentos para volver a ver no coincidirán con lo que muestra Warcraft III.",
+                  "Ce fichier de replay est abîmé : il lui manque la première sélection des joueurs au début de la partie, un défaut vu dans certains replays W3Champions (FLO). Warcraft III le rejoue mal dès le début, donc le revoir montre une autre partie. Replay Altar lit les ordres des joueurs, qui y sont tous : les chiffres ici sont aussi précis que d'habitude (vérifié avec les chiffres de fin de partie de W3Champions) ; seuls les moments à revoir ne correspondront pas à ce que montre Warcraft III.",
+                )}
+              </p>
+            )}
+            {r.classification.replayProblem === "truncated" && (
+              <p className="analyzer-warning">
+                ⚠{" "}
+                {tr(
+                  `This replay file is cut short: it ends at ${mmss(r.game.durationMs)}, in the middle of the game (FloTV recordings and copies made while the game was still running end this way). Everything after that is missing, so the result may be unknown and the numbers cover the game only up to there.`,
+                  `Este arquivo de replay está cortado: ele acaba em ${mmss(r.game.durationMs)}, no meio da partida (gravações do FloTV e cópias feitas com a partida ainda rodando acabam assim). Tudo depois disso está faltando, então o resultado pode ser desconhecido e os números cobrem a partida só até ali.`,
+                  `Este archivo de replay está cortado: termina en ${mmss(r.game.durationMs)}, en mitad de la partida (las grabaciones de FloTV y las copias hechas con la partida aún en curso terminan así). Todo lo posterior falta, así que el resultado puede ser desconocido y los números cubren la partida solo hasta ahí.`,
+                  `Ce fichier de replay est coupé : il s'arrête à ${mmss(r.game.durationMs)}, au milieu de la partie (les enregistrements FloTV et les copies faites pendant la partie s'arrêtent ainsi). Tout ce qui suit manque : le résultat peut être inconnu et les chiffres ne couvrent la partie que jusque-là.`,
+                )}
+              </p>
+            )}
             {resim.error && (
             <p className="sub no-share">
               {tr("The simulation failed", "A simulação falhou", "La simulación falló", "La simulation a échoué")}: {resim.error}

@@ -11,10 +11,18 @@ export class SimQueue {
   private totalMs = 0;
   private ctx: IngestContext;
   private log: (msg: string) => void;
+  /** True while simulations must wait (Warcraft III is running): resume() when it's over. */
+  private held: () => boolean;
 
-  constructor(ctx: IngestContext, log: (msg: string) => void) {
+  constructor(ctx: IngestContext, log: (msg: string) => void, held: () => boolean = () => false) {
     this.ctx = ctx;
     this.log = log;
+    this.held = held;
+  }
+
+  /** Simulate what waited while held. */
+  resume() {
+    void this.drain();
   }
 
   add(gameKey: string) {
@@ -44,15 +52,16 @@ export class SimQueue {
   /** For the progress bar: null when idle. */
   get progress() {
     const pending = this.pending;
-    if (!pending) return null;
+    if (!pending || (!this.running && this.held())) return null; // waiting for the match to end
     return { done: this.done, total: this.done + pending, avgMs: this.done ? Math.round(this.totalMs / this.done) : null };
   }
 
   private async drain() {
-    if (this.running) return;
+    if (this.running || this.held()) return;
     this.running = true;
     try {
-      for (let key = this.queue.shift(); key; key = this.queue.shift()) {
+      // The one running when a hold begins finishes; the rest wait for resume().
+      for (let key = this.queue.shift(); key; key = this.held() ? undefined : this.queue.shift()) {
         const record = readRecord(this.ctx.paths, key);
         if (!record) continue;
         const sim = await simulateGame(record, { dataRoot: this.ctx.paths.root, mapFolders: mapFolders(this.ctx.config), fromGame: builtinMap });

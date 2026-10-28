@@ -3,19 +3,21 @@ import { api, type GameFindings } from "../api.ts";
 import type { GameRow } from "@replay-altar/core/ui";
 import { dateTime, mmss, problemName, RACE, shortName, SOURCE } from "../format.ts";
 import { RaceIcon } from "../RaceIcon.tsx";
-import { tr } from "@replay-altar/core/i18n";
+import { locale, tr } from "@replay-altar/core/i18n";
 import { ReplayFolders } from "./Other.tsx";
+import { changeList, NO_FILTER, pageOf, type ListState } from "../paging.ts";
 
 export function Result({ result }: { result: string }) {
   return <span className={`result ${result}`}>{result === "win" ? tr("Win", "Vitória", "Victoria", "Victoire") : result === "loss" ? tr("Loss", "Derrota", "Derrota", "Défaite") : tr("Unknown", "Desconhecido", "Desconocido", "Inconnu")}</span>;
 }
 
+// The filters and the page, kept while a game's report is open: the list is made again on the way back.
+let kept: ListState = NO_FILTER;
+
 export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: string) => void }) {
-  const [source, setSource] = useState("all");
-  const [result, setResult] = useState("all");
-  const [oppRace, setOppRace] = useState("all");
-  const [q, setQ] = useState("");
-  const [problem, setProblem] = useState("all");
+  const [list, setList] = useState(kept);
+  const change = (c: Partial<ListState>) => setList((before) => (kept = changeList(before, c)));
+  const { source, result, oppRace, q, problem, page } = list;
   const [found, setFound] = useState<Map<string, GameFindings["findings"]>>(new Map());
   useEffect(() => {
     api.findingsSummary().then((list) => setFound(new Map(list.map((g) => [g.key, g.findings]))));
@@ -45,13 +47,25 @@ export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: str
       ),
     [games, source, result, oppRace, q, problem, found],
   );
+  // Newest first (the list comes sorted), PAGE_SIZE at a time; the filters and counts take every game.
+  const shown = pageOf(rows, page);
+  const pager = (bottom: boolean) => (
+    <Pager
+      at={shown}
+      total={rows.length}
+      onPage={(n) => {
+        change({ page: n });
+        if (bottom) document.querySelector("main")?.scrollTo(0, 0);
+      }}
+    />
+  );
 
   return (
     <div className="page">
       <div className="filters">
         <label>
           {tr("Source", "Origem", "Origen", "Origine")}
-          <select value={source} onChange={(e) => setSource(e.target.value)}>
+          <select value={source} onChange={(e) => change({ source: e.target.value })}>
             <option value="all">{tr("All", "Todas", "Todos", "Toutes")}</option>
             {Object.entries(SOURCE).map(([k, v]) => (
               <option key={k} value={k}>{v}</option>
@@ -60,7 +74,7 @@ export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: str
         </label>
         <label>
           {tr("Result", "Resultado", "Resultado", "Résultat")}
-          <select value={result} onChange={(e) => setResult(e.target.value)}>
+          <select value={result} onChange={(e) => change({ result: e.target.value })}>
             <option value="all">{tr("All", "Todos", "Todos", "Toutes")}</option>
             <option value="win">{tr("Wins", "Vitórias", "Victorias", "Victoires")}</option>
             <option value="loss">{tr("Losses", "Derrotas", "Derrotas", "Défaites")}</option>
@@ -68,7 +82,7 @@ export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: str
         </label>
         <label>
           {tr("Opponent race", "Raça do oponente", "Raza del rival", "Race de l'adversaire")}
-          <select value={oppRace} onChange={(e) => setOppRace(e.target.value)}>
+          <select value={oppRace} onChange={(e) => change({ oppRace: e.target.value })}>
             <option value="all">{tr("All", "Todas", "Todos", "Toutes")}</option>
             {["H", "O", "U", "N"].map((r) => (
               <option key={r} value={r}>{RACE[r]}</option>
@@ -77,17 +91,20 @@ export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: str
         </label>
         <label>
           {tr("Problem", "Problema", "Problema", "Problème")}
-          <select value={problem} onChange={(e) => setProblem(e.target.value)}>
+          <select value={problem} onChange={(e) => change({ problem: e.target.value })}>
             <option value="all">{tr("All", "Todos", "Todos", "Toutes")}</option>
             {problems.map((id) => (
               <option key={id} value={id}>{problemName(id)}</option>
             ))}
           </select>
         </label>
-        <input type="text" placeholder={tr("Search opponent, map, label", "Buscar oponente, mapa, nome", "Buscar rival, mapa, etiqueta", "Chercher adversaire, carte, étiquette")} value={q} onChange={(e) => setQ(e.target.value)} />
+        <input type="text" placeholder={tr("Search opponent, map, label", "Buscar oponente, mapa, nome", "Buscar rival, mapa, etiqueta", "Chercher adversaire, carte, étiquette")} value={q} onChange={(e) => change({ q: e.target.value })} />
         <span className="muted small">{tr(`${rows.length} games`, `${rows.length} partidas`, `${rows.length} partidas`, `${rows.length} parties`)}</span>
       </div>
       {games.length === 0 && <ReplayFolders empty />}
+      {/* Nothing imported yet (a first start): the offer to import comes first. */}
+      {games.length === 0 && <ImportMore games={games} />}
+      {pager(false)}
       <div className="card" style={{ padding: 0 }}>
         {rows.length === 0 ? (
           <div className="empty">
@@ -115,7 +132,7 @@ export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: str
               </tr>
             </thead>
             <tbody>
-              {rows.map((g) => (
+              {shown.rows.map((g) => (
                 <tr key={g.game_key} className="click" onClick={() => onOpen(g.game_key)}>
                   <td>{dateTime(g.played_at)}</td>
                   <td><Result result={g.result} /></td>
@@ -143,17 +160,51 @@ export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: str
           </table>
         )}
       </div>
-      <ImportMore games={games} />
+      {pager(true)}
+      {games.length > 0 && <ImportMore games={games} />}
+    </div>
+  );
+}
+
+/** Page controls: first, newer, "page 2 of 51 · games 101–200 of 5,016", older, last. Hidden for one page. */
+function Pager({ at, total, onPage }: { at: ReturnType<typeof pageOf>; total: number; onPage: (page: number) => void }) {
+  if (at.pages <= 1) return null;
+  const first = at.page === 0;
+  const last = at.page === at.pages - 1;
+  const from = (at.from + 1).toLocaleString(locale());
+  const to = (at.from + at.rows.length).toLocaleString(locale());
+  const of = total.toLocaleString(locale());
+  return (
+    <div className="pager">
+      <button className="btn" disabled={first} onClick={() => onPage(0)} title={tr("Newest games", "Partidas mais recentes", "Partidas más recientes", "Parties les plus récentes")}>
+        «
+      </button>
+      <button className="btn" disabled={first} onClick={() => onPage(at.page - 1)}>
+        ‹ {tr("Newer", "Mais recentes", "Más recientes", "Plus récentes")}
+      </button>
+      <span className="muted small">
+        {tr(`Page ${at.page + 1} of ${at.pages}`, `Página ${at.page + 1} de ${at.pages}`, `Página ${at.page + 1} de ${at.pages}`, `Page ${at.page + 1} sur ${at.pages}`)} ·{" "}
+        {tr(`games ${from}–${to} of ${of}`, `partidas ${from}–${to} de ${of}`, `partidas ${from}–${to} de ${of}`, `parties ${from} à ${to} sur ${of}`)}
+      </span>
+      <button className="btn" disabled={last} onClick={() => onPage(at.page + 1)}>
+        {tr("Older", "Mais antigas", "Más antiguas", "Plus anciennes")} ›
+      </button>
+      <button className="btn" disabled={last} onClick={() => onPage(at.pages - 1)} title={tr("Oldest games", "Partidas mais antigas", "Partidas más antiguas", "Parties les plus anciennes")}>
+        »
+      </button>
     </div>
   );
 }
 
 /**
- * Older replays in your folders that aren't imported yet: a first start imports only the newest
- * ones (a folder with thousands of replays took ages and kept the window busy).
+ * Replays that were in your folders (or Replay Altar's archive) before the first start and aren't
+ * imported yet: nothing is imported until you ask (a folder with thousands of replays took ages
+ * and kept the window busy, and not everyone wants their old games). New games are imported by
+ * themselves. After an update that reads games differently the list starts over the same way
+ * (`startedOver`, core analysis.ts).
  */
 function ImportMore({ games }: { games: GameRow[] }) {
-  const [scan, setScan] = useState<{ found: number; older: number } | null>(null);
+  const [scan, setScan] = useState<{ found: number; older: number; asked: boolean; startedOver: boolean } | null>(null);
   const [asked, setAsked] = useState(false);
   useEffect(() => {
     api.replaysScan().then((s) => {
@@ -169,14 +220,40 @@ function ImportMore({ games }: { games: GameRow[] }) {
   return (
     <div className="import-more">
       <p className="sub">
-        {scan.older === 1
-          ? tr("1 older replay in your folders isn't imported yet.", "1 replay mais antigo nas suas pastas ainda não foi importado.", "1 replay más antiguo de tus carpetas aún no se ha importado.", "1 replay plus ancien de vos dossiers n'est pas encore importé.")
-          : tr(`${scan.older} older replays in your folders aren't imported yet.`, `${scan.older} replays mais antigos nas suas pastas ainda não foram importados.`, `${scan.older} replays más antiguos de tus carpetas aún no se han importado.`, `${scan.older} replays plus anciens de vos dossiers ne sont pas encore importés.`)}
+        {!scan.asked && scan.startedOver
+          ? tr(
+              "This version of Replay Altar reads your games in a new way, so the match list starts over: import your replays again to see them with the new analysis.",
+              "Esta versão do Replay Altar lê as suas partidas de um jeito novo, então a lista de partidas recomeça: importe os seus replays de novo para vê-los com a nova análise.",
+              "Esta versión de Replay Altar lee tus partidas de una forma nueva, así que la lista de partidas empieza de nuevo: vuelve a importar tus replays para verlos con el nuevo análisis.",
+              "Cette version de Replay Altar lit vos parties d'une nouvelle façon, la liste des parties repart donc de zéro : importez à nouveau vos replays pour les voir avec la nouvelle analyse.",
+            ) +
+            " " +
+            (scan.older === 1
+              ? tr("1 replay found, counting the copies Replay Altar keeps.", "1 replay encontrado, contando as cópias que o Replay Altar guarda.", "1 replay encontrado, contando las copias que guarda Replay Altar.", "1 replay trouvé, en comptant les copies que garde Replay Altar.")
+              : tr(`${scan.older} replays found, counting the copies Replay Altar keeps.`, `${scan.older} replays encontrados, contando as cópias que o Replay Altar guarda.`, `${scan.older} replays encontrados, contando las copias que guarda Replay Altar.`, `${scan.older} replays trouvés, en comptant les copies que garde Replay Altar.`)) +
+            " " +
+            tr("Only the games you played appear in the list. The games you play from now on are added by themselves.", "Só as partidas que você jogou aparecem na lista. As partidas que você jogar a partir de agora entram sozinhas.", "Solo aparecen en la lista las partidas que jugaste. Las partidas que juegues a partir de ahora se añaden solas.", "Seules les parties que vous avez jouées apparaissent dans la liste. Les parties que vous jouerez désormais s'ajoutent toutes seules.")
+          : !scan.asked
+          ? (scan.older === 1
+              ? tr("1 replay found in your folders.", "1 replay encontrado nas suas pastas.", "1 replay encontrado en tus carpetas.", "1 replay trouvé dans vos dossiers.")
+              : tr(`${scan.older} replays found in your folders.`, `${scan.older} replays encontrados nas suas pastas.`, `${scan.older} replays encontrados en tus carpetas.`, `${scan.older} replays trouvés dans vos dossiers.`)) +
+            " " +
+            tr(
+              "Nothing is imported until you ask, and only the games you played appear in the list. The games you play from now on are added by themselves.",
+              "Nada é importado até você pedir, e só as partidas que você jogou aparecem na lista. As partidas que você jogar a partir de agora entram sozinhas.",
+              "No se importa nada hasta que lo pidas, y solo aparecen en la lista las partidas que jugaste. Las partidas que juegues a partir de ahora se añaden solas.",
+              "Rien n'est importé tant que vous ne le demandez pas, et seules les parties que vous avez jouées apparaissent dans la liste. Les parties que vous jouerez désormais s'ajoutent toutes seules.",
+            )
+          : scan.older === 1
+            ? tr("1 older replay in your folders isn't imported yet.", "1 replay mais antigo nas suas pastas ainda não foi importado.", "1 replay más antiguo de tus carpetas aún no se ha importado.", "1 replay plus ancien de vos dossiers n'est pas encore importé.")
+            : tr(`${scan.older} older replays in your folders aren't imported yet.`, `${scan.older} replays mais antigos nas suas pastas ainda não foram importados.`, `${scan.older} replays más antiguos de tus carpetas aún no se han importado.`, `${scan.older} replays plus anciens de vos dossiers ne sont pas encore importés.`)}
       </p>
       <div className="filters">
-        {scan.older > 50 && (
+        {scan.older > 20 && (
           <button className="btn" disabled={asked} onClick={() => more(false)}>
-            {tr("Import 50 more replays", "Importar mais 50 replays", "Importar 50 replays más", "Importer 50 replays de plus")}
+            {scan.asked
+              ? tr("Import 20 more replays", "Importar mais 20 replays", "Importar 20 replays más", "Importer 20 replays de plus")
+              : tr("Import 20 replays", "Importar 20 replays", "Importar 20 replays", "Importer 20 replays")}
           </button>
         )}
         <button className="btn" disabled={asked} onClick={() => more(true)}>

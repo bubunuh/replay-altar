@@ -1,5 +1,6 @@
 // The map cache in the data folder: extracted maps survive an update that replaces WC3V's folder.
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { gunzipSync, gzipSync } from "node:zlib";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, expect, test } from "vitest";
@@ -19,7 +20,7 @@ write(join(wc3v, "client/maps/EchoIsles_S2_v2.2/map.jpg"), "picture");
 write(join(wc3v, "helpers/mapConfiguration.json"), JSON.stringify({ version: 1, maps: { "EchoIsles_S2_v2.2.w3x": { info: { name: "EchoIsles" } } } }));
 write(join(wc3v, "client/js/gameData.json"), JSON.stringify({ maps: { "EchoIsles_S2_v2.2.w3x": { name: "EchoIsles" } } }));
 
-const { syncMapCache, ensureMapData, mapClientDir } = await import("../src/maps.ts");
+const { syncMapCache, ensureMapData, mapClientDir, completeClientFiles } = await import("../src/maps.ts");
 
 describe("extracted maps are kept in the data folder", () => {
   afterAll(() => {
@@ -28,10 +29,10 @@ describe("extracted maps are kept in the data folder", () => {
   });
 
   test("a map WC3V already has is copied to the data folder", () => {
-    expect(syncMapCache(data)).toEqual({ restored: 0, saved: 1 });
+    expect(syncMapCache(data)).toEqual({ restored: 0, saved: 1, repaired: 0, completed: 0 });
     expect(readFileSync(join(data, "sim/maps/EchoIsles_S2_v2.2/mapdata/war3map.wpm"), "utf8")).toBe("pathing");
     expect(existsSync(join(data, "sim/maps/EchoIsles_S2_v2.2/client/map.jpg"))).toBe(true);
-    expect(syncMapCache(data)).toEqual({ restored: 0, saved: 0 });
+    expect(syncMapCache(data)).toEqual({ restored: 0, saved: 0, repaired: 0, completed: 0 });
   });
 
   test("after an update wipes WC3V's copy, the map and its shared entries come back", () => {
@@ -41,7 +42,7 @@ describe("extracted maps are kept in the data folder", () => {
     write(join(wc3v, "client/js/gameData.json"), JSON.stringify({ maps: {} }));
     expect(mapClientDir(data, "(2)EchoIsles_S2_v2.2.w3x")).toBe(join(data, "sim/maps/EchoIsles_S2_v2.2/client"));
 
-    expect(syncMapCache(data)).toEqual({ restored: 1, saved: 0 });
+    expect(syncMapCache(data)).toEqual({ restored: 1, saved: 0, repaired: 0, completed: 0 });
     expect(readFileSync(join(wc3v, "mapdata/EchoIsles_S2_v2.2/war3map.wpm"), "utf8")).toBe("pathing");
     expect(JSON.parse(readFileSync(join(wc3v, "helpers/mapConfiguration.json"), "utf8")).maps["EchoIsles_S2_v2.2.w3x"]).toEqual({ info: { name: "EchoIsles" } });
     expect(JSON.parse(readFileSync(join(wc3v, "client/js/gameData.json"), "utf8")).maps["EchoIsles_S2_v2.2.w3x"]).toEqual({ name: "EchoIsles" });
@@ -53,6 +54,24 @@ describe("extracted maps are kept in the data folder", () => {
     rmSync(join(wc3v, "mapdata"), { recursive: true });
     expect(ensureMapData("(2)EchoIsles_S2_v2.2.w3x", [], data)).toBeNull();
     expect(existsSync(join(wc3v, "mapdata/EchoIsles_S2_v2.2/war3map.wpm"))).toBe(true);
+  });
+
+  test("a client file left half-written (empty .gz next to the full .json) is finished, at start too", () => {
+    const dir = join(data, "sim/maps/EchoIsles_S2_v2.2/client");
+    const grid = JSON.stringify({ grid: [[{ x: 0, y: 0 }]] });
+    write(join(dir, "wpm.json"), grid);
+    write(join(dir, "wpm.json.gz"), "");
+    write(join(dir, "doo.json"), "{}");
+    writeFileSync(join(dir, "doo.json.gz"), gzipSync("{}"));
+    expect(syncMapCache(data)).toMatchObject({ completed: 1 });
+    expect(gunzipSync(readFileSync(join(dir, "wpm.json.gz"))).toString()).toBe(grid);
+    expect(existsSync(join(dir, "wpm.json"))).toBe(false);
+    expect(existsSync(join(dir, "doo.json"))).toBe(false); // a leftover next to a sound .gz
+    expect(completeClientFiles(dir)).toBe(0);
+    // A plain file that isn't complete JSON (still being written) is left alone.
+    write(join(dir, "unit.json"), "{\"units\": [");
+    expect(completeClientFiles(dir)).toBe(0);
+    expect(existsSync(join(dir, "unit.json"))).toBe(true);
   });
 
   test("a map nobody has extracted and that isn't in the map folders says where to add it", () => {

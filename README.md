@@ -6,10 +6,10 @@ Replay Altar is a Warcraft III: Reforged replay analyzer for 1v1 players. It run
 
 [Download](https://github.com/bubunuh/replay-altar/releases)
 
-- **Every replay kept, automatically.** A small background program saves each replay the moment a game ends, before the game overwrites `LastReplay.w3g`. Battle.net ladder, W3Champions and custom melee games are all picked up, with nothing to upload or click.
+- **Every replay kept, automatically.** A small background program saves each replay the moment a game ends, before the game overwrites `LastReplay.w3g`. It starts with your computer but only wakes up while Warcraft III runs (Settings can make it always on, or off). Battle.net ladder, W3Champions and custom melee games are all picked up, with nothing to upload or click.
 - **The game reconstructed.** Each 1v1 is simulated from its replay with the [WC3V](https://github.com/jblanchette/wc3v) engine: workers, army value, supply, creep camps, hero levels and fights over time.
-- **A coach's report after every game.** Rules drawn from well-known guides (Grubby, Liquipedia, Warcraft 3 Gym, Vortix and others) name the problems that cost you the game, show the facts behind each one, explain why it happened and say what to do next time. Only rules that proved themselves on 3,388 tournament player-games are shown: each one appears clearly more often in lost games than in won ones. The report also points out the fight that turned the game (with the moment to rewatch), your strengths and the opponent's plan. [More below](#how-the-report-is-made).
-- **An evaluation curve, like in chess.** Who was ahead at every moment of the game, as how often a pro player in your position went on to win, with the three moments that swung it most and what moved them. Learned from 513 pro games and tested on 2,998 tournament games it had never seen. [More below](#the-evaluation-curve).
+- **A coach's report after every game.** Rules drawn from well-known guides (Grubby, Liquipedia, Warcraft 3 Gym, Vortix and others) name the problems that cost you the game, show the facts behind each one, explain why it happened and say what to do next time. Only rules that proved themselves on 3,532 tournament player-games are shown: each one appears clearly more often in lost games than in won ones. The report also points out the fight that turned the game (with the moment to rewatch), your strengths and the opponent's plan. [More below](#how-the-report-is-made).
+- **An evaluation curve, like in chess.** Who was ahead at every moment of the game, as how often a pro player in your position went on to win, with the three moments that swung it most and what moved them. Learned from 513 pro games and tested on 3,138 tournament games it had never seen. [More below](#the-evaluation-curve).
 - **One thing to work on.** Each report ends with the single most useful habit for your next game. Across your recent games, the Performance page picks the problem that keeps coming back and shows whether it is getting better.
 - **Every number in context.** Your numbers are placed among about 1,700 tournament games of your race and matchup ("better than 86% of pro games"), with a green, yellow or red verdict: at pro level, at least as good as your opponent, or behind both.
 - **Knows your build.** It recognises the build order each player went for, from guide builds and builds mined from pro games, and shows where your timings drifted from the pros who play it.
@@ -31,17 +31,17 @@ Your games stay on your computer. Replay Altar fetches only two things from the 
 
 **2. comparing with tournament players.** Every number is placed among about 1,700 player-games of your race: recent pro games on the current patch plus tournament games from 2022 to 2026, analyzed exactly like yours. "Better than 86% of pro games" means just that: 86% of those games had a worse number.
 
-**3. Deciding what mattered.** Each rule comes from a guide or from the pro data, and has to prove itself before it is shown. Every rule was run on 3,388 player-games whose results it had not been tuned on, from both players' side. A rule is shown only if it fires clearly more often in losses than in wins (the whole 95% confidence range above "no difference"). For example:
+**3. Deciding what mattered.** Each rule comes from a guide or from the pro data, and has to prove itself before it is shown. Every rule was run on 3,532 player-games whose results it had not been tuned on, from both players' side. A rule is shown only if it fires clearly more often in losses than in wins (the whole 95% confidence range above "no difference"). For example:
 
 | Finding | Appears in lost games | Appears in won games |
 |---|---|---|
-| Your fights cost far more than theirs | 39% | 13% |
+| Your fights cost far more than theirs | 37% | 17% |
 | Your heroes fell behind | 67% | 24% |
 | You lost your heroes too often | 14% | 6% |
 | No expansion in a long game | 7% | 3% |
 | They had more bases than you | 21% | 13% |
 
-11 rules passed and are shown. One check is shown whatever the result: playing without control groups or hotkeys.
+10 rules passed and are shown (scored on 0.2.2's simulation; [docs/RULES.md](docs/RULES.md) has every rule's numbers). One check is shown whatever the result: playing without control groups or hotkeys.
 
 In the future, suggestions will be skill based: during the analysis, the app will estimate your skill level and these suggestions will be more personal. <kbd>planned</kbd>
 
@@ -53,9 +53,9 @@ Every rule, its source and its scores: [docs/RULES.md](docs/RULES.md). The miles
 
 ![The evaluation chart of one game: the curve over time, blue while you were ahead, with three swings marked, and under it what moved each swing and what happened then](docs/images/win-chance.png)
 
-Each game's page shows an **evaluation curve**, like the ones chess sites draw under a game: blue while you were ahead, red while your opponent was, from the first minute to the last. At every moment, Replay Altar compares your position with your opponent's: army, workers, hero experience, heroes alive, expansions, units lost and upgrades. Its height answers one question: **how often did professional players in that same position go on to win?** 50% is even. It learned the answer from 513 recent pro games.
+Each game's page shows an **evaluation curve**, like the ones chess sites draw under a game: blue while you were ahead, red while your opponent was, from the first minute to the last. At every moment, Replay Altar compares your position with your opponent's: food used (army and workers, as the game counts it), workers, hero experience, heroes alive, expansions, units lost and upgrades. Its height answers one question: **how often did professional players in that same position go on to win?** 50% is even. It learned the answer from 513 recent pro games.
 
-How the graph works: every 30 seconds it compares you and your opponent on 7 things: army size, workers, hero XP, heroes alive, bases, upgrades, and how much each side has lost so far. Then it asks “when pros had this kind of lead or deficit at this minute, how often did they win?” The model is a logistic regression (basically a weighted score turned into a percentage), where the weights change over the game, since a worker lead matters differently at minute 5 than at minute 20. I fit it on 513 pro games and then tested it, without touching it, on 2,998 tournament games from 2022-2026 it had never seen. It picks the eventual winner 63% of the time at 10 minutes and 69% at 20. On unseen pro games its confidence is honest: when it says 70%, that side wins about 70% of the time. One thing to keep in mind: it shows how a pro would usually convert your position, so for regular ladder games it’ll look a bit overconfident. That’s on purpose, since a big drop means “a pro wouldn’t have lost this,” which is the point. Full write-up in docs/win-chance/report.pdf. 
+How the graph works: every 30 seconds it compares you and your opponent on 7 things: amount of units (army and workers, counted in food as the game does), workers, hero XP, heroes alive, bases, upgrades, and how much each side has lost so far. Then it asks “when pros had this kind of lead or deficit at this minute, how often did they win?” The model is a logistic regression (basically a weighted score turned into a percentage), where the weights change over the game, since a worker lead matters differently at minute 5 than at minute 20. I fit it on 513 pro games and then tested it, without touching it, on 3,138 tournament games from 2022-2026 it had never seen. It picks the eventual winner 64% of the time at 10 minutes and 70% at 20. On unseen pro games its confidence is honest: when it says 70%, that side wins about 70% of the time. One thing to keep in mind: it shows how a pro would usually convert your position, so for regular ladder games it’ll look a bit overconfident. That’s on purpose, since a big drop means “a pro wouldn’t have lost this,” which is the point. Full write-up in docs/win-chance/report.pdf. 
 
 **How it was made:** the [technical report (PDF)](docs/win-chance/report.pdf) describes the data, the model, how it was chosen and tested, its limits, and how to reproduce every number. The code, the fitted model and the list of games are all in this repository.
 
@@ -65,9 +65,11 @@ How the graph works: every 30 seconds it compares you and your opponent on 7 thi
 
 1. Download `ReplayAltar-Setup-<version>.exe` from the [Releases](../../releases) page.
 2. Run it. Windows will probably warn that it protected your PC, because the installer isn't digitally signed yet: click **More info**, then **Run anyway**.
-3. The installer first shows what Replay Altar does on your computer (privacy, starting at login); click **I Agree**. It needs no administrator rights, installs for your user, adds a Start menu and desktop shortcut, and opens the app.
+3. The installer first shows what Replay Altar does on your computer (privacy, what runs in the background); click **I Agree**. It needs no administrator rights, installs for your user, adds a Start menu and desktop shortcut, and opens the app.
 
-On the first start, in the background, Replay Altar reads the data it needs from your Warcraft III installation and imports your 50 newest replays (*Import 50 more replays* and *Import all replays*, at the end of the match list, bring in the older ones). It looks for the battletag that appears in most of your replays and asks you to confirm it (or type yours in Settings); until you do, nothing counts as yours. The list of games fills in by itself after a few minutes. From then on it starts with Windows and picks up each game as it ends.
+On the first start, in the background, Replay Altar reads the data it needs from your Warcraft III installation. It imports none of the replays already on your computer until you ask: the match list offers *Import 20 replays* (the newest) and *Import all replays*. It looks for the battletag that appears in most of your replays and asks you to confirm it (or type yours in Settings); until you do, nothing counts as yours. From then on a light background program starts with Windows and waits for the game: while Warcraft III runs it picks up each game as it ends, and once you close the game it simulates the new ones. **Settings → Behaviour** can make it run all the time, or only while Replay Altar's window is open (then the games you played meanwhile are picked up when you open it again; only `LastReplay.w3g`, which every game overwrites, can be missed). Simulations always wait until you close the game.
+
+**Updates.** An update that changes how games are read (0.2.2 is one) starts the match list over in the same way: it offers to import your replays again, counting the copy Replay Altar keeps of every game it imported (for a game whose `LastReplay.w3g` was overwritten, the only copy left). Settings, battletag, game data, maps, results you corrected and W3Champions statistics stay; the previous database is kept as `replay-altar.previous.sqlite`.
 
 - **Replays somewhere else?** It finds the game's `Documents\Warcraft III` folder by itself, OneDrive included. If yours is elsewhere, use **Settings → Replay folders → Choose folder…**.
 - **Something wrong?** The log is in `%LOCALAPPDATA%\replay-altar\logs\collector.log`.
@@ -80,7 +82,7 @@ On the first start, in the background, Replay Altar reads the data it needs from
 1. Download `ReplayAltar-<version>.AppImage` from the [Releases](../../releases) page.
 2. Make it executable (`chmod +x ReplayAltar-*.AppImage`, or Properties → Permissions in your file manager) and run it.
 
-On its first start it sets up what the checkout's `install` sets up: the background collector as a systemd user service, the `replay-altar` command and a menu entry. It finds Battle.net in Lutris (`~/Games/…`), plain Wine (`~/.wine`), Steam's Proton prefixes and Bottles, and reads the game's data with a built-in read-only extractor (no podman needed). Keep the AppImage where you put it: the service runs it from there, and Settings → Updates replaces it in place. On distributions that block Electron's sandbox (Ubuntu 24.04 and later), it may need `--no-sandbox`.
+On its first start it sets up what the checkout's `install` sets up: the background collector as a systemd user service (started at login and awake while Warcraft III runs, or as chosen in Settings → Behaviour), the `replay-altar` command and a menu entry. It finds Battle.net in Lutris (`~/Games/…`), plain Wine (`~/.wine`), Steam's Proton prefixes and Bottles, and reads the game's data with a built-in read-only extractor (no podman needed). Keep the AppImage where you put it: the service runs it from there, and Settings → Updates replaces it in place. On distributions that block Electron's sandbox (Ubuntu 24.04 and later), it may need `--no-sandbox`.
 
 **From a checkout**
 
@@ -95,7 +97,7 @@ node apps/collector/src/cli.ts setup-sim   # simulation engine and game data fro
 node apps/collector/src/cli.ts install     # background service, `replay-altar` command, desktop icon
 ```
 
-`install` sets up a systemd user service that starts at login, adds `replay-altar` and `replay-altar-desktop` to `~/.local/bin`, creates a desktop icon and imports your existing replays.
+`install` sets up the collector as a systemd user service and starts it, adds `replay-altar` and `replay-altar-desktop` to `~/.local/bin` and creates a desktop icon. The service starts at login and wakes up while Warcraft III (or the window) is open; Settings → Behaviour can make it always awake, or run only with the window. Your existing replays wait on the match list until you import them.
 
 The default game location is the Lutris Battle.net prefix in `~/Games/battlenet`. For another location, pass the Warcraft III folder to `node scripts/extract-gamedata.ts <folder>` and add your replay folder in Settings.
 
@@ -104,7 +106,7 @@ The default game location is the Lutris Battle.net prefix in `~/Games/battlenet`
 - **Matches:** every analyzed game, with its main problem. Open one for its report, charts, key numbers against pros, the build orders and a map of the fights and each player's creeping. **Feedback** under a game's findings tells us on GitHub whether they were right (the report is filled in, without player names), and **Report a bug** at the top opens a bug report.
 - **Performance:** your win rates, recurring problems with the one to work on now, and your numbers in wins, losses and against pros.
 - **Analyzer:** choose a replay file and the player whose side to take; the report opens like one of your games. Analyzed replays are listed there and kept apart from your stats.
-- **Settings:** your battletags, language, light or dark theme, replay folders, map folders, notifications, updates (a yellow mark on Settings when a new version is out; updating is your choice), which pro games your numbers are compared with, and **Help and feedback** to report a problem or suggest an idea.
+- **Settings:** your battletags, language, light or dark theme, replay folders, map folders, when Replay Altar runs in the background, notifications, updates (a yellow mark on Settings when a new version is out; updating is your choice), which pro games your numbers are compared with, and **Help and feedback** to report a problem or suggest an idea.
 
 Custom maps, games against the computer, team games and games you only observed are kept in the archive but not counted.
 
@@ -134,14 +136,14 @@ Player names in these screenshots are replaced with placeholders.
 
 ![Settings: battletags, language and theme, replay and map folders, behaviour, pro games, and help and feedback](docs/images/settings.png)
 
-When Warcraft III starts, the window opens behind the game without taking focus, and a notification after each game opens its report. Both can be turned off in Settings.
+When Warcraft III starts, the window opens behind the game without taking focus, and a notification after each game opens its report. Both can be turned off in Settings; if Replay Altar runs only while its window is open (Settings → Behaviour), they only happen then.
 
 ### Commands (Linux, or a Windows checkout)
 
 | Command | What it does |
 |---|---|
 | `replay-altar status` | Is the collector running, plus your last 10 games |
-| `replay-altar suspend` / `resume` | Stop the collector and keep it from starting at login / start it again (it catches up on saved replays) |
+| `replay-altar suspend` / `resume` | Stop the collector and keep it from starting at login / start it again, at login too unless Settings → Behaviour says only with the window (it catches up on saved replays) |
 | `replay-altar scan` | Import every replay in the game folders now |
 | `replay-altar override <game> win\|loss` | Fix a wrong result (`<game>`: the first characters of the game key, or `latest`) |
 | `replay-altar reingest` | Rebuild all statistics from the archived replays (after an update or a settings change) |
@@ -157,7 +159,7 @@ When Warcraft III starts, the window opens behind the game without taking focus,
 |---|---|---|
 | Archived replays (originals, never modified), game records, database, simulations | `~/.local/share/replay-altar/` | `%LOCALAPPDATA%\replay-altar\` |
 | Settings | `~/.config/replay-altar/config.json` | `%APPDATA%\replay-altar\config.json` |
-| Background service | systemd user unit `replay-altar-collector.service` | started at login from `HKCU\…\CurrentVersion\Run` (`ReplayAltarCollector`) |
+| Background service | systemd user unit `replay-altar-collector.service` (not enabled when it runs only with the window) | started at login from `HKCU\…\CurrentVersion\Run` (`ReplayAltarCollector`), or by the window when it runs only with the window |
 | Collector log | `journalctl --user -u replay-altar-collector` | `%LOCALAPPDATA%\replay-altar\logs\collector.log` |
 | Pro games (one folder per race) | `…/replay-altar/reference/` | `…\replay-altar\reference\` |
 
@@ -199,7 +201,10 @@ The code is TypeScript run directly by Node (type stripping), in npm workspaces:
 
 **Branches and builds.** Work goes to `dev`; `main` only gets tested work. Every push runs the tests on GitHub, and every push to `dev` also builds a test Windows installer, and from 0.2.0 a test AppImage (Actions → the run → Artifacts). Pushing a version tag (`v0.2.1`) builds them again and puts them on a draft release, with the `latest.yml` (and `latest-linux.yml`) the app's Update button reads.
 
-**WC3V fixes.** `patches/wc3v/` holds fixes to WC3V that Replay Altar applies on top of the submodule (`node scripts/patch-wc3v.ts`, run by `setup-sim` and the Windows build); each is meant to go upstream. The first lets WC3V read past a recycled unit handle, which used to cut about 5% of games short (proposed upstream as [jblanchette/wc3v#19](https://github.com/jblanchette/wc3v/pull/19)). The second and third stop two errors that ended the simulation part way: reviving a hero that had used a Town Portal, and training from a building WC3V first met as a plain unit (an Ancient of War built while not selected), proposed as [#20](https://github.com/jblanchette/wc3v/pull/20) and [#21](https://github.com/jblanchette/wc3v/pull/21). Together they recovered 16 of the 518 pro games.
+**WC3V changes.** The submodule `vendor/wc3v` points at an upstream WC3V commit; `patches/wc3v/` holds Replay Altar's changes on top of it, one `git format-patch` file per WC3V commit, applied in name order by `node scripts/patch-wc3v.ts` (run by `setup-sim`, the AppImage and Windows packaging and the GitHub build). The script checks the whole series against the submodule's commit before it writes anything and does nothing when it is already applied. Today's 26 patches are the WC3V lab's work: WC3V reads the replay's own selection lists (`lib/SelectionLedger.js`, `lib/HandleBinder.js`, `lib/SelectionEvidence.js`), so it knows which units exist and when they die, and a train order with several buildings selected trains in each of them (0001–0021); its data-tool reads the start locations of minified Lua maps (the copies hosted under hashed names) and optimised JASS maps (some ATR maps), which it stored at (null, null), so every game there stopped at 0:01, and a map entry without usable start locations names the map instead of failing in `Unit.recordPosition` (0022–0023, sent upstream as [#23](https://github.com/jblanchette/wc3v/pull/23)). A shift-click's selection list adds to the selection instead of replacing it, and an order given with nothing selected no longer stops the simulation (0024–0025). Night Elf train orders queue in the first selected Ancient only: copies the game refused for lack of gold became phantom units (0026). The entries already made from those maps, in WC3V's registry and in the copy every install keeps (`<data>/sim/maps/entries.json`), are repaired by Replay Altar at start and whenever a map is prepared for a simulation: their start locations are read again from the map's extracted script with WC3V's parser (`repairStartLocations` in `packages/sim/src/maps.ts`, `packages/sim/driver/start-locations.cjs`). The three earlier fixes (recycled unit handles, a revive after a Town Portal, training from a building first met as a unit) are upstream now ([#19](https://github.com/jblanchette/wc3v/pull/19), [#20](https://github.com/jblanchette/wc3v/pull/20), [#21](https://github.com/jblanchette/wc3v/pull/21)). Each change is meant to go upstream; remove its patch once the submodule points at a WC3V commit that has it.
+
+- **Adding a patch** is one step: put the next numbered file in `patches/wc3v`. For a commit made on top of the series (the lab's `lab-upstream` branch is): `git -C <WC3V clone> format-patch -1 <commit> --start-number 27 -o <this checkout>/patches/wc3v`. `node scripts/patch-wc3v.ts` then applies it (also on a checkout that has the earlier patches applied), and stops with the name of the patch that no longer fits if one doesn't.
+- **An existing checkout, after a pull that moves the submodule:** the applied patches are local changes in `vendor/wc3v`, which `git submodule update` refuses to overwrite. Put WC3V's files back first: `git -C vendor/wc3v checkout -- lib wc3v.js` and `git -C vendor/wc3v clean -fdq lib tests` (the files the patches add), then `git submodule update` and `node scripts/patch-wc3v.ts`. (`node scripts/patch-wc3v.ts --reset` repairs a half-applied series on the current commit.)
 
 **Screenshots** for this page: `node scripts/hide-names.ts /tmp/hide-names.js`, then `REPLAY_ALTAR_SHOT_JS=/tmp/hide-names.js` on a screenshot run replaces every player name with a placeholder.
 

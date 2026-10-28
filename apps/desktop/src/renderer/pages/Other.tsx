@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Config, Paths } from "@replay-altar/core/ui";
+import type { CollectorMode, Config, Paths } from "@replay-altar/core/ui";
 import { LANGUAGES, language, locale, tr, type Language } from "@replay-altar/core/i18n";
 import { setTextScale, TEXT_SCALES, textScale } from "../textSize.ts";
 import { api, type AppInfo, type Folders, type MapFolders as MapFolderInfo, type RefGroupInfo, type UpdateState } from "../api.ts";
@@ -260,7 +260,7 @@ function Help({ info }: { info: AppInfo | null }) {
 }
 
 export function Settings({ refs, update, onInstall }: { refs: RefGroupInfo[]; update: UpdateState | null; onInstall: () => void }) {
-  const [state, setState] = useState<{ config: Config; configPath: string; paths: Paths } | null>(null);
+  const [state, setState] = useState<{ config: Config; configPath: string; paths: Paths; collectorMode: CollectorMode } | null>(null);
   const [accounts, setAccounts] = useState("");
   const [saved, setSaved] = useState(false);
   const [status, setStatus] = useState("…");
@@ -359,6 +359,7 @@ export function Settings({ refs, update, onInstall }: { refs: RefGroupInfo[]; up
         <h2>{tr("Behaviour", "Comportamento", "Comportamiento", "Comportement")}</h2>
         <p className="sub">{tr("Collector", "Coletor", "Recolector", "Collecteur")}: <b>{collectorStatus(status)}</b>. {tr("Changes restart it.", "Mudanças reiniciam o coletor.", "Los cambios lo reinician.", "Les changements le redémarrent.")}</p>
         <div className="filters" style={{ flexDirection: "column", alignItems: "flex-start" }}>
+          <CollectorModes mode={config.collectorMode ?? state.collectorMode} onChange={(collectorMode) => save({ collectorMode })} />
           <label><input type="checkbox" checked={config.openWindowOnGameStart} onChange={(e) => save({ openWindowOnGameStart: e.target.checked })} />{tr("Open this window (without taking focus) when Warcraft III starts", "Abrir esta janela (sem tirar o foco) quando o Warcraft III abrir", "Abrir esta ventana (sin quitar el foco) cuando se inicia Warcraft III", "Ouvrir cette fenêtre (sans prendre le focus) au lancement de Warcraft III")}</label>
           <label><input type="checkbox" checked={config.notifyAfterGame} onChange={(e) => save({ notifyAfterGame: e.target.checked })} />{tr("Notify me after each analyzed game", "Me avisar depois de cada partida analisada", "Avisarme después de cada partida analizada", "Me notifier après chaque partie analysée")}</label>
           <label><input type="checkbox" checked={config.fetchOfficialStats !== false} onChange={(e) => save({ fetchOfficialStats: e.target.checked })} />{tr("After each W3Champions game, fetch its end-of-game statistics from W3Champions (sends both battletags to W3Champions)", "Depois de cada partida do W3Champions, buscar as estatísticas de fim de partida no W3Champions (envia as duas battletags ao W3Champions)", "Después de cada partida de W3Champions, obtener sus estadísticas de final de partida de W3Champions (envía las dos battletags a W3Champions)", "Après chaque partie W3Champions, récupérer ses statistiques de fin de partie auprès de W3Champions (envoie les deux battletags à W3Champions)")}</label>
@@ -388,6 +389,66 @@ export function Settings({ refs, update, onInstall }: { refs: RefGroupInfo[]; up
           </p>
         )}
       </div>
+    </div>
+  );
+}
+
+/** When the collector runs: three choices, each with a sentence on what it means. */
+function CollectorModes({ mode, onChange }: { mode: CollectorMode; onChange: (m: CollectorMode) => void }) {
+  const choices: [CollectorMode, string, string][] = [
+    [
+      "off",
+      tr("Off: only while this window is open", "Desligado: só enquanto esta janela estiver aberta", "Desactivado: solo mientras esta ventana esté abierta", "Désactivé : seulement quand cette fenêtre est ouverte"),
+      tr(
+        "Replay Altar runs only while its window is open. New games are imported the next time you open it.",
+        "O Replay Altar só funciona com a janela aberta. As partidas novas são importadas na próxima vez que você abri-lo.",
+        "Replay Altar solo funciona con su ventana abierta. Las partidas nuevas se importan la próxima vez que lo abras.",
+        "Replay Altar ne fonctionne que quand sa fenêtre est ouverte. Les nouvelles parties sont importées à sa prochaine ouverture.",
+      ),
+    ],
+    [
+      "game",
+      tr("Only while Warcraft III is running", "Só enquanto o Warcraft III estiver aberto", "Solo mientras Warcraft III esté abierto", "Seulement quand Warcraft III est lancé"),
+      tr(
+        "A light program starts when you log in and waits for the game. While you play it saves each replay as the game ends; once you close the game it simulates the new games, then waits again.",
+        "Um programa leve inicia quando você faz login e espera o jogo. Enquanto você joga, ele guarda cada replay quando a partida acaba; quando você fecha o jogo, ele simula as partidas novas e volta a esperar.",
+        "Un programa ligero se inicia al iniciar sesión y espera al juego. Mientras juegas guarda cada replay al terminar la partida; cuando cierras el juego simula las partidas nuevas y vuelve a esperar.",
+        "Un programme léger démarre à l'ouverture de session et attend le jeu. Pendant que vous jouez, il enregistre chaque replay à la fin de la partie ; quand vous fermez le jeu, il simule les nouvelles parties puis se remet en attente.",
+      ),
+    ],
+    [
+      "always",
+      tr("Always", "Sempre", "Siempre", "Toujours"),
+      tr(
+        "Starts when you log in and keeps watching your replay folders all the time.",
+        "Inicia quando você faz login e fica de olho nas suas pastas de replays o tempo todo.",
+        "Se inicia al iniciar sesión y vigila tus carpetas de replays todo el tiempo.",
+        "Démarre à l'ouverture de session et surveille vos dossiers de replays en permanence.",
+      ),
+    ],
+  ];
+  return (
+    <div className="collector-modes">
+      <div className="label">{tr("Run Replay Altar in the background", "Rodar o Replay Altar em segundo plano", "Ejecutar Replay Altar en segundo plano", "Faire tourner Replay Altar en arrière-plan")}</div>
+      {choices.map(([id, label, help]) => (
+        <label key={id}>
+          <input type="radio" name="collector-mode" checked={mode === id} onChange={() => onChange(id)} />
+          <span>
+            {label}
+            <span className="help">{help}</span>
+            {id === "off" && mode === "off" && (
+              <span className="collector-off-warning">
+                {tr(
+                  "With this off, new games are imported only when you open Replay Altar. Warcraft III overwrites its last replay after every match, so open Replay Altar after playing to be sure no game is missed.",
+                  "Com isto desligado, as partidas novas só são importadas quando você abre o Replay Altar. O Warcraft III sobrescreve o último replay depois de cada partida, então abra o Replay Altar depois de jogar para ter certeza de que nenhuma partida fique de fora.",
+                  "Con esto desactivado, las partidas nuevas solo se importan cuando abres Replay Altar. Warcraft III sobrescribe su último replay después de cada partida, así que abre Replay Altar después de jugar para asegurarte de no perder ninguna partida.",
+                  "Avec ce réglage désactivé, les nouvelles parties ne sont importées que lorsque vous ouvrez Replay Altar. Warcraft III écrase son dernier replay après chaque partie : ouvrez donc Replay Altar après avoir joué pour être sûr de ne manquer aucune partie.",
+                )}
+              </span>
+            )}
+          </span>
+        </label>
+      ))}
     </div>
   );
 }

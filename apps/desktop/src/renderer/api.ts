@@ -1,4 +1,4 @@
-import type { Config, GameDetail, GameRow, MetricDef, Paths, PerfGame, Progress, ReferenceGroup } from "@replay-altar/core/ui";
+import type { CollectorMode, Config, GameDetail, GameRow, MetricDef, Paths, PerfGame, Progress, ReferenceGroup } from "@replay-altar/core/ui";
 import type { RefProfile } from "@replay-altar/reference/types";
 import type { RulesBook } from "@replay-altar/rules/types";
 import type { Principles } from "@replay-altar/rules/principles";
@@ -48,7 +48,8 @@ type W3Api = {
   getGame(key: string): Promise<GameDetail>;
   performance(): Promise<{ games: PerfGame[]; metrics: MetricDef[] }>;
   overrideResult(key: string, result: "win" | "loss" | null): Promise<void>;
-  getConfig(): Promise<{ config: Config; configPath: string; paths: Paths }>;
+  /** `collectorMode`: when the collector runs, as it applies now (config.collectorMode, or the default). */
+  getConfig(): Promise<{ config: Config; configPath: string; paths: Paths; collectorMode: CollectorMode }>;
   setConfig(config: Config): Promise<void>;
   collectorStatus(): Promise<string>;
   folders(): Promise<Folders>;
@@ -103,8 +104,12 @@ type W3Api = {
   findingsSummary(): Promise<GameFindings[]>;
   /** Fights and creep camps cleared, positioned on the map; null without a simulation or map data. */
   mapActivity(key: string): Promise<MapActivity | null>;
-  /** Replays in your folders not imported yet, as the collector's last scan counted them. */
-  replaysScan(): Promise<{ found: number; older: number } | null>;
+  /**
+   * Replays in your folders not imported yet, as the collector's last scan counted them; `asked`:
+   * some of the older ones were imported already (nothing is until you ask on a new install).
+   */
+  /** `startedOver`: the match list started over for a new analysis (an update). */
+  replaysScan(): Promise<{ found: number; older: number; asked: boolean; startedOver: boolean } | null>;
   /** Imports the next IMPORT_STEP older replays, or all of them. */
   importMore(all: boolean): Promise<void>;
   logError(message: string): void;

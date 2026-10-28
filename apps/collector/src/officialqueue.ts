@@ -2,7 +2,8 @@
 // time. W3Champions lists a match a little after the replay appears, so a game that just ended is
 // tried after 90 s, then later. A first import can bring hundreds of old W3C games: they wait in
 // the same line, a few seconds apart, and get one try each (an old match that isn't found now
-// won't appear later).
+// won't appear later). The later tries live only in this process: when the collector goes back to
+// waiting or stops, the next start looks up again the recent games still missing them (catchUp).
 import { applyOfficial, readRecord, type IngestContext } from "@replay-altar/core";
 import { officialForOwnGame, RateLimited, w3cClient } from "@replay-altar/reference";
 
@@ -13,6 +14,8 @@ const BETWEEN_GAMES_MS = 5_000;
 const SLOW_DOWN_MS = 60 * 60_000;
 /** Games that ended this recently are retried when not found; older ones get one try. */
 const RECENT_MS = 6 * 60 * 60_000;
+/** At start, games that ended this recently and still lack their statistics are looked up again. */
+export const CATCH_UP_MS = 3 * 24 * 60 * 60_000;
 
 /** What a lookup asks of the line: nothing more, another try later, or a long pause for everyone. */
 export type Outcome = "done" | "retry" | "slow-down";
@@ -33,10 +36,20 @@ export class PoliteQueue {
     this.opts = opts;
   }
 
-  add(key: string, attempt = 0) {
+  /** `at`: when it is due (default: the attempt's delay from now). */
+  add(key: string, attempt = 0, at = Date.now() + (this.opts.retryDelays[attempt] ?? 0)) {
     if (attempt >= this.opts.retryDelays.length || this.jobs.some((j) => j.key === key)) return;
-    this.jobs.push({ key, attempt, at: Date.now() + this.opts.retryDelays[attempt] });
+    this.jobs.push({ key, attempt, at });
     this.schedule();
+  }
+
+  /** The delay before an attempt (after the game ended for the first, after the last try for the others). */
+  delay(attempt: number) {
+    return this.opts.retryDelays[attempt] ?? 0;
+  }
+
+  get attempts() {
+    return this.opts.retryDelays.length;
   }
 
   get pending() {
@@ -90,6 +103,28 @@ export class OfficialQueue {
   /** Schedule a lookup for a W3Champions game (no-op for others or when already fetched). */
   add(gameKey: string) {
     this.queue.add(gameKey);
+  }
+
+  /**
+   * At start: your W3Champions games of the last CATCH_UP_MS still without their statistics and
+   * with tries left, in the same line (one lookup at a time, the same spacing and pause on a 429).
+   * Each is due when its next try would have been, or now when that time has passed. Returns how
+   * many were queued.
+   */
+  catchUp(now = Date.now()): number {
+    const since = new Date(now - CATCH_UP_MS).toISOString();
+    const rows = this.ctx.db.prepare("SELECT game_key, ended_at FROM games WHERE source = 'w3champions' AND analyzed = 1 AND ended_at >= ? ORDER BY ended_at").all(since) as { game_key: string; ended_at: string }[];
+    let n = 0;
+    for (const row of rows) {
+      const official = readRecord(this.ctx.paths, row.game_key)?.official;
+      if (official?.status === "ok") continue;
+      const attempt = official?.attempts ?? 0;
+      if (attempt >= this.queue.attempts) continue;
+      const last = official ? Date.parse(official.fetchedAt) : Date.parse(row.ended_at);
+      this.queue.add(row.game_key, attempt, Math.max(now, last + this.queue.delay(attempt)));
+      n++;
+    }
+    return n;
   }
 
   private async lookup(gameKey: string, attempt: number): Promise<Outcome> {
