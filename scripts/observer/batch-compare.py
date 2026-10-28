@@ -153,6 +153,9 @@ def main():
             best[entry["file"]] = (entry, samples)
     for entry, samples in sorted(best.values(), key=lambda x: x[0]["file"]):
         r = record_of(entry["key"])
+        if r["classification"].get("replayProblem"):
+            print(f"{entry['file']}: damaged replay ({r['classification']['replayProblem']}), the game played it wrong; skipped")
+            continue
         o = json.load(gzip.open(r["sim"]["outputPath"]))
         acts = check.actions(r["provenance"]["archivePath"])
         for p in r["players"]:

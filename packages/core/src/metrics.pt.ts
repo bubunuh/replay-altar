@@ -42,7 +42,7 @@ export const METRIC_PT: Record<string, [label: string, description: string]> = {
   upkeep_gold_lost: ["Ouro perdido com upkeep", "Ouro que o imposto de upkeep levou (só partidas do W3Champions)."],
   units_killed: ["Unidades mortas", "Unidades que você matou, creeps incluídos, como a tela de pontuação do jogo conta. Partidas do W3Champions: o número oficial. Nas outras, ≈ (unidades inimigas que a simulação viu morrer + creeps dos acampamentos que você limpou) × 1,49, que bateu com a contagem oficial com correlação 0,90 em partidas de pros."],
   units_produced: ["Unidades produzidas", "Unidades que você produziu, como o jogo conta (só partidas do W3Champions)."],
-  largest_army: ["Maior exército", "Seu maior exército em food (heróis incluídos), como o jogo conta. Partidas do W3Champions: o número oficial; nas outras, o food simulado (0,95x o oficial na mediana, correlação 0,90)."],
+  largest_army: ["Maior exército", "Seu maior exército como o jogo conta: seu maior food usado, trabalhadores e heróis incluídos. Partidas do W3Champions: o número oficial; nas outras, o food simulado (1,00x o oficial na mediana, correlação 0,92)."],
   heroes_killed: ["Heróis mortos", "Heróis inimigos que você matou (só partidas do W3Champions)."],
   items_obtained: ["Itens obtidos", "Itens que seus heróis obtiveram, comprados ou dropados (só partidas do W3Champions)."],
   first_scout_ms: ["Primeiro scout", "Quando uma unidade sua chegou pela primeira vez ao lado do mapa do oponente."],

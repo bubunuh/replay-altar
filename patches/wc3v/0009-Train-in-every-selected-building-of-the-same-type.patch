@@ -1,0 +1,66 @@
+From 4002df0c3143e3984742e81aefe31d2991bc35ed Mon Sep 17 00:00:00 2001
+From: bubunuh <76405364+bubunuh@users.noreply.github.com>
+Date: Sun, 25 Oct 2026 00:51:21 +0200
+Subject: [PATCH 09/21] Train in every selected building of the same type
+
+A train order given with several production buildings of one type selected
+queues the unit in each of them; WC3V only queued it in the first. On the dev
+games with ground truth, players who do it get more units than they issued
+train orders (e.g. 18 Priest train orders with 35 Arcane Sanctums selected
+over them in total, at least 21 Priests seen alive), so WC3V missed units.
+
+Not every queued unit comes out (the game refuses orders without gold or
+food); the selection lists sort that out afterwards: units they never show
+count as never made.
+
+Dev games: army value error 114 -> 102 (Night Elf 136 -> 121, Undead
+159 -> 138).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ lib/Player.js | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+
+diff --git a/lib/Player.js b/lib/Player.js
+index 830861f..1e90de5 100644
+--- a/lib/Player.js
++++ b/lib/Player.js
+@@ -2910,6 +2910,16 @@ const Player = class {
+   // use an ability that has no target
+   // can be either an 4-item itemId array or a 4-char itemId string
+   //
++  // A plain unit (not a hero, research or building upgrade) trained from a
++  // building's command card.
++  _trainsInEachBuilding (itemId, abilityFlags) {
++    if (abilityFlags !== abilityFlagNames.LearnSkillOrTrain &&
++        abilityFlags !== abilityFlagNames.TrainUnit) return false;
++    if (researchMeta[itemId]) return false;
++    const info = mappings.getUnitInfo(itemId);
++    return !!(info && info.isUnit && !info.isBuilding && !(info.meta && info.meta.hero));
++  }
++
+   useAbilityNoTarget (action) {
+     const isItemArray = Array.isArray(action.itemId);
+     const itemId = isItemArray ?
+@@ -3190,6 +3200,18 @@ const Player = class {
+             unknownA,
+             unknownB
+           );
++
++        // A train order with several buildings of the same type selected
++        // queues the unit in each of them, not just the first: on replays
++        // with ground truth, players doing it get more units than they issued
++        // train orders.
++        if (firstUnit.isBuilding && !isItemArray && this._trainsInEachBuilding(itemId, abilityFlags)) {
++          for (const other of selectedUnits) {
++            if (other === firstUnit || !other.isBuilding || other.itemId !== firstUnit.itemId) continue;
++            if (other.buildState === 1) continue;     // still under construction
++            Building.doAbilityNoTargetItemId(this, other, itemId, abilityFlags, unknownA, unknownB);
++          }
++        }
+       }
+ 
+       return;
+-- 
+2.56.0
+

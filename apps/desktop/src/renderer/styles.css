@@ -274,3 +274,14 @@ button.linklike { background: none; border: 0; padding: 0; color: var(--accent);
 .update-banner p { margin: 0 0 8px; }
 .installing { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px; background: rgb(0 0 0 / 0.55); }
 .installing .card { max-width: 480px; }
+
+/* Settings → Behaviour: when the collector runs. */
+.collector-modes { display: flex; flex-direction: column; gap: 6px; margin-bottom: 4px; }
+.collector-modes .label { color: var(--ink-2); font-size: calc(13px * var(--text-scale)); }
+.collector-modes label { display: flex; gap: 6px; align-items: flex-start; color: var(--ink-2); font-size: calc(13px * var(--text-scale)); }
+.collector-modes input { margin-top: 3px; }
+.collector-modes .help { display: block; color: var(--muted); font-size: calc(12.5px * var(--text-scale)); margin-top: 1px; }
+.collector-off-warning { display: block; margin-top: 6px; color: var(--ink); background: color-mix(in srgb, var(--warning) 18%, transparent); border-left: 3px solid var(--warning); padding: 6px 10px; border-radius: 4px; font-size: calc(12.5px * var(--text-scale)); }
+/* Match list pages (Matches.tsx), above and below the table. */
+.pager { display: flex; gap: 8px; align-items: center; justify-content: center; margin: 10px 0; flex-wrap: wrap; }
+.pager .btn:disabled { opacity: 0.45; cursor: default; }

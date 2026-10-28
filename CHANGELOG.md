@@ -5,9 +5,142 @@ What changes for players in each version. Work happens on `dev`; a version is ma
 part of a version: an installer ships only the app, the simulation engine and the published pro
 statistics (`data/`).
 
-## Unreleased (next version)
+## Unreleased (next version, 0.2.2)
 
-Nothing yet.
+- **Nothing is imported until you ask** (tester feedback after 0.2.1): on the first start, if
+  replays are found, the match list offers *Import 50 replays* and *Import all replays (N)*, and
+  nothing loads by itself. The games you play from then on are added as before.
+- **Your games are imported again after the update, when you ask:** 0.2.2 reads and simulates
+  games differently (new numbers, the replay checks below, the new simulation), so instead of
+  reading every game again by itself, the match list starts empty, as on a new install, with
+  *Import 50 replays* and *Import all replays (N)*. N counts every replay Replay Altar can find:
+  the ones in your replay folders and the copies it keeps of every game it imported, which for
+  games whose `LastReplay.w3g` was overwritten are the only ones left (and of replays an older
+  version couldn't read, which this one may); a copy of a replay that is still in your folders
+  counts once. Games imported again keep their date, a result you corrected
+  by hand and their W3Champions statistics (not asked for again). Your settings, battletag, game
+  data and maps stay; the previous database stays in one backup file
+  (`replay-altar.previous.sqlite` in the data folder). The games you play after the update are
+  added by themselves. Later versions that change the analysis will do the same.
+- **The match list in pages of 100:** with thousands of games the list took one to two seconds
+  to redraw at every change (a filter, a search, each game imported), and the "Main problem"
+  column took about a minute to fill in. Now it shows 100 games per page, newest first, with page
+  buttons above and below; the filters, the search, the problem counts and the number of games
+  still take every game, a filter goes back to the first page, and new games coming in don't move
+  you off your page. On 5,000 games, a change now redraws in about 16 ms and the "Main problem"
+  column fills in about 2.5 s.
+- **W3Champions statistics are looked for again at start:** a game whose end-of-game statistics
+  weren't on W3Champions yet is tried again 10 minutes and 1 hour later, but those tries were lost
+  when Replay Altar went back to waiting or was closed. Now, when it starts, the games of the last
+  three days still without them get their remaining tries, one game at a time and a few seconds
+  apart as before, with a long pause if W3Champions asks to slow down.
+- **Choose when Replay Altar runs in the background** (tester feedback): Settings → Behaviour has
+  three choices. *Only while Warcraft III is running*, the new default (also when you update): a
+  light program starts when you log in and only waits for the game; while you play it saves each
+  replay as the match ends, and once you close the game it simulates the new games, then goes
+  back to waiting. *Always*: awake all the time, as before. In every mode the simulations now wait
+  until you close the game, so they no longer slow down your next match. *Off*: nothing starts
+  when you log in and closing the window stops Replay Altar; new games are picked up the next time
+  you open it (the game keeps them in Replays and Replays/Autosaved; only an overwritten
+  `LastReplay.w3g` can be missed), and Settings warns about that when you choose it.
+- **Damaged W3Champions replays are pointed out:** some W3Champions (FLO) replays lack the players' first selection at the start of the game, and Warcraft III plays them back wrong from the start, so rewatching one shows a different game. The report of such a game now says so. Its numbers stay: Replay Altar reads the players' orders, which are all there (on the two such games with W3Champions' own end-of-game numbers, hero levels matched exactly and the estimates were as close as usual).
+- **Hero levels after a Tome of Retraining:** a hero retrained with a tome could end up to four levels too high or too low (30% of the games with a tome), which threw off hero levels, hero experience and the findings about them. Replay Altar now reads the retraining from when the skill menu was opened and the tome bought: on games with W3Champions' own hero levels, 27 of 28 retrained players' heroes now match (25 before).
+- **Second and third heroes count in the resources spent:** the gold and lumber spent left out every hero after the first (which is free), so it read about 7% low against the game's own numbers; now 2% (on 176 W3Champions player-games). This also moves the gold collected estimated for Battle.net games.
+- **More accurate army value, losses and fights (our improved WC3V):** the simulation now reads the replay's own selection lists, so it knows which units really exist and when they die, and a train click with several buildings selected trains in each of them. Measured against Warcraft III's own unit counts on 15 recorded games it was not developed on, the army value is off by 97 on average over a game instead of 158, typically by about 24% instead of 37%, and in fights in which a side lost 300 or more, the side that lost more is named wrongly in 19% of them instead of 32%. A unit seen in another form (a Druid of the Claw in bear form, a burrowed Crypt Fiend, a Berserker) counts as the unit trained, train orders the game refused no longer count as units lost, and Militia no longer count as army. Replay Altar's own correction of the deaths, which did part of this after the simulation, is no longer needed and was removed.
+- **Food used is counted right:** the simulation's food counter added each unit when it was
+  trained but never took it off when it died, so food climbed to about 100 and stayed there (on 51
+  games recorded from the game's own numbers, food read 10 too high on average and over 20 late in
+  the game; real time above 80 food was 1 second per game, estimated 113). Food is now counted from
+  the units alive: 3 off on average. This fixes the food charts, the time in upkeep and the gold it
+  cost, 3-3-60 and the largest army, which now matches W3Champions' own number (the highest food
+  used, workers included; correlation 0.92, was 0.74).
+- **Hero timelines:** a hero cancelled at the altar and ordered again later no longer appears on the hero chart, and in the build-order comparison, at the time of the cancelled order (and a Demon Hunter or Alchemist the simulation last saw transformed is found again).
+- **Games on some maps can be simulated again:** games on 60 maps, mostly the copies of ladder
+  maps that some hosts save under a long code instead of the map's name (`Maps/dz/…`), plus a few
+  ATR maps (Devil's Forest, Shallow Grave, Shattered Exile, Hammerfall, Icemond), stopped at the
+  first second and couldn't be simulated, because the simulation misread where the players start
+  on them. They now simulate to the end (all 91 such games among our tournament replays). Maps
+  your copy of Replay Altar already prepared are corrected by themselves when it starts after the
+  update; if a map's start positions still can't be read, the game now says so instead of "the
+  simulation could read the replay only up to 0:01".
+- **Every pro and tournament game simulated again with the new simulation:** the 4,202 pro,
+  tournament and review games were read and simulated again, so your games and the pros' are
+  measured the same way. 140 more tournament games can be simulated now (3,173 of 3,370: the 129
+  on maps whose start positions were misread, and the replays the simulation stopped reading
+  part way), and every pro game but one (a map we don't have). What changes for you:
+  - **The pro comparisons** ("better than 86% of pro games", the bands on the charts) come from
+    about 1,720 to 1,830 player-games per race instead of 1,660 to 1,740. With deaths read from
+    the replay, the pros' resources lost and killed are a third to a half higher than before,
+    and their estimated unspent gold about half: a lead or a deficit there now compares like with like.
+  - **The evaluation curve was fitted again** on the new numbers: on the 3,138 tournament games
+    it never saw (2,998 before) it still picks the eventual winner 63% of the time at 10 minutes
+    and 68% at 20 (69% before), and its scores improved (log loss 0.6367 instead of 0.6422). The
+    army value counts for more in it (at 15 minutes, a typical army lead moves the curve 17 points
+    instead of 7), since it is now closer to the real one. On unseen pro games it is a little more
+    sure of itself than before (calibration slope 0.92 instead of 1.03).
+  - **Units killed** (for games without W3Champions' numbers) is estimated with a new factor, 1.29
+    instead of 1.48, which matches the game's own count better (correlation 0.93 instead of 0.90).
+  - **The findings** were scored again on 3,532 held-out player-games, with the same test as in
+    0.2.0 (fires clearly more often in losses than in wins). Two pass now and are shown: *upkeep*
+    (time spent in upkeep) and *3-3-60* (Grubby's goal: both heroes at level 3 and 60 food). Two no longer pass and
+    are hidden: *unspent gold* and *supply blocks*. Still 11 rules.
+    The fights finding still separates losses from wins clearly (37% of losses, 18% of wins).
+    Measured the same way as before, two shown rules (unspent gold, supply blocks) now fall just
+    short and three hidden ones (upkeep, 3360, no items) now pass; which ones to show is left for
+    the full review in 0.2.3.
+- **Cut-short replays can be imported:** a replay file that ends in the middle of the game (FloTV recordings, or a copy made while the game was still running) often couldn't be imported at all. It now is, up to where it ends, and its report says the rest is missing.
+
+
+### Checked for 0.2.2
+
+Suggestions from SaulApeMan's replay project (via Discord, 2026-10-25), each tested on our replays
+(518 pro, 3,370 tournament, 55 review and 101 of your games, and the 176 player-games with
+W3Champions' official numbers); what helped is in the list above.
+
+- **Broken W3Champions/FLO replays:** *done* (above). The check as proposed (any order before the
+  first selection) also flags normal games, where a player trains a worker from the hall that is
+  selected at the start before selecting anything (3 of 518 pro games, 23 tournament
+  games); limited to orders in the first 0.5 s it flagged exactly the 4 of 48 recorded replays that
+  played wrong (batch 2: 10, 12; batch 3: 16, 17), 5 of 3,370 tournament replays (builds 6117 to
+  7003, so not only since the 19 Oct patch), and no pro or review game. "Every number is wrong" does
+  not hold for Replay Altar: the orders are complete, so such games stay analyzed, with a note. The
+  second check (W3Champions files with header build 7000 dated after 19 Oct 2026) matched no
+  replay we have (the 4 broken ones are build 7003), so it wasn't added.
+- **Hero levels after a Tome of Retraining:** *done* (above). The problem was w3gjs's retraining
+  mark (levels changed in 30% of the 587 player-games with a tome), plus refused extra clicks in
+  the re-spend; "the same skill twice" was already handled by the rank rules. The skill menu's
+  openings (action 0x66) do bound the sessions, as suggested.
+- **Units per selected building:** *not applied, moved to the gold and lumber model (0.2.3).* It
+  exists: 9.6% of train clicks (176 W3Champions player-games) had 2 or more buildings of the type
+  selected (types from the replay's own subgroup names). But the game refuses the copies it can't
+  pay for or feed, and the replay doesn't say which: counted in full, spending − 500 went over the
+  official gold collected in 62% of player-games (40% without), up to +54% (21 clicks with 4
+  Workshops selected = 84 Siege Engines); capped at 2 per click, still 62%. Measuring it showed
+  that heroes were missing from the spending (*done*, above). Variant codes: in Replay Altar's own
+  counts only hrtt, otbk and ospm appear in orders, priced and named like their base unit; the
+  others come from in-game transformations, which mattered in the death matching (*done*, above).
+  The simulation (our improved WC3V, above) does train in each selected building; the copies the
+  game refused are its largest remaining error (a Night Elf with two Ancients of Lore, 103 → 302
+  per player-game on one held-out game), which the gold and lumber model should fix too.
+- **Cancelled altar orders:** the hero count, hero timings and the one-hero rule were never
+  affected: they come from skill picks, which a cancelled hero never makes (60 cancels in 47 of
+  8,049 player-games, none counted). WC3V, though, makes a hero for every cancelled order (all 44
+  checked), and Replay Altar took the first one as the hero: 56 heroes appeared too early, by up
+  to 9 minutes (*fixed*, above, with 43 heroes it couldn't find in a transformed form). For the
+  WC3V lab: those phantom heroes may also hold 5 food each in WC3V's supply.
+- **Lobby password:** *doesn't apply.* w3gjs reads the string after the game name (its
+  `privateString`) and skips it. 58 of our 4,024 replays carry one (all "wuyue" tournament lobbies,
+  passwords 1011 to 1018), and all 58 read correctly: no metadata warning, both players named,
+  map and checksum read, and 56 simulated (one lacks its map, one was never simulated).
+- **Truncated last record** (FloTV recordings end mid-record): *done* (above). w3gjs failed on 15%
+  of cut points (294 of 1,993 cuts of our 5 test replays), in its last game data record or a block
+  header; the others parsed but kept the header's full length. None of our 4,024 replays is cut.
+  Unrelated but found on the way: WC3V reports "parse truncated" for 105 complete replays (97
+  tournament, 8 review), which is why they have no simulation; w3gjs reads all of them to the end,
+  so it's WC3V's own parser (for the WC3V lab). With 0.2.2's WC3V all of them simulate to the end.
+- Already fine, nothing to do: hero revives (the hero timelines already use the revive order);
+  "selections via hotkey" already compares group recalls with mouse selections, the only
+  distinction the replay allows.
 
 ## 0.2.1 (2026-10-23)
 
@@ -38,9 +171,30 @@ Nothing yet.
 - **Linux AppImage**, alongside the Windows installer: one file, no Node, git or podman needed. On first start it sets up the background collector (a systemd user service), the `replay-altar` command and a menu entry, reads the game data with a built-in read-only extractor, and updates itself in place like the Windows version.
 - **Linux: Battle.net is found in more places:** Lutris folders under `~/Games`, `~/.wine`, Steam's Proton prefixes and Bottles, for both the replays and the game data.
 
+## Planned for 0.2.3
+
+- **Income model:** since 0.2.2 the second and third heroes count in the gold spent, and the
+  mined-income model now often runs short early in the game (pros "spend" about 900 gold more than
+  it estimates by 10:00), so the unspent gold reads 0 and the *unspent gold* finding stopped
+  working. Refit it together with the gold and lumber model.
+- **Gold and lumber in WC3V:** the biggest error left in the new WC3V is train orders the game
+  refused for lack of gold, lumber or food, which WC3V still turns into units (worst with Night Elf
+  Druid spam). A gold and lumber model inside the simulation would tell them apart. The observer
+  recordings already hold gold, lumber, gold mined and lumber harvested at every snapshot, so they
+  serve as ground truth; more recordings (more races, expansions, long games) as needed. The same
+  model would let Replay Altar's own counts (units ordered, spending, build order) count a train
+  click once per selected building, which they can't do safely yet (see 0.2.2's checks).
+- **Review the evaluation curve and the coaching rules on the better data:** refit the win-chance
+  model on the ~500 current-patch pro games and validate it on the ~3,000 tournament games, as for
+  0.2.0; re-score every rule held out (docs/RULES.md) and revisit which are shown.
+
 ## Later
 
-- **Re-simulate every game with WC3V's merged fixes:** once the WC3V author has merged the revised fixes (#19, #21), switch Replay Altar's patches to the merged code and simulate all pro, tournament and your games again (about half an hour at full CPU). Measured beforehand: findings unchanged, the evaluation curve moves by more than half a point in 4% of games (6 points at most).
+- **macOS:** woodmanhu's plan (docs/MACOS_SUPPORT_PLAN.md, PR #2) and first code step (PR #3, data
+  folders and replay discovery) are merged into `dev` (2026-10-26); they change nothing on Windows
+  or Linux and are untested on a Mac. A Mac build needs the rest of the plan (game process detection, start at login, a macOS game data
+  extractor, packaging, unsigned) and someone with a Mac to test each step.
+
 - **Findings by skill level:** download ladder games across skill levels (W3Champions, by MMR) and choose and tune the findings for the level detected for each player, so beginner checks (upkeep, supply, towers…) show where they matter and stay hidden for strong players.
 - **More languages:** German, Ukrainian, Russian, Chinese and Korean (needs a text format that scales past four languages, and fonts for Cyrillic, Chinese and Korean).
 - **Code signing:** SignPath turned the project down for now (too new, no reputation); try again later.

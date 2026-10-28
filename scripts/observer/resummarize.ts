@@ -6,7 +6,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { applySim, loadConfig, openDb, paths, readRecord, referencePaths } from "@replay-altar/core";
-import { CONSTANTS, gamedataDir, loadCosts, readSimOutput, selectionsOf, summarize } from "@replay-altar/sim";
+import { CONSTANTS, gamedataDir, loadCosts, readSimOutput, summarize } from "@replay-altar/sim";
 import { openReference } from "@replay-altar/reference";
 
 const config = loadConfig();
@@ -31,7 +31,7 @@ if (gi >= 0) {
     if (record?.sim?.status !== "ok") continue;
     const { ranAt, runMs, outputPath } = record.sim;
     if (!existsSync(outputPath)) continue;
-    const sim = summarize(record, readSimOutput(outputPath), costs, CONSTANTS, { ranAt, runMs, outputPath }, await selectionsOf(record.provenance.archivePath));
+    const sim = summarize(record, readSimOutput(outputPath), costs, CONSTANTS, { ranAt, runMs, outputPath });
     for (let tries = 0; ; tries++) {
       try {
         applySim(ref, game_key, sim);
@@ -50,7 +50,7 @@ for (const batch of process.argv.slice(2).filter((a, i, all) => a !== "--group" 
     const record = ctx && readRecord(ctx.paths, key);
     if (!ctx || record?.sim?.status !== "ok") continue;
     const { ranAt, runMs, outputPath } = record.sim;
-    applySim(ctx, key, summarize(record, readSimOutput(outputPath), costs, CONSTANTS, { ranAt, runMs, outputPath }, await selectionsOf(record.provenance.archivePath)));
+    applySim(ctx, key, summarize(record, readSimOutput(outputPath), costs, CONSTANTS, { ranAt, runMs, outputPath }));
     n++;
   }
 }

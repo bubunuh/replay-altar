@@ -25,16 +25,18 @@ export type GameRow = {
   sim_status: "ok" | "failed" | null;
 };
 
-export function listGames(db: DB): GameRow[] {
-  return db
-    .prepare(
-      `SELECT g.game_key, g.played_at, g.duration_ms, g.source, g.category, g.analyzed, g.skip_reason,
+const GAME_ROWS = `SELECT g.game_key, g.played_at, g.duration_ms, g.source, g.category, g.analyzed, g.skip_reason,
               g.map_name, g.matchup, g.me_race, g.opp_name, g.opp_race, g.result, g.result_detected,
               g.result_confidence, g.user_label, p.apm, g.sim_status
-       FROM v_games g LEFT JOIN game_players p ON p.game_key = g.game_key AND p.player_id = g.me_player_id
-       ORDER BY g.played_at DESC`,
-    )
-    .all() as GameRow[];
+       FROM v_games g LEFT JOIN game_players p ON p.game_key = g.game_key AND p.player_id = g.me_player_id`;
+
+export function listGames(db: DB): GameRow[] {
+  return db.prepare(`${GAME_ROWS} ORDER BY g.played_at DESC`).all() as GameRow[];
+}
+
+/** One game's row (each report asked for every row: with thousands of games, the match list's findings took minutes). */
+export function gameRow(db: DB, key: string): GameRow | null {
+  return (db.prepare(`${GAME_ROWS} WHERE g.game_key = ?`).get(key) as GameRow | undefined) ?? null;
 }
 
 export type Annotation = { id: number; kind: string; source: string; author: string | null; model: string | null; body: unknown; created_at: string };
@@ -43,7 +45,7 @@ export type GameDetail = { record: GameRecord; row: GameRow; annotations: Annota
 
 export function getGame(db: DB, paths: Paths, key: string): GameDetail {
   const record = readRecord(paths, key);
-  const row = listGames(db).find((g) => g.game_key === key);
+  const row = gameRow(db, key);
   if (!record || !row) return null;
   const annotations = (db.prepare("SELECT * FROM annotations WHERE game_key = ? ORDER BY id").all(key) as (Annotation & { body: string })[]).map((a) => ({
     ...a,

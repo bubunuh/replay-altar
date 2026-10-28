@@ -1,7 +1,7 @@
 // Is the game running? Used by the collector and the desktop app. Linux reads /proc (the game
 // runs under Wine/Proton); Windows asks tasklist; macOS checks the launch services process list.
 import { execFileSync } from "node:child_process";
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 
 /** Parse a Darwin `ps` output where columns are PID + COMMAND, or a `pgrep`/`ps` command's stdout. */
 export function parseDarwinProcessList(text: string): boolean {
@@ -15,6 +15,10 @@ export function parseDarwinProcessList(text: string): boolean {
 }
 
 export function isWarcraftRunning(): boolean {
+  // Dev/test: the game "runs" while this file exists (a fake game process would also be seen by
+  // any other Replay Altar on the computer).
+  const fake = process.env.REPLAY_ALTAR_FAKE_WARCRAFT;
+  if (fake) return existsSync(fake);
   if (process.platform === "win32") return runningOnWindows();
   if (process.platform === "darwin") return runningOnDarwin();
   return runningUnderWine();

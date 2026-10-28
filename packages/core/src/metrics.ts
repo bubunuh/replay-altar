@@ -2,14 +2,14 @@
 // A replay holds commands, not game state: every "time" here is when an order was issued
 // (cancelled orders included), and heroes are timed by their first learned skill.
 import { CORE_UPGRADES, dropRepeatedBuildOrders, isRaceCode, POTION_ITEMS, RACES, researchLevels, TIER_NAMES, TOWN_PORTAL, type RaceCode } from "./gamedata.ts";
-import { heroesXpAt, levelUpTimes } from "./heroxp.ts";
+import { heroesXpAt, playerLevelUps, type SkillActions } from "./heroxp.ts";
 import type { RawReplay } from "./parse.ts";
 import { language } from "./i18n.ts";
 import { METRIC_PT, tierLabelPt } from "./metrics.pt.ts";
 import { METRIC_ES, tierLabelEs } from "./metrics.es.ts";
 import { METRIC_FR, tierLabelFr } from "./metrics.fr.ts";
 
-export const METRICS_VERSION = 10;
+export const METRICS_VERSION = 11;
 
 export type MetricUnit = "ms" | "count" | "apm" | "ratio" | "per_min";
 
@@ -81,9 +81,9 @@ const SIM_SPECS: MetricSpec[] = [
   { key: "gold_collected", label: "Gold collected", unit: "count", group: "economy", source: "simulation", description: "Gold your workers brought in over the game. W3Champions games: the game's own number. Otherwise estimated as gold spent minus the 500 starting gold (within ~3% of the official number on pro games)." },
   { key: "lumber_collected", label: "Lumber collected", unit: "count", group: "economy", source: "official", description: "Lumber harvested over the game (W3Champions games only)." },
   { key: "upkeep_gold_lost", label: "Gold lost to upkeep", unit: "count", group: "economy", source: "official", description: "Gold the upkeep tax took (W3Champions games only)." },
-  { key: "units_killed", label: "Units killed", unit: "count", group: "fights", source: "estimate", description: "Units you killed, creeps included, as the game's score screen counts them. W3Champions games: the official number. Otherwise ≈ (enemy units the simulation saw die + creeps in camps you cleared) × 1.49, which matched the official count with correlation 0.90 on pro games." },
+  { key: "units_killed", label: "Units killed", unit: "count", group: "fights", source: "estimate", description: "Units you killed, creeps included, as the game's score screen counts them. W3Champions games: the official number. Otherwise ≈ (enemy units the simulation saw die + creeps in camps you cleared) × 1.29, which matched the official count with correlation 0.93 on pro games." },
   { key: "units_produced", label: "Units produced", unit: "count", group: "army", source: "official", description: "Units you produced, as the game counts them (W3Champions games only)." },
-  { key: "largest_army", label: "Largest army", unit: "count", group: "army", source: "simulation", description: "Your largest army in food (heroes included), as the game counts it. W3Champions games: the official number; otherwise the simulated supply (0.95x official on median, correlation 0.90)." },
+  { key: "largest_army", label: "Largest army", unit: "count", group: "army", source: "simulation", description: "Your largest army as the game counts it: your highest food used, workers and heroes included. W3Champions games: the official number; otherwise the simulated food (1.00x official on median, correlation 0.92)." },
   { key: "heroes_killed", label: "Heroes killed", unit: "count", group: "fights", source: "official", description: "Enemy heroes you killed (W3Champions games only)." },
   { key: "items_obtained", label: "Items obtained", unit: "count", group: "items", source: "official", description: "Items your heroes obtained, bought or dropped (W3Champions games only)." },
   { key: "first_scout_ms", label: "First scout", unit: "ms", group: "scouting", source: "simulation", description: "When a unit of yours first reached the opponent's side of the map." },
@@ -254,8 +254,8 @@ export function hallIdleMs(race: RaceCode, orders: { id: string; ms: number }[],
   return idle;
 }
 
-function heroMetrics(heroes: { abilityOrder: { type: "ability" | "retraining"; time: number; value?: string }[] }[], durationMs: number): Metrics {
-  const levels = heroes.map((h) => levelUpTimes(h.abilityOrder));
+function heroMetrics(heroes: { abilityOrder: { type: "ability" | "retraining"; time: number; value?: string }[] }[], durationMs: number, actions?: SkillActions): Metrics {
+  const levels = playerLevelUps(heroes, actions);
   const levelAt = (t: number) => Math.max(0, ...levels.map((l) => l.filter((x) => x <= t).length));
   const firstReaching = (lvl: number) => {
     const times = levels.map((l) => l[lvl - 1]).filter((x): x is number => x !== undefined);
@@ -338,7 +338,7 @@ export function computeMetrics(raw: RawReplay, playerId: number): Metrics {
     upgrades_ordered: p.upgrades!.order.length,
     items_bought: p.items!.order.length,
     first_item_ms: p.items!.order[0]?.ms ?? null,
-    ...heroMetrics(p.heroes ?? [], durationMs),
+    ...heroMetrics(p.heroes ?? [], durationMs, raw.actions?.[String(playerId)]),
     hall_idle_6m_s: rd && durationMs >= 360_000 ? Math.round(hallIdleMs(race as RaceCode, [...units, ...buildings], 360_000) / 1000) : null,
     hall_idle_10m_s: rd && durationMs >= 600_000 ? Math.round(hallIdleMs(race as RaceCode, [...units, ...buildings], 600_000) / 1000) : null,
     first_attack_upgrade_ms: rd ? firstUpgrade(p.upgrades!.order, race as RaceCode, "attack") : null,

@@ -12,7 +12,7 @@ import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, 
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { mapDataName } from "./mapname.ts";
-import { WC3V_DIR } from "./paths.ts";
+import { START_LOCATIONS, WC3V_DIR } from "./paths.ts";
 
 export { mapDataName };
 
@@ -89,6 +89,91 @@ function restoreEntries(cache: string) {
   }
 }
 
+type MapEntry = { info?: { name?: string }; startingPositions?: Record<string, { x?: unknown; y?: unknown } | null> };
+
+/**
+ * A map entry whose start locations an older WC3V misread: a spot without coordinates, or one
+ * not named by a number. Its data-tool read minified Lua scripts (the copies of ladder maps hosted
+ * under hashed names) as one spot "_ENV" at (null, null), and optimised JASS ("- 1280.0", some
+ * ATR maps) as null; every game on those maps stopped at its first second.
+ */
+export function misreadStarts(entry: unknown): boolean {
+  const spots = (entry as MapEntry | null)?.startingPositions;
+  if (!spots || typeof spots !== "object") return false;
+  return Object.entries(spots).some(([spot, at]) => !/^\s*\d+\s*$/.test(spot) || !Number.isFinite(at?.x) || !Number.isFinite(at?.y));
+}
+
+/**
+ * Repairs the entries of maps whose start locations were misread (misreadStarts), in WC3V's map
+ * registry and in the copy kept with the cache: their start locations are read again from the
+ * map's extracted script (mapdata/<map>/war3map.lua or .j) with WC3V's current parser, as its
+ * data-tool now would; the rest of the entry was right. A map whose script isn't there is
+ * dropped from both, with its extracted data, so the next game on it extracts it again.
+ * `only`: just this map (its folder name). Entries already right are left as they are; when
+ * none is misread this only reads the two files. Never throws.
+ */
+export function repairStartLocations(cache: string | null, only?: string): { repaired: string[]; dropped: string[] } {
+  const done = { repaired: [] as string[], dropped: [] as string[] };
+  try {
+    const config = readJson<{ maps?: Record<string, MapEntry> }>(MAP_CONFIG(), {});
+    const keptFile = cache ? join(cache, "entries.json") : null;
+    const kept = keptFile ? readJson<{ mapConfiguration?: Record<string, MapEntry> } | null>(keptFile, null) : null;
+    const registries = [config.maps ?? {}, kept?.mapConfiguration ?? {}];
+    const names = new Set<string>();
+    for (const maps of registries)
+      for (const e of Object.values(maps)) {
+        const name = e?.info?.name;
+        if (name && (!only || name === only) && misreadStarts(e)) names.add(name);
+      }
+    if (!names.size) return done;
+
+    const dirs = (name: string) => [join(WC3V_DIR, "mapdata", name), ...(cache ? [join(cache, name, "mapdata")] : [])];
+    const scripts = new Map<string, string>();
+    for (const name of names) {
+      const script = dirs(name).flatMap((d) => ["war3map.lua", "war3map.j"].map((f) => join(d, f))).find((f) => existsSync(f));
+      if (script) scripts.set(name, script);
+    }
+    const read: Record<string, MapEntry["startingPositions"]> = scripts.size
+      ? JSON.parse(
+          execFileSync(process.execPath, [START_LOCATIONS], {
+            input: JSON.stringify([...scripts.values()]),
+            encoding: "utf8",
+            stdio: ["pipe", "pipe", "ignore"],
+            windowsHide: true,
+            timeout: 60_000,
+            env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" },
+          }),
+        )
+      : {};
+
+    let changed = false;
+    for (const name of names) {
+      const script = scripts.get(name);
+      if (!script) {
+        // Nothing to read them from (the map's extracted data is gone): extracted again when next needed.
+        for (const maps of registries) for (const [key, e] of Object.entries(maps)) if (e?.info?.name === name) delete maps[key];
+        for (const d of dirs(name)) rmSync(d, { recursive: true, force: true });
+        done.dropped.push(name);
+        changed = true;
+        continue;
+      }
+      const starts = read[script];
+      // Still misread by the parser this WC3V has: left for WC3V's own error to name the map.
+      if (!starts || !Object.keys(starts).length || misreadStarts({ startingPositions: starts })) continue;
+      for (const maps of registries) for (const e of Object.values(maps)) if (e?.info?.name === name && misreadStarts(e)) e.startingPositions = starts;
+      done.repaired.push(name);
+      changed = true;
+    }
+    if (changed) {
+      if (config.maps) writeFileSync(MAP_CONFIG(), JSON.stringify(config));
+      if (kept && keptFile) writeFileSync(keptFile, JSON.stringify(kept));
+    }
+  } catch {
+    // WC3V missing or unreadable: the simulation says so itself
+  }
+  return done;
+}
+
 const inWc3v = (name: string) => existsSync(join(WC3V_DIR, "mapdata", name));
 const inCache = (cache: string, name: string) => existsSync(join(cache, name, "mapdata"));
 
@@ -110,10 +195,11 @@ function restore(cache: string, name: string) {
 }
 
 /**
- * At start: every cached map back into WC3V's folder (after an update) and every map WC3V has
- * into the cache (maps extracted before the cache existed). Returns how many moved each way.
+ * At start: every cached map back into WC3V's folder (after an update), map entries an older WC3V
+ * misread repaired (repairStartLocations), and every map WC3V has into the cache (maps extracted
+ * before the cache existed). Returns how many moved each way and how many entries were repaired.
  */
-export function syncMapCache(dataRoot: string): { restored: number; saved: number } {
+export function syncMapCache(dataRoot: string): { restored: number; saved: number; repaired: number } {
   const cache = mapCacheDir(dataRoot);
   let restored = 0;
   let saved = 0;
@@ -126,6 +212,7 @@ export function syncMapCache(dataRoot: string): { restored: number; saved: numbe
     }
     restoreEntries(cache);
   }
+  const repaired = repairStartLocations(cache).repaired.length;
   const mapdata = join(WC3V_DIR, "mapdata");
   if (existsSync(mapdata)) {
     for (const name of readdirSync(mapdata)) {
@@ -140,7 +227,7 @@ export function syncMapCache(dataRoot: string): { restored: number; saved: numbe
       if (existsSync(client) && readdirSync(client).some((f) => !existsSync(join(copy, f)))) cpSync(client, copy, { recursive: true });
     }
   }
-  return { restored, saved };
+  return { restored, saved, repaired };
 }
 
 /**
@@ -172,13 +259,12 @@ export type FromGame = (mapFile: string) => string | null;
 export function ensureMapData(mapFile: string, folders: string[], dataRoot: string | null, fromGame?: FromGame): string | null {
   const name = mapDataName(mapFile);
   const cache = dataRoot ? mapCacheDir(dataRoot) : null;
-  if (inWc3v(name)) {
-    if (cache && !inCache(cache, name)) save(cache, name);
-    return null;
-  }
-  if (cache && inCache(cache, name)) {
-    restore(cache, name);
-    return null;
+  if (inWc3v(name) || (cache && inCache(cache, name))) {
+    if (!inWc3v(name)) restore(cache!, name);
+    else if (cache && !inCache(cache, name)) save(cache, name);
+    // An entry an older WC3V misread is repaired here too (CLI and reference runs don't go
+    // through syncMapCache); a map it had to drop is extracted again below.
+    if (!repairStartLocations(cache, name).dropped.length) return null;
   }
   let source = findMapFile(folders, mapFile);
   let copied: string | null = null;

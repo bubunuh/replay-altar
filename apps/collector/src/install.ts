@@ -7,7 +7,7 @@ import { chmodSync, copyFileSync, existsSync, mkdirSync, readdirSync, readFileSy
 import { homedir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import { collectorFiles, configPath, dataDir, disableCollector, enableCollector, linuxUnit, projectRoot, SERVICE, windowsLauncher } from "@replay-altar/core";
+import { collectorFiles, collectorMode, configPath, dataDir, disableCollector, linuxUnit, loadConfig, projectRoot, SERVICE, startCollector, windowsLauncher } from "@replay-altar/core";
 
 const home = homedir();
 const windows = process.platform === "win32";
@@ -34,6 +34,14 @@ const WINDOWS = {
 /** The desktop app in this checkout, as Windows starts it: Electron with the app folder. */
 export const windowsDesktop = () => ({ exe: join(PROJECT, "node_modules/electron/dist/electron.exe"), args: [join(PROJECT, "apps/desktop")] });
 const SHORTCUT = "Replay Altar.lnk";
+
+/** Settings → Behaviour: the collector starts at login unless it should run only with the window ("off"). */
+const atLogin = () => collectorMode(loadConfig()) !== "off";
+
+const runningNote = (login: boolean) =>
+  login
+    ? `Collector is running and starts at login${collectorMode(loadConfig()) === "game" ? " (it only wakes up while Warcraft III or Replay Altar's window is open)" : ""}`
+    : "Collector is running; it doesn't start at login and closing Replay Altar's window stops it (Settings → Behaviour changes that)";
 
 function write(path: string, content: string, mode = 0o644) {
   mkdirSync(dirname(path), { recursive: true });
@@ -156,8 +164,9 @@ function installWindows(node: string) {
   }
   mkdirSync(dirname(collectorFiles().log), { recursive: true });
   write(collectorFiles().launcher, windowsLauncher([node, CLI, "collector"]));
-  enableCollector();
-  console.log(`\nDone. Collector is running and starts at login; Replay Altar is in the Start menu and on your desktop.`);
+  const login = atLogin();
+  startCollector(login);
+  console.log(`\nDone. ${runningNote(login)}; Replay Altar is in the Start menu and on your desktop.`);
   console.log(`For the command line, add ${dirname(WINDOWS.cli())} to your PATH (or run ${WINDOWS.cli()}).`);
 }
 
@@ -199,8 +208,9 @@ export function install() {
   }
 
   write(INSTALLED.service, linuxUnit([node, `${PROJECT}/apps/collector/src/cli.ts`, "collector"]));
-  enableCollector();
-  console.log(`\nDone. Collector is running${hasDesktop ? "; Replay Altar is on your desktop and in the app menu" : " (desktop app not built yet)"}.`);
+  const login = atLogin();
+  startCollector(login);
+  console.log(`\nDone. ${runningNote(login)}${hasDesktop ? "; Replay Altar is on your desktop and in the app menu" : " (desktop app not built yet)"}.`);
 }
 
 export function suspend() {
@@ -209,8 +219,9 @@ export function suspend() {
 }
 
 export function resume() {
-  enableCollector();
-  console.log("Collector running again; it will pick up replays played while suspended (except overwritten LastReplay.w3g).");
+  const login = atLogin();
+  startCollector(login);
+  console.log(`${login ? "Collector running again and at login" : "Collector running again (not at login: Settings → Behaviour says only with the window)"}; it will pick up replays played while suspended (except overwritten LastReplay.w3g).`);
 }
 
 export function uninstall(purge: boolean) {

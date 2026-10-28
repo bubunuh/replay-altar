@@ -4,7 +4,11 @@ import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import { buildRecord, endTimeOf, paths, parseReplay, type BuildEvent, type SimSummary } from "@replay-altar/core";
 import { CONSTANTS, gamedataDir, loadCosts, simNotReady, simulateGame } from "../src/index.ts";
-import { runIncome, spendFromOrders, type Timeline } from "../src/economy.ts";
+import { runIncome, spendFromOrders, type Timeline, type WOutput } from "../src/economy.ts";
+import { neverMade, withoutNeverMade } from "../src/deaths.ts";
+import { armyValueFn, heroUnit } from "../src/army.ts";
+import { foodInUse } from "../src/food.ts";
+import type { CostTables } from "../src/costs.ts";
 
 const realData = paths().root;
 const ready = simNotReady(realData) === null;
@@ -28,6 +32,76 @@ describe.skipIf(!ready)("spending from orders", () => {
     const u = costs!.upgrades.Rhra;
     expect(l1).toMatchObject({ gold: u.goldBase, lumber: u.lumberBase });
     expect(l2).toMatchObject({ gold: u.goldBase + u.goldMod, lumber: u.lumberBase + u.lumberMod });
+  });
+});
+
+// Game data for the tests below, so they run without an install.
+const unit = (gold: number, lumber: number, food: number, buildS: number, isHero = false) => ({ gold, lumber, food, foodMade: 0, buildMs: buildS * 1000, isHero });
+const FAKE: CostTables = {
+  version: "test", manifestSha256: "", items: {}, upgrades: {},
+  units: { Hamg: unit(425, 100, 5, 55, true), Hmkg: unit(425, 100, 5, 55, true), Npal: unit(425, 100, 5, 55, true), hfoo: unit(135, 0, 2, 20), edoc: unit(255, 80, 4, 35), hmil: unit(75, 0, 1, 0), hpea: unit(75, 0, 1, 15) },
+};
+const hero = (code: string, firstPickMs: number, orderedMs?: number | null) => ({ order: 0, code, name: code, level: 1, levelUps: [firstPickMs], skills: [], retrainings: 0, orderedMs });
+
+describe("heroes in the spending", () => {
+  test("the heroes a player had are priced when ordered, the first one free", () => {
+    const s = spendFromOrders([ev(300_000, "unit", "hfoo")], FAKE, [hero("Hamg", 120_000, 64_000), hero("Hmkg", 480_000, 410_000)]);
+    expect(s).toEqual([{ t: 300_000, gold: 135, lumber: 0 }, { t: 410_000, gold: 425, lumber: 100 }]);
+  });
+  test("without the order time (older records), a hero is priced its training time before its first skill", () => {
+    expect(spendFromOrders([], FAKE, [hero("Hamg", 120_000), hero("Npal", 500_000, null)])).toEqual([{ t: 445_000, gold: 425, lumber: 100 }]);
+  });
+});
+
+describe("food used, from the units", () => {
+  test("a unit counts from the start of its training until it dies; a hero from its order, dead or not; a Wisp until it becomes a building", () => {
+    const costs: CostTables = { ...FAKE, units: { ...FAKE.units, ewsp: unit(60, 0, 1, 14) } };
+    const units = [
+      { itemId: "hpea", spawnTime: 500 }, // starting worker
+      { itemId: "hfoo", spawnTime: 100_000, trainedTime: 130_000, lostState: { state: "lost", since: 200_000 } }, // queued, started at 110 s
+      { itemId: "hfoo", spawnTime: 150_000, trainedTime: 170_000, lostState: { state: "possiblyLost", since: 400_000 } },
+      { itemId: "ewsp", spawnTime: 10_000, trainedTime: 24_000, destroyedByBuilding: true, destroyedAt: 60_000 },
+      { itemId: "hfoo", isBuilding: true, spawnTime: 0 },
+      { itemId: "Hamg", spawnTime: 60_000, trainedTime: 119_000, lostState: { state: "lost", since: 300_000 } },
+    ];
+    const f = foodInUse(units, [hero("Hamg", 125_000, 64_000)], costs);
+    const at = (t: number) => f.filter((s) => s.t <= t).at(-1)!.used;
+    expect([at(0), at(1000), at(20_000), at(64_000), at(110_000), at(150_000), at(250_000), at(500_000)]).toEqual([0, 1, 2, 6, 8, 10, 8, 6]);
+  });
+});
+
+describe("the simulation's unit for a hero", () => {
+  test("a hero cancelled at the altar and ordered again later: the one trained before its first skill", () => {
+    // Death Knight ordered at 1:49, cancelled at 2:16, ordered again at 6:06; first skill at 7:14.
+    const phantom = { itemId: "Udea", trainedTime: 163_410 };
+    const real = { itemId: "Udea", trainedTime: 421_000 };
+    expect(heroUnit([phantom, real], "Udea", 434_000)).toBe(real);
+  });
+  test("a hero in another form (Metamorphosis) is still its unit", () => {
+    const dh = { itemId: "Edmm", trainedTime: 123_000 };
+    expect(heroUnit([dh], "Edem", 130_000)).toBe(dh);
+  });
+});
+
+describe("which units count in the army value", () => {
+  const units = [
+    { itemId: "hfoo", trainedTime: 10_000 },
+    // a train order the game refused: the selection lists never showed it
+    { itemId: "hfoo", trainedTime: 20_000, lostState: { state: "possiblyLost", since: 20_000, source: "unlisted" } },
+    { itemId: "hfoo", trainedTime: 30_000, lostState: { state: "lost", since: 90_000, source: "selection" } },
+    // a Peasant called to arms that WC3V never saw go back to work
+    { itemId: "hmil", spawnTime: 5_000, morphHistory: [{ gameTime: 50_000, itemId: "hmil", from: "hpea" }] },
+  ];
+  const o = { players: { "1": { teamId: 0, race: "H", parseConfidence: 1, units } } } as unknown as WOutput;
+
+  test("a unit that never existed is left out, the output itself untouched", () => {
+    expect(units.filter(neverMade)).toEqual([units[1]]);
+    expect(withoutNeverMade(o).players["1"].units).toEqual([units[0], units[2], units[3]]);
+    expect(o.players["1"].units).toHaveLength(4);
+  });
+  test("units count from training until WC3V's death; Militia are workers", () => {
+    const value = armyValueFn(withoutNeverMade(o), 1, FAKE);
+    expect([value(15_000), value(60_000), value(100_000)]).toEqual([135, 270, 135]);
   });
 });
 

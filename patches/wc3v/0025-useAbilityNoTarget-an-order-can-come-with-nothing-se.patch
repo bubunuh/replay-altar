@@ -1,0 +1,71 @@
+From 6a6c619f586bc2205a884ec9ffb632f51c7ba058 Mon Sep 17 00:00:00 2001
+From: bubunuh <76405364+bubunuh@users.noreply.github.com>
+Date: Tue, 27 Oct 2026 15:23:59 +0100
+Subject: [PATCH 25/25] useAbilityNoTarget: an order can come with nothing
+ selected
+
+The unregistered-building branch read this.selection.units[0] without a
+check, so a building order (an upgrade, a train) arriving while WC3V's
+selection was empty threw and stopped the simulation for the rest of the
+replay. The selection can be empty there for several reasons (a deselect
+WC3V read as removing the last unit, a selection made before the replay's
+first action), and the branch only uses the unit for a lookup, so it now
+skips the lookup. The other readers of selection.units[0] already check.
+
+Test case added to tests/selection-presub.test.js.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ lib/Player.js                  |  7 ++++---
+ tests/selection-presub.test.js | 10 ++++++++++
+ 2 files changed, 14 insertions(+), 3 deletions(-)
+
+diff --git a/lib/Player.js b/lib/Player.js
+index 664cceb..6eb5982 100644
+--- a/lib/Player.js
++++ b/lib/Player.js
+@@ -3043,9 +3043,10 @@ const Player = class {
+     if (!selectedUnits.length) {
+       // no registered units in selection
+       if (unitInfo.isBuilding) {
+-        // we found a building that hasn't been registered yet
+-        const firstSelectionItem = this.selection.units[0];
+-        let maybeBuilding = this.findUnregisteredUnitByItemIds(
++        // we found a building that hasn't been registered yet. The selection
++        // can be empty here (an order after the last unit was deselected).
++        const firstSelectionItem = this.selection && this.selection.units[0];
++        let maybeBuilding = firstSelectionItem && this.findUnregisteredUnitByItemIds(
+           firstSelectionItem.itemId1,
+           firstSelectionItem.itemId2
+         );
+diff --git a/tests/selection-presub.test.js b/tests/selection-presub.test.js
+index 99d23dd..6a36874 100644
+--- a/tests/selection-presub.test.js
++++ b/tests/selection-presub.test.js
+@@ -7,6 +7,7 @@
+  *      whole new selection
+  *   2. a shift-add keeps the units already selected and adds the listed ones
+  *   3. a shift-added unit deselected again leaves the rest selected
++ *   4. an order for a building upgrade with nothing selected does not throw
+  *
+  * Run: `node tests/selection-presub.test.js`
+  */
+@@ -92,6 +93,15 @@ check('deselecting the shift-added unit leaves the rest selected', () => {
+   assert.deepStrictEqual(p.selected(), [ 100 ]);
+ });
+ 
++check('an upgrade ordered with nothing selected does not throw', () => {
++  const p = makePlayer();
++  p.at(1000); p.pre(ZIG); p.sel(SELECT, ZIG);
++  p.at(2000); p.sel(DESELECT, ZIG);
++  assert.deepStrictEqual(p.selected(), []);
++  // Spirit Tower (uzg1): a building, so it takes the unregistered-building path
++  p.player.useAbilityNoTarget({ itemId: 'uzg1', abilityFlags: 0 });
++});
++
+ console.log('');
+ if (failures) {
+   console.log(`FAILED — ${failures} check(s)`);
+-- 
+2.56.0
+
