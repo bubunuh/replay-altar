@@ -5,7 +5,7 @@ What changes for players in each version. Work happens on `dev`; a version is ma
 part of a version: an installer ships only the app, the simulation engine and the published pro
 statistics (`data/`).
 
-## 0.2.3 (release candidate)
+## 0.2.3 (2026-10-29)
 
 - **No more false alarms from antivirus programs** (reported by a user): nothing in Replay Altar
   is harmful, but on Windows the way it started its background program could make some
