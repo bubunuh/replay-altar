@@ -7,9 +7,9 @@ statistics (`data/`).
 
 ## 0.2.3 (release candidate)
 
-- **No more antivirus alarms from the background program** (a user's antivirus reported a
-  Trojan): nothing in Replay Altar is harmful, but on Windows it started its background program
-  the way some malware does: a login entry that ran `wscript.exe` on a hidden script in your
+- **No more false alarms from antivirus programs** (reported by a user): nothing in Replay Altar
+  is harmful, but on Windows the way it started its background program could make some
+  antivirus programs raise an alert: a login entry that ran `wscript.exe` on a hidden script in your
   AppData folder, which started the app as Node, and notifications shown through a hidden
   PowerShell script. Now the login entry (still `ReplayAltarCollector` in your user's Run key) runs
   `ReplayAltar.exe --cli collector` directly, the script file is deleted when you update, and the
