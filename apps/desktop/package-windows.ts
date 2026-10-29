@@ -36,6 +36,8 @@ await build({
     nsis: {
       oneClick: true,
       perMachine: false,
+      // A per-user install never asks for administrator rights, so no elevate.exe in it.
+      packElevateHelper: false,
       runAfterFinish: true,
       createDesktopShortcut: true,
       createStartMenuShortcut: true,

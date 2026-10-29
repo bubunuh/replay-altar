@@ -1,6 +1,7 @@
-// The collector as a background service. Linux: a systemd user unit. Windows: a hidden launcher
-// script (collector.vbs), with the running collector's pid in collector.pid (no admin rights
-// needed for either). It starts at login (the unit enabled; the launcher in the user's Run key)
+// The collector as a background service. Linux: a systemd user unit. Windows: the installed app's
+// own executable as the CLI (`ReplayAltar.exe --cli collector`; a checkout: a hidden launcher
+// script, collector.vbs), with the running collector's pid in collector.pid (no admin rights
+// needed for either). It starts at login (the unit enabled; the command in the user's Run key)
 // unless Settings → Behaviour says to run it only with the window ("off"), in which case the
 // window starts it and stops it when it closes. The window marks itself open in window.pid, so a
 // collector waiting for Warcraft III ("game") wakes up for it too.
@@ -9,13 +10,15 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { dataDir, type CollectorMode } from "./config.ts";
+import { isInstalled } from "./root.ts";
 
 export const SERVICE = "replay-altar-collector.service";
 const RUN_KEY = "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run";
-const RUN_VALUE = "ReplayAltarCollector";
+export const RUN_VALUE = "ReplayAltarCollector";
 const windows = process.platform === "win32";
 
 export const collectorFiles = () => ({
+  /** A checkout's launcher (an installed copy before 0.2.3 had one too, removed by the window). */
   launcher: join(dataDir(), "bin/collector.vbs"),
   pid: join(dataDir(), "collector.pid"),
   log: join(dataDir(), "logs/collector.log"),
@@ -27,7 +30,21 @@ export const collectorFiles = () => ({
 export const linuxUnitFile = () => join(homedir(), ".config/systemd/user", SERVICE);
 
 /** Is the collector set up as a service on this computer (by an install, the AppImage or the Windows app)? */
-export const collectorInstalled = () => existsSync(windows ? collectorFiles().launcher : linuxUnitFile());
+export const collectorInstalled = () => (windows ? isInstalled() || existsSync(collectorFiles().launcher) : existsSync(linuxUnitFile()));
+
+/**
+ * An installed Windows copy's collector: its own executable, which runs the CLI on itself as Node
+ * and stays (without a window) until it is done, as the AppImage does. 0.2.2 and earlier went
+ * through a hidden script started by wscript.exe, which antivirus programs took for a trojan.
+ */
+export const windowsCollectorCommand = (exe = process.execPath) => [exe, "--cli", "collector"];
+
+let loginItem: ((on: boolean) => void) | null = null;
+
+/** The window of an installed Windows copy writes the Run entry itself (Electron's login items), not through reg.exe. */
+export function useLoginItem(set: (on: boolean) => void) {
+  loginItem = set;
+}
 
 // REPLAY_ALTAR_NO_SYSTEMD=1 (tests): write files only, never touch the running user session.
 const dryRun = () => !!process.env.REPLAY_ALTAR_NO_SYSTEMD;
@@ -101,7 +118,7 @@ export function markCollectorRunning() {
 
 /** "active", "inactive" (installed, not running), "not installed", or systemd's own word. */
 export function collectorState(): string {
-  if (windows) return runningPid() ? "active" : existsSync(collectorFiles().launcher) ? "inactive" : "not installed";
+  if (windows) return runningPid() ? "active" : collectorInstalled() ? "inactive" : "not installed";
   try {
     return execFileSync("systemctl", ["--user", "is-active", SERVICE], { encoding: "utf8" }).trim();
   } catch (e) {
@@ -110,9 +127,12 @@ export function collectorState(): string {
 }
 
 function startOnWindows() {
-  if (dryRun()) return console.log(`  (skipped) start ${collectorFiles().launcher}`);
+  const [cmd, ...args] = isInstalled() ? windowsCollectorCommand() : ["wscript.exe", collectorFiles().launcher];
+  if (dryRun()) return console.log(`  (skipped) start ${[cmd, ...args].join(" ")}`);
   if (runningPid()) return;
-  spawn("wscript.exe", [collectorFiles().launcher], { detached: true, stdio: "ignore", windowsHide: true }).unref();
+  // Without ELECTRON_RUN_AS_NODE, so the executable starts as the app (its --cli) rather than as Node.
+  const { ELECTRON_RUN_AS_NODE: _node, ...env } = process.env;
+  spawn(cmd, args, { detached: true, stdio: "ignore", windowsHide: true, env }).unref();
 }
 
 function stopOnWindows() {
@@ -128,13 +148,21 @@ function stopOnWindows() {
   rmSync(collectorFiles().pid, { force: true });
 }
 
+/** What the Run entry starts on Windows: the installed executable as the CLI, or a checkout's launcher. */
+export const windowsLoginValue = (installed = isInstalled()) =>
+  installed ? windowsCollectorCommand().map((a) => `"${a}"`).join(" ") : `wscript.exe "${collectorFiles().launcher}"`;
+
 /** The command that makes the collector start at every login, or no longer (`on` false). */
-export function loginCommand(on: boolean, platform: NodeJS.Platform = process.platform): string[] {
+export function loginCommand(on: boolean, platform: NodeJS.Platform = process.platform, installed = isInstalled()): string[] {
   if (platform !== "win32") return ["systemctl", "--user", on ? "enable" : "disable", SERVICE];
-  return on ? ["reg", "add", RUN_KEY, "/v", RUN_VALUE, "/t", "REG_SZ", "/d", `wscript.exe "${collectorFiles().launcher}"`, "/f"] : ["reg", "delete", RUN_KEY, "/v", RUN_VALUE, "/f"];
+  return on ? ["reg", "add", RUN_KEY, "/v", RUN_VALUE, "/t", "REG_SZ", "/d", windowsLoginValue(installed), "/f"] : ["reg", "delete", RUN_KEY, "/v", RUN_VALUE, "/f"];
 }
 
 function setLogin(on: boolean) {
+  if (windows && loginItem) {
+    if (dryRun()) return console.log(`  (skipped) login item ${on ? "on" : "off"}`);
+    return loginItem(on);
+  }
   const [cmd, ...args] = loginCommand(on);
   if (dryRun()) return console.log(`  (skipped) ${[cmd, ...args].join(" ")}`);
   try {
@@ -213,10 +241,9 @@ export function linuxUnit(command: string[]): string {
 }
 
 /**
- * The hidden launcher Windows runs at login: `command` (program and arguments) with no console
- * window, its output appended to the log, with `env` set first (an installed copy runs the
- * collector with its own Electron as Node: ELECTRON_RUN_AS_NODE=1). VBScript doubles quotes
- * inside strings.
+ * A checkout's hidden launcher, which Windows runs at login: `command` (program and arguments)
+ * with no console window (node.exe would open one), its output appended to the log, with `env`
+ * set first. VBScript doubles quotes inside strings.
  */
 export function windowsLauncher(command: string[], env: Record<string, string> = {}): string {
   const files = collectorFiles();

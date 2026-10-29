@@ -43,7 +43,30 @@ export function openDesktop(args: string[]) {
 
 /** Shows a notification; resolves with the action the user clicked, if any. */
 export function notify(title: string, body: string, action?: { id: string; label: string }): Promise<string | null> {
+  // An installed Windows copy: the app's own process that started this one shows it (main.ts, --cli).
+  if (windows && process.send) return notifyThroughParent(process, title, body, action);
   return windows ? toast(title, body, action) : notifySend(title, body, action);
+}
+
+type Parent = Pick<NodeJS.Process, "send" | "on" | "off">;
+let asked = 0;
+
+/** Asks the parent process to show it; its answer is the action clicked, or null (it waits 20 s; here 25). */
+export function notifyThroughParent(parent: Parent, title: string, body: string, action?: { id: string; label: string }): Promise<string | null> {
+  const id = ++asked;
+  return new Promise((resolve) => {
+    const done = (answer: string | null) => {
+      clearTimeout(timer);
+      parent.off("message", onMessage);
+      resolve(answer);
+    };
+    const onMessage = (m: { notify?: number; action?: string | null }) => {
+      if (m?.notify === id) done(m.action ?? null);
+    };
+    const timer = setTimeout(() => done(null), 25_000);
+    parent.on("message", onMessage);
+    parent.send!({ notify: id, title, body, action: action?.id });
+  });
 }
 
 function notifySend(title: string, body: string, action?: { id: string; label: string }): Promise<string | null> {

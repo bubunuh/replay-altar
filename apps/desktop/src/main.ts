@@ -1,11 +1,11 @@
 // Electron main process: one window, read-mostly access to the Replay Altar database.
 import { freshCopy, pruneOldCopies } from "./appimage.ts";
 import { appendFileSync, closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readdirSync, readFileSync, readSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
-import { execFile, spawn } from "node:child_process";
+import { execFile, spawn, type StdioOptions } from "node:child_process";
 import { createHash } from "node:crypto";
 import { homedir, release as osRelease, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { app, BrowserWindow, clipboard, dialog, ipcMain, nativeTheme, shell } from "electron";
+import { app, BrowserWindow, clipboard, dialog, ipcMain, nativeTheme, Notification, shell } from "electron";
 import { loadRefGroups, rulesBook } from "@replay-altar/rules";
 import { mapDataName } from "@replay-altar/sim/mapname";
 import { mapMarkers } from "./mapOverlay.ts";
@@ -37,7 +37,9 @@ import {
   markWindowClosed,
   markWindowOpen,
   linuxUnit,
-  windowsLauncher,
+  RUN_VALUE,
+  useLoginItem,
+  windowsCollectorCommand,
   language,
   listGames,
   loadConfig,
@@ -54,35 +56,69 @@ import {
 
 app.setName("replay-altar");
 
-// A Linux AppImage's collector and command line: `ReplayAltar.AppImage --cli <command…>` runs the
-// CLI on this executable as Node (the systemd unit runs `--cli collector`). The AppImage's files
-// only exist while it runs, so this process stays, without a window, until the CLI is done.
+// The collector and command line of a Linux AppImage and of an installed Windows copy:
+// `--cli <command…>` runs the CLI on this executable as Node (the systemd unit and the Windows Run
+// entry run `--cli collector`). The AppImage's files only exist while it runs, so this process
+// stays, without a window, until the CLI is done. On Windows the collector has no console: its
+// output goes to its log, and its notifications are shown from here, as Replay Altar's (0.2.2 and
+// earlier went through PowerShell, which antivirus programs took for a trojan).
 const cliAt = process.argv.indexOf("--cli");
 if (cliAt >= 0) {
-  const child = spawn(process.execPath, [join(projectRoot(), "collector/collector.mjs"), ...process.argv.slice(cliAt + 1)], {
-    stdio: "inherit",
+  const args = process.argv.slice(cliAt + 1);
+  const windowsCollector = process.platform === "win32" && args[0] === "collector";
+  app.disableHardwareAcceleration(); // no window, so no GPU process
+  let stdio: StdioOptions = "inherit";
+  if (windowsCollector) {
+    const log = collectorFiles().log;
+    mkdirSync(dirname(log), { recursive: true });
+    const fd = openSync(log, "a");
+    stdio = ["ignore", fd, fd, "ipc"];
+    app.setAppUserModelId("app.replayaltar"); // the Start menu shortcut's, so notifications show as Replay Altar
+  }
+  const child = spawn(process.execPath, [join(projectRoot(), "collector/collector.mjs"), ...args], {
+    stdio,
     env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" },
   });
+  if (windowsCollector) child.on("message", (ask: NotifyAsk) => void showNotification(ask, (answer) => child.connected && child.send(answer)));
   child.on("exit", (code, signal) => app.exit(code ?? (signal ? 1 : 0)));
   for (const sig of ["SIGTERM", "SIGINT"] as const) process.on(sig, () => child.kill(sig));
 }
 
+/** A notification the collector asks for (`notify` in apps/collector/src/system.ts). */
+type NotifyAsk = { notify: number; title: string; body: string; action?: string };
+/** Shown ones, kept until answered: a notification that is collected loses its click. */
+const shown = new Set<Notification>();
+
+/** Shows it and answers with its action when clicked within 20 s, or with null. */
+async function showNotification(ask: NotifyAsk, reply: (answer: { notify: number; action: string | null }) => void) {
+  await app.whenReady();
+  const n = new Notification({ title: ask.title, body: ask.body });
+  shown.add(n);
+  let answered = false;
+  const answer = (action: string | null) => {
+    if (answered) return;
+    answered = true;
+    shown.delete(n);
+    reply({ notify: ask.notify, action });
+  };
+  n.on("click", () => answer(ask.action ?? null));
+  n.on("failed", () => answer(null));
+  setTimeout(() => answer(null), 20_000);
+  n.show();
+}
+
 /**
- * An installed copy on Windows sets up its own collector: started now, on this executable as Node
- * (the launcher is rewritten when an update moves the executable), and at every login unless
- * `mode` is "off" (Settings → Behaviour). True when it did.
+ * An installed copy on Windows sets up its own collector: started now, as `ReplayAltar.exe --cli
+ * collector`, and at every login unless `mode` is "off" (Settings → Behaviour), through a Run
+ * entry Electron writes (rewritten at every start, so it follows an update that moves the
+ * executable). True when it did.
  */
 function ensureWindowsCollector(mode: CollectorMode): boolean {
   if (process.platform !== "win32" || !isInstalled()) return false;
-  const files = collectorFiles();
-  const launcher = windowsLauncher([process.execPath, join(projectRoot(), "collector/collector.mjs"), "collector"], { ELECTRON_RUN_AS_NODE: "1" });
-  const changed = !existsSync(files.launcher) || readFileSync(files.launcher, "utf8") !== launcher;
-  if (changed) {
-    mkdirSync(dirname(files.launcher), { recursive: true });
-    mkdirSync(dirname(files.log), { recursive: true });
-    writeFileSync(files.launcher, launcher);
-    restartCollectorIfRunning();
-  }
+  const [exe, ...args] = windowsCollectorCommand();
+  useLoginItem((on) => app.setLoginItemSettings({ openAtLogin: on, path: exe, args, name: RUN_VALUE }));
+  // 0.2.2 and earlier started it through a hidden script; the same Run entry now names this executable.
+  rmSync(collectorFiles().launcher, { force: true });
   collectorForWindow("opened", mode);
   return true;
 }

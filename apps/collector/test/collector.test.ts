@@ -2,6 +2,8 @@ import { describe, expect, test, vi } from "vitest";
 import { windowsLauncher } from "@replay-altar/core";
 import { decodeDds, encodePng } from "../src/dds.ts";
 import { PoliteQueue, type Outcome } from "../src/officialqueue.ts";
+import { notifyThroughParent } from "../src/system.ts";
+import { EventEmitter } from "node:events";
 import { inflateSync } from "node:zlib";
 
 /** A 4×4 DDS of one block, header filled only where the decoder reads it. */
@@ -49,6 +51,34 @@ describe("Windows collector launcher", () => {
     const vbs = windowsLauncher(["C:\\Program Files\\nodejs\\node.exe", "C:\\src\\cli.ts", "collector"]);
     expect(vbs).toContain('.Run "cmd /c """"C:\\Program Files\\nodejs\\node.exe"" ""C:\\src\\cli.ts"" ""collector"" >> ""');
     expect(vbs).toMatch(/2>&1""", 0, False\r\n$/);
+  });
+});
+
+describe("notifications through the app's own process (installed Windows copy)", () => {
+  const parent = () => {
+    const sent: { notify: number; title: string; body: string; action?: string }[] = [];
+    const ear = new EventEmitter();
+    return { sent, ear, proc: { send: (m: (typeof sent)[number]) => (sent.push(m), true), on: ear.on.bind(ear), off: ear.off.bind(ear) } };
+  };
+
+  test("asks with the texts and the action, and resolves with the action clicked", async () => {
+    const { sent, ear, proc } = parent();
+    const answer = notifyThroughParent(proc as never, "Victory", "vs Grubby", { id: "open", label: "Open report" });
+    expect(sent).toEqual([{ notify: sent[0].notify, title: "Victory", body: "vs Grubby", action: "open" }]);
+    ear.emit("message", { notify: sent[0].notify + 1, action: "open" }); // another notification's answer
+    ear.emit("message", { notify: sent[0].notify, action: "open" });
+    expect(await answer).toBe("open");
+    expect(ear.listenerCount("message")).toBe(0);
+  });
+
+  test("no answer from the app: nothing clicked after 25 s", async () => {
+    vi.useFakeTimers();
+    const { ear, proc } = parent();
+    const answer = notifyThroughParent(proc as never, "Defeat", "vs Happy");
+    vi.advanceTimersByTime(25_000);
+    expect(await answer).toBe(null);
+    expect(ear.listenerCount("message")).toBe(0);
+    vi.useRealTimers();
   });
 });
 
