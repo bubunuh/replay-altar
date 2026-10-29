@@ -14,7 +14,10 @@ statistics (`data/`).
   PowerShell script. Now the login entry (still `ReplayAltarCollector` in your user's Run key) runs
   `ReplayAltar.exe --cli collector` directly, the script file is deleted when you update, and the
   notification after a game comes from Replay Altar itself (it used to say *Windows PowerShell*).
-  Nothing changes in what runs when (Settings → Behaviour) or in what is imported.
+  Nothing changes in what runs when (Settings → Behaviour) or in what is imported. The installer
+  also leaves out two files Replay Altar never used: WC3V's website script `install.ps1`, which
+  downloads and runs WC3V's own installer (the pattern of a downloader), and the installer
+  helper `elevate.exe`, for administrator rights a per-user install never asks for.
 
 ## 0.2.2 (2026-10-28)
 
