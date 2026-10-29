@@ -1,6 +1,6 @@
 // When the collector runs (Settings → Behaviour): what the window does to the collector service. Dry run (REPLAY_ALTAR_NO_SYSTEMD): the commands are printed, never run.
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { collectorForWindow, isWindowOpen, loginCommand, markWindowClosed, markWindowOpen, SERVICE } from "../src/service.ts";
+import { collectorForWindow, isWindowOpen, loginCommand, markWindowClosed, markWindowOpen, SERVICE, windowsCollectorCommand, windowsLoginValue } from "../src/service.ts";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -51,11 +51,15 @@ describe("start at login, per system", () => {
     expect(loginCommand(true, "linux")).toEqual(["systemctl", "--user", "enable", SERVICE]);
     expect(loginCommand(false, "linux")).toEqual(["systemctl", "--user", "disable", SERVICE]);
   });
-  test("Windows: the launcher in the user's Run key, or no entry", () => {
-    const on = loginCommand(true, "win32");
+  test("Windows checkout: the launcher in the user's Run key, or no entry", () => {
+    const on = loginCommand(true, "win32", false);
     expect(on.slice(0, 5)).toEqual(["reg", "add", "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run", "/v", "ReplayAltarCollector"]);
     expect(on.at(-2)).toMatch(/^wscript\.exe ".*collector\.vbs"$/);
-    expect(loginCommand(false, "win32")).toEqual(["reg", "delete", "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run", "/v", "ReplayAltarCollector", "/f"]);
+    expect(loginCommand(false, "win32", false)).toEqual(["reg", "delete", "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run", "/v", "ReplayAltarCollector", "/f"]);
+  });
+  test("Windows installed: the app's own executable as the CLI, no script", () => {
+    expect(windowsLoginValue(true)).toBe(`"${process.execPath}" "--cli" "collector"`);
+    expect(windowsCollectorCommand("C:\\Apps\\ReplayAltar.exe")).toEqual(["C:\\Apps\\ReplayAltar.exe", "--cli", "collector"]);
   });
 });
 

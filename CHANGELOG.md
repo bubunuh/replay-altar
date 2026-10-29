@@ -5,6 +5,17 @@ What changes for players in each version. Work happens on `dev`; a version is ma
 part of a version: an installer ships only the app, the simulation engine and the published pro
 statistics (`data/`).
 
+## 0.2.3 (release candidate)
+
+- **No more antivirus alarms from the background program** (a user's antivirus reported a
+  Trojan): nothing in Replay Altar is harmful, but on Windows it started its background program
+  the way some malware does: a login entry that ran `wscript.exe` on a hidden script in your
+  AppData folder, which started the app as Node, and notifications shown through a hidden
+  PowerShell script. Now the login entry (still `ReplayAltarCollector` in your user's Run key) runs
+  `ReplayAltar.exe --cli collector` directly, the script file is deleted when you update, and the
+  notification after a game comes from Replay Altar itself (it used to say *Windows PowerShell*).
+  Nothing changes in what runs when (Settings → Behaviour) or in what is imported.
+
 ## 0.2.2 (2026-10-28)
 
 - **Nothing is imported until you ask** (tester feedback after 0.2.1): on the first start, if
@@ -128,7 +139,7 @@ W3Champions' official numbers); what helped is in the list above.
   mark (levels changed in 30% of the 587 player-games with a tome), plus refused extra clicks in
   the re-spend; "the same skill twice" was already handled by the rank rules. The skill menu's
   openings (action 0x66) do bound the sessions, as suggested.
-- **Units per selected building:** *not applied, moved to the gold and lumber model (0.2.3).* It
+- **Units per selected building:** *not applied, moved to the gold and lumber model (0.2.4).* It
   exists: 9.6% of train clicks (176 W3Champions player-games) had 2 or more buildings of the type
   selected (types from the replay's own subgroup names). But the game refuses the copies it can't
   pay for or feed, and the replay doesn't say which: counted in full, spending − 500 went over the
@@ -189,7 +200,7 @@ W3Champions' official numbers); what helped is in the list above.
 - **Linux AppImage**, alongside the Windows installer: one file, no Node, git or podman needed. On first start it sets up the background collector (a systemd user service), the `replay-altar` command and a menu entry, reads the game data with a built-in read-only extractor, and updates itself in place like the Windows version.
 - **Linux: Battle.net is found in more places:** Lutris folders under `~/Games`, `~/.wine`, Steam's Proton prefixes and Bottles, for both the replays and the game data.
 
-## Planned for 0.2.3
+## Planned for 0.2.4
 
 - **Income model:** since 0.2.2 the second and third heroes count in the gold spent, and the
   mined-income model now often runs short early in the game (pros "spend" about 900 gold more than

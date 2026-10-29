@@ -33,7 +33,7 @@ is shown whenever it fires, win or lose, on top of the three main findings.
 dead off and put pros above 80 food for minutes; with food counted from the units it fires in 7%
 of wins and 6% of losses (0.72–1.11) and is hidden again. `floating` likely
 dropped because the second and third heroes now count in spending and the income model runs short
-early, so the unspent gold is mostly 0 (to be revisited with the gold and lumber model, 0.2.3). `fights` still passes clearly, with a lower lift than on 0.2.1's
+early, so the unspent gold is mostly 0 (to be revisited with the gold and lumber model, 0.2.4). `fights` still passes clearly, with a lower lift than on 0.2.1's
 simulation (2.1 instead of 3.1: it fires in 17% of wins instead of 13%; raising its 1.3x to 1.5x
 gave 2.3, 12% / 28%, on the first 0.2.2 scoring).
 
