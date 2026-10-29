@@ -214,7 +214,21 @@ W3Champions' official numbers); what helped is in the list above.
   Found on a user's HvU game recorded from the game's own numbers (`observer/check-strauss.jsonl`):
   the curve said 75-90% all game, while the armies were close until the last fight. Fix: count
   workers by race (ghouls cutting lumber, or the difference from each race's usual count), and
-  check that each matchup's average evaluation matches how often that side won.
+  check that each matchup's average evaluation matches how often that side won. A fixed edge per
+  matchup was tried for 0.2.0 and did worse (docs/WIN-CHANCE.md), and a curve per matchup would
+  have about 50 fitting games each; if a matchup is still off, give workers and the amount of
+  units weights by race, pulled toward the shared ones, or fit on the tournament games too.
+- **Race-specific rules:** today's rules are the same for every race (only their thresholds follow
+  the pros of your race). Screen the sources again (Warcraft 3 Gym's race pages, Liquipedia's race
+  pages, and new race guides and coaching videos) for checks that belong to one race or matchup and
+  can be read from a replay (e.g. the Undead ghoul and acolyte split, Night Elf wisps lost, Human
+  time on Militia, Orc burrows against a tower rush). There are about 880 held-out player-games
+  per race, enough for a rule that fires in 5-10% of games with a lift of about 1.5, but only
+  strong effects per matchup (about 220). The ~3,000 tournament games are already half of the rule
+  pool (thresholds mined on one half, scored on the other), and every rule so far was scored on
+  that same half, so: write the candidates down before looking at the games, screen them as
+  today, and confirm the few that pass on games no rule has seen (1,000-2,000 new warcraft3.info
+  tournament or W3Champions 2400+ games).
 
 ## Later
 
