@@ -17,8 +17,6 @@ import {
   collectorState,
   configPath,
   dataDir,
-  darwinLaunchAgent,
-  darwinLaunchAgentPath,
   detectedWarcraftDocuments,
   countMaps,
   mapFolders,
@@ -91,15 +89,6 @@ function ensureWindowsCollector(mode: CollectorMode): boolean {
 
 function ensureDarwinCollector(mode: CollectorMode): boolean {
   if (process.platform !== "darwin" || !isInstalled()) return false;
-  const plist = darwinLaunchAgentPath();
-  const command = [process.execPath, join(projectRoot(), "collector/collector.mjs"), "collector"];
-  const agent = darwinLaunchAgent(command[0], command.slice(1));
-  const changed = !existsSync(plist) || readFileSync(plist, "utf8") !== agent;
-  if (changed) {
-    mkdirSync(dirname(plist), { recursive: true });
-    writeFileSync(plist, agent);
-    restartCollectorIfRunning();
-  }
   collectorForWindow("opened", mode);
   return true;
 }

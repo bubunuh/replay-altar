@@ -18,7 +18,6 @@ import {
   detectResult,
   endTimeOf,
   ingestFile,
-  isWarcraftRunning,
   openDb,
   parseDarwinProcessList,
   parseReplay,
@@ -312,17 +311,17 @@ describe("platform defaults", () => {
     expect(parseDarwinProcessList("789\tElectron\n")).toBe(false);
   });
 
-  test("isWarcraftRunning resolves native macOS process detection", () => {
-    if (process.platform !== "darwin") return;
-    expect(typeof isWarcraftRunning).toBe("function");
-  });
-
   test("Darwin generates a LaunchAgent plist for the collector", () => {
-    const plist = darwinLaunchAgent("/usr/local/bin/replay-altar", ["collector"]);
+    const plist = darwinLaunchAgent("/usr/local/bin/replay-altar", ["collector"], false, { ELECTRON_RUN_AS_NODE: "1" });
+    const checkoutPlist = darwinLaunchAgent("/usr/local/bin/replay-altar", ["collector"], false);
     expect(plist).toContain("<key>Label</key>");
     expect(plist).toContain("replay-altar-collector");
     expect(plist).toContain("/usr/local/bin/replay-altar");
-    expect(plist).toContain("<key>RunAtLoad</key>");
+    expect(plist).toContain("<key>EnvironmentVariables</key>");
+    expect(plist).toContain("<key>ELECTRON_RUN_AS_NODE</key>");
+    expect(plist).toContain("<string>1</string>");
+    expect(plist).toContain("<key>RunAtLoad</key>\n  <false/>");
+    expect(checkoutPlist).not.toContain("<key>EnvironmentVariables</key>");
   });
 });
 

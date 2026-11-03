@@ -50,7 +50,8 @@ describe.skipIf(!linux)("the collector service and the window (Linux)", () => {
 describe.skipIf(!darwin)("the collector service and the window (macOS)", () => {
   test("off: the window loads the collector while it is open, and unloads it when the window closes", () => {
     collectorForWindow("opened", "off");
-    expect(printed.some((line) => line.startsWith("(skipped) launchctl load "))).toBe(true);
+    expect(printed.some((line) => line.startsWith("(skipped) launchctl bootstrap "))).toBe(true);
+    expect(printed.some((line) => line.startsWith("(skipped) launchctl kickstart "))).toBe(true);
     printed = [];
     collectorForWindow("closed", "off");
     expect(printed.some((line) => line.startsWith("(skipped) launchctl unload "))).toBe(true);
@@ -58,7 +59,8 @@ describe.skipIf(!darwin)("the collector service and the window (macOS)", () => {
 
   test.each(["game", "always"] as const)("%s: the LaunchAgent loads and stays active while the window is open", (mode) => {
     collectorForWindow("opened", mode);
-    expect(printed.some((line) => line.startsWith("(skipped) launchctl load "))).toBe(true);
+    expect(printed.some((line) => line.startsWith("(skipped) launchctl bootstrap "))).toBe(true);
+    expect(printed.some((line) => line.startsWith("(skipped) launchctl kickstart "))).toBe(true);
     printed = [];
     collectorForWindow("closed", mode);
     expect(printed).toEqual([]);
@@ -66,7 +68,8 @@ describe.skipIf(!darwin)("the collector service and the window (macOS)", () => {
 
   test("changed to off in Settings: keeps the collector running without making it start at login", () => {
     collectorForWindow("setting changed", "off");
-    expect(printed.some((line) => line.startsWith("(skipped) launchctl load "))).toBe(true);
+    expect(printed.some((line) => line.startsWith("(skipped) launchctl bootstrap "))).toBe(true);
+    expect(printed.some((line) => line.startsWith("(skipped) launchctl kickstart "))).toBe(true);
     expect(printed.some((line) => line.startsWith("(skipped) launchctl unload "))).toBe(false);
   });
 });

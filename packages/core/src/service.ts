@@ -18,14 +18,15 @@ const LAUNCH_AGENTS_DIR = "Library/LaunchAgents";
 
 export const darwinLaunchAgentPath = () => join(homedir(), LAUNCH_AGENTS_DIR, "replay-altar-collector.plist");
 
-export function darwinCollectorCommand(): string[] {
-  if (isInstalled()) return [process.execPath, join(projectRoot(), "collector/collector.mjs"), "collector"];
+export function darwinCollectorCommand(installed = isInstalled()): string[] {
+  if (installed) return [process.execPath, join(projectRoot(), "collector/collector.mjs"), "collector"];
   return [join(homedir(), ".local/bin/replay-altar"), "collector"];
 }
 
 /** A macOS LaunchAgent plist that starts the collector at login. */
-export function darwinLaunchAgent(binary: string, args: string[] = [], runAtLoad = true): string {
+export function darwinLaunchAgent(binary: string, args: string[] = [], runAtLoad = true, env: Record<string, string> = {}): string {
   const xml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+  const environment = Object.entries(env);
   return [
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
     "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">",
@@ -37,6 +38,12 @@ export function darwinLaunchAgent(binary: string, args: string[] = [], runAtLoad
     "  <array>",
     ...[binary, ...args].map((arg) => `  <string>${xml(arg)}</string>`),
     "  </array>",
+    ...(environment.length ? [
+      "  <key>EnvironmentVariables</key>",
+      "  <dict>",
+      ...environment.flatMap(([key, value]) => [`    <key>${xml(key)}</key>`, `    <string>${xml(value)}</string>`]),
+      "  </dict>",
+    ] : []),
     "  <key>RunAtLoad</key>",
     runAtLoad ? "  <true/>" : "  <false/>",
     "  <key>KeepAlive</key>",
@@ -48,7 +55,6 @@ export function darwinLaunchAgent(binary: string, args: string[] = [], runAtLoad
 
 export const collectorFiles = () => ({
   launcher: join(dataDir(), "bin/collector.vbs"),
-  macosPlist: join(dataDir(), "bin/replay-altar-collector.plist"),
   pid: join(dataDir(), "collector.pid"),
   log: join(dataDir(), "logs/collector.log"),
   /** The window's pid while it is open. */
@@ -188,17 +194,24 @@ function setLogin(on: boolean) {
 export function startCollector(atLogin: boolean) {
   if (darwin) {
     const plist = darwinLaunchAgentPath();
-    const [binary, ...args] = darwinCollectorCommand();
-    const agent = darwinLaunchAgent(binary, args, atLogin);
-    if (dryRun()) return console.log(`  (skipped) launchctl ${atLogin ? "load" : "load"} ${plist}`);
+    const installed = isInstalled();
+    const [binary, ...args] = darwinCollectorCommand(installed);
+    const env: Record<string, string> = installed ? { ELECTRON_RUN_AS_NODE: "1" } : {};
+    const agent = darwinLaunchAgent(binary, args, atLogin, env);
+    const uid = process.getuid?.() ?? 0;
+    if (dryRun()) {
+      console.log(`  (skipped) launchctl bootstrap gui/${uid} ${plist}`);
+      console.log(`  (skipped) launchctl kickstart gui/${uid}/replay-altar-collector`);
+      return;
+    }
     mkdirSync(dirname(plist), { recursive: true });
     writeFileSync(plist, agent);
-    const uid = process.getuid?.() ?? 0;
     try {
       execFileSync("launchctl", ["bootstrap", `gui/${uid}`, plist], { stdio: "inherit" });
     } catch {
       execFileSync("launchctl", ["load", "-w", plist], { stdio: "inherit" });
     }
+    execFileSync("launchctl", ["kickstart", `gui/${uid}/replay-altar-collector`], { stdio: "inherit" });
     return;
   }
   if (!windows) systemctl("daemon-reload"); // the unit file may have just been (re)written
@@ -264,10 +277,7 @@ export function disableCollector() {
  * the window closes, an "off" collector stops (a "game" one goes back to waiting by itself).
  */
 export function collectorForWindow(moment: "opened" | "setting changed" | "closed", mode: CollectorMode) {
-  if (moment !== "closed") {
-    if (darwin) return startCollector(mode !== "off");
-    return startCollector(mode !== "off");
-  }
+  if (moment !== "closed") return startCollector(mode !== "off");
   if (mode === "off") return stopCollector();
 }
 
