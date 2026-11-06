@@ -27,7 +27,13 @@ statistics (`data/`).
 - **Recurring strengths on Performance**, under the recurring problems: in how many of your wins
   and losses each strength showed, the trend of your last 5 games against the 5 before, and *Keep
   doing this*: the strength in most of your last 10 wins.
+- **A strength only where you did at least as well as your opponent:** strengths compare you with
+  pros, so one could show although your opponent did better in the same game.
 - **Shared reports open with the main strength** (Share on a game's page).
+- **The Priestess of the Moon's portrait** in a game's header is the game's own (it showed an old
+  picture of her mount); portraits already extracted are extracted again once.
+- **No blink after "Simulate again":** the game's page went blank ("Loading…") for a moment while
+  it reloaded, and lost its scroll position.
 - **AppImage: the taskbar shows Replay Altar's icon** (the window is linked to its menu entry on
   GNOME and KDE).
 - **Linux: the window no longer crashes at start when the shared font cache is broken** (seen on
