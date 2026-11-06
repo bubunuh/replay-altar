@@ -152,7 +152,7 @@ W3Champions' official numbers); what helped is in the list above.
   mark (levels changed in 30% of the 587 player-games with a tome), plus refused extra clicks in
   the re-spend; "the same skill twice" was already handled by the rank rules. The skill menu's
   openings (action 0x66) do bound the sessions, as suggested.
-- **Units per selected building:** *not applied, moved to the gold and lumber model (0.2.4).* It
+- **Units per selected building:** *not applied, moved to the gold and lumber model (0.3).* It
   exists: 9.6% of train clicks (176 W3Champions player-games) had 2 or more buildings of the type
   selected (types from the replay's own subgroup names). But the game refuses the copies it can't
   pay for or feed, and the replay doesn't say which: counted in full, spending − 500 went over the
@@ -215,9 +215,40 @@ W3Champions' official numbers); what helped is in the list above.
 
 ## Planned for 0.2.4
 
-- **Say what the player did well** (issue #6, a user on 0.2.2): the report reads as a list of
-  mistakes even for games you won; what went well is shown only at the end of the Findings. Give it
-  more room, for example strengths first in won games.
+Small, visible changes; the larger work moves to 0.3.
+
+- **What you did well comes first** (issue #6: "it starts to feel very negative", even in won
+  games). The strengths already exist: where your game beat most pro games of your matchup (better
+  than 60% of them, at most two, never one a finding contradicts), shown last in the Findings card.
+  Now:
+  - the Findings card opens with **What went well**, then what to work on;
+  - up to three strengths, each with a short name (like the problems' short names, in the four
+    languages) and its sentence, as today (your number, the opponent's, and the share of pro games it
+    beats);
+  - the one-sentence recap names the best strength first in a won game;
+  - checked like the findings, on the held-out player-games: each strength should show up more often
+    in wins than in losses; one that doesn't is left out.
+- **Match list: "Main strength" instead of APM.** The APM column goes (APM stays on the game's page
+  and on Performance); a **Main strength** column comes before **Main problem**, with the best
+  strength's short name and its sentence on hover, and "—" when there is none. A **Strength**
+  filter beside the Problem filter.
+- **Linux: a broken shared font cache no longer crashes the window** (done, above).
+
+Proposed, to confirm (each small):
+- **Recurring strengths on Performance**, beside the recurring problems: what you do well in most of
+  your games, from the same strengths.
+- **The share text** (Share on the game's page) starts with the main strength.
+- **WC3V from upstream:** our WC3V changes are merged upstream (jblanchette/wc3v #23 and #24, plus the
+  author's follow-ups to #24), so Replay Altar can use upstream WC3V and drop its 26 patches. Checked
+  on the 51 recorded games and the 3,626 regression replays; if the numbers move, the pro data is
+  simulated again (otherwise nothing changes for players).
+- **AppImage: the window grouped with its icon** (set `desktopName`, which electron-builder warns
+  about), so GNOME and KDE show Replay Altar's icon in the taskbar for the AppImage too.
+
+## Planned for 0.3
+
+The larger work, moved from 0.2.4: the gold and lumber model, recalibrations and new rules.
+
 - **Income model:** since 0.2.2 the second and third heroes count in the gold spent, and the
   mined-income model now often runs short early in the game (pros "spend" about 900 gold more than
   it estimates by 10:00), so the unspent gold reads 0 and the *unspent gold* finding stopped
@@ -228,7 +259,11 @@ W3Champions' official numbers); what helped is in the list above.
   recordings already hold gold, lumber, gold mined and lumber harvested at every snapshot, so they
   serve as ground truth; more recordings (more races, expansions, long games) as needed. The same
   model would let Replay Altar's own counts (units ordered, spending, build order) count a train
-  click once per selected building, which they can't do safely yet (see 0.2.2's checks).
+  click once per selected building, which they can't do safely yet (see 0.2.2's checks). First
+  measure the most it can gain: on the recorded games, refuse the orders the game's real gold,
+  lumber and food couldn't pay for, and score the army error; build the model only if that moves it
+  clearly. Its tests need new recordings (the 0.2.2 holdout is spent): expansions, long games,
+  Night Elf and Undead.
 - **Review the evaluation curve and the coaching rules on the better data:** refit the win-chance
   model on the ~500 current-patch pro games and validate it on the ~3,000 tournament games, as for
   0.2.0; re-score every rule held out (docs/RULES.md) and revisit which are shown.
