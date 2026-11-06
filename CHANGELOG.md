@@ -235,19 +235,22 @@ W3Champions' official numbers); what helped is in the list above.
 - **Linux AppImage**, alongside the Windows installer: one file, no Node, git or podman needed. On first start it sets up the background collector (a systemd user service), the `replay-altar` command and a menu entry, reads the game data with a built-in read-only extractor, and updates itself in place like the Windows version.
 - **Linux: Battle.net is found in more places:** Lutris folders under `~/Games`, `~/.wine`, Steam's Proton prefixes and Bottles, for both the replays and the game data.
 
-## Still to decide for 0.2.4
-
-- **WC3V from upstream:** our WC3V changes are merged upstream (jblanchette/wc3v #23 and #24), so
-  Replay Altar could use upstream WC3V and drop its 26 patches (branch ready). Upstream also has
-  the author's follow-ups to #24, which move unit deaths by up to about a second in almost every
-  game (244 of 251 checked): the army error stays the same (36 recorded games 70.9 → 71.0, the 15
-  others 78.1 → 76.3) and all 3,626 regression replays still simulate to the end. Switching means
-  simulating the pro data again and players importing their games again, for no gain in accuracy.
-
 ## Planned for 0.3
 
 The larger work, moved from 0.2.4: the gold and lumber model, recalibrations and new rules.
 
+- **WC3V from upstream:** our WC3V changes are merged upstream (jblanchette/wc3v #23 and #24), so
+  Replay Altar can use upstream WC3V and drop its 26 patches (ready on branch
+  `wc3v-upstream`, ec21018; a checkout needs `vendor/wc3v` reset, see its README). Upstream also has
+  the author's follow-ups to #24, which move unit deaths by up to about a second in almost every
+  game (244 of 251 checked): the army error stays the same (36 recorded games 70.9 → 71.0, the 15
+  others 78.1 → 76.3) and all 3,626 regression replays still simulate to the end. Moved from 0.2.4: switching
+  means simulating the pro data again and players importing their games again, which the gold and
+  lumber model needs anyway, so both go in together.
+- **"Food well used" as a strength:** it passes the held-out check for pros only weakly (47% of
+  wins, 31% of losses), and on one player's games it showed in 15 of 31 losses and 3 of 23 wins
+  (short or small games have little unused food). Study it closer, e.g. count it only from an
+  army of some size.
 - **Income model:** since 0.2.2 the second and third heroes count in the gold spent, and the
   mined-income model now often runs short early in the game (pros "spend" about 900 gold more than
   it estimates by 10:00), so the unspent gold reads 0 and the *unspent gold* finding stopped
