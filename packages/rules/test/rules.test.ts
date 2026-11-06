@@ -102,6 +102,11 @@ describe("strengths", () => {
     const keys = strengths(scored({ trade_efficiency: 0.4, workers_by_6m: 10 }), ref).map((x) => x.key);
     expect(keys).toEqual([]);
   });
+  test("not a strength: a number the opponent beat in the same game", () => {
+    const r = scored({ hero_xp_share: 10, units_killed: 9 });
+    r.players[1].metrics = { units_killed: 10 } as never;
+    expect(strengths(r, ref).map((x) => x.key)).toEqual(["hero_xp_share"]);
+  });
   test("heroes: the hero trade, only when you killed more heroes than you lost", () => {
     const deaths = { values: [0, 0, 0, 0, 1, 1, 1, 2, 2, 3], p50: 1 };
     const withHeroes = { mp: { metrics: { hero_deaths: deaths } } } as unknown as Parameters<typeof strengths>[1];

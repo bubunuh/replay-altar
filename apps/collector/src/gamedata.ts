@@ -28,10 +28,10 @@ const windows = process.platform === "win32";
 const TABLES = ["unitbalance.slk", "upgradedata.slk", "abilitydata.slk", "itemdata.slk", "unitweapons.slk", "unitdata.slk"].map((f) => `units\\${f}`).concat("units\\miscgame.txt");
 const RACES = ["human", "orc", "undead", "nightelf", "random"].map((r) => `webui\\versusmenu\\raceicons\\${r}-resting.png`);
 const FONT = "fonts\\frizqt__.ttf";
-/** Hero code to its command-card icon. */
+/** Hero code to its command-card icon. (btnheromoonpriestess is an old picture of the mount, not the hero's.) */
 const HEROES: Record<string, string> = {
   Hamg: "btnheroarchmage", Hmkg: "btnheromountainking", Hpal: "btnheropaladin", Hblm: "btnherobloodelfprince",
-  Edem: "btnherodemonhunter", Ekee: "btnkeeperofthegrove", Emoo: "btnheromoonpriestess", Ewar: "btnherowarden",
+  Edem: "btnherodemonhunter", Ekee: "btnkeeperofthegrove", Emoo: "btnpriestessofthemoon", Ewar: "btnherowarden",
   Obla: "btnheroblademaster", Ofar: "btnherofarseer", Otch: "btnherotaurenchieftain", Oshd: "btnshadowhunter",
   Udea: "btnherodeathknight", Udre: "btnherodreadlord", Ulic: "btnherolich", Ucrl: "btnherocryptlord",
   Npbm: "btnpandarenbrewmaster", Nbrn: "btnbansheeranger", Nngs: "btnnagaseawitch", Nplh: "btnpitlord",
@@ -142,6 +142,37 @@ export function restoreUnitBalance(): boolean {
   return true;
 }
 
+/** Raised when HEROES changes, so the portraits already extracted are extracted again (ensureHeroIcons). */
+const HERO_ICONS = "2";
+
+/** Hero portraits for the match header, decoded from DDS. */
+export function extractHeroIcons(wc3: string) {
+  const dir = join(dataDir(), "ui/heroes");
+  const raw = mkdtempSync(join(tmpdir(), "replay-altar-heroes-"));
+  try {
+    extract(wc3, raw, Object.values(HEROES).map((b) => `replaceabletextures\\commandbuttons\\${b}.dds`));
+    mkdirSync(dir, { recursive: true });
+    for (const [code, icon] of Object.entries(HEROES)) {
+      const dds = join(raw, `${icon}.dds`);
+      if (existsSync(dds)) writeFileSync(join(dir, `${code}.png`), encodePng(decodeDds(readFileSync(dds))));
+    }
+    writeFileSync(join(dir, "version"), HERO_ICONS);
+  } finally {
+    rmSync(raw, { recursive: true, force: true });
+  }
+}
+
+/** Portraits extracted by an older HEROES (the Priestess of the Moon's before 0.2.4) are extracted again. */
+export function heroIconsOutdated(): boolean {
+  const dir = join(dataDir(), "ui/heroes");
+  if (!existsSync(dir)) return false; // none yet: extractGameData makes them
+  try {
+    return readFileSync(join(dir, "version"), "utf8").trim() !== HERO_ICONS;
+  } catch {
+    return true;
+  }
+}
+
 export function extractGameData(wc3 = defaultWarcraftDir()) {
   if (!existsSync(join(wc3, ".build.info"))) throw new Error(`No Warcraft III install at ${wc3}`);
   const version = gameVersion(wc3);
@@ -161,18 +192,7 @@ export function extractGameData(wc3 = defaultWarcraftDir()) {
   // Race crests and the game's UI font (Friz Quadrata): kept with your data, never in the repo.
   extract(wc3, join(data, "ui/races"), RACES);
   extract(wc3, join(data, "ui/fonts"), [FONT]);
-  // Hero portraits for the match header, decoded from DDS.
-  const raw = mkdtempSync(join(tmpdir(), "replay-altar-heroes-"));
-  try {
-    extract(wc3, raw, Object.values(HEROES).map((b) => `replaceabletextures\\commandbuttons\\${b}.dds`));
-    mkdirSync(join(data, "ui/heroes"), { recursive: true });
-    for (const [code, icon] of Object.entries(HEROES)) {
-      const dds = join(raw, `${icon}.dds`);
-      if (existsSync(dds)) writeFileSync(join(data, "ui/heroes", `${code}.png`), encodePng(decodeDds(readFileSync(dds))));
-    }
-  } finally {
-    rmSync(raw, { recursive: true, force: true });
-  }
+  extractHeroIcons(wc3);
 
   // WC3V's converter reads ./UnitBalance.slk and writes ./UnitBalance.json (on Windows the
   // extracted unitbalance.slk is already that file: names are case-insensitive there).

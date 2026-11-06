@@ -199,6 +199,10 @@ function heroTrade(c: Ctx): { worseThan: number } | null {
   return { worseThan: 1 - percentileOf(pros, killed) };
 }
 
+/** Yours at least as good as theirs, by the metric's direction (theirs unknown: yes). */
+const atLeastAsGood = (better: "higher" | "lower", mine: number | null | undefined, theirs: number | null | undefined) =>
+  mine == null || theirs == null || (better === "higher" ? mine >= theirs : mine <= theirs);
+
 /** What went well: `key` the metric, `name` its short name, `text` the sentence, `share` the % of pro games beaten. */
 export type Strength = { key: string; name: string; text: string; share: number };
 
@@ -217,6 +221,8 @@ export function allStrengths(r: GameRecord, ref: FactsRef | null, found: Finding
     .filter((x) => x.g && (x.m.key === "hero_deaths" || x.g.worseThan <= 0.4))
     // Losing the trade isn't a strength, however it compares with pros.
     .filter((x) => x.m.key !== "trade_efficiency" || (me.metrics.trade_efficiency ?? 0) > 0.5)
+    // Nor is a number your opponent beat in the same game ("you 14.8, opp 12.3, better than 62% of pro games").
+    .filter((x) => x.m.key === "hero_deaths" || atLeastAsGood(x.m.better!, me.metrics[x.m.key], opp.metrics[x.m.key]))
     .sort((a, b) => a.g!.worseThan - b.g!.worseThan)
     .map(({ m, g }): Strength => {
       const label = localizeMetric(m).raceLabels?.[me.race as RaceCode] ?? localizeMetric(m).label;

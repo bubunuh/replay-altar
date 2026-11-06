@@ -100,7 +100,8 @@ you led in army all game.
 
 The report opens with what went well: up to three core metrics where the game beat most pro
 games of the matchup (`strengths` in `findings.ts`), skipping any that a finding shown for the
-same game contradicts, and a lost trade. The match list shows the first as "Main strength".
+same game contradicts, a lost trade, and any number the opponent beat in the same game (the table
+below counts with that rule; the rows of those left out are from before it). The match list shows the first as "Main strength".
 Heroes count as the trade, not your losses alone: "Won the hero trade" when you killed more heroes
 than you lost. Losing none qualified in 62% of player-games (wins 71%, losses 53%), mostly short
 losses, games over before the fights, so it praised little; checked on a user's games too (won 35%
@@ -114,13 +115,13 @@ of the difference above 0, and in at least 1% of games.
 |---|---|---|---|---|
 | hero_xp_share | 60% | 9% | +50.8 (+43.0 to +58.6) | 34.1% |
 | trade_efficiency | 60% | 19% | +40.6 (+32.0 to +49.2) | 39.2% |
-| hero_xp_6m | 34% | 14% | +20.8 (+12.8 to +28.9) | 24.0% |
-| hero_xp_10m | 35% | 17% | +18.4 (+10.1 to +26.7) | 25.7% |
-| units_killed | 36% | 18% | +18.4 (+10.0 to +26.8) | 26.7% |
+| hero_xp_6m | 26% | 6% | +19.3 (+12.4 to +26.1) | 15.9% |
+| hero_xp_10m | 29% | 11% | +17.8 (+10.3 to +25.4) | 19.6% |
+| units_killed | 34% | 13% | +21.3 (+13.4 to +29.3) | 23.3% |
 | hero_deaths, as the hero trade | 32% | 20% | +12.0 (+3.6 to +20.4) | 25.5% |
 | unused_supply_avg | 47% | 31% | +16.1 (+6.7 to +25.4) | 39.2% (left out for now: weak, mostly short or small games; to study in 0.3) |
-| hero_level3_ms | 27% | 12% | +14.9 (+7.4 to +22.4) | 19.1% |
-| creep_camps_6m | 30% | 18% | +12.5 (+4.3 to +20.7) | 23.8% |
+| hero_level3_ms | 21% | 6% | +14.8 (+8.4 to +21.3) | 13.2% |
+| creep_camps_6m | 26% | 12% | +13.4 (+5.9 to +20.9) | 18.9% |
 | gold_collected | 33% | 26% | +6.7 (-2.2 to +15.5) | 29.7% (not a strength) |
 | workers_alive_6m | 36% | 32% | +4.3 (-4.9 to +13.4) | 33.8% (not a strength) |
 | goal_3360_ms | 11% | 7% | +4.0 (-1.5 to +9.5) | 8.8% (not a strength) |
