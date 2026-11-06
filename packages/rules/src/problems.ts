@@ -48,7 +48,6 @@ export const STRENGTH_NAME: Record<string, string> = trTable({
   creep_camps_6m: ["Early creeping", "Creep cedo", "Creep temprano", "Creep précoce"],
   units_killed: ["Units killed", "Unidades abatidas", "Unidades eliminadas", "Unités tuées"],
   trade_efficiency: ["Efficient trades", "Trocas eficientes", "Intercambios eficientes", "Échanges efficaces"],
-  unused_supply_avg: ["Food well used", "Food bem usado", "Food bien aprovechado", "Food bien utilisée"],
   hero_deaths: ["Won the hero trade", "Venceu a troca de heróis", "Ganó el intercambio de héroes", "Échange de héros gagné"],
 });
 

@@ -13,8 +13,9 @@ statistics (`data/`).
   of them), then what to work on. A won game's summary names the best one first. Each strength
   was checked like the findings, on 408 pro player-games it wasn't tuned on: it has to show up
   clearly more often in wins than in losses. Five didn't and are no longer shown (gold collected,
-  workers by 6:00, workers alive at 6:00 and 10:00, 3-3-60); nine are kept, from *Hero experience
-  lead* (in 60% of wins, 9% of losses) to *Early creeping* (30% and 18%).
+  workers by 6:00, workers alive at 6:00 and 10:00, 3-3-60); eight are kept, from *Hero experience
+  lead* (in 60% of wins, 9% of losses) to *Early creeping* (30% and 18%). Unused food ("Food
+  left over") is no longer shown as a strength either, until it is studied for 0.3.
 - **"Won the hero trade" instead of "Heroes kept alive":** losing no hero counted as a strength in
   62% of pro games, mostly in short losses that ended before the fights, so it praised little (on
   one player's games, they won 35% of the games where it showed). It now shows when you killed more

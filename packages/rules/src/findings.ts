@@ -35,6 +35,9 @@ const NOT_STRENGTHS = new Set([
   // (95% interval of wins minus losses includes 0): goal_3360_ms +4.0 points (-1.5 to +9.5), gold_collected +6.7 (-2.2 to +15.5),
   // workers_alive_10m +3.6 (-4.2 to +11.4), workers_alive_6m +4.3 (-4.9 to +13.4), workers_by_6m +1.7 (-6.7 to +10.1).
   "goal_3360_ms", "gold_collected", "workers_alive_10m", "workers_alive_6m", "workers_by_6m",
+  // Little unused food passes the check only weakly (wins 47%, losses 31%), comes mostly in short or
+  // small games, and reads as if food were a resource to keep; left out until it is studied (0.3).
+  "unused_supply_avg",
 ]);
 /** Per race: Undead mine with 5 Acolytes, so more early Acolytes mean an expansion, not better play. */
 const NOT_STRENGTHS_FOR: Partial<Record<RaceCode, Set<string>>> = { U: new Set(["workers_by_6m"]) };

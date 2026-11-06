@@ -118,7 +118,7 @@ of the difference above 0, and in at least 1% of games.
 | hero_xp_10m | 35% | 17% | +18.4 (+10.1 to +26.7) | 25.7% |
 | units_killed | 36% | 18% | +18.4 (+10.0 to +26.8) | 26.7% |
 | hero_deaths, as the hero trade | 32% | 20% | +12.0 (+3.6 to +20.4) | 25.5% |
-| unused_supply_avg | 47% | 31% | +16.1 (+6.7 to +25.4) | 39.2% |
+| unused_supply_avg | 47% | 31% | +16.1 (+6.7 to +25.4) | 39.2% (left out for now: weak, mostly short or small games; to study in 0.3) |
 | hero_level3_ms | 27% | 12% | +14.9 (+7.4 to +22.4) | 19.1% |
 | creep_camps_6m | 30% | 18% | +12.5 (+4.3 to +20.7) | 23.8% |
 | gold_collected | 33% | 26% | +6.7 (-2.2 to +15.5) | 29.7% (not a strength) |
