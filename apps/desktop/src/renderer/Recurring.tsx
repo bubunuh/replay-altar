@@ -14,7 +14,7 @@ export function Recurring({ games, onOpen }: { games: PerfGame[]; onOpen: (key: 
   }, [games.length]);
 
   const problems = useMemo(() => (all ? recurringView(games, all) : null), [all, games]);
-  const strengths = useMemo(() => (all ? recurringView(games, all, strengthItems) : null), [all, games]);
+  const strengths = useMemo(() => (all ? recurringView(games, all, strengthItems, true) : null), [all, games]);
   return (
     <>
       {problems && <RecurringCard view={problems} strengths={false} onOpen={onOpen} />}
@@ -45,7 +45,11 @@ function RecurringCard({ view, strengths, onOpen }: { view: RecurringView; stren
         <p className="one-thing">
           <b>{strengths ? tr("Keep doing this", "Continue assim", "Sigue así", "Continuez ainsi") : tr("Work on this now", "Trabalhe nisto agora", "Trabaja en esto ahora", "À travailler maintenant")}</b>
           <br />
-          {name(view.focus.id)}: {tr(`in ${view.focus.n} of your last ${view.last10} games.`, `em ${view.focus.n} das suas últimas ${view.last10} partidas.`, `en ${view.focus.n} de tus últimas ${view.last10} partidas.`, `dans ${view.focus.n} de vos ${view.last10} dernières parties.`)} {view.focusRow?.advice}
+          {name(view.focus.id)}:{" "}
+          {strengths
+            ? tr(`in ${view.focus.n} of your last ${view.last10} wins.`, `em ${view.focus.n} das suas últimas ${view.last10} vitórias.`, `en ${view.focus.n} de tus últimas ${view.last10} victorias.`, `dans ${view.focus.n} de vos ${view.last10} dernières victoires.`)
+            : tr(`in ${view.focus.n} of your last ${view.last10} games.`, `em ${view.focus.n} das suas últimas ${view.last10} partidas.`, `en ${view.focus.n} de tus últimas ${view.last10} partidas.`, `dans ${view.focus.n} de vos ${view.last10} dernières parties.`)}{" "}
+          {view.focusRow?.advice}
         </p>
       )}
       <table>

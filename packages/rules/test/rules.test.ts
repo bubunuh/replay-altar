@@ -102,6 +102,19 @@ describe("strengths", () => {
     const keys = strengths(scored({ trade_efficiency: 0.4, workers_by_6m: 10 }), ref).map((x) => x.key);
     expect(keys).toEqual([]);
   });
+  test("heroes: the hero trade, only when you killed more heroes than you lost", () => {
+    const deaths = { values: [0, 0, 0, 0, 1, 1, 1, 2, 2, 3], p50: 1 };
+    const withHeroes = { mp: { metrics: { hero_deaths: deaths } } } as unknown as Parameters<typeof strengths>[1];
+    const trade = (mine: number, theirs: number) => {
+      const r = scored({ hero_deaths: mine });
+      r.players[1].metrics = { hero_deaths: theirs } as never;
+      return strengths(r, withHeroes);
+    };
+    expect(trade(1, 3)).toMatchObject([{ key: "hero_deaths", name: "Won the hero trade" }]);
+    expect(trade(1, 3)[0].text).toMatch(/^Hero trade: you killed .*3 heroes and lost .*1\.$/);
+    expect(trade(0, 0)).toEqual([]);
+    expect(trade(2, 1)).toEqual([]);
+  });
 });
 
 describe("openings", () => {

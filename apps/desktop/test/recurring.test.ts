@@ -46,7 +46,7 @@ describe("recurring problems", () => {
 });
 
 describe("recurring strengths", () => {
-  const view = recurringView(games, all, strengthItems);
+  const view = recurringView(games, all, strengthItems, true);
   const row = (id: string) => view.rows.find((r) => r.id === id)!;
 
   test("counts each strength in losses and in wins, with the trend of the last 5 against the 5 before", () => {
@@ -56,12 +56,13 @@ describe("recurring strengths", () => {
     expect(row("kills").latest).toBe("g11");
   });
 
-  test("keep doing this: the strength in most of the last 10 games", () => {
-    expect(view.focus).toMatchObject({ id: "kills", n: 7 });
-    expect(view.last10).toBe(10);
+  test("most wins first; keep doing this: the strength in most of the last 10 wins", () => {
+    expect(view.rows.map((r) => r.id)).toEqual(["kills", "heroes_up"]);
+    expect(view.focus).toMatchObject({ id: "kills", n: 2 });
+    expect(view.last10).toBe(5);
   });
 
   test("no rows without strengths", () => {
-    expect(recurringView(games, all.map((g) => ({ ...g, strengths: [] })), strengthItems).rows).toEqual([]);
+    expect(recurringView(games, all.map((g) => ({ ...g, strengths: [] })), strengthItems, true).rows).toEqual([]);
   });
 });
