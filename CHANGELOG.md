@@ -32,10 +32,10 @@ statistics (`data/`).
 - **Shared reports open with the main strength** (Share on a game's page).
 - **The Priestess of the Moon's portrait** in a game's header is the game's own (it showed an old
   picture of her mount); portraits already extracted are extracted again once.
-- **Evaluation curve: a swing that ends during a fight runs to the fight's end,** and the curve
-  reaches the end of the game. The simulation counts each side's dead at slightly different
+- **Evaluation curve: a swing that ends during a fight runs to the fight's end** (and a fight the
+  game ended in gives none). The simulation counts each side's dead at slightly different
   moments, so halfway through a fight the curve could drop for a fight the other side lost more
-  in, and its explanation read "you lost more" next to "you lost ≈605, they lost ≈860" (37% of
+  in, and its explanation read "you lost more" next to "you lost ≈605, they lost ≈860" (35% of
   the swings on one player's games now cover a whole fight).
 - **No blink after "Simulate again":** the game's page went blank ("Loading…") for a moment while
   it reloaded, and lost its scroll position.
@@ -259,6 +259,10 @@ The larger work, moved from 0.2.4: the gold and lumber model, recalibrations and
   others 78.1 → 76.3) and all 3,626 regression replays still simulate to the end. Moved from 0.2.4: switching
   means simulating the pro data again and players importing their games again, which the gold and
   lumber model needs anyway, so both go in together.
+- **Armies that "die" as the game ends:** in 14 of 105 player-games on one player's PC, an army
+  loses more than half its value in the last 10 seconds, mostly the winner's (1410 → 235 at the
+  end of a won game): the simulation counts units as lost when the game ends, not in a fight. The
+  army chart's last point and the resources lost at the end read too high. For the WC3V lab.
 - **"Food well used" as a strength:** it passes the held-out check for pros only weakly (47% of
   wins, 31% of losses), and on one player's games it showed in 15 of 31 losses and 3 of 23 wins
   (short or small games have little unused food). Study it closer, e.g. count it only from an
