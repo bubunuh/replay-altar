@@ -1,7 +1,7 @@
 // Shapes of the rules' report (browser-safe: the window imports these).
-import type { Finding } from "./findings.ts";
+import type { Finding, Strength } from "./findings.ts";
 
-export type { Finding };
+export type { Finding, Strength };
 
 /** The rules' output for one game; problem says why there is none. */
 export type RulesBook = {
@@ -13,7 +13,7 @@ export type RulesBook = {
   turningPoint: string | null;
   /** The top finding's advice. */
   oneThing: string | null;
-  strengths: string[];
+  strengths: Strength[];
   opponentPlan: string[];
   facts: string;
 };

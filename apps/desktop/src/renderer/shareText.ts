@@ -31,7 +31,7 @@ export function shareText(r: GameRecord, me: PlayerRecord, opp: PlayerRecord, re
       });
     }
     if (book.turningPoint) lines.push("", `**${tr("Turning point", "Momento decisivo", "Momento decisivo", "Tournant")}:** ${book.turningPoint}`);
-    if (book.strengths.length) lines.push("", `**${tr("Strengths", "Pontos fortes", "Puntos fuertes", "Points forts")}:** ${book.strengths.join(" ")}`);
+    if (book.strengths.length) lines.push("", `**${tr("Strengths", "Pontos fortes", "Puntos fuertes", "Points forts")}:** ${book.strengths.map((x) => x.text).join(" ")}`);
   }
   lines.push("", `*${tr("Analyzed with Replay Altar", "Analisado com o Replay Altar", "Analizado con Replay Altar", "Analysé avec Replay Altar")}: ${PROJECT_URL}*`);
   return lines.join("\n");

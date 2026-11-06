@@ -11,6 +11,7 @@ import { tr } from "@replay-altar/core/i18n";
 import { metricValue, type FactsRef } from "./facts.ts";
 import { openingOf } from "./openings.ts";
 import { expansionsOf, fightLosses, levelSum, mmss } from "./series.ts";
+import { strengthName } from "./problems.ts";
 import { adviceFor } from "./advice.ts";
 import { armyMix, mixValue } from "./combat.ts";
 import { num, proGap, simHeroes, type Ctx, type Finding } from "./rules/shared.ts";
@@ -23,10 +24,17 @@ export { heroStall } from "./rules/core.ts";
 
 const MIN_SEVERITY = 0.5;
 const MAX_FINDINGS = 3;
+const MAX_STRENGTHS = 3;
 /** Shorter games (someone left early) say nothing about how you play. */
 export const MIN_GAME_MS = 180_000;
 /** Core metrics that are not skills worth praising (being attacked less is not your doing). */
-const NOT_STRENGTHS = new Set(["fights_defending"]);
+const NOT_STRENGTHS = new Set([
+  "fights_defending",
+  // Held out (node scripts/eval-findings.ts --holdout --strengths, 408 pro perspectives): fires as often in losses as in wins
+  // (95% interval of wins minus losses includes 0): goal_3360_ms +4.0 points (-1.5 to +9.5), gold_collected +6.7 (-2.2 to +15.5),
+  // workers_alive_10m +3.6 (-4.2 to +11.4), workers_alive_6m +4.3 (-4.9 to +13.4), workers_by_6m +1.7 (-6.7 to +10.1).
+  "goal_3360_ms", "gold_collected", "workers_alive_10m", "workers_alive_6m", "workers_by_6m",
+]);
 /** Per race: Undead mine with 5 Acolytes, so more early Acolytes mean an expansion, not better play. */
 const NOT_STRENGTHS_FOR: Partial<Record<RaceCode, Set<string>>> = { U: new Set(["workers_by_6m"]) };
 
@@ -162,7 +170,6 @@ export const findings = (r: GameRecord, ref: FactsRef | null, subjectId?: number
   return mech ? [...top, mech] : top;
 };
 
-/** Core metrics at pro level, best first: what went well (at most 2). */
 /** Strengths that would contradict a finding shown for the same game (found in scripts/scan-reports.ts). */
 const COVERED_BY: Record<string, string[]> = {
   heroes: ["hero_xp_6m", "hero_xp_10m", "hero_xp_share", "hero_level3_ms", "goal_3360_ms", "creep_camps_6m", "hero2_ms", "hero3_ms"],
@@ -176,7 +183,14 @@ const COVERED_BY: Record<string, string[]> = {
   mine_dry: ["expansions", "gold_collected"],
 };
 
-export function strengths(r: GameRecord, ref: FactsRef | null, found: Finding[] = []): string[] {
+/** What went well: `key` the metric, `name` its short name, `text` the sentence, `share` the % of pro games beaten. */
+export type Strength = { key: string; name: string; text: string; share: number };
+
+/** Core metrics at pro level, best first: what went well (at most 3). */
+export const strengths = (r: GameRecord, ref: FactsRef | null, found: Finding[] = []) => allStrengths(r, ref, found).slice(0, MAX_STRENGTHS);
+
+/** Every strength that qualifies, best first (before the cut to the top few; scripts/eval-findings.ts counts them). */
+export function allStrengths(r: GameRecord, ref: FactsRef | null, found: Finding[] = []): Strength[] {
   const covered = new Set(found.flatMap((f) => COVERED_BY[f.id] ?? []));
   const me = r.players.find((p) => p.isMe);
   const opp = r.players.find((p) => p.playerId === r.classification.opponentId);
@@ -188,12 +202,12 @@ export function strengths(r: GameRecord, ref: FactsRef | null, found: Finding[] 
     // Losing the trade isn't a strength, however it compares with pros.
     .filter((x) => x.m.key !== "trade_efficiency" || (me.metrics.trade_efficiency ?? 0) > 0.5)
     .sort((a, b) => a.g!.worseThan - b.g!.worseThan)
-    .slice(0, 2)
-    .map(({ m, g }) => {
+    .map(({ m, g }): Strength => {
       const label = localizeMetric(m).raceLabels?.[me.race as RaceCode] ?? localizeMetric(m).label;
       const [mine, theirs] = [metricValue(m, me.metrics[m.key], r.metricSources?.[m.key] === "official"), metricValue(m, opp.metrics[m.key], r.metricSources?.[m.key] === "official")];
       const share = Math.round((1 - g!.worseThan) * 100);
-      return tr(`${label}: you ${mine}, opp ${theirs}, better than ${share}% of pro games.`, `${label}: você ${mine}, oponente ${theirs}, melhor que ${share}% das partidas de pros.`, `${label}: tú ${mine}, rival ${theirs}, mejor que el ${share}% de las partidas de pros.`, `${label} : vous ${mine}, adversaire ${theirs}, mieux que ${share} % des parties de pros.`);
+      const text = tr(`${label}: you ${mine}, opp ${theirs}, better than ${share}% of pro games.`, `${label}: você ${mine}, oponente ${theirs}, melhor que ${share}% das partidas de pros.`, `${label}: tú ${mine}, rival ${theirs}, mejor que el ${share}% de las partidas de pros.`, `${label} : vous ${mine}, adversaire ${theirs}, mieux que ${share} % des parties de pros.`);
+      return { key: m.key, name: strengthName(m.key), text, share };
     });
 }
 

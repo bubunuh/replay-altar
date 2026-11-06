@@ -6,13 +6,15 @@
 //   node scripts/eval-findings.ts --holdout   (thresholds mined from half the games, scored on the other half)
 //   node scripts/eval-findings.ts --holdout --pool validation   (the same, with the validation games
 //                                                pooled into the mining and the scoring, as shipped)
+//   node scripts/eval-findings.ts --holdout --strengths   (instead of the rules: how often each strength
+//                                                qualifies in wins and in losses, with a 95% interval)
 //   node scripts/eval-findings.ts --validation   (the shipped thresholds, scored on the validation set's
 //                                                tournament games, 2022 to today: scripts/download-validation.ts)
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
 import { openDb, paths, referencePaths, readRecord, listGames, type GameRecord } from "@replay-altar/core";
-import { loadRefGroups, refFor as refForPlayers } from "../packages/rules/src/context.ts";
-import { allFindings, SHOWN_RULES } from "../packages/rules/src/findings.ts";
+import { asPlayer, loadRefGroups, refFor as refForPlayers } from "../packages/rules/src/context.ts";
+import { allFindings, allStrengths, findings, SHOWN_RULES } from "../packages/rules/src/findings.ts";
 import { execFileSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -29,7 +31,10 @@ const refFor = (r: GameRecord, pid: number) => {
   return refForPlayers(groups, me, r.players.find((p) => p.playerId !== pid)!);
 };
 
-type Row = { game: string; race: string; win: boolean; ids: string[]; top: string[] };
+type Row = { game: string; race: string; win: boolean; ids: string[]; top: string[]; good: string[] };
+// --strengths: the metrics that qualify as a strength (before the cut to the top three), as the report works them out.
+const STRENGTHS = process.argv.includes("--strengths");
+const goodOf = (r: GameRecord, playerId: number) => (STRENGTHS ? allStrengths(asPlayer(r, playerId), refFor(r, playerId), findings(r, refFor(r, playerId), playerId)).map((x) => x.key) : []);
 const rows: Row[] = [];
 // --validation: every player of every validation game, against the pros of their race.
 const VALIDATION = process.argv.includes("--validation");
@@ -45,7 +50,7 @@ if (VALIDATION || POOL) {
       } catch {
         continue; // a broken simulation
       }
-      rows.push({ game: r.gameKey, race: p.race, win: p.result === "win", ids: found.map((x) => x.id), top: found.filter((x) => SHOWN_RULES.has(x.id)).slice(0, 3).map((x) => x.id) });
+      rows.push({ game: r.gameKey, race: p.race, win: p.result === "win", ids: found.map((x) => x.id), top: found.filter((x) => SHOWN_RULES.has(x.id)).slice(0, 3).map((x) => x.id), good: goodOf(r, p.playerId) });
     }
   }
 }
@@ -58,15 +63,29 @@ for (const { group, profile } of VALIDATION ? [] : groups) {
     // Both players of the group's race (the profile is for that race).
     for (const p of r.players.filter((x) => x.race === group.race && (x.result === "win" || x.result === "loss"))) {
       const found = allFindings(r, refFor(r, p.playerId), p.playerId, { all: true });
-      rows.push({ game: r.gameKey, race: p.race, win: p.result === "win", ids: found.map((x) => x.id), top: found.filter((x) => SHOWN_RULES.has(x.id)).slice(0, 3).map((x) => x.id) });
+      rows.push({ game: r.gameKey, race: p.race, win: p.result === "win", ids: found.map((x) => x.id), top: found.filter((x) => SHOWN_RULES.has(x.id)).slice(0, 3).map((x) => x.id), good: goodOf(r, p.playerId) });
     }
   }
 }
 const wins = rows.filter((r) => r.win), losses = rows.filter((r) => !r.win);
 console.log(`pro perspectives: ${rows.length} (${wins.length} wins, ${losses.length} losses)\n`);
+const pct = (x: number) => `${Math.round(x * 100)}%`.padStart(4);
+if (STRENGTHS) {
+  // Difference of the two rates with a 95% interval (normal approximation); a key passes when the
+  // whole interval is above 0 and it fires in at least 1% of the player-games.
+  console.log("strength".padEnd(20), "| wins  losses | difference (95% interval) | overall | verdict");
+  for (const key of [...new Set(rows.flatMap((r) => r.good))].sort()) {
+    const [pw, pl] = [wins.filter((r) => r.good.includes(key)).length / wins.length, losses.filter((r) => r.good.includes(key)).length / losses.length];
+    const overall = rows.filter((r) => r.good.includes(key)).length / rows.length;
+    const d = pw - pl, se = Math.sqrt((pw * (1 - pw)) / wins.length + (pl * (1 - pl)) / losses.length);
+    const [lo, hi] = [d - 1.96 * se, d + 1.96 * se];
+    const f = (x: number) => `${x >= 0 ? "+" : ""}${(x * 100).toFixed(1)}`;
+    console.log(key.padEnd(20), `| ${pct(pw)}   ${pct(pl)}  | ${f(d).padStart(6)} (${f(lo)} to ${f(hi)})`.padEnd(30), `| ${(overall * 100).toFixed(1).padStart(5)}%  | ${lo > 0 && overall >= 0.01 ? "ok" : "FAILS"}`);
+  }
+  process.exit(0);
+}
 const ids = [...new Set(rows.flatMap((r) => r.ids))];
 const rate = (set: Row[], id: string) => set.filter((r) => r.ids.includes(id)).length / Math.max(1, set.length);
-const pct = (x: number) => `${Math.round(x * 100)}%`.padStart(4);
 const lift = (w: number, l: number) => (w > 0 ? (l / w).toFixed(1) : l > 0 ? "inf" : "-");
 const races = [...new Set(rows.map((r) => r.race))];
 // 95% range of each lift, resampling whole games (both players of a game stay together).

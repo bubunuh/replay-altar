@@ -433,7 +433,8 @@ if (fontRestart) {
     for (const [i, g] of games.entries()) {
       // Other requests get through now and then: hundreds of games not worked out yet take a while.
       if (i % 25 === 24) await new Promise((r) => setImmediate(r));
-      out.push({ key: g.game_key, playedAt: g.played_at, result: g.result, findings: bookOf(g.game_key).findings.map((f) => ({ id: f.id, headline: f.headline, severity: f.severity, advice: f.advice ?? null })) });
+      const book = bookOf(g.game_key);
+      out.push({ key: g.game_key, playedAt: g.played_at, result: g.result, findings: book.findings.map((f) => ({ id: f.id, headline: f.headline, severity: f.severity, advice: f.advice ?? null })), strengths: book.strengths.map((s) => ({ key: s.key, name: s.name, text: s.text })) });
     }
     return out;
   });

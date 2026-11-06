@@ -53,6 +53,6 @@ found.forEach((f, i) => {
   if (f.advice) console.log(`   next: ${f.advice}`);
 });
 console.log(`turning point: ${turningPoint(view, subject, opp, result)?.text ?? "none"}`);
-console.log(`strengths: ${good.join(" | ") || "none"}`);
+console.log(`strengths: ${good.map((x) => x.text).join(" | ") || "none"}`);
 console.log(`opponent: ${opponentPlan(view, ref).join(" ")}`);
 console.log(`\n${gameFacts(view, { result, ref }).replace(/\n### Mechanics[\s\S]*$/, "")}`);

@@ -96,6 +96,36 @@ The same script flags suspect reports for review: losses with no finding or only
 strengths that contradict a shown finding (now removed from the strengths), and losses where
 you led in army all game.
 
+## Strengths
+
+The report opens with what went well: up to three core metrics where the game beat most pro
+games of the matchup (`strengths` in `findings.ts`), skipping any that a finding shown for the
+same game contradicts, and a lost trade. The match list shows the first as "Main strength".
+Each metric was checked on held-out pro games like the rules above
+(`node scripts/eval-findings.ts --holdout --strengths`: 408 player-games, 203 wins and 205
+losses): a strength has to qualify more often in wins than in losses, with the whole 95% interval
+of the difference above 0, and in at least 1% of games.
+
+| strength | in wins | in losses | difference (95% interval) | overall |
+|---|---|---|---|---|
+| hero_xp_share | 60% | 9% | +50.8 (+43.0 to +58.6) | 34.1% |
+| trade_efficiency | 60% | 19% | +40.6 (+32.0 to +49.2) | 39.2% |
+| hero_xp_6m | 34% | 14% | +20.8 (+12.8 to +28.9) | 24.0% |
+| hero_deaths | 71% | 53% | +18.7 (+9.5 to +28.0) | 62.0% |
+| hero_xp_10m | 35% | 17% | +18.4 (+10.1 to +26.7) | 25.7% |
+| units_killed | 36% | 18% | +18.4 (+10.0 to +26.8) | 26.7% |
+| unused_supply_avg | 47% | 31% | +16.1 (+6.7 to +25.4) | 39.2% |
+| hero_level3_ms | 27% | 12% | +14.9 (+7.4 to +22.4) | 19.1% |
+| creep_camps_6m | 30% | 18% | +12.5 (+4.3 to +20.7) | 23.8% |
+| gold_collected | 33% | 26% | +6.7 (-2.2 to +15.5) | 29.7% (not a strength) |
+| workers_alive_6m | 36% | 32% | +4.3 (-4.9 to +13.4) | 33.8% (not a strength) |
+| goal_3360_ms | 11% | 7% | +4.0 (-1.5 to +9.5) | 8.8% (not a strength) |
+| workers_alive_10m | 22% | 19% | +3.6 (-4.2 to +11.4) | 20.3% (not a strength) |
+| workers_by_6m | 26% | 24% | +1.7 (-6.7 to +10.1) | 25.2% (not a strength) |
+
+Pros reach the same worker counts and gold in wins and losses, so those are no longer praised
+(`NOT_STRENGTHS`).
+
 ## Around the findings (no model needed)
 
 `packages/rules/src/report.ts`, `advice.ts`, and `becauseFor` in `findings.ts`:

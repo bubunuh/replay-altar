@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { api, type GameFindings } from "../api.ts";
 import type { GameRow } from "@replay-altar/core/ui";
-import { dateTime, mmss, problemName, RACE, shortName, SOURCE } from "../format.ts";
+import { dateTime, mmss, problemName, RACE, shortName, SOURCE, strengthName } from "../format.ts";
 import { RaceIcon } from "../RaceIcon.tsx";
 import { locale, tr } from "@replay-altar/core/i18n";
 import { ReplayFolders } from "./Other.tsx";
@@ -17,10 +17,10 @@ let kept: ListState = NO_FILTER;
 export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: string) => void }) {
   const [list, setList] = useState(kept);
   const change = (c: Partial<ListState>) => setList((before) => (kept = changeList(before, c)));
-  const { source, result, oppRace, q, problem, page } = list;
-  const [found, setFound] = useState<Map<string, GameFindings["findings"]>>(new Map());
+  const { source, result, oppRace, q, problem, strength, page } = list;
+  const [found, setFound] = useState<Map<string, GameFindings>>(new Map());
   useEffect(() => {
-    api.findingsSummary().then((list) => setFound(new Map(list.map((g) => [g.key, g.findings]))));
+    api.findingsSummary().then((list) => setFound(new Map(list.map((g) => [g.key, g]))));
   }, [games]);
   // Replays found before you confirmed your battletag are kept, but none of them is yours yet.
   const [noBattletag, setNoBattletag] = useState(false);
@@ -30,8 +30,14 @@ export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: str
   // Problems that come up in the reports (the top three each), most frequent first.
   const problems = useMemo(() => {
     const n = new Map<string, number>();
-    for (const f of found.values()) for (const x of f.slice(0, 3)) n.set(x.id, (n.get(x.id) ?? 0) + 1);
+    for (const g of found.values()) for (const x of g.findings.slice(0, 3)) n.set(x.id, (n.get(x.id) ?? 0) + 1);
     return [...n.entries()].sort((a, b) => b[1] - a[1]).map(([id]) => id);
+  }, [found]);
+  // The same for the strengths the reports show.
+  const strengths = useMemo(() => {
+    const n = new Map<string, number>();
+    for (const g of found.values()) for (const x of g.strengths) n.set(x.key, (n.get(x.key) ?? 0) + 1);
+    return [...n.entries()].sort((a, b) => b[1] - a[1]).map(([key]) => key);
   }, [found]);
 
   const rows = useMemo(
@@ -42,10 +48,11 @@ export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: str
           (source === "all" || g.source === source) &&
           (result === "all" || g.result === result) &&
           (oppRace === "all" || g.opp_race === oppRace) &&
-          (problem === "all" || (found.get(g.game_key) ?? []).slice(0, 3).some((f) => f.id === problem)) &&
+          (problem === "all" || (found.get(g.game_key)?.findings ?? []).slice(0, 3).some((f) => f.id === problem)) &&
+          (strength === "all" || (found.get(g.game_key)?.strengths ?? []).some((x) => x.key === strength)) &&
           (!q || `${g.opp_name} ${g.map_name} ${g.user_label ?? ""}`.toLowerCase().includes(q.toLowerCase())),
       ),
-    [games, source, result, oppRace, q, problem, found],
+    [games, source, result, oppRace, q, problem, strength, found],
   );
   // Newest first (the list comes sorted), PAGE_SIZE at a time; the filters and counts take every game.
   const shown = pageOf(rows, page);
@@ -98,6 +105,15 @@ export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: str
             ))}
           </select>
         </label>
+        <label>
+          {tr("Strength", "Ponto forte", "Punto fuerte", "Point fort")}
+          <select value={strength} onChange={(e) => change({ strength: e.target.value })}>
+            <option value="all">{tr("All", "Todos", "Todos", "Tous")}</option>
+            {strengths.map((key) => (
+              <option key={key} value={key}>{strengthName(key)}</option>
+            ))}
+          </select>
+        </label>
         <input type="text" placeholder={tr("Search opponent, map, label", "Buscar oponente, mapa, nome", "Buscar rival, mapa, etiqueta", "Chercher adversaire, carte, étiquette")} value={q} onChange={(e) => change({ q: e.target.value })} />
         <span className="muted small">{tr(`${rows.length} games`, `${rows.length} partidas`, `${rows.length} partidas`, `${rows.length} parties`)}</span>
       </div>
@@ -126,8 +142,8 @@ export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: str
                 <th>{tr("Opponent", "Oponente", "Rival", "Adversaire")}</th>
                 <th>{tr("Map", "Mapa", "Mapa", "Carte")}</th>
                 <th className="num">{tr("Length", "Duração", "Duración", "Durée")}</th>
-                <th className="num">APM</th>
                 <th>{tr("Source", "Origem", "Origen", "Origine")}</th>
+                <th data-tip={tr("What this game did best compared with pro games of the matchup; hover for the full sentence.", "O que esta partida fez de melhor em comparação com partidas de pros do confronto; passe o mouse para ver a frase completa.", "Lo que mejor hizo esta partida en comparación con partidas de pros del enfrentamiento; pasa el cursor para ver la frase completa.", "Ce que cette partie a fait de mieux par rapport aux parties de pros du matchup ; survolez pour la phrase complète.")}>{tr("Main strength", "Ponto forte principal", "Punto fuerte principal", "Point fort principal")}</th>
                 <th data-tip={tr("The report's most important finding; hover for the full sentence.", "O problema mais importante da análise; passe o mouse para ver a frase completa.", "El hallazgo más importante del análisis; pasa el cursor para ver la frase completa.", "Le constat le plus important de l'analyse ; survolez pour la phrase complète.")}>{tr("Main problem", "Problema principal", "Problema principal", "Problème principal")}</th>
               </tr>
             </thead>
@@ -146,11 +162,16 @@ export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: str
                   <td title={g.opp_name ?? ""}>{shortName(g.opp_name)}</td>
                   <td>{g.map_name}</td>
                   <td className="num">{mmss(g.duration_ms)}</td>
-                  <td className="num">{g.apm === null ? "—" : Math.round(g.apm)}</td>
                   <td className="muted">{SOURCE[g.source]}</td>
                   <td>
                     {(() => {
-                      const top = found.get(g.game_key)?.[0];
+                      const best = found.get(g.game_key)?.strengths[0];
+                      return best ? <span data-tip={best.text}>{best.name}</span> : <span className="muted">—</span>;
+                    })()}
+                  </td>
+                  <td>
+                    {(() => {
+                      const top = found.get(g.game_key)?.findings[0];
                       return top ? <span data-tip={top.headline}>{problemName(top.id)}</span> : <span className="muted">—</span>;
                     })()}
                   </td>

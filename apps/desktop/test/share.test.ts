@@ -14,7 +14,7 @@ describe("sharing a report as text", () => {
     recap: "You won in 14:11 against Orc.",
     findings: [{ headline: "You reached 50 food and waited", evidence: ["First at 50 food at 8:00."], advice: "Attack, expand or tech." }],
     turningPoint: "The game turned at 9:47.",
-    strengths: ["Units killed: 63."],
+    strengths: [{ key: "units_killed", name: "Units killed", text: "Units killed: 63.", share: 80 }],
   } as unknown as RulesBook;
 
   test("result, matchup, map, heroes, findings with advice, and a link; no battletags", () => {

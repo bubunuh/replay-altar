@@ -5,7 +5,7 @@ import type { GameRecord, PlayerRecord } from "@replay-altar/core/ui";
 import { RACE_NAMES } from "@replay-altar/core/gamedata";
 import { nameOf } from "@replay-altar/core/names";
 import { tr } from "@replay-altar/core/i18n";
-import type { Finding } from "./findings.ts";
+import type { Finding, Strength } from "./findings.ts";
 import { at, fightLabel, fightLosses, levelXp, mmss, seriesOf } from "./series.ts";
 
 const lowerFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
@@ -104,14 +104,14 @@ function lossShape(r: GameRecord, opp: PlayerRecord): string {
 }
 
 /** One or two sentences: the result, the main problem and its first cause, the next problem. */
-export function recapOf(r: GameRecord, opp: PlayerRecord, result: string, found: Finding[], strengths: string[]): string {
+export function recapOf(r: GameRecord, opp: PlayerRecord, result: string, found: Finding[], strengths: Strength[]): string {
   const race = RACE_NAMES[opp.race] ?? opp.race;
   const length = mmss(r.game.durationMs);
   const head =
     (result === "win" ? tr(`You won in ${length} against ${race}.`, `Você venceu em ${length} contra ${race}.`, `Ganaste en ${length} contra ${race}.`, `Vous avez gagné en ${length} contre ${race}.`)
     : result === "loss" ? tr(`You lost in ${length} against ${race}.`, `Você perdeu em ${length} contra ${race}.`, `Perdiste en ${length} contra ${race}.`, `Vous avez perdu en ${length} contre ${race}.`)
     : tr(`The game lasted ${length} against ${race}.`, `A partida durou ${length} contra ${race}.`, `La partida duró ${length} contra ${race}.`, `La partie a duré ${length} contre ${race}.`)) + blindSpot(r);
-  if (!found.length) return `${head} ${tr("No clear problem stood out", "Nenhum problema claro se destacou", "No destacó ningún problema claro", "Aucun problème net ne ressort")}${strengths.length ? tr(`; best: ${clause(strengths[0])}`, `; o melhor: ${clause(strengths[0])}`, `; lo mejor: ${clause(strengths[0])}`, `; le meilleur : ${clause(strengths[0])}`) : ""}.${result === "loss" ? lossShape(r, opp) : ""}`;
+  if (!found.length) return `${head} ${tr("No clear problem stood out", "Nenhum problema claro se destacou", "No destacó ningún problema claro", "Aucun problème net ne ressort")}${strengths.length ? tr(`; best: ${clause(strengths[0].text)}`, `; o melhor: ${clause(strengths[0].text)}`, `; lo mejor: ${clause(strengths[0].text)}`, `; le meilleur : ${clause(strengths[0].text)}`) : ""}.${result === "loss" ? lossShape(r, opp) : ""}`;
   // Lost while clearly ahead at the end: usually a leave or a disconnect, not the findings.
   const me = r.players.find((p) => p.playerId !== opp.playerId && p.teamId !== opp.teamId);
   const last = (p?: PlayerRecord) => (p ? (seriesOf(r, p).at(-1)?.armyValue ?? 0) : 0);
@@ -123,5 +123,7 @@ export function recapOf(r: GameRecord, opp: PlayerRecord, result: string, found:
   const [top, next] = found;
   const cause = top.because?.[0];
   const lead = result === "win" ? tr("Still worth fixing", "Ainda vale corrigir", "Aun así vale la pena corregir", "À corriger quand même") : tr("The biggest problem", "O maior problema", "El mayor problema", "Le plus gros problème");
-  return `${head}${ended} ${lead}: ${clause(top.headline)}${cause ? ` (${clause(cause)})` : ""}${next ? tr(`; also, ${clause(next.headline)}`, `; além disso, ${clause(next.headline)}`, `; además, ${clause(next.headline)}`, `; aussi, ${clause(next.headline)}`) : ""}.`;
+  // A win opens with what went best, then the problem.
+  const best = result === "win" && strengths.length ? tr(` Best: ${clause(strengths[0].text)};`, ` O melhor: ${clause(strengths[0].text)};`, ` Lo mejor: ${clause(strengths[0].text)};`, ` Le meilleur : ${clause(strengths[0].text)} ;`) : "";
+  return `${head}${ended}${best} ${best ? lowerFirst(lead) : lead}: ${clause(top.headline)}${cause ? ` (${clause(cause)})` : ""}${next ? tr(`; also, ${clause(next.headline)}`, `; além disso, ${clause(next.headline)}`, `; además, ${clause(next.headline)}`, `; aussi, ${clause(next.headline)}`) : ""}.`;
 }

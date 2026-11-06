@@ -60,7 +60,7 @@ for (const { id, p } of sources) {
       if (result === "loss" && !disconnect && !turningPoint(view, me, opp, result)) hits.loss_no_turning_point.push(tag);
       for (const x of found) {
         const re = CONTRADICTS[x.id];
-        const s = re && good.find((g) => re.test(g));
+        const s = re && good.find((g) => re.test(g.text));
         if (s) hits.contradiction.push(`${tag}: [${x.id}] ${x.headline} / ${s}`);
       }
       const sm = seriesOf(r, me), so = seriesOf(r, opp);

@@ -1,6 +1,6 @@
-// "Findings" on a match: a recap, what the rules found (most important first) with the facts
-// that explain each and what to do next time, the fight that turned the game, the one thing to
-// work on and the strengths; the opponent's plan and the full fact sheet behind "Show more".
+// "Findings" on a match: a recap, what went well, what the rules found (most important first) with
+// the facts that explain each and what to do next time, the fight that turned the game, the one
+// thing to work on; the opponent's plan and the full fact sheet behind "Show more".
 import { useEffect, useState } from "react";
 import type { RulesBook } from "@replay-altar/rules/types";
 import { api } from "./api.ts";
@@ -30,6 +30,18 @@ export function RulesCard({ gameKey, onFeedback }: { gameKey: string; onFeedback
         {tr("Findings", "Análise", "Análisis", "Analyse")} <Tip text={tr("Computed by Replay Altar's rules from the replay, compared with pro games of your matchup. Most important first.", "Calculada pelas regras do Replay Altar a partir do replay, comparando com partidas de pros do seu confronto. O mais importante primeiro.", "Calculado por las reglas de Replay Altar a partir del replay, comparado con partidas de pros de tu enfrentamiento. Lo más importante primero.", "Calculé par les règles de Replay Altar à partir du replay, comparé aux parties de pros de votre matchup. Le plus important en premier.")} />
       </h2>
       <p className="rules-recap">{book.recap}</p>
+      {book.strengths.length > 0 && (
+        <div className="rules-strengths">
+          <h3>
+            {tr("What went well", "O que foi bem", "Lo que fue bien", "Ce qui a bien marché")} <Tip text={tr("Where this game beat most pro games of your matchup (and nothing in the findings below contradicts it).", "Onde esta partida superou a maioria das partidas de pros do seu confronto (e nada na análise abaixo contradiz).", "Donde esta partida superó a la mayoría de las partidas de pros de tu enfrentamiento (y nada de lo de abajo lo contradice).", "Là où cette partie a fait mieux que la plupart des parties de pros de votre matchup (sans contredire ce qui est relevé plus bas).")} />
+          </h3>
+          <ul className="small">
+            {book.strengths.map((s) => (
+              <li key={s.key}>{s.text}</li>
+            ))}
+          </ul>
+        </div>
+      )}
       <ol className="rules-findings">
         {book.findings.map((f) => (
           <li key={f.id}>
@@ -61,18 +73,6 @@ export function RulesCard({ gameKey, onFeedback }: { gameKey: string; onFeedback
         <p className="one-thing">
           <b>{tr("One thing for next game", "Uma coisa para a próxima partida", "Una cosa para la próxima partida", "Une chose pour la prochaine partie")}</b> {book.oneThing}
         </p>
-      )}
-      {book.strengths.length > 0 && (
-        <div className="rules-strengths">
-          <h3>
-            {tr("Strengths", "Pontos fortes", "Puntos fuertes", "Points forts")} <Tip text={tr("Where this game beat most pro games of your matchup (and nothing a finding above contradicts).", "Onde esta partida superou a maioria das partidas de pros do seu confronto (e nada na análise acima contradiz).", "Donde esta partida superó a la mayoría de las partidas de pros de tu enfrentamiento (y nada de lo de arriba lo contradice).", "Là où cette partie a fait mieux que la plupart des parties de pros de votre matchup (sans contredire ce qui est relevé plus haut).")} />
-          </h3>
-          <ul className="small">
-            {book.strengths.map((s) => (
-              <li key={s}>{s}</li>
-            ))}
-          </ul>
-        </div>
       )}
       <div className="rules-footer">
         <button className="btn" onClick={() => setMore((x) => !x)} data-tip={tr("The opponent's plan from their orders, and every number the rules used.", "O plano do oponente pelas ordens dele, e todos os números que as regras usaram.", "El plan del rival a partir de sus órdenes, y cada número que usaron las reglas.", "Le plan de l'adversaire d'après ses ordres, et chaque nombre utilisé par les règles.")}>
