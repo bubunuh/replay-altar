@@ -44,7 +44,7 @@ export const STRENGTH_NAME: Record<string, string> = trTable({
   hero_xp_6m: ["Hero experience by 6:00", "Experiência dos heróis aos 6:00", "Experiencia de héroes a los 6:00", "Expérience des héros à 6:00"],
   hero_xp_10m: ["Hero experience by 10:00", "Experiência dos heróis aos 10:00", "Experiencia de héroes a los 10:00", "Expérience des héros à 10:00"],
   hero_xp_share: ["Hero experience lead", "Vantagem de experiência dos heróis", "Ventaja de experiencia de héroes", "Avance d'expérience des héros"],
-  hero_level3_ms: ["Fast heroes", "Heróis rápidos", "Héroes rápidos", "Héros rapides"],
+  hero_level3_ms: ["Early hero level 3", "Herói nível 3 cedo", "Héroe nivel 3 temprano", "Héros niveau 3 tôt"],
   creep_camps_6m: ["Early creeping", "Creep cedo", "Creep temprano", "Creep précoce"],
   units_killed: ["Units killed", "Unidades abatidas", "Unidades eliminadas", "Unités tuées"],
   trade_efficiency: ["Efficient trades", "Trocas eficientes", "Intercambios eficientes", "Échanges efficaces"],
