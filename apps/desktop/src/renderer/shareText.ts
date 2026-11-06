@@ -21,6 +21,8 @@ export function shareText(r: GameRecord, me: PlayerRecord, opp: PlayerRecord, re
     `${tr("Heroes", "Heróis", "Héroes", "Héros")}: ${heroes(me)} ${tr("vs", "contra", "contra", "contre")} ${heroes(opp)}`,
   ];
   if (book) {
+    const [main, ...others] = book.strengths;
+    if (main) lines.push("", `**${tr("Main strength", "Principal ponto forte", "Punto fuerte principal", "Point fort principal")}:** ${main.name}: ${main.text}`);
     lines.push("", book.recap);
     if (book.findings.length) {
       lines.push("", `**${tr("Findings", "Problemas", "Análisis", "Analyse")}**`);
@@ -31,7 +33,7 @@ export function shareText(r: GameRecord, me: PlayerRecord, opp: PlayerRecord, re
       });
     }
     if (book.turningPoint) lines.push("", `**${tr("Turning point", "Momento decisivo", "Momento decisivo", "Tournant")}:** ${book.turningPoint}`);
-    if (book.strengths.length) lines.push("", `**${tr("Strengths", "Pontos fortes", "Puntos fuertes", "Points forts")}:** ${book.strengths.map((x) => x.text).join(" ")}`);
+    if (others.length) lines.push("", `**${tr("Other strengths", "Outros pontos fortes", "Otros puntos fuertes", "Autres points forts")}:** ${others.map((x) => x.text).join(" ")}`);
   }
   lines.push("", `*${tr("Analyzed with Replay Altar", "Analisado com o Replay Altar", "Analizado con Replay Altar", "Analysé avec Replay Altar")}: ${PROJECT_URL}*`);
   return lines.join("\n");

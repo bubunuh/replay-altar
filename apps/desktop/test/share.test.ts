@@ -14,7 +14,10 @@ describe("sharing a report as text", () => {
     recap: "You won in 14:11 against Orc.",
     findings: [{ headline: "You reached 50 food and waited", evidence: ["First at 50 food at 8:00."], advice: "Attack, expand or tech." }],
     turningPoint: "The game turned at 9:47.",
-    strengths: [{ key: "units_killed", name: "Units killed", text: "Units killed: 63.", share: 80 }],
+    strengths: [
+      { key: "units_killed", name: "Units killed", text: "Units killed: 63.", share: 80 },
+      { key: "early_hero", name: "Early hero level 3", text: "Hero level 3 at 3:10.", share: 60 },
+    ],
   } as unknown as RulesBook;
 
   test("result, matchup, map, heroes, findings with advice, and a link; no battletags", () => {
@@ -25,6 +28,16 @@ describe("sharing a report as text", () => {
     expect(text).toContain("**Turning point:** The game turned at 9:47.");
     expect(text).toContain("https://github.com/bubunuh/replay-altar");
     expect(text).not.toMatch(/Me#1234|Someone|#\d{4}/);
+  });
+
+  test("opens with the main strength, the others come after the findings", () => {
+    const lines = shareText(r, me, opp, "win", book).split("\n");
+    expect(lines[2]).toBe("");
+    expect(lines[3]).toBe("**Main strength:** Units killed: Units killed: 63.");
+    expect(lines[5]).toBe("You won in 14:11 against Orc.");
+    const text = lines.join("\n");
+    expect(text).toContain("**Other strengths:** Hero level 3 at 3:10.");
+    expect(text.match(/Units killed: 63\./g)).toHaveLength(1);
   });
 
   test("W3Champions map files read as the map's name", () => {

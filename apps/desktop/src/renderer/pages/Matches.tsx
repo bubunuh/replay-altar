@@ -98,7 +98,7 @@ export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: str
         </label>
         <label>
           {tr("Problem", "Problema", "Problema", "Problème")}
-          <select value={problem} onChange={(e) => change({ problem: e.target.value })}>
+          <select className="narrow" value={problem} onChange={(e) => change({ problem: e.target.value })}>
             <option value="all">{tr("All", "Todos", "Todos", "Toutes")}</option>
             {problems.map((id) => (
               <option key={id} value={id}>{problemName(id)}</option>
@@ -107,7 +107,7 @@ export function Matches({ games, onOpen }: { games: GameRow[]; onOpen: (key: str
         </label>
         <label>
           {tr("Strength", "Ponto forte", "Punto fuerte", "Point fort")}
-          <select value={strength} onChange={(e) => change({ strength: e.target.value })}>
+          <select className="narrow" value={strength} onChange={(e) => change({ strength: e.target.value })}>
             <option value="all">{tr("All", "Todos", "Todos", "Tous")}</option>
             {strengths.map((key) => (
               <option key={key} value={key}>{strengthName(key)}</option>

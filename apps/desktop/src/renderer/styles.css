@@ -108,6 +108,7 @@ main { overflow: auto; padding: 20px; }
 .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
 
 .filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.filters select.narrow { max-width: 150px; }
 .filters label { display: flex; gap: 6px; align-items: center; color: var(--ink-2); font-size: calc(13px * var(--text-scale)); }
 select, input[type="text"] { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; }
 button.btn { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
