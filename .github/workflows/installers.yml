@@ -26,11 +26,14 @@ jobs:
         with:
           node-version: "26"
           cache: npm
+      # Twice (2026-11-06) this step hung for 50 minutes on a package mirror: give up after 10
+      # minutes so a rerun can start, and let apt retry slow downloads itself.
       - name: Install wine
+        timeout-minutes: 10
         run: |
           sudo dpkg --add-architecture i386
-          sudo apt-get update -q
-          sudo apt-get install -y -q --no-install-recommends wine64 wine32:i386 wine
+          sudo apt-get update -q -o Acquire::Retries=3 -o Acquire::http::Timeout=30
+          sudo apt-get install -y -q --no-install-recommends -o Acquire::Retries=3 -o Acquire::http::Timeout=30 wine64 wine32:i386 wine
       - run: npm ci --no-audit --no-fund
       - name: WC3V's packages (the simulation)
         run: npm ci --omit=dev --no-audit --no-fund
