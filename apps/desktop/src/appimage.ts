@@ -7,13 +7,15 @@ import { cpSync, existsSync, mkdirSync, readdirSync, renameSync, rmSync } from "
 import { join } from "node:path";
 import { app } from "electron";
 import { dataDir } from "@replay-altar/core/ui";
+import { fontRestart } from "./fonts.ts";
 
 const copies = () => join(dataDir(), "app");
 
 /** True when this start made the copy (a new version): the running collector should restart. */
 export let freshCopy = false;
 
-if (process.platform === "linux" && process.env.APPIMAGE && !process.env.REPLAY_ALTAR_ROOT) {
+// (Not in a process that only starts the window again, fonts.ts: the window makes the copy.)
+if (process.platform === "linux" && process.env.APPIMAGE && !process.env.REPLAY_ALTAR_ROOT && !fontRestart) {
   const root = join(copies(), app.getVersion());
   if (!existsSync(root)) {
     // Copied aside, then moved into place, so a collector starting at the same time never sees half a copy.

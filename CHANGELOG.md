@@ -5,6 +5,16 @@ What changes for players in each version. Work happens on `dev`; a version is ma
 part of a version: an installer ships only the app, the simulation engine and the published pro
 statistics (`data/`).
 
+## Unreleased (0.2.4)
+
+- **Linux: the window no longer crashes at start when the shared font cache is broken** (seen on
+  Bazzite): the window read the font cache every program shares (`~/.cache/fontconfig`), and after
+  another Electron app had rewritten it, Replay Altar's window closed a second after every start
+  ("Could not find any font"). The window now keeps a font cache of its own
+  (`~/.cache/replay-altar/fontconfig`), with the system's fonts and font rules; if the window
+  still crashes within its first seconds, that cache is dropped and the window started once more.
+  The background program was never affected.
+
 ## 0.2.3 (2026-10-29)
 
 - **No more false alarms from antivirus programs** (reported by a user): nothing in Replay Altar
@@ -205,6 +215,9 @@ W3Champions' official numbers); what helped is in the list above.
 
 ## Planned for 0.2.4
 
+- **Say what the player did well** (issue #6, a user on 0.2.2): the report reads as a list of
+  mistakes even for games you won; what went well is shown only at the end of the Findings. Give it
+  more room, for example strengths first in won games.
 - **Income model:** since 0.2.2 the second and third heroes count in the gold spent, and the
   mined-income model now often runs short early in the game (pros "spend" about 900 gold more than
   it estimates by 10:00), so the unspent gold reads 0 and the *unspent gold* finding stopped
