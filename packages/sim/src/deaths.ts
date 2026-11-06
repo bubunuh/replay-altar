@@ -1,7 +1,7 @@
 // Which of WC3V's units existed, and when they died, for the army value, the losses and the fights.
 //
 // Deaths are WC3V's own (`lostState`: lost or possibly lost, since when). Since 0.2.2 WC3V reads
-// the replay's selection lists itself (patches/wc3v: SelectionLedger, HandleBinder,
+// the replay's selection lists itself (upstream WC3V since 1.0.14: SelectionLedger, HandleBinder,
 // SelectionEvidence): a unit the lists show gone dies then, and a trained unit the lists never
 // show is marked possibly lost from its training with source "unlisted": an order the game refused
 // (no gold or food) or one that was cancelled. Such a unit never existed, so it is left out
