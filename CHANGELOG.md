@@ -7,6 +7,28 @@ statistics (`data/`).
 
 ## Unreleased (0.2.4)
 
+- **What you did well comes first** (issue #6, a user: "after a while it starts to feel very
+  negative", even with every game a win). The Findings card of a game now opens with **What went
+  well**: up to three things where your game beat most pro games of your matchup (better than 60%
+  of them), then what to work on. A won game's summary names the best one first. Each strength
+  was checked like the findings, on 408 pro player-games it wasn't tuned on: it has to show up
+  clearly more often in wins than in losses. Five didn't and are no longer shown (gold collected,
+  workers by 6:00, workers alive at 6:00 and 10:00, 3-3-60); nine are kept, from *Hero experience
+  lead* (in 60% of wins, 9% of losses) to *Early creeping* (30% and 18%).
+- **"Won the hero trade" instead of "Heroes kept alive":** losing no hero counted as a strength in
+  62% of pro games, mostly in short losses that ended before the fights, so it praised little (on
+  one player's games, they won 35% of the games where it showed). It now shows when you killed more
+  heroes than you lost ("Hero trade: you killed 3 heroes and lost 1"): in 32% of pro wins and 20%
+  of losses, and 70% wins on that player's games.
+- **Match list: "Main strength" instead of APM.** A *Main strength* column before *Main problem*
+  (its short name, the sentence on hover), and a *Strength* filter next to *Problem*. APM is still
+  on each game's page and on Performance.
+- **Recurring strengths on Performance**, under the recurring problems: in how many of your wins
+  and losses each strength showed, the trend of your last 5 games against the 5 before, and *Keep
+  doing this*: the strength in most of your last 10 wins.
+- **Shared reports open with the main strength** (Share on a game's page).
+- **AppImage: the taskbar shows Replay Altar's icon** (the window is linked to its menu entry on
+  GNOME and KDE).
 - **Linux: the window no longer crashes at start when the shared font cache is broken** (seen on
   Bazzite): the window read the font cache every program shares (`~/.cache/fontconfig`), and after
   another Electron app had rewritten it, Replay Altar's window closed a second after every start
@@ -213,37 +235,14 @@ W3Champions' official numbers); what helped is in the list above.
 - **Linux AppImage**, alongside the Windows installer: one file, no Node, git or podman needed. On first start it sets up the background collector (a systemd user service), the `replay-altar` command and a menu entry, reads the game data with a built-in read-only extractor, and updates itself in place like the Windows version.
 - **Linux: Battle.net is found in more places:** Lutris folders under `~/Games`, `~/.wine`, Steam's Proton prefixes and Bottles, for both the replays and the game data.
 
-## Planned for 0.2.4
+## Still to decide for 0.2.4
 
-Small, visible changes; the larger work moves to 0.3.
-
-- **What you did well comes first** (issue #6: "it starts to feel very negative", even in won
-  games). The strengths already exist: where your game beat most pro games of your matchup (better
-  than 60% of them, at most two, never one a finding contradicts), shown last in the Findings card.
-  Now:
-  - the Findings card opens with **What went well**, then what to work on;
-  - up to three strengths, each with a short name (like the problems' short names, in the four
-    languages) and its sentence, as today (your number, the opponent's, and the share of pro games it
-    beats);
-  - the one-sentence recap names the best strength first in a won game;
-  - checked like the findings, on the held-out player-games: each strength should show up more often
-    in wins than in losses; one that doesn't is left out.
-- **Match list: "Main strength" instead of APM.** The APM column goes (APM stays on the game's page
-  and on Performance); a **Main strength** column comes before **Main problem**, with the best
-  strength's short name and its sentence on hover, and "—" when there is none. A **Strength**
-  filter beside the Problem filter.
-- **Linux: a broken shared font cache no longer crashes the window** (done, above).
-
-Proposed, to confirm (each small):
-- **Recurring strengths on Performance**, beside the recurring problems: what you do well in most of
-  your games, from the same strengths.
-- **The share text** (Share on the game's page) starts with the main strength.
-- **WC3V from upstream:** our WC3V changes are merged upstream (jblanchette/wc3v #23 and #24, plus the
-  author's follow-ups to #24), so Replay Altar can use upstream WC3V and drop its 26 patches. Checked
-  on the 51 recorded games and the 3,626 regression replays; if the numbers move, the pro data is
-  simulated again (otherwise nothing changes for players).
-- **AppImage: the window grouped with its icon** (set `desktopName`, which electron-builder warns
-  about), so GNOME and KDE show Replay Altar's icon in the taskbar for the AppImage too.
+- **WC3V from upstream:** our WC3V changes are merged upstream (jblanchette/wc3v #23 and #24), so
+  Replay Altar could use upstream WC3V and drop its 26 patches (branch ready). Upstream also has
+  the author's follow-ups to #24, which move unit deaths by up to about a second in almost every
+  game (244 of 251 checked): the army error stays the same (36 recorded games 70.9 → 71.0, the 15
+  others 78.1 → 76.3) and all 3,626 regression replays still simulate to the end. Switching means
+  simulating the pro data again and players importing their games again, for no gain in accuracy.
 
 ## Planned for 0.3
 
