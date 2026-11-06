@@ -32,6 +32,11 @@ statistics (`data/`).
 - **Shared reports open with the main strength** (Share on a game's page).
 - **The Priestess of the Moon's portrait** in a game's header is the game's own (it showed an old
   picture of her mount); portraits already extracted are extracted again once.
+- **Evaluation curve: a swing that ends during a fight runs to the fight's end,** and the curve
+  reaches the end of the game. The simulation counts each side's dead at slightly different
+  moments, so halfway through a fight the curve could drop for a fight the other side lost more
+  in, and its explanation read "you lost more" next to "you lost ≈605, they lost ≈860" (37% of
+  the swings on one player's games now cover a whole fight).
 - **No blink after "Simulate again":** the game's page went blank ("Loading…") for a moment while
   it reloaded, and lost its scroll position.
 - **AppImage: the taskbar shows Replay Altar's icon** (the window is linked to its menu entry on
