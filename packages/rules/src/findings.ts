@@ -193,10 +193,16 @@ const COVERED_BY: Record<string, string[]> = {
  * wins and 20% of losses (841 pro player-games). Ranked by the heroes killed against pros' losses.
  */
 function heroTrade(c: Ctx): { worseThan: number } | null {
-  const [killed, lost] = [c.opp.metrics.hero_deaths, c.me.metrics.hero_deaths];
+  const [killed, lost] = heroesKilledLost(c.me, c.opp);
   const pros = c.ref?.mp.metrics.hero_deaths?.values;
   if (killed == null || lost == null || killed <= lost || !pros?.length) return null;
   return { worseThan: 1 - percentileOf(pros, killed) };
+}
+
+/** Heroes you killed and lost: W3Champions' own count when it has one (the table above the report shows it), else the simulation's. */
+function heroesKilledLost(me: PlayerRecord, opp: PlayerRecord): [number | null | undefined, number | null | undefined] {
+  const [k, l] = [me.metrics.heroes_killed, opp.metrics.heroes_killed];
+  return k != null && l != null ? [k, l] : [opp.metrics.hero_deaths, me.metrics.hero_deaths];
 }
 
 /** Yours at least as good as theirs, by the metric's direction (theirs unknown: yes). */
@@ -229,8 +235,9 @@ export function allStrengths(r: GameRecord, ref: FactsRef | null, found: Finding
       const [mine, theirs] = [metricValue(m, me.metrics[m.key], r.metricSources?.[m.key] === "official"), metricValue(m, opp.metrics[m.key], r.metricSources?.[m.key] === "official")];
       const share = Math.round((1 - g!.worseThan) * 100);
       if (m.key === "hero_deaths") {
-        const [killed, lost] = [metricValue(m, opp.metrics.hero_deaths, false), metricValue(m, me.metrics.hero_deaths, false)];
-        const text = tr(`Hero trade: you killed ${killed} heroes and lost ${lost}.`, `Troca de heróis: você matou ${killed} heróis e perdeu ${lost}.`, `Intercambio de héroes: mataste ${killed} héroes y perdiste ${lost}.`, `Échange de héros : vous avez tué ${killed} héros et en avez perdu ${lost}.`);
+        const [killed, lost] = heroesKilledLost(me, opp) as [number, number];
+        const one = killed === 1;
+        const text = tr(`Hero trade: you killed ${killed} ${one ? "hero" : "heroes"} and lost ${lost}.`, `Troca de heróis: você matou ${killed} ${one ? "herói" : "heróis"} e perdeu ${lost}.`, `Intercambio de héroes: mataste ${killed} ${one ? "héroe" : "héroes"} y perdiste ${lost}.`, `Échange de héros : vous avez tué ${killed} héros et en avez perdu ${lost}.`);
         return { key: m.key, name: strengthName(m.key), text, share };
       }
       const text = tr(`${label}: you ${mine}, opp ${theirs}, better than ${share}% of pro games.`, `${label}: você ${mine}, oponente ${theirs}, melhor que ${share}% das partidas de pros.`, `${label}: tú ${mine}, rival ${theirs}, mejor que el ${share}% de las partidas de pros.`, `${label} : vous ${mine}, adversaire ${theirs}, mieux que ${share} % des parties de pros.`);

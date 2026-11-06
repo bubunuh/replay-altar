@@ -118,6 +118,10 @@ describe("strengths", () => {
     expect(trade(1, 3)).toMatchObject([{ key: "hero_deaths", name: "Won the hero trade" }]);
     expect(trade(1, 3)[0].text).toMatch(/^Hero trade: you killed .*3 heroes and lost .*1\.$/);
     expect(trade(0, 0)).toEqual([]);
+    // W3Champions' own count wins over the simulation's (1 killed each: no trade won).
+    const official = scored({ hero_deaths: 0, heroes_killed: 1 });
+    official.players[1].metrics = { hero_deaths: 1, heroes_killed: 1 } as never;
+    expect(strengths(official, withHeroes)).toEqual([]);
     expect(trade(2, 1)).toEqual([]);
   });
 });

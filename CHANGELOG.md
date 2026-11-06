@@ -266,7 +266,8 @@ The larger work, moved from 0.2.4: the gold and lumber model, recalibrations and
 - **"Food well used" as a strength:** it passes the held-out check for pros only weakly (47% of
   wins, 31% of losses), and on one player's games it showed in 15 of 31 losses and 3 of 23 wins
   (short or small games have little unused food). Study it closer, e.g. count it only from an
-  army of some size.
+  army of some size. Food buildings are not only food: Undead Ziggurats and Orc Burrows defend,
+  Night Elf Moon Wells heal, Human Farms block paths, so spare food can be a choice, not waste.
 - **Income model:** since 0.2.2 the second and third heroes count in the gold spent, and the
   mined-income model now often runs short early in the game (pros "spend" about 900 gold more than
   it estimates by 10:00), so the unspent gold reads 0 and the *unspent gold* finding stopped
