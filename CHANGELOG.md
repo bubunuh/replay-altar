@@ -5,7 +5,7 @@ What changes for players in each version. Work happens on `dev`; a version is ma
 part of a version: an installer ships only the app, the simulation engine and the published pro
 statistics (`data/`).
 
-## Unreleased (0.2.4)
+## 0.2.4 (2026-11-06)
 
 - **What you did well comes first** (issue #6, a user: "after a while it starts to feel very
   negative", even with every game a win). The Findings card of a game now opens with **What went
