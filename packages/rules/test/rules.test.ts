@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { GameRecord, SimSample } from "@replay-altar/core/ui";
-import { allFindings, findings, opponentPlan } from "@replay-altar/rules";
+import { allFindings, findings, opponentPlan, strengths } from "@replay-altar/rules";
 import { leads } from "../src/series.ts";
 
 describe("leads", () => {
@@ -79,6 +79,50 @@ describe("findings", () => {
     const plan = opponentPlan(game({}), null);
     expect(plan).toContain("Army: first unit ordered 10:10 (Gryphon Rider); in all Gryphon Rider ×1.");
     expect(plan.find((l) => l.startsWith("Towers"))).toBe("Towers: 1 build/upgrade orders, 1 of them by 5:00.");
+  });
+});
+
+describe("strengths", () => {
+  // Pro games to compare with: 10 values per metric, 1 to 10.
+  const entry = { values: Array.from({ length: 10 }, (_, i) => i + 1), p50: 5.5 };
+  const ref = { mp: { metrics: { hero_xp_share: entry, hero_xp_10m: entry, trade_efficiency: entry, units_killed: entry, workers_by_6m: entry } } } as unknown as Parameters<typeof strengths>[1];
+  const scored = (metrics: Record<string, number>) => {
+    const r = game({});
+    r.players[0].metrics = metrics as never;
+    r.players[1].metrics = {} as never;
+    return r;
+  };
+  test("up to three, best first, each with its key, short name and the share of pro games beaten", () => {
+    const good = strengths(scored({ hero_xp_share: 10, hero_xp_10m: 9.5, trade_efficiency: 8, units_killed: 9 }), ref);
+    expect(good.map((x) => x.key)).toEqual(["hero_xp_share", "hero_xp_10m", "units_killed"]);
+    expect(good[0]).toMatchObject({ key: "hero_xp_share", name: "Hero experience lead", share: 95 });
+    expect(good[0].text).toContain("better than 95% of pro games");
+  });
+  test("not a strength: a lost trade, and metrics that don't tell wins from losses", () => {
+    const keys = strengths(scored({ trade_efficiency: 0.4, workers_by_6m: 10 }), ref).map((x) => x.key);
+    expect(keys).toEqual([]);
+  });
+  test("not a strength: a number the opponent beat in the same game", () => {
+    const r = scored({ hero_xp_share: 10, units_killed: 9 });
+    r.players[1].metrics = { units_killed: 10 } as never;
+    expect(strengths(r, ref).map((x) => x.key)).toEqual(["hero_xp_share"]);
+  });
+  test("heroes: the hero trade, only when you killed more heroes than you lost", () => {
+    const deaths = { values: [0, 0, 0, 0, 1, 1, 1, 2, 2, 3], p50: 1 };
+    const withHeroes = { mp: { metrics: { hero_deaths: deaths } } } as unknown as Parameters<typeof strengths>[1];
+    const trade = (mine: number, theirs: number) => {
+      const r = scored({ hero_deaths: mine });
+      r.players[1].metrics = { hero_deaths: theirs } as never;
+      return strengths(r, withHeroes);
+    };
+    expect(trade(1, 3)).toMatchObject([{ key: "hero_deaths", name: "Won the hero trade" }]);
+    expect(trade(1, 3)[0].text).toMatch(/^Hero trade: you killed .*3 heroes and lost .*1\.$/);
+    expect(trade(0, 0)).toEqual([]);
+    // W3Champions' own count wins over the simulation's (1 killed each: no trade won).
+    const official = scored({ hero_deaths: 0, heroes_killed: 1 });
+    official.players[1].metrics = { hero_deaths: 1, heroes_killed: 1 } as never;
+    expect(strengths(official, withHeroes)).toEqual([]);
+    expect(trade(2, 1)).toEqual([]);
   });
 });
 
@@ -183,6 +227,11 @@ describe("report without the model", () => {
     expect(turningPoint(r, me, opp, "win")).toBeNull();
     // You still had the bigger army when this loss ended: the recap says so before the findings.
     expect(recapOf(r, opp, "loss", allFindings(r, null, undefined, { all: true }), [])).toMatch(/^You lost in 14:00 against Human\. The game ended while your army was bigger \(1500 vs 700\).* The biggest problem: they left a window open/);
+    // A win opens with the best strength, a loss goes straight to the problem.
+    const best = [{ key: "units_killed", name: "Units killed", text: "Units killed: you 63, opp 40, better than 80% of pro games.", share: 80 }];
+    const found = allFindings(r, null, undefined, { all: true });
+    expect(recapOf(r, opp, "win", found, best)).toMatch(/^You won in 14:00 against Human\. Best: units killed: you 63, opp 40, better than 80% of pro games; still worth fixing: /);
+    expect(recapOf(r, opp, "loss", found, best)).not.toContain("Best:");
   });
 
   test("composition: attack types against armor, and anti-air", async () => {

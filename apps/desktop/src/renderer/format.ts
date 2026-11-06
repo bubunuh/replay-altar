@@ -3,7 +3,7 @@ import { mmss } from "@replay-altar/core/time";
 import { decimal, locale, tr } from "@replay-altar/core/i18n";
 
 export { mmss };
-export { problemName } from "@replay-altar/rules/problems";
+export { problemName, strengthName } from "@replay-altar/rules/problems";
 
 export const RACE: Record<string, string> = { H: "Human", O: "Orc", U: "Undead", N: "Night Elf", R: tr("Random", "Aleatório", "Aleatorio", "Aléatoire") };
 

@@ -40,6 +40,8 @@ await build({
       category: "Game",
       synopsis: "Warcraft III replay coach",
       artifactName: "ReplayAltar-${version}.AppImage",
+      // The .desktop file takes its name from the staged package.json's desktopName (stage.ts), as on GNOME/KDE the taskbar matches the window to it.
+      syncDesktopName: true,
     },
   },
 });

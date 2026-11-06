@@ -5,6 +5,50 @@ What changes for players in each version. Work happens on `dev`; a version is ma
 part of a version: an installer ships only the app, the simulation engine and the published pro
 statistics (`data/`).
 
+## Unreleased (0.2.4)
+
+- **What you did well comes first** (issue #6, a user: "after a while it starts to feel very
+  negative", even with every game a win). The Findings card of a game now opens with **What went
+  well**: up to three things where your game beat most pro games of your matchup (better than 60%
+  of them), then what to work on. A won game's summary names the best one first. Each strength
+  was checked like the findings, on 408 pro player-games it wasn't tuned on: it has to show up
+  clearly more often in wins than in losses. Five didn't and are no longer shown (gold collected,
+  workers by 6:00, workers alive at 6:00 and 10:00, 3-3-60); eight are kept, from *Hero experience
+  lead* (in 60% of wins, 9% of losses) to *Early creeping* (30% and 18%). Unused food ("Food
+  left over") is no longer shown as a strength either, until it is studied for 0.3.
+- **"Won the hero trade" instead of "Heroes kept alive":** losing no hero counted as a strength in
+  62% of pro games, mostly in short losses that ended before the fights, so it praised little (on
+  one player's games, they won 35% of the games where it showed). It now shows when you killed more
+  heroes than you lost ("Hero trade: you killed 3 heroes and lost 1"): in 32% of pro wins and 20%
+  of losses, and 70% wins on that player's games.
+- **Match list: "Main strength" instead of APM.** A *Main strength* column before *Main problem*
+  (its short name, the sentence on hover), and a *Strength* filter next to *Problem*. APM is still
+  on each game's page and on Performance.
+- **Recurring strengths on Performance**, under the recurring problems: in how many of your wins
+  and losses each strength showed, the trend of your last 5 games against the 5 before, and *Keep
+  doing this*: the strength in most of your last 10 wins.
+- **A strength only where you did at least as well as your opponent:** strengths compare you with
+  pros, so one could show although your opponent did better in the same game.
+- **Shared reports open with the main strength** (Share on a game's page).
+- **The Priestess of the Moon's portrait** in a game's header is the game's own (it showed an old
+  picture of her mount); portraits already extracted are extracted again once.
+- **Evaluation curve: a swing that ends during a fight runs to the fight's end** (and a fight the
+  game ended in gives none). The simulation counts each side's dead at slightly different
+  moments, so halfway through a fight the curve could drop for a fight the other side lost more
+  in, and its explanation read "you lost more" next to "you lost ≈605, they lost ≈860" (35% of
+  the swings on one player's games now cover a whole fight).
+- **No blink after "Simulate again":** the game's page went blank ("Loading…") for a moment while
+  it reloaded, and lost its scroll position.
+- **AppImage: the taskbar shows Replay Altar's icon** (the window is linked to its menu entry on
+  GNOME and KDE).
+- **Linux: the window no longer crashes at start when the shared font cache is broken** (seen on
+  Bazzite): the window read the font cache every program shares (`~/.cache/fontconfig`), and after
+  another Electron app had rewritten it, Replay Altar's window closed a second after every start
+  ("Could not find any font"). The window now keeps a font cache of its own
+  (`~/.cache/replay-altar/fontconfig`), with the system's fonts and font rules; if the window
+  still crashes within its first seconds, that cache is dropped and the window started once more.
+  The background program was never affected.
+
 ## 0.2.3 (2026-10-29)
 
 - **No more false alarms from antivirus programs** (reported by a user): nothing in Replay Altar
@@ -142,7 +186,7 @@ W3Champions' official numbers); what helped is in the list above.
   mark (levels changed in 30% of the 587 player-games with a tome), plus refused extra clicks in
   the re-spend; "the same skill twice" was already handled by the rank rules. The skill menu's
   openings (action 0x66) do bound the sessions, as suggested.
-- **Units per selected building:** *not applied, moved to the gold and lumber model (0.2.4).* It
+- **Units per selected building:** *not applied, moved to the gold and lumber model (0.3).* It
   exists: 9.6% of train clicks (176 W3Champions player-games) had 2 or more buildings of the type
   selected (types from the replay's own subgroup names). But the game refuses the copies it can't
   pay for or feed, and the replay doesn't say which: counted in full, spending − 500 went over the
@@ -203,8 +247,27 @@ W3Champions' official numbers); what helped is in the list above.
 - **Linux AppImage**, alongside the Windows installer: one file, no Node, git or podman needed. On first start it sets up the background collector (a systemd user service), the `replay-altar` command and a menu entry, reads the game data with a built-in read-only extractor, and updates itself in place like the Windows version.
 - **Linux: Battle.net is found in more places:** Lutris folders under `~/Games`, `~/.wine`, Steam's Proton prefixes and Bottles, for both the replays and the game data.
 
-## Planned for 0.2.4
+## Planned for 0.3
 
+The larger work, moved from 0.2.4: the gold and lumber model, recalibrations and new rules.
+
+- **WC3V from upstream:** our WC3V changes are merged upstream (jblanchette/wc3v #23 and #24), so
+  Replay Altar can use upstream WC3V and drop its 26 patches (ready on branch
+  `wc3v-upstream`, ec21018; a checkout needs `vendor/wc3v` reset, see its README). Upstream also has
+  the author's follow-ups to #24, which move unit deaths by up to about a second in almost every
+  game (244 of 251 checked): the army error stays the same (36 recorded games 70.9 → 71.0, the 15
+  others 78.1 → 76.3) and all 3,626 regression replays still simulate to the end. Moved from 0.2.4: switching
+  means simulating the pro data again and players importing their games again, which the gold and
+  lumber model needs anyway, so both go in together.
+- **Armies that "die" as the game ends:** in 14 of 105 player-games on one player's PC, an army
+  loses more than half its value in the last 10 seconds, mostly the winner's (1410 → 235 at the
+  end of a won game): the simulation counts units as lost when the game ends, not in a fight. The
+  army chart's last point and the resources lost at the end read too high. For the WC3V lab.
+- **"Food well used" as a strength:** it passes the held-out check for pros only weakly (47% of
+  wins, 31% of losses), and on one player's games it showed in 15 of 31 losses and 3 of 23 wins
+  (short or small games have little unused food). Study it closer, e.g. count it only from an
+  army of some size. Food buildings are not only food: Undead Ziggurats and Orc Burrows defend,
+  Night Elf Moon Wells heal, Human Farms block paths, so spare food can be a choice, not waste.
 - **Income model:** since 0.2.2 the second and third heroes count in the gold spent, and the
   mined-income model now often runs short early in the game (pros "spend" about 900 gold more than
   it estimates by 10:00), so the unspent gold reads 0 and the *unspent gold* finding stopped
@@ -215,7 +278,11 @@ W3Champions' official numbers); what helped is in the list above.
   recordings already hold gold, lumber, gold mined and lumber harvested at every snapshot, so they
   serve as ground truth; more recordings (more races, expansions, long games) as needed. The same
   model would let Replay Altar's own counts (units ordered, spending, build order) count a train
-  click once per selected building, which they can't do safely yet (see 0.2.2's checks).
+  click once per selected building, which they can't do safely yet (see 0.2.2's checks). First
+  measure the most it can gain: on the recorded games, refuse the orders the game's real gold,
+  lumber and food couldn't pay for, and score the army error; build the model only if that moves it
+  clearly. Its tests need new recordings (the 0.2.2 holdout is spent): expansions, long games,
+  Night Elf and Undead.
 - **Review the evaluation curve and the coaching rules on the better data:** refit the win-chance
   model on the ~500 current-patch pro games and validate it on the ~3,000 tournament games, as for
   0.2.0; re-score every rule held out (docs/RULES.md) and revisit which are shown.

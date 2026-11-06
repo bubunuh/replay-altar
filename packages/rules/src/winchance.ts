@@ -195,8 +195,21 @@ export function winCurve(r: GameRecord, model: WinModel, me: PlayerRecord, opp: 
   if (points.length < 3) return null;
 
   const back = SWING_MS / STEP_MS;
+  const fights = fightLosses(r, me, opp);
+  // A swing that ends during a fight runs to the fight's end (as its losses are counted, 10 s
+  // after): the simulation counts each side's dead at different moments, so halfway through, the
+  // chance can drop for a fight the side then won (4:30-5:30 "you lost more" in a fight where they
+  // lost ≈860 and you ≈605). A fight the game ended in gives no swing: the simulation's last
+  // seconds are not to be trusted (an army often "dies" as the game ends), so the curve stops before.
+  const settled = (i: number) => {
+    const open = fights.find(({ f, me: m, opp: o }) => f.category !== "creep-fight" && m + o >= 150 && f.start < points[i].t && f.end + 10_000 > points[i].t);
+    return open ? points.findIndex((x) => x.t >= open.f.end + 10_000) : i;
+  };
   const candidates = points
-    .map((c, i) => ({ from: points[Math.max(0, i - back)].t, to: c.t, pFrom: points[Math.max(0, i - back)].p, pTo: c.p }))
+    .flatMap((_, i) => {
+      const f = Math.max(0, i - back), t = settled(i);
+      return t < 0 ? [] : [{ from: points[f].t, to: points[t].t, pFrom: points[f].p, pTo: points[t].p }];
+    })
     .filter((s) => Math.abs(s.pTo - s.pFrom) >= SWING_MIN)
     .sort((x, y) => Math.abs(y.pTo - y.pFrom) - Math.abs(x.pTo - x.pFrom));
   const picked: typeof candidates = [];
@@ -215,7 +228,6 @@ export function winCurve(r: GameRecord, model: WinModel, me: PlayerRecord, opp: 
       .slice(0, 2)
       .map((x) => ({ feature: x.f, favours: x.c > 0 ? "me" : "opp" }));
   };
-  const fights = fightLosses(r, me, opp);
   const events = (t0: number, t1: number): SwingEvent[] => {
     const out: SwingEvent[] = [];
     const within = (t: number | null) => t !== null && t >= t0 && t <= t1;

@@ -12,7 +12,7 @@ export type { UpdateState };
 /** For bug reports: this version, the system, and where the collector's log is (Windows). */
 export type AppInfo = { version: string; system: string; logDir: string | null };
 
-export type GameFindings = { key: string; playedAt: string; result: string; findings: { id: string; headline: string; severity: number; advice: string | null }[] };
+export type GameFindings = { key: string; playedAt: string; result: string; findings: { id: string; headline: string; severity: number; advice: string | null }[]; strengths: { key: string; name: string; text: string }[] };
 
 /** Replay folders: found by themselves, added by you, and how many folders that can hold replays exist. */
 export type Folders = { found: string[]; added: string[]; replayDirs: number };

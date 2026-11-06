@@ -27,7 +27,8 @@ export async function stageApp(extractor: string, platform: "win32" | "linux") {
   // The app: built window and its assets, with a package.json of its own (nothing to install).
   cpSync(join(desktop, "out"), join(app, "out"), { recursive: true });
   cpSync(join(desktop, "assets"), join(app, "assets"), { recursive: true });
-  writeFileSync(join(app, "package.json"), JSON.stringify({ name: "replay-altar", productName: "Replay Altar", version, description: "Warcraft III replay coach", author: "Replay Altar", main: "out/main.cjs" }, null, 2));
+  // desktopName: Electron's app_id on Linux, so the taskbar links the window to replay-altar.desktop (the menu entry's name).
+  writeFileSync(join(app, "package.json"), JSON.stringify({ name: "replay-altar", productName: "Replay Altar", version, description: "Warcraft III replay coach", author: "Replay Altar", main: "out/main.cjs", desktopName: "replay-altar.desktop" }, null, 2));
 
   // The collector as one ES module; CommonJS dependencies get a require of their own.
   await esbuild.build({

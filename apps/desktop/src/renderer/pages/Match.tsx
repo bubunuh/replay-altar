@@ -238,8 +238,14 @@ function BuildLine({ record, player, who, principles }: { record: GameRecord; pl
   );
 }
 
+/**
+ * The game shown last: when it changes (simulated again) its page is made anew, and starts from
+ * this instead of "Loading…", so the window doesn't blink or lose its scroll.
+ */
+let shown: { key: string; detail: GameDetail } | null = null;
+
 export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; metrics: MetricDef[]; refs: RefGroupInfo[]; onBack: () => void }) {
-  const [detail, setDetail] = useState<GameDetail | undefined>();
+  const [detail, setDetail] = useState<GameDetail | undefined>(() => (shown?.key === gameKey ? shown.detail : undefined));
   const [hideWorkers, setHideWorkers] = useState(true);
   const [sharing, setSharing] = useState(false);
   // A replay from the Analyzer page rather than one of your games.
@@ -248,7 +254,14 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
   const [resim, setResim] = useState<{ running: boolean; error: string | null }>({ running: false, error: null });
   const [hideNames, setHideNames] = useState(true);
   const [kinds, setKinds] = useState(new Set(["building", "unit", "upgrade", "item"]));
-  const load = useCallback(() => api.getGame(gameKey).then(setDetail), [gameKey]);
+  const load = useCallback(
+    () =>
+      api.getGame(gameKey).then((d) => {
+        shown = d ? { key: gameKey, detail: d } : null;
+        setDetail(d);
+      }),
+    [gameKey],
+  );
   useEffect(() => {
     load();
   }, [load]);

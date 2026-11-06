@@ -8,9 +8,11 @@ import type { GameRecord, PlayerRecord } from "@replay-altar/core/ui";
 import { RACES, type RaceCode, CORE_UPGRADES } from "@replay-altar/core/gamedata";
 import { localizeMetric, METRICS } from "@replay-altar/core/metrics";
 import { tr } from "@replay-altar/core/i18n";
+import { percentileOf } from "@replay-altar/reference/quantiles";
 import { metricValue, type FactsRef } from "./facts.ts";
 import { openingOf } from "./openings.ts";
 import { expansionsOf, fightLosses, levelSum, mmss } from "./series.ts";
+import { strengthName } from "./problems.ts";
 import { adviceFor } from "./advice.ts";
 import { armyMix, mixValue } from "./combat.ts";
 import { num, proGap, simHeroes, type Ctx, type Finding } from "./rules/shared.ts";
@@ -23,10 +25,20 @@ export { heroStall } from "./rules/core.ts";
 
 const MIN_SEVERITY = 0.5;
 const MAX_FINDINGS = 3;
+const MAX_STRENGTHS = 3;
 /** Shorter games (someone left early) say nothing about how you play. */
 export const MIN_GAME_MS = 180_000;
 /** Core metrics that are not skills worth praising (being attacked less is not your doing). */
-const NOT_STRENGTHS = new Set(["fights_defending"]);
+const NOT_STRENGTHS = new Set([
+  "fights_defending",
+  // Held out (node scripts/eval-findings.ts --holdout --strengths, 408 pro perspectives): fires as often in losses as in wins
+  // (95% interval of wins minus losses includes 0): goal_3360_ms +4.0 points (-1.5 to +9.5), gold_collected +6.7 (-2.2 to +15.5),
+  // workers_alive_10m +3.6 (-4.2 to +11.4), workers_alive_6m +4.3 (-4.9 to +13.4), workers_by_6m +1.7 (-6.7 to +10.1).
+  "goal_3360_ms", "gold_collected", "workers_alive_10m", "workers_alive_6m", "workers_by_6m",
+  // Little unused food passes the check only weakly (wins 47%, losses 31%), comes mostly in short or
+  // small games, and reads as if food were a resource to keep; left out until it is studied (0.3).
+  "unused_supply_avg",
+]);
 /** Per race: Undead mine with 5 Acolytes, so more early Acolytes mean an expansion, not better play. */
 const NOT_STRENGTHS_FOR: Partial<Record<RaceCode, Set<string>>> = { U: new Set(["workers_by_6m"]) };
 
@@ -162,7 +174,6 @@ export const findings = (r: GameRecord, ref: FactsRef | null, subjectId?: number
   return mech ? [...top, mech] : top;
 };
 
-/** Core metrics at pro level, best first: what went well (at most 2). */
 /** Strengths that would contradict a finding shown for the same game (found in scripts/scan-reports.ts). */
 const COVERED_BY: Record<string, string[]> = {
   heroes: ["hero_xp_6m", "hero_xp_10m", "hero_xp_share", "hero_level3_ms", "goal_3360_ms", "creep_camps_6m", "hero2_ms", "hero3_ms"],
@@ -176,24 +187,61 @@ const COVERED_BY: Record<string, string[]> = {
   mine_dry: ["expansions", "gold_collected"],
 };
 
-export function strengths(r: GameRecord, ref: FactsRef | null, found: Finding[] = []): string[] {
+/**
+ * Heroes: the trade, not your losses alone. Losing none qualified in 62% of pro games and mostly in
+ * short losses (games over before the fights); killing more heroes than you lost is in 34% of pro
+ * wins and 20% of losses (841 pro player-games). Ranked by the heroes killed against pros' losses.
+ */
+function heroTrade(c: Ctx): { worseThan: number } | null {
+  const [killed, lost] = heroesKilledLost(c.me, c.opp);
+  const pros = c.ref?.mp.metrics.hero_deaths?.values;
+  if (killed == null || lost == null || killed <= lost || !pros?.length) return null;
+  return { worseThan: 1 - percentileOf(pros, killed) };
+}
+
+/** Heroes you killed and lost: W3Champions' own count when it has one (the table above the report shows it), else the simulation's. */
+function heroesKilledLost(me: PlayerRecord, opp: PlayerRecord): [number | null | undefined, number | null | undefined] {
+  const [k, l] = [me.metrics.heroes_killed, opp.metrics.heroes_killed];
+  return k != null && l != null ? [k, l] : [opp.metrics.hero_deaths, me.metrics.hero_deaths];
+}
+
+/** Yours at least as good as theirs, by the metric's direction (theirs unknown: yes). */
+const atLeastAsGood = (better: "higher" | "lower", mine: number | null | undefined, theirs: number | null | undefined) =>
+  mine == null || theirs == null || (better === "higher" ? mine >= theirs : mine <= theirs);
+
+/** What went well: `key` the metric, `name` its short name, `text` the sentence, `share` the % of pro games beaten. */
+export type Strength = { key: string; name: string; text: string; share: number };
+
+/** Core metrics at pro level, best first: what went well (at most 3). */
+export const strengths = (r: GameRecord, ref: FactsRef | null, found: Finding[] = []) => allStrengths(r, ref, found).slice(0, MAX_STRENGTHS);
+
+/** Every strength that qualifies, best first (before the cut to the top few; scripts/eval-findings.ts counts them). */
+export function allStrengths(r: GameRecord, ref: FactsRef | null, found: Finding[] = []): Strength[] {
   const covered = new Set(found.flatMap((f) => COVERED_BY[f.id] ?? []));
   const me = r.players.find((p) => p.isMe);
   const opp = r.players.find((p) => p.playerId === r.classification.opponentId);
   if (!me || !opp || !ref || r.game.durationMs < MIN_GAME_MS) return [];
   const c: Ctx = { r, me, opp, ref };
   return METRICS.filter((m) => m.section === "core" && m.better && !NOT_STRENGTHS.has(m.key) && !covered.has(m.key) && !NOT_STRENGTHS_FOR[me.race as RaceCode]?.has(m.key))
-    .map((m) => ({ m, g: proGap(c, m.key) }))
-    .filter((x) => x.g && x.g.worseThan <= 0.4)
+    .map((m) => ({ m, g: m.key === "hero_deaths" ? heroTrade(c) : proGap(c, m.key) }))
+    .filter((x) => x.g && (x.m.key === "hero_deaths" || x.g.worseThan <= 0.4))
     // Losing the trade isn't a strength, however it compares with pros.
     .filter((x) => x.m.key !== "trade_efficiency" || (me.metrics.trade_efficiency ?? 0) > 0.5)
+    // Nor is a number your opponent beat in the same game ("you 14.8, opp 12.3, better than 62% of pro games").
+    .filter((x) => x.m.key === "hero_deaths" || atLeastAsGood(x.m.better!, me.metrics[x.m.key], opp.metrics[x.m.key]))
     .sort((a, b) => a.g!.worseThan - b.g!.worseThan)
-    .slice(0, 2)
-    .map(({ m, g }) => {
+    .map(({ m, g }): Strength => {
       const label = localizeMetric(m).raceLabels?.[me.race as RaceCode] ?? localizeMetric(m).label;
       const [mine, theirs] = [metricValue(m, me.metrics[m.key], r.metricSources?.[m.key] === "official"), metricValue(m, opp.metrics[m.key], r.metricSources?.[m.key] === "official")];
       const share = Math.round((1 - g!.worseThan) * 100);
-      return tr(`${label}: you ${mine}, opp ${theirs}, better than ${share}% of pro games.`, `${label}: você ${mine}, oponente ${theirs}, melhor que ${share}% das partidas de pros.`, `${label}: tú ${mine}, rival ${theirs}, mejor que el ${share}% de las partidas de pros.`, `${label} : vous ${mine}, adversaire ${theirs}, mieux que ${share} % des parties de pros.`);
+      if (m.key === "hero_deaths") {
+        const [killed, lost] = heroesKilledLost(me, opp) as [number, number];
+        const one = killed === 1;
+        const text = tr(`Hero trade: you killed ${killed} ${one ? "hero" : "heroes"} and lost ${lost}.`, `Troca de heróis: você matou ${killed} ${one ? "herói" : "heróis"} e perdeu ${lost}.`, `Intercambio de héroes: mataste ${killed} ${one ? "héroe" : "héroes"} y perdiste ${lost}.`, `Échange de héros : vous avez tué ${killed} héros et en avez perdu ${lost}.`);
+        return { key: m.key, name: strengthName(m.key), text, share };
+      }
+      const text = tr(`${label}: you ${mine}, opp ${theirs}, better than ${share}% of pro games.`, `${label}: você ${mine}, oponente ${theirs}, melhor que ${share}% das partidas de pros.`, `${label}: tú ${mine}, rival ${theirs}, mejor que el ${share}% de las partidas de pros.`, `${label} : vous ${mine}, adversaire ${theirs}, mieux que ${share} % des parties de pros.`);
+      return { key: m.key, name: strengthName(m.key), text, share };
     });
 }
 

@@ -5,7 +5,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { dataDir, loadConfig, parseReplay, saveConfig, seatsOf, type Config } from "@replay-altar/core";
 import { simNotReady } from "@replay-altar/sim";
-import { defaultWarcraftDir, extractGameData, restoreUnitBalance } from "./gamedata.ts";
+import { defaultWarcraftDir, extractGameData, extractHeroIcons, heroIconsOutdated, restoreUnitBalance } from "./gamedata.ts";
 import { isReplayFile } from "./watcher.ts";
 
 /** Replays looked at to find your battletag, newest first. */
@@ -49,6 +49,7 @@ export async function detectAccounts(dirs: string[], log: (msg: string) => void)
 
 /** Extracts the game data the simulation needs when it is missing and the game is installed. */
 export function ensureGameData(log: (msg: string) => void, onStart: () => void = () => {}) {
+  ensureHeroIcons(log);
   const problem = simNotReady(dataDir());
   if (!problem || !/game data/.test(problem)) return;
   if (restoreUnitBalance() && !simNotReady(dataDir())) return log("game data: unit table put back from the data folder");
@@ -59,6 +60,19 @@ export function ensureGameData(log: (msg: string) => void, onStart: () => void =
     extractGameData(wc3);
   } catch (e) {
     log(`game data extraction failed: ${(e as Error).message}`);
+  }
+}
+
+/** Hero portraits from an older version of the list are extracted again (a second or so). */
+function ensureHeroIcons(log: (msg: string) => void) {
+  if (!heroIconsOutdated()) return;
+  const wc3 = defaultWarcraftDir();
+  if (!existsSync(join(wc3, ".build.info"))) return;
+  try {
+    extractHeroIcons(wc3);
+    log("hero portraits extracted again");
+  } catch (e) {
+    log(`hero portraits: ${(e as Error).message}`);
   }
 }
 

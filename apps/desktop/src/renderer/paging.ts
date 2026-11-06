@@ -11,9 +11,9 @@ export function pageOf<T>(rows: T[], page: number, size = PAGE_SIZE): { page: nu
 }
 
 /** The list's filters and page. */
-export type ListState = { source: string; result: string; oppRace: string; q: string; problem: string; page: number };
+export type ListState = { source: string; result: string; oppRace: string; q: string; problem: string; strength: string; page: number };
 
-export const NO_FILTER: ListState = { source: "all", result: "all", oppRace: "all", q: "", problem: "all", page: 0 };
+export const NO_FILTER: ListState = { source: "all", result: "all", oppRace: "all", q: "", problem: "all", strength: "all", page: 0 };
 
 /**
  * A change: a filter starts again from the first page; a page change only moves the page. A

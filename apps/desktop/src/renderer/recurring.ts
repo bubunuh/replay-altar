@@ -1,17 +1,31 @@
-// Recurring problems over a list of your games (Recurring.tsx shows them on Performance): how
+// Recurring problems (and strengths) over a list of your games (Recurring.tsx shows them on Performance): how
 // often each finding came up in losses and wins, the trend (your last 5 games against the 5
-// before) and the one habit to work on now: the problem in most of your last 10 games.
+// before) and the one habit to work on now: the problem in most of your last 10 games. Strengths
+// go by the wins instead (most wins first; "keep doing this": the one in most of your last 10 wins),
+// since a report shows only its best three: in a win, stronger ones push a common one out.
 import type { PerfGame } from "@replay-altar/core/ui";
 import type { GameFindings } from "./api.ts";
 
 /** Only the findings a report shows count (the top three). */
 const SHOWN = 3;
 
-/** `games` oldest first, as on Performance; `all` the findings of every analyzed game. */
-export function recurringView(games: Pick<PerfGame, "game_key" | "result">[], all: GameFindings[]) {
+/** What recurs in one game: an id, what to show of it and what to do about it. */
+export type Item = { id: string; headline: string; advice: string | null };
+
+/** The problems a report shows. */
+export const problemItems = (g: GameFindings): Item[] => g.findings.slice(0, SHOWN);
+/** The strengths of a game, named by their key. */
+export const strengthItems = (g: GameFindings): Item[] => g.strengths.map((s) => ({ id: s.key, headline: s.text, advice: null }));
+
+/** `games` oldest first, as on Performance; `all` the findings of every analyzed game; `pick` what recurs (problems by default), `good` true for strengths. */
+export function recurringView(games: Pick<PerfGame, "game_key" | "result">[], all: GameFindings[], pick: (g: GameFindings) => Item[] = problemItems, good = false) {
   const byKey = new Map(all.map((g) => [g.key, g]));
+  const itemsOf = (key: string) => {
+    const found = byKey.get(key);
+    return found ? pick(found) : [];
+  };
   // Oldest first, decided games only, as on the rest of the page.
-  const list = games.filter((g) => g.result === "win" || g.result === "loss").map((g) => ({ g, f: byKey.get(g.game_key)?.findings.slice(0, SHOWN) ?? [] }));
+  const list = games.filter((g) => g.result === "win" || g.result === "loss").map((g) => ({ g, f: itemsOf(g.game_key) }));
   const has = (x: (typeof list)[number], id: string) => x.f.some((f) => f.id === id);
   const ids = [...new Set(list.flatMap((x) => x.f.map((f) => f.id)))];
   const losses = list.filter((x) => x.g.result === "loss");
@@ -33,9 +47,9 @@ export function recurringView(games: Pick<PerfGame, "game_key" | "result">[], al
         advice: f.advice,
       };
     })
-    .sort((a, b) => b.inLosses + b.inWins - (a.inLosses + a.inWins) || b.inLosses - a.inLosses)
+    .sort((a, b) => (good ? b.inWins - a.inWins || a.inLosses - b.inLosses : b.inLosses + b.inWins - (a.inLosses + a.inWins) || b.inLosses - a.inLosses))
     .slice(0, 8);
-  const last10 = list.slice(-10);
+  const last10 = good ? wins.slice(-10) : list.slice(-10);
   const focus = ids
     .map((id) => ({ id, n: last10.filter((x) => has(x, id)).length, losses: last10.filter((x) => x.g.result === "loss" && has(x, id)).length }))
     .filter((x) => x.id !== "mechanics" && x.n >= 2)

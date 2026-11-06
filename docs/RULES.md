@@ -96,6 +96,41 @@ The same script flags suspect reports for review: losses with no finding or only
 strengths that contradict a shown finding (now removed from the strengths), and losses where
 you led in army all game.
 
+## Strengths
+
+The report opens with what went well: up to three core metrics where the game beat most pro
+games of the matchup (`strengths` in `findings.ts`), skipping any that a finding shown for the
+same game contradicts, a lost trade, and any number the opponent beat in the same game (the table
+below counts with that rule; the rows of those left out are from before it). The match list shows the first as "Main strength".
+Heroes count as the trade, not your losses alone: "Won the hero trade" when you killed more heroes
+than you lost. Losing none qualified in 62% of player-games (wins 71%, losses 53%), mostly short
+losses, games over before the fights, so it praised little; checked on a user's games too (won 35%
+of the games where it qualified, 70% of those where they won the hero trade).
+Each metric was checked on held-out pro games like the rules above
+(`node scripts/eval-findings.ts --holdout --strengths`: 408 player-games, 203 wins and 205
+losses): a strength has to qualify more often in wins than in losses, with the whole 95% interval
+of the difference above 0, and in at least 1% of games.
+
+| strength | in wins | in losses | difference (95% interval) | overall |
+|---|---|---|---|---|
+| hero_xp_share | 60% | 9% | +50.8 (+43.0 to +58.6) | 34.1% |
+| trade_efficiency | 60% | 19% | +40.6 (+32.0 to +49.2) | 39.2% |
+| hero_xp_6m | 26% | 6% | +19.3 (+12.4 to +26.1) | 15.9% |
+| hero_xp_10m | 29% | 11% | +17.8 (+10.3 to +25.4) | 19.6% |
+| units_killed | 34% | 13% | +21.3 (+13.4 to +29.3) | 23.3% |
+| hero_deaths, as the hero trade | 32% | 20% | +12.0 (+3.6 to +20.4) | 25.5% |
+| unused_supply_avg | 47% | 31% | +16.1 (+6.7 to +25.4) | 39.2% (left out for now: weak, mostly short or small games; to study in 0.3) |
+| hero_level3_ms | 21% | 6% | +14.8 (+8.4 to +21.3) | 13.2% |
+| creep_camps_6m | 26% | 12% | +13.4 (+5.9 to +20.9) | 18.9% |
+| gold_collected | 33% | 26% | +6.7 (-2.2 to +15.5) | 29.7% (not a strength) |
+| workers_alive_6m | 36% | 32% | +4.3 (-4.9 to +13.4) | 33.8% (not a strength) |
+| goal_3360_ms | 11% | 7% | +4.0 (-1.5 to +9.5) | 8.8% (not a strength) |
+| workers_alive_10m | 22% | 19% | +3.6 (-4.2 to +11.4) | 20.3% (not a strength) |
+| workers_by_6m | 26% | 24% | +1.7 (-6.7 to +10.1) | 25.2% (not a strength) |
+
+Pros reach the same worker counts and gold in wins and losses, so those are no longer praised
+(`NOT_STRENGTHS`).
+
 ## Around the findings (no model needed)
 
 `packages/rules/src/report.ts`, `advice.ts`, and `becauseFor` in `findings.ts`:

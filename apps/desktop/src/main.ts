@@ -1,4 +1,5 @@
 // Electron main process: one window, read-mostly access to the Replay Altar database.
+import { fontRestart } from "./fonts.ts";
 import { freshCopy, pruneOldCopies } from "./appimage.ts";
 import { appendFileSync, closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readdirSync, readFileSync, readSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
 import { execFile, spawn, type StdioOptions } from "node:child_process";
@@ -192,11 +193,13 @@ const parseArgs = (argv: string[]): Launch => ({
 
 // A screenshot run (dev/test) gets its own profile, and so its own single-instance lock:
 // it must never hand its arguments to, resize, or quit the real Replay Altar window.
-if (parseArgs(process.argv).screenshot) {
+if (parseArgs(process.argv).screenshot && !fontRestart) {
   app.setPath("userData", mkdtempSync(join(tmpdir(), "replay-altar-shot-")));
 }
 
-if (cliAt >= 0) {
+if (fontRestart) {
+  // Only starts the window again, with its own fonts (fonts.ts).
+} else if (cliAt >= 0) {
   // The CLI only (above).
 } else if (!app.requestSingleInstanceLock()) {
   app.quit();
@@ -430,7 +433,8 @@ if (cliAt >= 0) {
     for (const [i, g] of games.entries()) {
       // Other requests get through now and then: hundreds of games not worked out yet take a while.
       if (i % 25 === 24) await new Promise((r) => setImmediate(r));
-      out.push({ key: g.game_key, playedAt: g.played_at, result: g.result, findings: bookOf(g.game_key).findings.map((f) => ({ id: f.id, headline: f.headline, severity: f.severity, advice: f.advice ?? null })) });
+      const book = bookOf(g.game_key);
+      out.push({ key: g.game_key, playedAt: g.played_at, result: g.result, findings: book.findings.map((f) => ({ id: f.id, headline: f.headline, severity: f.severity, advice: f.advice ?? null })), strengths: book.strengths.map((s) => ({ key: s.key, name: s.name, text: s.text })) });
     }
     return out;
   });
