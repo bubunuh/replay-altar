@@ -5,7 +5,7 @@ What changes for players in each version. Work happens on `dev`; a version is ma
 part of a version: an installer ships only the app, the simulation engine and the published pro
 statistics (`data/`).
 
-## Unreleased (0.2.5)
+## 0.2.5 (2026-11-10)
 
 - **W3Champions games no longer show twice in the match list.** Each W3Champions game leaves two
   replays: the game's own (LastReplay.w3g) and the W3Champions launcher's (w3c-<date>.w3g). The
