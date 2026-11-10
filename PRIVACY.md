@@ -17,7 +17,7 @@ Replay Altar reads Warcraft III's game data and your maps and replays from your 
 
 Only these two things, and both can be turned off in **Settings → Behaviour**:
 
-1. **W3Champions end-of-game statistics.** After each W3Champions game you play, Replay Altar asks the W3Champions website for that game's own end-of-game statistics (gold, lumber, experience, units killed). To find the game, it sends both players' battletags and the season to W3Champions, a few small requests per game, one game at a time. W3Champions' own privacy policy applies to these requests: https://www.w3champions.com.
+1. **W3Champions end-of-game statistics.** After each W3Champions game you play, Replay Altar asks the W3Champions website for that game's result and its own end-of-game statistics (gold, lumber, experience, units killed). To find the game, it sends both players' battletags and the season to W3Champions, a few small requests per game, one game at a time. W3Champions' own privacy policy applies to these requests: https://www.w3champions.com.
 2. **Update check.** Once a day, Replay Altar asks GitHub for the list of Replay Altar versions, to tell you when a new one is out. Nothing about you is sent beyond what any web request carries (your IP address). Updating is always your choice: when you press **Update**, the new installer is downloaded from GitHub. GitHub's privacy statement applies: https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement.
 
 **Report a problem** and **Suggest an idea** (Settings → Help and feedback) only open a page on GitHub in your browser, with Replay Altar's version and your system filled in; nothing is sent unless you submit it there yourself.

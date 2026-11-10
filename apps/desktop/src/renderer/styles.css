@@ -127,6 +127,10 @@ td.num, th.num { text-align: right; }
 .result::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
 .result.win::before { background: var(--good); }
 .result.loss::before { background: var(--critical); }
+.result.reviewing { color: var(--muted); font-weight: 500; }
+.result.reviewing::before { background: transparent; border: 1.5px solid var(--muted); animation: reviewing 1.6s ease-in-out infinite; }
+@keyframes reviewing { 50% { opacity: 0.3; } }
+@media (prefers-reduced-motion: reduce) { .result.reviewing::before { animation: none; } }
 .tag { display: inline-block; padding: 1px 7px; border-radius: 999px; background: var(--surface-2); color: var(--ink-2); font-size: calc(12px * var(--text-scale)); }
 
 .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }

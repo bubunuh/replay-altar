@@ -321,7 +321,9 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
         <div className="card match-card">
           <div className="match-side">{me && opp && <ScorePanel record={r} me={me} opp={opp} metrics={metrics} mp={ref?.mp ?? null} />}</div>
           <div className="match-head">
-            <div className={`big ${row.result}`}>{row.result === "win" ? tr("Victory", "Vitória", "Victoria", "Victoire") : row.result === "loss" ? tr("Defeat", "Derrota", "Derrota", "Défaite") : tr("Result unknown", "Resultado desconhecido", "Resultado desconocido", "Résultat inconnu")}</div>
+            <div className={`big ${row.result}`} data-tip={row.result === "reviewing" ? tr("Looking up the result on W3Champions: it shows in a minute or two after the game.", "Buscando o resultado no W3Champions: ele aparece um ou dois minutos depois da partida.", "Buscando el resultado en W3Champions: aparece uno o dos minutos después de la partida.", "Recherche du résultat sur W3Champions : il s'affiche une ou deux minutes après la partie.") : undefined}>
+              {row.result === "win" ? tr("Victory", "Vitória", "Victoria", "Victoire") : row.result === "loss" ? tr("Defeat", "Derrota", "Derrota", "Défaite") : row.result === "reviewing" ? tr("Reviewing…", "Verificando…", "Verificando…", "Vérification…") : tr("Result unknown", "Resultado desconhecido", "Resultado desconocido", "Résultat inconnu")}
+            </div>
             <div className="versus">
               <div className="versus-side me">
                 <div className="versus-name">
@@ -353,7 +355,7 @@ export function Match({ gameKey, metrics, refs, onBack }: { gameKey: string; met
                     load();
                   }}
                 >
-                  <option value="detected">{tr("Detected", "Detectado", "Detectado", "Détecté")}: {({ win: tr("win", "vitória", "victoria", "victoire"), loss: tr("loss", "derrota", "derrota", "défaite") } as Record<string, string>)[row.result_detected] ?? row.result_detected}</option>
+                  <option value="detected">{tr("Detected", "Detectado", "Detectado", "Détecté")}: {({ win: tr("win", "vitória", "victoria", "victoire"), loss: tr("loss", "derrota", "derrota", "défaite"), unknown: tr("unknown", "desconhecido", "desconocido", "inconnu"), reviewing: tr("reviewing", "verificando", "verificando", "vérification") } as Record<string, string>)[row.result_detected] ?? row.result_detected}</option>
                   <option value="win">{tr("Win (manual)", "Vitória (manual)", "Victoria (manual)", "Victoire (manuel)")}</option>
                   <option value="loss">{tr("Loss (manual)", "Derrota (manual)", "Derrota (manual)", "Défaite (manuel)")}</option>
                 </select>

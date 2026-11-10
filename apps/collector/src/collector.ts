@@ -5,6 +5,7 @@ import { join } from "node:path";
 import {
   collectorMode,
   firstStart,
+  GAME_KEY_VERSION,
   importLimit,
   ingestFile,
   isWarcraftRunning,
@@ -12,6 +13,7 @@ import {
   type CollectorMode,
   logEvent,
   reingestAll,
+  rekeyGames,
   loadConfig,
   markCollectorRunning,
   mmss,
@@ -20,8 +22,10 @@ import {
   replayDirs,
   resolveLanguage,
   setLanguage,
+  settleW3cResults,
   startOverIfNewAnalysis,
   tr,
+  w3cResultDone,
   warcraftFolders,
   type GameRecord,
 } from "@replay-altar/core";
@@ -93,7 +97,24 @@ async function awake(mode: CollectorMode, wake: Wake | null, first: boolean, asl
   const db = openDb(p.db);
   // Before anything is imported: a database with games already means an update.
   const start = firstStart(db);
-  const ctx = { db, config, paths: p };
+  const lookups = config.fetchOfficialStats !== false;
+  // Your W3Champions games' results come from W3Champions (core official.ts).
+  const ctx = { db, config, paths: p, w3cResults: lookups ? ("lookup" as const) : ("off" as const) };
+  // Up to 0.2.4 a W3Champions game's two copies (the game's own and the launcher's) were two games
+  // (gamekey.ts): once, they become one.
+  const keys = join(p.root, "game-keys.json");
+  let keyVersion = 0;
+  try {
+    keyVersion = Number((JSON.parse(readFileSync(keys, "utf8")) as { version?: unknown }).version) || 0;
+  } catch {
+    // never done
+  }
+  if (keyVersion < GAME_KEY_VERSION) {
+    const out = rekeyGames(ctx);
+    if (out.moved) log(`game keys: ${out.moved} game(s) moved to their key, ${out.merged} of them into the other copy of the same game`);
+    for (const e of out.errors) log(`game keys: ${e}`);
+    if (out.errors.length === 0) writeFileSync(keys, JSON.stringify({ version: GAME_KEY_VERSION, at: new Date().toISOString() }));
+  }
   // Your battletags changed (confirmed or edited in Settings, which restarts the collector): sort
   // the archived games again, so the ones you played count as yours.
   const applied = join(p.root, "accounts-applied.json");
@@ -105,6 +126,19 @@ async function awake(mode: CollectorMode, wake: Wake | null, first: boolean, asl
     writeFileSync(applied, accountsKey);
     writeProgress({ setup: null, import: null, sims: null });
   }
+  // Up to 0.2.4 a W3Champions game's result came from the replay, often wrongly (official.ts):
+  // once, they become W3Champions' ("Reviewing" until the lookups below find them). When the
+  // lookups were turned on or off, the games without a winner follow.
+  const resultsFile = join(p.root, "w3c-results.json");
+  let modeBefore: unknown = null;
+  try {
+    modeBefore = (JSON.parse(readFileSync(resultsFile, "utf8")) as { mode?: unknown }).mode;
+  } catch {
+    // never done
+  }
+  const settled = settleW3cResults(ctx, modeBefore !== ctx.w3cResults);
+  if (settled) log(`W3Champions results: ${settled} game(s) ${lookups ? "now take theirs from W3Champions" : "unknown while the W3Champions lookups are off"}`);
+  if (modeBefore !== ctx.w3cResults) writeFileSync(resultsFile, JSON.stringify({ mode: ctx.w3cResults, at: new Date().toISOString() }));
   // Warcraft III as last seen (every few seconds): "game" mode holds simulations while it runs.
   let warcraft = isWarcraftRunning();
   const sims = new SimQueue(ctx, log, () => holdSimulations(warcraft));
@@ -134,8 +168,8 @@ async function awake(mode: CollectorMode, wake: Wake | null, first: boolean, asl
       const r = out.record;
       log(`${out.status} ${r.gameKey.slice(0, 8)} ${r.classification.source}/${r.classification.category} analyzed=${r.classification.analyzed} from ${path}`);
       if (out.needsSim) sims.add(r.gameKey);
-      // Never looked up (a game imported again after a start-over keeps what was found before).
-      if (out.status === "new" && !r.official && r.classification.source === "w3champions" && r.classification.analyzed && config.fetchOfficialStats !== false) officials.add(r.gameKey);
+      // Not looked up yet (a game imported again after a start-over keeps what was found before).
+      if (out.status === "new" && !w3cResultDone(r.official) && r.classification.source === "w3champions" && r.classification.analyzed && lookups) officials.add(r.gameKey);
       // Notify only for a game that just ended while we were watching. A rescan can find a
       // game from minutes ago, and its notification would land in the middle of the next match.
       const fresh = Date.now() - Date.parse(r.game.endedAt) < 10 * 60_000;
@@ -183,9 +217,9 @@ async function awake(mode: CollectorMode, wake: Wake | null, first: boolean, asl
   sims.backfill();
   // W3Champions statistics still missing for recent games: their later tries were lost if the
   // collector went back to waiting or stopped meanwhile.
-  if (config.fetchOfficialStats !== false) {
+  if (lookups) {
     const n = officials.catchUp();
-    if (n) log(`W3Champions statistics: ${n} recent game(s) to look up again`);
+    if (n) log(`W3Champions: ${n} game(s) to look up (statistics and who won)`);
   }
   // Games that failed for a reason outside the replay are simulated again: missing game data
   // whenever it's there now (it appears once the game is installed), and map failures once per

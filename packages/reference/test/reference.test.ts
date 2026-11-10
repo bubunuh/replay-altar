@@ -64,6 +64,8 @@ describe("official end-of-game stats", () => {
     const r = record();
     const off = await officialForOwnGame(client("2026-10-12T21:05:37Z"), r);
     expect(off).toMatchObject({ status: "ok", matchId: "w3c-1" });
+    // Who won, as W3Champions says (the result of a W3Champions game, core official.ts).
+    expect(off.status === "ok" && off.players.map((p) => [p.battleTag, p.won])).toEqual([["Me#1", true], ["Opp#1", false]]);
     mergeOfficial(r, off);
     const me = r.players[0];
     expect(me.metrics.hero_xp_total).toBe(2411);

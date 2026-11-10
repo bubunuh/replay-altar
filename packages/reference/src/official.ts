@@ -1,14 +1,24 @@
 // Fetching the game's own end-of-game stats from W3Champions for a stored game.
 import type { GameRecord, OfficialStats } from "@replay-altar/core";
-import type { W3cClient, W3cScore } from "./w3c.ts";
+import type { W3cClient, W3cMatch, W3cScore } from "./w3c.ts";
 
 const GATEWAYS = [20, 10];
 const START_TOLERANCE_MS = 10 * 60_000;
 
-export function officialFromScores(matchId: string, scores: W3cScore[], record: GameRecord): OfficialStats {
+/** W3Champions' winner for a player of the match (the player's own flag, else the team's). */
+function wonIn(match: W3cMatch, battleTag: string): boolean | undefined {
+  for (const t of match.teams) {
+    const p = t.players.find((x) => x.battleTag.toLowerCase() === battleTag.toLowerCase());
+    if (p) return p.won ?? t.won;
+  }
+  return undefined;
+}
+
+export function officialFromScores(matchId: string, scores: W3cScore[], record: GameRecord, match?: W3cMatch): OfficialStats {
   const players = record.players.flatMap((p) => {
     const s = scores.find((x) => x.battleTag.toLowerCase() === p.name.toLowerCase());
     if (!s) return [];
+    const won = match ? wonIn(match, s.battleTag) : undefined;
     return [
       {
         playerId: p.playerId,
@@ -23,6 +33,7 @@ export function officialFromScores(matchId: string, scores: W3cScore[], record: 
         goldCollected: s.resourceScore.goldCollected,
         lumberCollected: s.resourceScore.lumberCollected,
         goldUpkeepLost: s.resourceScore.goldUpkeepLost,
+        ...(won === undefined ? {} : { won }),
       },
     ];
   });
@@ -36,7 +47,7 @@ export function officialFromScores(matchId: string, scores: W3cScore[], record: 
 export async function officialForMatch(client: W3cClient, matchId: string, record: GameRecord): Promise<OfficialStats> {
   const detail = await client.matchDetail(matchId);
   if (!detail) return { status: "missing", source: "w3champions", fetchedAt: new Date().toISOString(), attempts: 1, reason: "match not found" };
-  return officialFromScores(matchId, detail.playerScores, record);
+  return officialFromScores(matchId, detail.playerScores, record, detail.match);
 }
 
 /**

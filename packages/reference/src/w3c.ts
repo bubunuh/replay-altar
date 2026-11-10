@@ -21,7 +21,7 @@ export type W3cMatch = {
   gateWay: number;
   season: number;
   gameMode: number;
-  teams: { players: W3cPlayer[] }[];
+  teams: { players: W3cPlayer[]; won?: boolean }[];
 };
 
 export type Fetch = (url: string, init?: { method?: string; body?: string; headers?: Record<string, string> }) => Promise<{ status: number; headers: { get(name: string): string | null }; json(): Promise<unknown>; arrayBuffer(): Promise<ArrayBuffer> }>;

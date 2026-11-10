@@ -19,7 +19,7 @@ import {
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { activeReferenceGroups, applyOfficial, applySim, collectorState, proDataDir, projectRoot, readRecord, referencePaths, type RefLookup } from "@replay-altar/core";
+import { activeReferenceGroups, applyOfficial, applySim, collectorState, proDataDir, projectRoot, readRecord, referencePaths, w3cResultDone, type OfficialStats, type RefLookup } from "@replay-altar/core";
 import { CONSTANTS, gamedataDir, loadCosts, readSimOutput, simNotReady, simulateGame, summarize } from "@replay-altar/sim";
 import { buildProfile, poolOf, officialForMatch, officialForOwnGame, openReference, readState, refreshGroup, w3cClient } from "@replay-altar/reference";
 import { rulesBook } from "@replay-altar/rules";
@@ -67,7 +67,11 @@ const HELP = `replay-altar — Warcraft III replay archive & stats
 `;
 
 const [cmd, ...args] = process.argv.slice(2);
-const ctx = () => ({ db: openDb(paths().db), config: loadConfig(), paths: paths() });
+/** Your own games (W3Champions results as the collector sets them: core official.ts). */
+const ctx = () => {
+  const config = loadConfig();
+  return { db: openDb(paths().db), config, paths: paths(), w3cResults: config.fetchOfficialStats === false ? ("off" as const) : ("lookup" as const) };
+};
 const resolveKey = (db: ReturnType<typeof openDb>, ref: string) => {
   const row = (ref === "latest"
     ? db.prepare("SELECT game_key FROM games ORDER BY played_at DESC LIMIT 1").get()
@@ -371,12 +375,15 @@ switch (cmd) {
     const pause = () => new Promise((r) => setTimeout(r, 2000)); // gentle on W3Champions
     let ok = 0;
     let missing = 0;
-    // Yours: W3Champions games without stats (or with a not-yet-found note).
+    // Yours: W3Champions games without stats or without who won (or with a not-found note). Not
+    // found now: the collector's next start decides whether to try again (officialqueue.ts).
     for (const { game_key } of c.db.prepare("SELECT game_key FROM games WHERE source = 'w3champions' AND analyzed = 1").all() as { game_key: string }[]) {
       const record = readRecord(c.paths, game_key);
-      if (!record || record.official?.status === "ok") continue;
-      const prev = record.official?.status === "missing" ? record.official.attempts : 0;
-      const off = await officialForOwnGame(client, record, prev);
+      const before = record?.official;
+      if (!record || (before?.status === "ok" && w3cResultDone(before) && !before.final)) continue;
+      const prev = before?.status === "missing" ? before.attempts : 0;
+      const found = before?.status === "ok" ? await officialForMatch(client, before.matchId, record) : await officialForOwnGame(client, record, prev);
+      const off: OfficialStats = found.status === "ok" ? found : before?.status === "ok" ? { ...before, final: true } : { ...found, final: false };
       applyOfficial(c, game_key, off);
       if (off.status === "ok") ok++;
       else missing++;

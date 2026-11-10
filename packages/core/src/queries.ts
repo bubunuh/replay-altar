@@ -17,7 +17,7 @@ export type GameRow = {
   me_race: string | null;
   opp_name: string | null;
   opp_race: string | null;
-  result: "win" | "loss" | "unknown";
+  result: "win" | "loss" | "unknown" | "reviewing";
   result_detected: string;
   result_confidence: string;
   user_label: string | null;

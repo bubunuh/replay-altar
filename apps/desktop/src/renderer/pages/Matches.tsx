@@ -8,6 +8,8 @@ import { ReplayFolders } from "./Other.tsx";
 import { changeList, NO_FILTER, pageOf, type ListState } from "../paging.ts";
 
 export function Result({ result }: { result: string }) {
+  // A W3Champions game's result while it is looked up on W3Champions (core official.ts).
+  if (result === "reviewing") return <span className="result reviewing" data-tip={tr("Looking up the result on W3Champions: it shows in a minute or two after the game.", "Buscando o resultado no W3Champions: ele aparece um ou dois minutos depois da partida.", "Buscando el resultado en W3Champions: aparece uno o dos minutos después de la partida.", "Recherche du résultat sur W3Champions : il s'affiche une ou deux minutes après la partie.")}>{tr("Reviewing", "Verificando", "Verificando", "Vérification")}</span>;
   return <span className={`result ${result}`}>{result === "win" ? tr("Win", "Vitória", "Victoria", "Victoire") : result === "loss" ? tr("Loss", "Derrota", "Derrota", "Défaite") : tr("Unknown", "Desconhecido", "Desconocido", "Inconnu")}</span>;
 }
 

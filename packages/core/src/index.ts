@@ -5,6 +5,7 @@ export * from "./analysis.ts";
 export * from "./process.ts";
 export * from "./db.ts";
 export * from "./gamedata.ts";
+export * from "./gamekey.ts";
 export * from "./ingest.ts";
 export * from "./metrics.ts";
 export * from "./names.ts";
