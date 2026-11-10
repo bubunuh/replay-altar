@@ -5,6 +5,29 @@ What changes for players in each version. Work happens on `dev`; a version is ma
 part of a version: an installer ships only the app, the simulation engine and the published pro
 statistics (`data/`).
 
+## Unreleased (0.2.5)
+
+- **W3Champions games no longer show twice in the match list.** Each W3Champions game leaves two
+  replays: the game's own (LastReplay.w3g) and the W3Champions launcher's (w3c-<date>.w3g). The
+  game's copy adds your own number to the game's name (w3c-20-o6WD8g57v2-1102274), so the two
+  copies counted as two games, simulated twice, and counted twice in your statistics. They are
+  now one game, whichever is saved first. The longer copy is the one analyzed, as for other
+  copies of a game. Games imported twice before are merged once at the first start of 0.2.5:
+  they keep the simulation, the W3Champions statistics and any result you corrected. Battle.net
+  games were never affected.
+- **W3Champions results come from W3Champions.** At the end of a W3Champions game its server
+  closes everyone's connection, and the replay then doesn't say who won the way a Battle.net
+  replay does: read the Battle.net way, it gave the wrong winner in 2 of one player's 4 recent
+  W3Champions games. A W3Champions game you play now shows **Reviewing** until Replay Altar finds
+  the match on W3Champions (the same lookup as its end-of-game statistics, 90 seconds after the
+  game, then after 10 minutes and an hour), then W3Champions' own result. If the match is never
+  found (a private game, or the lookups are turned off in Settings) the result is **Unknown**,
+  and you can set it on the game's page. Your W3Champions games from before are looked up once
+  more for their result; results you corrected by hand stay. Reading the replay right for
+  W3Champions games is for 0.3.0.
+- **A new game's W3Champions lookup no longer waits behind another game's.** When one game's
+  lookup was waiting for its next try (10 minutes or an hour later), the next game's waited too.
+
 ## 0.2.4 (2026-11-06)
 
 - **What you did well comes first** (issue #6, a user: "after a while it starts to feel very

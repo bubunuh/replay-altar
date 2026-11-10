@@ -1,18 +1,20 @@
 import { createHash } from "node:crypto";
-import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { archiveEntryFor, isInside, keptOfficial, type ArchiveEntry, type ArchivedFrom } from "./analysis.ts";
 import { gzipSync } from "node:zlib";
 import type { Config } from "./config.ts";
-import { mapName, writeGame, type DB } from "./db.ts";
+import { mapName, transaction, writeGame, type DB } from "./db.ts";
+import { gameKeyOf, matchGameName } from "./gamekey.ts";
 import { SIM_METRIC_KEYS } from "./metrics.ts";
 import { parseReplay, type RawReplay } from "./parse.ts";
-import { mergeOfficial, type OfficialStats } from "./official.ts";
+import { mergeOfficial, settleW3cResult, takesW3cResult, type OfficialStats, type W3cResults } from "./official.ts";
 import { bestTimeFile, buildRecord, endTimeOf, mergeSim, type GameRecord, type SourceFile, type TimeSource } from "./record.ts";
 import type { SimSummary } from "./sim.ts";
 import { type Paths, logEvent, rawPath, readRaw, readRecord, recordPath } from "./store.ts";
 
-export type IngestContext = { db: DB; config: Config; paths: Paths };
+/** w3cResults: set for your own games only (official.ts). */
+export type IngestContext = { db: DB; config: Config; paths: Paths; w3cResults?: W3cResults };
 
 export type IngestOutcome =
   /** needsSim: the game has no simulation for its current canonical file yet. */
@@ -85,13 +87,25 @@ export const sourceFileOf = (f: ArchivedFrom, durationMs: number): SourceFile =>
 export const archivedEndTime = (entry: ArchiveEntry): number | null =>
   entry.files.length ? Date.parse(bestTimeFile(entry.files.map((f) => sourceFileOf(f, 0))).endedAt) : null;
 
-function save(ctx: IngestContext, record: GameRecord, raw: RawReplay, archiveSha: string) {
-  const { paths } = ctx;
+function writeFiles(paths: Paths, record: GameRecord, raw: RawReplay) {
   mkdirSync(paths.games, { recursive: true });
   mkdirSync(paths.raw, { recursive: true });
   writeFileSync(rawPath(paths, record.gameKey), gzipSync(JSON.stringify(raw)));
   writeFileSync(recordPath(paths, record.gameKey), JSON.stringify(record, null, 1) + "\n");
+}
+
+function save(ctx: IngestContext, record: GameRecord, raw: RawReplay, archiveSha: string) {
+  settleW3cResult(record, ctx.w3cResults);
+  writeFiles(ctx.paths, record, raw);
   writeGame(ctx.db, record, archiveSha);
+}
+
+/** A changed record whose replay didn't change: its JSON and DB rows. */
+function saveRecord(ctx: IngestContext, record: GameRecord) {
+  settleW3cResult(record, ctx.w3cResults);
+  mkdirSync(ctx.paths.games, { recursive: true });
+  writeFileSync(recordPath(ctx.paths, record.gameKey), JSON.stringify(record, null, 1) + "\n");
+  writeGame(ctx.db, record, record.provenance.canonicalFile.sha256);
 }
 
 
@@ -138,11 +152,12 @@ export async function ingestFile(ctx: IngestContext, path: string): Promise<Inge
     return { status: "error", path, error };
   }
 
-  const key = raw.output.id;
+  const key = gameKeyOf(raw);
   const existing = readRecord(paths, key);
   // This content's game as archived before a start-over: the copy and the files it came from.
+  // Archived before 0.2.5, a W3Champions game may be there under its key of then (w3gjs's id).
   const entry = archiveEntryFor(paths, sha);
-  const kept = entry?.gameKey === key ? entry : undefined;
+  const kept = entry && (entry.gameKey === key || entry.gameKey === raw.output.id) ? entry : undefined;
   const here: SourceFile = {
     path,
     sha256: sha,
@@ -178,7 +193,7 @@ export async function ingestFile(ctx: IngestContext, path: string): Promise<Inge
   // belong to the game, so they always carry over.
   if (!replacesCanonical) mergeSim(record, existing?.sim);
   // Kept through a start-over: not asked for again.
-  mergeOfficial(record, existing?.official ?? keptOfficial(paths, key));
+  mergeOfficial(record, existing?.official ?? keptOfficial(paths, key) ?? keptOfficial(paths, raw.output.id));
 
   if (replacesCanonical) {
     if (existing && existsSync(existing.provenance.archivePath)) {
@@ -210,9 +225,107 @@ function archiveFor(paths: Paths, record: GameRecord, path: string, buffer: Buff
   return target;
 }
 
+/** The tables that name a game by its key, other than games (its own rows go with it). */
+const keyedTables = (db: DB) =>
+  (db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name <> 'games'").all() as { name: string }[])
+    .map((t) => t.name)
+    .filter((t) => (db.prepare(`SELECT name FROM pragma_table_info(?)`).all(t) as { name: string }[]).some((c) => c.name === "game_key"));
+
+/**
+ * A game stored under a key it no longer has (gamekey.ts: before 0.2.5, a W3Champions game's two
+ * copies were two games), moved to its key: `raw` is its canonical file read. When another copy of
+ * the game is there already, the two become one game as in ingestFile: every file of both, the
+ * longer copy canonical (on a tie, the game already there), with that copy's simulation, and the
+ * W3Champions statistics found for either. What hangs on the old key follows (results corrected by
+ * hand); the other copy's archived replay moves to the superseded folder. Safe to run again after
+ * an interruption: the old game is only gone once the new one is written.
+ */
+function moveGame(ctx: IngestContext, from: string, raw: RawReplay): { key: string; merged: boolean } {
+  const { db, config, paths } = ctx;
+  const old = readRecord(paths, from);
+  if (!old) throw new Error(`no record for ${from}`);
+  const key = gameKeyOf(raw);
+  const there = readRecord(paths, key);
+  const oldWins = !there || old.provenance.canonicalFile.durationMs > there.provenance.canonicalFile.durationMs;
+  const [win, lose] = oldWins ? [old, there] : [there, old];
+  const files: SourceFile[] = [];
+  for (const f of [...(there?.provenance.files ?? []), ...old.provenance.files]) {
+    if (!files.some((g) => g.path === f.path && g.sha256 === f.sha256)) files.push(f);
+  }
+  const winRaw = oldWins ? raw : readRaw(paths, key);
+  const record = buildRecord({
+    raw: winRaw,
+    myAccounts: config.accounts,
+    canonicalFile: win.provenance.canonicalFile,
+    files,
+    archivePath: win.provenance.archivePath,
+    ingestedAt: [old.provenance.ingestedAt, there?.provenance.ingestedAt].filter((t): t is string => !!t).sort()[0],
+  });
+  // The simulation belongs to the canonical file; its output goes by the key.
+  let sim = win.sim;
+  if (sim?.status === "ok" && win === old) {
+    const to = join(dirname(sim.outputPath), `${key}.wc3v.gz`);
+    if (existsSync(sim.outputPath)) renameSync(sim.outputPath, to);
+    if (existsSync(to)) sim = { ...sim, outputPath: to }; // moved now, or by a run cut short
+  }
+  mergeSim(record, sim);
+  const officials = [win.official, lose?.official, keptOfficial(paths, key), keptOfficial(paths, from)].filter((o): o is OfficialStats => !!o);
+  mergeOfficial(record, officials.find((o) => o.status === "ok") ?? officials[0]);
+  settleW3cResult(record, ctx.w3cResults);
+
+  writeFiles(paths, record, winRaw);
+  transaction(db, () => {
+    db.prepare("DELETE FROM games WHERE game_key = ?").run(from);
+    for (const t of keyedTables(db)) {
+      db.prepare(`UPDATE OR IGNORE "${t}" SET game_key = ? WHERE game_key = ?`).run(key, from);
+      db.prepare(`DELETE FROM "${t}" WHERE game_key = ?`).run(from);
+    }
+    writeGame(db, record, record.provenance.canonicalFile.sha256);
+  });
+  rmSync(recordPath(paths, from), { force: true });
+  rmSync(rawPath(paths, from), { force: true });
+  if (lose) {
+    const lost = lose.provenance.archivePath;
+    if (lost && lost !== record.provenance.archivePath && existsSync(lost) && isInside(lost, paths.archive) && !isInside(lost, paths.superseded)) {
+      mkdirSync(paths.superseded, { recursive: true });
+      renameSync(lost, freePath(join(paths.superseded, basename(lost)), lose.provenance.canonicalFile.sha256));
+    }
+    const output = (r: GameRecord) => (r.sim?.status === "ok" ? r.sim.outputPath : null);
+    const lostOutput = output(lose);
+    if (lostOutput && lostOutput !== output(record)) rmSync(lostOutput, { force: true });
+  }
+  return { key, merged: !!there };
+}
+
+/**
+ * The games stored under a key they no longer have, moved to it (moveGame): from before 0.2.5, a
+ * W3Champions game named with a player's suffix. Only those are read.
+ */
+export function rekeyGames(ctx: IngestContext): { moved: number; merged: number; errors: string[] } {
+  const { db, paths } = ctx;
+  const out = { moved: 0, merged: 0, errors: [] as string[] };
+  const rows = db.prepare("SELECT game_key, game_name FROM games WHERE game_name LIKE 'w3c-%'").all() as { game_key: string; game_name: string }[];
+  for (const { game_key, game_name } of rows) {
+    if (matchGameName(game_name) === game_name) continue;
+    try {
+      const raw = readRaw(paths, game_key);
+      if (gameKeyOf(raw) === game_key) continue;
+      const { merged } = moveGame(ctx, game_key, raw);
+      out.moved++;
+      if (merged) out.merged++;
+    } catch (e) {
+      out.errors.push(`${game_key}: ${(e as Error).message}`);
+    }
+  }
+  // The window keeps each game's findings until an event says the games changed.
+  if (out.moved) logEvent(paths, { type: "reingested", games: out.moved });
+  return out;
+}
+
 /**
  * Rebuild every record and DB row from the archived originals, using the current parser,
- * classifier and metrics. Manual annotations are untouched.
+ * classifier and metrics. Manual annotations are untouched. A game whose key changed moves to it
+ * (moveGame).
  */
 export async function reingestAll(ctx: IngestContext): Promise<{ games: number; errors: string[] }> {
   const { paths } = ctx;
@@ -220,10 +333,17 @@ export async function reingestAll(ctx: IngestContext): Promise<{ games: number; 
   let games = 0;
   if (!existsSync(paths.games)) return { games, errors };
   for (const f of readdirSync(paths.games).filter((x) => x.endsWith(".json")).sort()) {
-    const old = JSON.parse(readFileSync(join(paths.games, f), "utf8")) as GameRecord;
+    const file = join(paths.games, f);
+    if (!existsSync(file)) continue; // moved to its key meanwhile
+    const old = JSON.parse(readFileSync(file, "utf8")) as GameRecord;
     try {
       const buffer = readFileSync(old.provenance.archivePath);
       const raw = await parseReplay(buffer);
+      if (gameKeyOf(raw) !== old.gameKey) {
+        moveGame(ctx, old.gameKey, raw);
+        games++;
+        continue;
+      }
       const record = buildRecord({
         raw,
         myAccounts: ctx.config.accounts,
@@ -266,7 +386,35 @@ export function applyOfficial(ctx: IngestContext, gameKey: string, official: Off
   const record = readRecord(ctx.paths, gameKey);
   if (!record) return null;
   mergeOfficial(record, official);
-  save(ctx, record, readRaw(ctx.paths, gameKey), record.provenance.canonicalFile.sha256);
+  saveRecord(ctx, record);
   logEvent(ctx.paths, { type: "official", gameKey, status: official.status });
   return record;
+}
+
+/**
+ * Your W3Champions games' results as W3Champions gives them now (official.ts), at each start: the
+ * ones still from the replay (up to 0.2.4, once) and, when the lookups were turned on or off since
+ * the last start (`modeChanged`), the ones without a winner. Only the games whose result changes
+ * are written. Returns how many.
+ */
+export function settleW3cResults(ctx: IngestContext, modeChanged: boolean): number {
+  const rows = ctx.db
+    .prepare(
+      `SELECT game_key, result_detected, result_method FROM games
+       WHERE source = 'w3champions' AND analyzed = 1 AND category = '1v1_human' AND opp_name IS NOT NULL
+         AND (result_method <> 'w3champions' OR (? AND result_detected IN ('reviewing', 'unknown')))`,
+    )
+    .all(modeChanged ? 1 : 0) as { game_key: string; result_detected: string; result_method: string }[];
+  let changed = 0;
+  for (const row of rows) {
+    const record = readRecord(ctx.paths, row.game_key);
+    if (!record || !takesW3cResult(record)) continue;
+    settleW3cResult(record, ctx.w3cResults);
+    if (record.result.me === row.result_detected && record.result.method === row.result_method) continue;
+    saveRecord(ctx, record);
+    changed++;
+  }
+  // The window keeps each game's findings until an event says the games changed.
+  if (changed) logEvent(ctx.paths, { type: "reingested", games: changed });
+  return changed;
 }

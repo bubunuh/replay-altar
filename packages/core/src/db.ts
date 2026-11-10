@@ -13,7 +13,7 @@ const SCHEMA_V1 = `
 CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 
 CREATE TABLE games (
-  game_key TEXT PRIMARY KEY,           -- w3gjs id, see provenance.gameKeyMethod
+  game_key TEXT PRIMARY KEY,           -- gamekey.ts, see provenance.gameKeyMethod
   played_at TEXT NOT NULL,             -- ISO UTC, estimated game start (ended_at - duration)
   ended_at TEXT NOT NULL,
   time_source TEXT NOT NULL,           -- w3c_filename | lastreplay_mtime | saved_file_mtime
@@ -212,15 +212,23 @@ export function openDb(file: string, opts: { readOnly?: boolean } = {}): DB {
   return db;
 }
 
+const depth = new WeakMap<DB, number>();
+
+/** All of `fn` or nothing. Inside another transaction it is part of that one (a savepoint). */
 export function transaction<T>(db: DB, fn: () => T): T {
-  db.exec("BEGIN IMMEDIATE");
+  const level = depth.get(db) ?? 0;
+  const [begin, commit, rollback] = level === 0 ? ["BEGIN IMMEDIATE", "COMMIT", "ROLLBACK"] : [`SAVEPOINT t${level}`, `RELEASE t${level}`, `ROLLBACK TO t${level}; RELEASE t${level}`];
+  db.exec(begin);
+  depth.set(db, level + 1);
   try {
     const out = fn();
-    db.exec("COMMIT");
+    db.exec(commit);
     return out;
   } catch (e) {
-    db.exec("ROLLBACK");
+    db.exec(rollback);
     throw e;
+  } finally {
+    depth.set(db, level);
   }
 }
 

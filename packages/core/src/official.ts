@@ -1,6 +1,7 @@
 // The game's own end-of-game statistics (the score screen), as W3Champions stores them for its
 // matches. Battle.net ladder games have none. When present they replace our estimates.
 import type { GameRecord } from "./record.ts";
+import type { ResultInfo } from "./result.ts";
 
 export type OfficialPlayer = {
   playerId: number;
@@ -15,12 +16,15 @@ export type OfficialPlayer = {
   goldCollected: number;
   lumberCollected: number;
   goldUpkeepLost: number;
+  /** W3Champions' winner. Missing in statistics fetched before 0.2.5 (they are fetched again). */
+  won?: boolean;
 };
 
+/** `final`: no more lookups for this game (its result stays unknown unless the statistics say who won). */
 export type OfficialStats =
-  | { status: "ok"; source: "w3champions"; matchId: string; fetchedAt: string; players: OfficialPlayer[] }
-  /** Looked for but not found (yet); `attempts` drives retries. */
-  | { status: "missing"; source: "w3champions"; fetchedAt: string; attempts: number; reason: string };
+  | { status: "ok"; source: "w3champions"; matchId: string; fetchedAt: string; players: OfficialPlayer[]; final?: boolean }
+  /** Looked for but not found (yet); `attempts` drives retries. `final` unset: written before 0.2.5. */
+  | { status: "missing"; source: "w3champions"; fetchedAt: string; attempts: number; reason: string; final?: boolean };
 
 /** Metrics the official stats fill in (official-only ones stay null without them). */
 export const OFFICIAL_ONLY = ["lumber_collected", "upkeep_gold_lost", "units_killed", "units_produced", "largest_army", "heroes_killed", "items_obtained"] as const;
@@ -54,5 +58,50 @@ export function mergeOfficial(record: GameRecord, official: OfficialStats | unde
     p.metrics.hero_xp_per_min = typeof mine === "number" && record.game.durationMs > 0 ? mine / (record.game.durationMs / 60_000) : null;
   }
   for (const k of ["gold_collected", "hero_xp_total", "hero_xp_share", "hero_xp_per_min", ...OFFICIAL_ONLY]) record.metricSources[k] = "official";
+  return record;
+}
+
+/**
+ * Where your W3Champions games' results come from in a store. "lookup": W3Champions' own winner,
+ * "Reviewing" until it is found and "Unknown" if it never is; "off": the lookups are turned off
+ * (Settings), so "Unknown". Unset (reference games, analyzed replays): the replay's leave records.
+ *
+ * Why not the replay: at the end of a W3Champions game its server (FLO) closes everyone's
+ * connection, and the leave records it leaves don't say who won the way Battle.net's do. Read as
+ * Battle.net's, they gave the wrong winner in 2 of 4 of one player's games (0.2.5); reading them
+ * right is for 0.3.0.
+ */
+export type W3cResults = "lookup" | "off";
+
+/** A W3Champions 1v1 of yours: the games the lookup can find (officialForOwnGame). */
+export function takesW3cResult(r: GameRecord): boolean {
+  return r.classification.source === "w3champions" && r.classification.category === "1v1_human" && r.players.some((p) => p.isMe) && r.players.some((p) => p.playerId === r.classification.opponentId);
+}
+
+/** Whether the statistics already say who won (or never will). */
+export function w3cResultDone(o: OfficialStats | undefined): boolean {
+  if (!o) return false;
+  if (o.status === "ok") return o.players.some((p) => p.won !== undefined) || !!o.final;
+  return !!o.final;
+}
+
+/** Set a W3Champions game's result from W3Champions (see W3cResults); other games are left as they are. */
+export function settleW3cResult(record: GameRecord, mode: W3cResults | undefined): GameRecord {
+  if (!mode || !takesW3cResult(record)) return record;
+  // What the replay said, kept from the first time (record.result is W3Champions' after).
+  const { replay: before, ...fresh } = record.result;
+  const fromReplay = before ?? fresh;
+  const o = record.official;
+  const winner = o?.status === "ok" ? o.players.find((p) => p.won) : undefined;
+  const winnerTeamId = winner ? (record.players.find((p) => p.playerId === winner.playerId)?.teamId ?? null) : null;
+  const meTeam = record.players.find((p) => p.isMe)?.teamId;
+  const me: ResultInfo["me"] = winnerTeamId !== null ? (winnerTeamId === meTeam ? "win" : "loss") : mode === "off" || w3cResultDone(o) ? "unknown" : "reviewing";
+  const evidence =
+    winnerTeamId !== null && o?.status === "ok" ? `W3Champions match ${o.matchId}: ${winner!.battleTag} won`
+    : mode === "off" ? "W3Champions lookups are turned off (Settings)"
+    : me === "unknown" ? `not found on W3Champions${o?.status === "missing" ? `: ${o.reason}` : ""}`
+    : "looking it up on W3Champions";
+  record.result = { winnerTeamId, method: "w3champions", confidence: winnerTeamId === null ? "none" : "high", me, evidence, replay: fromReplay };
+  for (const p of record.players) p.result = winnerTeamId === null ? "unknown" : p.teamId === winnerTeamId ? "win" : "loss";
   return record;
 }

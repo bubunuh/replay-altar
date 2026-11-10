@@ -6,6 +6,7 @@ import { computeMetrics, METRICS_VERSION, SIM_METRICS, type Metrics } from "./me
 import { playerLevelUps } from "./heroxp.ts";
 import { dropRepeatedBuildOrders } from "./gamedata.ts";
 import { abilityName, nameOf, NAMES_SOURCE } from "./names.ts";
+import { GAME_KEY_METHOD, gameKeyOf } from "./gamekey.ts";
 import type { RawReplay } from "./parse.ts";
 import { detectResult, type ResultInfo } from "./result.ts";
 import type { OfficialStats } from "./official.ts";
@@ -212,7 +213,7 @@ export function buildRecord(input: {
 
   return {
     schemaVersion: SCHEMA_VERSION,
-    gameKey: out.id,
+    gameKey: gameKeyOf(raw),
     userLabel: userLabelOf(files),
     game: {
       playedAt,
@@ -231,7 +232,7 @@ export function buildRecord(input: {
     players,
     chat: out.chat.map((m) => ({ ms: m.timeMS, player: m.playerName, mode: m.mode, message: m.message })),
     provenance: {
-      gameKeyMethod: "w3gjs id: sha256(randomSeed + non-observer player names by id + gameName)",
+      gameKeyMethod: GAME_KEY_METHOD,
       canonicalFile: input.canonicalFile,
       files,
       archivePath: input.archivePath,

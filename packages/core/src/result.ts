@@ -3,14 +3,18 @@
 import type { Classification } from "./classify.ts";
 import type { RawReplay } from "./parse.ts";
 
-export type ResultMethod = "leave_victory" | "leave_game_over" | "first_leaver_lost" | "none";
+/** "w3champions": W3Champions' own winner (official.ts), for your W3Champions 1v1s. */
+export type ResultMethod = "leave_victory" | "leave_game_over" | "first_leaver_lost" | "w3champions" | "none";
 
 export type ResultInfo = {
   winnerTeamId: number | null;
   method: ResultMethod;
   confidence: "high" | "medium" | "none";
-  me: "win" | "loss" | "unknown";
+  /** "reviewing": a W3Champions game whose result is still being looked up on W3Champions. */
+  me: "win" | "loss" | "unknown" | "reviewing";
   evidence: string;
+  /** What the replay's leave records said, when the result comes from elsewhere (W3Champions). */
+  replay?: Omit<ResultInfo, "replay">;
 };
 
 // Leave record codes (little-endian hex as w3gjs prints them).
