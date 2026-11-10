@@ -270,58 +270,77 @@ W3Champions' official numbers); what helped is in the list above.
 - **Linux AppImage**, alongside the Windows installer: one file, no Node, git or podman needed. On first start it sets up the background collector (a systemd user service), the `replay-altar` command and a menu entry, reads the game data with a built-in read-only extractor, and updates itself in place like the Windows version.
 - **Linux: Battle.net is found in more places:** Lutris folders under `~/Games`, `~/.wine`, Steam's Proton prefixes and Bottles, for both the replays and the game data.
 
-## Planned for 0.3
+## Planned for 0.3.0
 
-The larger work, moved from 0.2.4: the gold and lumber model, recalibrations and new rules.
+The numbers get more right: the simulation, the gold and lumber estimates, the evaluation curve and
+W3Champions results. Everything that changes the simulation goes in together, because each such
+change means simulating the pro games again and players importing their games again; what is
+fitted on the simulation's numbers (income model, evaluation curve, rules) is redone once, after
+the simulation is settled. New rules are for 0.4.
 
+- **More recorded games, first:** every change below is judged against Warcraft III's own numbers,
+  read from the game while it plays a replay. From 51 recorded games to about 120: W3Champions
+  ladder games at three skill levels and tournament games, every matchup at every level, and more
+  of what the 51 are short of (games over 20 minutes, two or more expansions, Night Elf, Undead).
+  Half of the new games are put aside before anyone looks at them and only score the finished
+  work (the 15 games put aside for 0.2.2 are used up).
 - **WC3V from upstream:** our WC3V changes are merged upstream (jblanchette/wc3v #23 and #24), so
   Replay Altar can use upstream WC3V and drop its 26 patches (ready on branch
   `wc3v-upstream`, ec21018; a checkout needs `vendor/wc3v` reset, see its README). Upstream also has
   the author's follow-ups to #24, which move unit deaths by up to about a second in almost every
   game (244 of 251 checked): the army error stays the same (36 recorded games 70.9 → 71.0, the 15
-  others 78.1 → 76.3) and all 3,626 regression replays still simulate to the end. Moved from 0.2.4: switching
-  means simulating the pro data again and players importing their games again, which the gold and
-  lumber model needs anyway, so both go in together.
+  others 78.1 → 76.3) and all 3,626 regression replays still simulate to the end.
 - **Armies that "die" as the game ends:** in 14 of 105 player-games on one player's PC, an army
   loses more than half its value in the last 10 seconds, mostly the winner's (1410 → 235 at the
   end of a won game): the simulation counts units as lost when the game ends, not in a fight. The
   army chart's last point and the resources lost at the end read too high. For the WC3V lab.
-- **"Food well used" as a strength:** it passes the held-out check for pros only weakly (47% of
-  wins, 31% of losses), and on one player's games it showed in 15 of 31 losses and 3 of 23 wins
-  (short or small games have little unused food). Study it closer, e.g. count it only from an
-  army of some size. Food buildings are not only food: Undead Ziggurats and Orc Burrows defend,
-  Night Elf Moon Wells heal, Human Farms block paths, so spare food can be a choice, not waste.
+- **Gold and lumber in WC3V, if a first measurement says it pays:** the biggest error left in the
+  new WC3V is train orders the game refused for lack of gold, lumber or food, which WC3V still
+  turns into units (worst with Night Elf Druid spam until 0.2.2 trained Night Elf units in the
+  first selected Ancient only). A gold and lumber model inside the simulation would tell them
+  apart, and would let Replay Altar's own counts (units ordered, spending, build order) count a
+  train click once per selected building, which they can't do safely yet (see 0.2.2's checks).
+  The recordings hold gold, lumber, gold mined and lumber harvested at every snapshot, so they
+  serve as ground truth. First the most it can gain is measured: on the recorded games, refuse the
+  orders the game's real gold, lumber and food couldn't pay for, and score the army error. Under
+  about 15% better, no model is built for 0.3.0 and the measurement is written down here.
+  Clearly better, the model is built once and has to beat the games put aside; if it doesn't,
+  0.3.0 ships without it.
 - **Income model:** since 0.2.2 the second and third heroes count in the gold spent, and the
   mined-income model now often runs short early in the game (pros "spend" about 900 gold more than
   it estimates by 10:00), so the unspent gold reads 0 and the *unspent gold* finding stopped
-  working. Refit it together with the gold and lumber model.
-- **Gold and lumber in WC3V:** the biggest error left in the new WC3V is train orders the game
-  refused for lack of gold, lumber or food, which WC3V still turns into units (worst with Night Elf
-  Druid spam until 0.2.2 trained Night Elf units in the first selected Ancient only). A gold and lumber model inside the simulation would tell them apart. The observer
-  recordings already hold gold, lumber, gold mined and lumber harvested at every snapshot, so they
-  serve as ground truth; more recordings (more races, expansions, long games) as needed. The same
-  model would let Replay Altar's own counts (units ordered, spending, build order) count a train
-  click once per selected building, which they can't do safely yet (see 0.2.2's checks). First
-  measure the most it can gain: on the recorded games, refuse the orders the game's real gold,
-  lumber and food couldn't pay for, and score the army error; build the model only if that moves it
-  clearly. Its tests need new recordings (the 0.2.2 holdout is spent): expansions, long games,
-  Night Elf and Undead.
-- **Review the evaluation curve and the coaching rules on the better data:** refit the win-chance
-  model on the ~500 current-patch pro games and validate it on the ~3,000 tournament games, as for
-  0.2.0; re-score every rule held out (docs/RULES.md) and revisit which are shown.
-- **The evaluation curve favours whoever plays against Undead:** it compares the players' worker
-  counts as they are, but Undead mine with 5 acolytes while ghouls cut the lumber, so a Human or
-  Orc always looks about 10 workers ahead (and the amount of units counts those workers too). On
-  the 0.2.2 pro and tournament games, a Human against Undead gets 59-62% on average at 10 and 15
-  minutes but won 51% of those games, an Orc 56-59% but won 49%, and the Undead side reads about
-  10 points too low; Human against Orc reads about 8 points low for the Human at 10 minutes.
-  Found on a user's HvU game recorded from the game's own numbers (`observer/check-strauss.jsonl`):
-  the curve said 75-90% all game, while the armies were close until the last fight. Fix: count
-  workers by race (ghouls cutting lumber, or the difference from each race's usual count), and
-  check that each matchup's average evaluation matches how often that side won. A fixed edge per
-  matchup was tried for 0.2.0 and did worse (docs/WIN-CHANCE.md), and a curve per matchup would
-  have about 50 fitting games each; if a matchup is still off, give workers and the amount of
-  units weights by race, pulled toward the shared ones, or fit on the tournament games too.
+  working. Refit it on the new simulation, checked against the recordings' gold and lumber over
+  the whole game (every skill level) and W3Champions' end-of-game numbers.
+- **The evaluation curve, fitted again, no longer favours whoever plays against Undead:** it
+  compares the players' worker counts as they are, but Undead mine with 5 acolytes while ghouls
+  cut the lumber, so a Human or Orc always looks about 10 workers ahead (and the amount of units
+  counts those workers too). On the 0.2.2 pro and tournament games, a Human against Undead gets
+  59-62% on average at 10 and 15 minutes but won 51% of those games, an Orc 56-59% but won 49%,
+  and the Undead side reads about 10 points too low; Human against Orc reads about 8 points low
+  for the Human at 10 minutes. Found on a user's HvU game recorded from the game's own numbers
+  (`observer/check-strauss.jsonl`): the curve said 75-90% all game, while the armies were close
+  until the last fight. Fix: count workers by race (ghouls cutting lumber, or the difference from
+  each race's usual count), refit on the ~500 current-patch pro games, validate on the ~3,000
+  tournament games as for 0.2.0, and check that each matchup's average evaluation matches how
+  often that side won. One curve for all matchups stays: a fixed edge per matchup was tried for
+  0.2.0 and did worse (docs/WIN-CHANCE.md), and a curve per matchup would have about 50 fitting
+  games each.
+- **Every rule and strength scored again** on the new numbers, held out (docs/RULES.md), to decide
+  which are shown.
+- **W3Champions results read from the replay:** since 0.2.5 a W3Champions game shows *Reviewing*
+  until its result is found on W3Champions, and a private W3Champions game stays *Unknown*. The
+  replay does say who won, read differently: W3Champions' server closes every connection at the
+  end, so the last leave record describes the player who saved the replay, not the player it
+  names. That reading fixed the 2 wrong games of 0.2.5 and changed nothing on about 4,400 stored
+  replays, which proves it on 2 games only. For 0.3.0: test it on every W3Champions replay saved
+  by a player whose result we know, and use it only if it is right on all of them. W3Champions'
+  own result still wins when the match is found there; the replay gives the result at once and
+  covers private games.
+
+## Planned for 0.4
+
+New things to coach on, on 0.3.0's numbers. Neither needs the games simulated or imported again.
+
 - **Race-specific rules:** today's rules are the same for every race (only their thresholds follow
   the pros of your race). Screen the sources again (Warcraft 3 Gym's race pages, Liquipedia's race
   pages, and new race guides and coaching videos) for checks that belong to one race or matchup and
@@ -333,6 +352,12 @@ The larger work, moved from 0.2.4: the gold and lumber model, recalibrations and
   that same half, so: write the candidates down before looking at the games, screen them as
   today, and confirm the few that pass on games no rule has seen (1,000-2,000 new warcraft3.info
   tournament or W3Champions 2400+ games).
+- **"Food well used" as a strength** (hidden since 0.2.4): it passes the held-out check for pros
+  only weakly (47% of wins, 31% of losses), and on one player's games it showed in 15 of 31 losses
+  and 3 of 23 wins (short or small games have little unused food). Food buildings are not only
+  food: Undead Ziggurats and Orc Burrows defend, Night Elf Moon Wells heal, Human Farms block
+  paths, so spare food can be a choice, not waste. That makes it a question per race: study it
+  with the race-specific rules, e.g. count it only from an army of some size.
 
 ## Later
 
