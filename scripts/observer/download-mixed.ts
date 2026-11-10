@@ -1,10 +1,14 @@
 // Research: a recording batch spread over skill levels, for the WC3V lab. W3Champions ladder 1v1s at
 // three MMR bands plus warcraft3.info tournament games, all of the installed game version (Warcraft III
-// only opens replays of its own version), at most one game per matchup per band, simulated with WC3V.
+// only opens replays of its own version), at most --per-cell games per matchup per band (default 1),
+// simulated with WC3V. With --per-cell 2 or more, a cell's first game is 8 to 25 minutes as before and
+// the others are the longest on offer, up to 40 minutes (the first batches have few long games).
+// Replays with a damaged start (missing first selections: the game plays them back wrong) are left out.
+// Files are named zq01_..., zq02_...: watch.py finds each one by typing that first word into the game's filter.
 // Copies the replays into the game's Replays folder and writes a manifest for batch-compare.py.
 // Polite: W3Champions one replay every 45 s, warcraft3.info one request every 10 s.
 //
-//   node scripts/observer/download-mixed.ts <batch name> <replays folder> [--low 6] [--avg 8] [--high 8] [--pro 8] [--build 7003]
+//   node scripts/observer/download-mixed.ts <batch name> <replays folder> [--low 6] [--avg 8] [--high 8] [--pro 8] [--per-cell 1] [--build 7003]
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { applySim, ingestFile, loadConfig, mapFolders, parseReplay, paths, type GameRecord } from "@replay-altar/core";
@@ -52,7 +56,10 @@ for (const b of readdirSync(join(paths().root, "observer"))) {
 
 const manifestFile = join(out, "manifest.json");
 const manifest: Record<string, unknown>[] = existsSync(manifestFile) ? JSON.parse(readFileSync(manifestFile, "utf8")) : [];
-const taken = (band: string, mu: string) => manifest.some((e) => e.band === band && e.mu === mu);
+const perCell = Number(arg("--per-cell", "1"));
+const inCell = (band: string, mu: string) => manifest.filter((e) => e.band === band && e.mu === mu).length;
+const taken = (band: string, mu: string) => inCell(band, mu) >= perCell;
+const LONG = 1200; // seconds: a cell's later games should be at least this long, if there are any
 const count = (band: string) => manifest.filter((e) => e.band === band).length;
 
 /** Ingests, checks the version and simulates; copies the replay into the Replays folder if all is well. */
@@ -74,11 +81,15 @@ async function keep(buffer: Buffer, id: string, band: string, extra: Record<stri
     console.log(`${id}: simulation failed (${sim.reason}), skipped`);
     return false;
   }
+  if (record.classification.replayProblem) {
+    console.log(`${id}: ${record.classification.replayProblem}, skipped`);
+    return false;
+  }
   const mu = matchup(record.players.map((p) => p.race));
   const mapShort = record.game.map.file.replace(/^.*[\\/]/, "").replace(/\.w3[xm]$/, "").replace(/^\d+_|w3c_\d+_\d+_/g, "").slice(0, 20);
-  const name = `${String(manifest.length + 1).padStart(2, "0")}_${band}_${mu}_${mapShort}.w3g`;
+  const name = `zq${String(manifest.length + 1).padStart(2, "0")}_${band}_${mu}_${mapShort}.w3g`;
   copyFileSync(record.provenance.archivePath, join(replaysDir, name));
-  manifest.push({ file: name, key: record.gameKey, band, mu, map: record.game.map.file, names: record.players.map((p) => p.name), dur: Math.round(record.game.durationMs / 60000), ...extra });
+  manifest.push({ file: name, key: record.gameKey, band, mu, map: record.game.map.file, names: record.players.map((p) => p.name), dur: Math.round(record.game.durationMs / 60000), durationMs: record.game.durationMs, ...extra });
   writeFileSync(manifestFile, JSON.stringify(manifest, null, 1));
   console.log(`${name}  ${record.players.map((p) => p.name).join(" vs ")}`);
   return true;
@@ -89,22 +100,25 @@ const season = await w3c.currentSeason();
 for (const band of ["low", "avg", "high"] as const) {
   const [lo, hi] = BANDS[band];
   const candidates: { m: Awaited<ReturnType<typeof w3c.listMatches>>["matches"][number]; mu: string }[] = [];
-  for (let page = 0; page < 12 && candidates.length < 200; page++) {
+  for (let page = 0; page < 12 * perCell && candidates.length < 200 * perCell; page++) {
     for (const gateway of [20, 10]) {
       const { matches } = await w3c.listMatches({ gateway, season, minMmr: lo - 150, maxMmr: hi + 150, offset: page * 50, pageSize: 50 });
       await sleep(2000);
       for (const m of matches) {
         const players = m.teams.flatMap((t) => t.players);
-        if (players.length !== 2 || m.durationInSeconds < 480 || m.durationInSeconds > 1500 || earlier.has(m.id)) continue;
+        if (players.length !== 2 || m.durationInSeconds < 480 || m.durationInSeconds > (perCell > 1 ? 2400 : 1500) || earlier.has(m.id)) continue;
         if (players.some((p) => p.oldMmr < lo || p.oldMmr > hi || W3C_RACE[p.race] === "R") || Math.abs(players[0].oldMmr - players[1].oldMmr) > 150) continue;
         candidates.push({ m, mu: matchup(players.map((p) => W3C_RACE[p.race])) });
       }
     }
   }
   candidates.sort((a, b) => THIN.indexOf(a.mu) - THIN.indexOf(b.mu));
-  for (const { m, mu } of candidates) {
+  // Round 0 fills each cell's first place (8 to 25 minutes), the later rounds the others, longest first.
+  const rounds = [candidates.filter((c) => c.m.durationInSeconds <= 1500)];
+  for (let r = 1; r < perCell; r++) rounds.push([...candidates].sort((a, b) => THIN.indexOf(a.mu) - THIN.indexOf(b.mu) || b.m.durationInSeconds - a.m.durationInSeconds));
+  for (const [round, list] of rounds.entries()) for (const { m, mu } of list) {
     if (count(band) >= want[band]) break;
-    if (taken(band, mu) || manifest.some((e) => e.w3c === m.id)) continue;
+    if (inCell(band, mu) > round || taken(band, mu) || manifest.some((e) => e.w3c === m.id)) continue;
     await sleep(45_000);
     const buffer = await w3c.downloadReplay(m.id);
     if (!buffer) continue;
@@ -118,11 +132,14 @@ for (const band of ["low", "avg", "high"] as const) {
 let olderInARow = 0;
 outer: for (let page = 1; page <= 40 && count("pro") < want.pro; page++) {
   const { replays } = await w3i.listReplays(page);
-  const fits = replays.filter((r) => r.type === "1on1" && r.players.length === 2 && r.duration >= 540 && r.duration <= 1500 && !earlier.has(String(r.id)) && r.players.every((p) => w3iRace(p.race) && p.stats_player));
+  const fits = replays.filter((r) => r.type === "1on1" && r.players.length === 2 && r.duration >= 540 && r.duration <= (perCell > 1 ? 2400 : 1500) && !earlier.has(String(r.id)) && r.players.every((p) => w3iRace(p.race) && p.stats_player));
   fits.sort((a, b) => THIN.indexOf(matchup(a.players.map((p) => w3iRace(p.race)!))) - THIN.indexOf(matchup(b.players.map((p) => w3iRace(p.race)!))));
   for (const r of fits) {
     if (count("pro") >= want.pro) break outer;
-    if (taken("pro", matchup(r.players.map((p) => w3iRace(p.race)!))) || manifest.some((e) => e.w3info === r.id)) continue;
+    const mu = matchup(r.players.map((p) => w3iRace(p.race)!));
+    // A cell's later places go to long games while the list is young; after 15 pages any length will do.
+    if (inCell("pro", mu) >= 1 && r.duration < LONG && page <= 15) continue;
+    if (taken("pro", mu) || manifest.some((e) => e.w3info === r.id)) continue;
     const buffer = await w3i.download(r.id);
     if (!buffer) continue;
     if ((await parseReplay(buffer)).output.buildNumber < build) {
