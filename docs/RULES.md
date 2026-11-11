@@ -9,7 +9,7 @@ Numbers below: 3,532 held-out player-games over the four races (1,765 wins, 1,76
 the curated current-patch pro games (warcraft3.info tournaments and W3Champions 2400+) pooled with
 the validation set's tournament games from 2022 to 2026 (older patches, players from semi-pro to
 the very top), all read and simulated again with 0.2.2's reading and simulation (2026-10-27:
-WC3V with patches 0001–0026, no death correction afterwards, food used counted from the units;
+WC3V with Replay Altar's 26 patches (0001–0026, upstream since), no death correction afterwards, food used counted from the units;
 140 more validation games simulate than on 2026-10-23). On the current-patch pro games alone (408 held-out player-games) the main
 rules score: heroes 2.2, fights 3.7, hero deaths 2.3, expansion 2.4, out-expanded 1.7.
 

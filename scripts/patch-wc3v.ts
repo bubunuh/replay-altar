@@ -1,6 +1,8 @@
 // Applies Replay Altar's changes to WC3V (patches/wc3v/*.patch, in name order) to the vendor/wc3v
 // checkout. Run by `replay-altar setup-sim`, the AppImage and Windows packaging and the GitHub
-// build, so every copy simulates the same way.
+// build, so every copy simulates the same way. Since the submodule points at an upstream WC3V
+// commit that has all of Replay Altar's former changes, the series is empty (the folder may not
+// exist) and this script does nothing; it stays for the next change that is not upstream yet.
 //
 //   node scripts/patch-wc3v.ts          apply them (nothing happens when they already are)
 //   node scripts/patch-wc3v.ts --reset  also when the files they touch hold something else (a
@@ -40,7 +42,7 @@ const ok = (args: string[], env: Record<string, string> = {}) => {
 };
 
 try {
-  const patches = readdirSync(dir).filter((f) => f.endsWith(".patch")).sort();
+  const patches = existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith(".patch")).sort() : [];
   const head = git(["rev-parse", "--short", "HEAD"]).trim();
 
   // The submodule's commit with the patches on top, in the scratch index. `after(k)` runs once
