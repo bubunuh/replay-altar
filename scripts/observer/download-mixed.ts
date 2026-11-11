@@ -21,7 +21,7 @@ const arg = (name: string, fallback: string) => {
   return i >= 0 ? process.argv[i + 1] : fallback;
 };
 const [batch, replaysDir] = process.argv.slice(2);
-if (!batch || !replaysDir) throw new Error("usage: <batch name> <replays folder> [--low 6] [--avg 8] [--high 8] [--pro 8]");
+if (!batch || !replaysDir) throw new Error("usage: <batch name> <replays folder> [--low 6] [--avg 8] [--high 8] [--pro 8] | --from <folder> [--band pro]");
 const build = Number(arg("--build", "7003"));
 const BANDS = { low: [1000, 1300], avg: [1500, 1700], high: [2000, 2300] } as const;
 const want = { low: Number(arg("--low", "6")), avg: Number(arg("--avg", "8")), high: Number(arg("--high", "8")), pro: Number(arg("--pro", "8")) };
@@ -106,7 +106,18 @@ async function keep(buffer: Buffer, id: string, band: string, extra: Record<stri
   return true;
 }
 
-// W3Champions ladder: both players in the band and within 150 MMR of each other.
+// --from <folder>: replays downloaded by hand (warcraft3.info limits downloads), all into one band
+// (--band, default pro); nothing is downloaded.
+const fromFolder = arg("--from", "");
+if (fromFolder) {
+  const band = arg("--band", "pro");
+  for (const f of readdirSync(fromFolder).filter((f) => /\.(w3g|nwg)$/i.test(f)).sort()) {
+    if (!(await keep(readFileSync(join(fromFolder, f)), f, band, { source: "w3info", from: f }))) console.log(`${f}: not added`);
+  }
+  console.log(`${manifest.length} replays in ${replaysDir} (${Object.keys(want).map((b) => `${b} ${count(b)}`).join(", ")})`);
+  process.exit(0);
+}
+
 const season = await w3c.currentSeason();
 for (const band of ["low", "avg", "high"] as const) {
   const [lo, hi] = BANDS[band];
