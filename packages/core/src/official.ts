@@ -62,14 +62,13 @@ export function mergeOfficial(record: GameRecord, official: OfficialStats | unde
 }
 
 /**
- * Where your W3Champions games' results come from in a store. "lookup": W3Champions' own winner,
- * "Reviewing" until it is found and "Unknown" if it never is; "off": the lookups are turned off
- * (Settings), so "Unknown". Unset (reference games, analyzed replays): the replay's leave records.
- *
- * Why not the replay: at the end of a W3Champions game its server (FLO) closes everyone's
- * connection, and the leave records it leaves don't say who won the way Battle.net's do. Read as
- * Battle.net's, they gave the wrong winner in 2 of 4 of one player's games (0.2.5); reading them
- * right is for 0.3.0.
+ * Where your W3Champions games' results come from in a store. The replay says it at once when its
+ * leave records decide (result.ts reads the records of W3Champions' server, FLO, since 0.3.0; in
+ * 0.2.5 they weren't trusted). "lookup": W3Champions' own winner is looked up too and is the
+ * authority: it replaces the replay's when found, and a game the replay doesn't decide is
+ * "Reviewing" until then, "Unknown" if it never is found. "off": the lookups are turned off
+ * (Settings): the replay's result, else "Unknown". Unset (reference games, analyzed replays): the
+ * replay's leave records only.
  */
 export type W3cResults = "lookup" | "off";
 
@@ -85,7 +84,18 @@ export function w3cResultDone(o: OfficialStats | undefined): boolean {
   return !!o.final;
 }
 
-/** Set a W3Champions game's result from W3Champions (see W3cResults); other games are left as they are. */
+/**
+ * A W3Champions game where W3Champions' winner isn't the one the replay's leave records gave: the
+ * two winners' teams. W3Champions' stands; the collector writes it to its log, so that we learn of
+ * replays the reading gets wrong.
+ */
+export function w3cResultDiffers(record: GameRecord): { replay: number; w3champions: number } | null {
+  const r = record.result;
+  if (r.method !== "w3champions" || r.winnerTeamId === null || !r.replay || r.replay.winnerTeamId === null || r.replay.winnerTeamId === r.winnerTeamId) return null;
+  return { replay: r.replay.winnerTeamId, w3champions: r.winnerTeamId };
+}
+
+/** Set a W3Champions game's result (see W3cResults); other games are left as they are. */
 export function settleW3cResult(record: GameRecord, mode: W3cResults | undefined): GameRecord {
   if (!mode || !takesW3cResult(record)) return record;
   // What the replay said, kept from the first time (record.result is W3Champions' after).
@@ -95,6 +105,12 @@ export function settleW3cResult(record: GameRecord, mode: W3cResults | undefined
   const winner = o?.status === "ok" ? o.players.find((p) => p.won) : undefined;
   const winnerTeamId = winner ? (record.players.find((p) => p.playerId === winner.playerId)?.teamId ?? null) : null;
   const meTeam = record.players.find((p) => p.isMe)?.teamId;
+  if (winnerTeamId === null && fromReplay.winnerTeamId !== null && fromReplay.method !== "w3champions") {
+    // W3Champions hasn't said (yet): the replay's own result.
+    record.result = { ...fromReplay, me: fromReplay.winnerTeamId === meTeam ? "win" : "loss" };
+    for (const p of record.players) p.result = p.teamId === fromReplay.winnerTeamId ? "win" : "loss";
+    return record;
+  }
   const me: ResultInfo["me"] = winnerTeamId !== null ? (winnerTeamId === meTeam ? "win" : "loss") : mode === "off" || w3cResultDone(o) ? "unknown" : "reviewing";
   const evidence =
     winnerTeamId !== null && o?.status === "ok" ? `W3Champions match ${o.matchId}: ${winner!.battleTag} won`

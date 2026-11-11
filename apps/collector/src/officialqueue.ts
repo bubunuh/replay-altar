@@ -5,8 +5,9 @@
 // won't appear later). The later tries live only in this process: when the collector goes back to
 // waiting or stops, the next start looks up again the recent games still missing them (catchUp).
 // The match also says who won: from 0.2.5 that is your W3Champions games' result (core official.ts),
-// "Reviewing" until it is found, "Unknown" once the last try missed.
-import { applyOfficial, readRecord, w3cResultDone, type IngestContext, type OfficialStats } from "@replay-altar/core";
+// the authority over what the replay says (0.3.0); a game the replay doesn't decide is "Reviewing" until
+// it is found, "Unknown" once the last try missed.
+import { applyOfficial, readRecord, w3cResultDiffers, w3cResultDone, type IngestContext, type OfficialStats } from "@replay-altar/core";
 import { officialForMatch, officialForOwnGame, RateLimited, w3cClient } from "@replay-altar/reference";
 
 const RETRY_DELAYS_MS = [90_000, 10 * 60_000, 60 * 60_000];
@@ -117,7 +118,8 @@ export class OfficialQueue {
 
   /**
    * At start, in the same line (one lookup at a time, the same spacing and pause on a 429), newest
-   * first, your W3Champions games that don't know who won yet:
+   * first, your W3Champions games W3Champions hasn't said the winner of yet ("Reviewing", or with
+   * the result their replay gives):
    * - never looked up (the collector stopped before, or the lookups were off): due now;
    * - statistics from before 0.2.5, without the winner: the match again, due now;
    * - not found before 0.2.5: one more try, due now;
@@ -126,11 +128,12 @@ export class OfficialQueue {
    * Returns how many were queued.
    */
   catchUp(now = Date.now()): number {
-    // "Reviewing" is what each start (settleW3cResults) and each save make of a game without its winner.
-    const rows = this.ctx.db.prepare("SELECT game_key, ended_at FROM games WHERE source = 'w3champions' AND analyzed = 1 AND result_detected = 'reviewing' ORDER BY ended_at DESC").all() as { game_key: string; ended_at: string }[];
+    // Without W3Champions' winner a game is "Reviewing", or has the result its replay gives.
+    const rows = this.ctx.db.prepare("SELECT game_key, ended_at FROM games WHERE source = 'w3champions' AND analyzed = 1 AND category = '1v1_human' AND opp_name IS NOT NULL AND (result_detected = 'reviewing' OR result_method <> 'w3champions') ORDER BY ended_at DESC").all() as { game_key: string; ended_at: string }[];
     let n = 0;
     for (const row of rows) {
-      const official = readRecord(this.ctx.paths, row.game_key)?.official;
+      const record = readRecord(this.ctx.paths, row.game_key);
+      const official = record?.official;
       if (w3cResultDone(official)) continue;
       const due = (attempt: number, at = now) => {
         this.queue.add(row.game_key, attempt, at);
@@ -163,8 +166,11 @@ export class OfficialQueue {
       }
       // Found, but without a winner (not expected): no better on the next try than now.
       if (off.status === "ok" && !w3cResultDone(off)) off = { ...off, final };
-      applyOfficial(this.ctx, gameKey, off);
+      const after = applyOfficial(this.ctx, gameKey, off);
       if (off.status === "ok" && w3cResultDone(off)) this.log(`official stats for ${gameKey.slice(0, 8)} (W3C match ${off.matchId})`);
+      // W3Champions' result stands; the log keeps the replay's records, to learn how to read them.
+      const differs = after && w3cResultDiffers(after);
+      if (differs) this.log(`W3Champions result for ${gameKey.slice(0, 8)} differs from the replay's: W3Champions says team ${differs.w3champions} won, the replay team ${differs.replay} (${after.result.replay!.method}: ${after.result.replay!.evidence})`);
       return w3cResultDone(off) ? "done" : "retry";
     } catch (e) {
       this.log(`official stats for ${gameKey.slice(0, 8)} failed: ${(e as Error).message}`);

@@ -5,11 +5,12 @@ import { archiveEntryFor, isInside, keptOfficial, type ArchiveEntry, type Archiv
 import { gzipSync } from "node:zlib";
 import type { Config } from "./config.ts";
 import { mapName, transaction, writeGame, type DB } from "./db.ts";
+import { LADDER_HOSTS } from "./gamedata.ts";
 import { gameKeyOf, matchGameName } from "./gamekey.ts";
 import { SIM_METRIC_KEYS } from "./metrics.ts";
 import { parseReplay, type RawReplay } from "./parse.ts";
-import { mergeOfficial, settleW3cResult, takesW3cResult, type OfficialStats, type W3cResults } from "./official.ts";
-import { bestTimeFile, buildRecord, endTimeOf, mergeSim, type GameRecord, type SourceFile, type TimeSource } from "./record.ts";
+import { mergeOfficial, settleW3cResult, takesW3cResult, w3cResultDiffers, type OfficialStats, type W3cResults } from "./official.ts";
+import { bestTimeFile, buildRecord, endTimeOf, mergeSim, replayResult, type GameRecord, type SourceFile, type TimeSource } from "./record.ts";
 import type { SimSummary } from "./sim.ts";
 import { type Paths, logEvent, rawPath, readRaw, readRecord, recordPath } from "./store.ts";
 
@@ -168,7 +169,9 @@ export async function ingestFile(ctx: IngestContext, path: string): Promise<Inge
   };
   const origins = kept ? kept.files.map((f) => sourceFileOf(f, raw.output.duration)) : [];
   // Imported from the archived copy: the file it was copied from stands for it.
-  const file = (fromArchive && origins.find((f) => f.sha256 === sha)) || here;
+  // A W3Champions game's copies don't all say who won: each keeps its leave records (record.ts).
+  const leaves = raw.output.observers?.includes(LADDER_HOSTS.w3c) && raw.leaveEvents.length ? raw.leaveEvents.map(({ playerId, reason, result }) => ({ playerId, reason, result })) : undefined;
+  const file: SourceFile = { ...((fromArchive && origins.find((f) => f.sha256 === sha)) || here), ...(leaves ? { leaves } : {}) };
   const files: SourceFile[] = [];
   for (const f of [...(existing?.provenance.files ?? []), ...origins, file]) {
     const i = files.findIndex((g) => g.path === f.path && g.sha256 === f.sha256);
@@ -385,30 +388,48 @@ export function applySim(ctx: IngestContext, gameKey: string, sim: SimSummary): 
 export function applyOfficial(ctx: IngestContext, gameKey: string, official: OfficialStats): GameRecord | null {
   const record = readRecord(ctx.paths, gameKey);
   if (!record) return null;
+  const differed = w3cResultDiffers(record);
   mergeOfficial(record, official);
   saveRecord(ctx, record);
   logEvent(ctx.paths, { type: "official", gameKey, status: official.status });
+  // W3Champions' winner isn't the replay's: theirs stands, and it is written down once.
+  const differs = w3cResultDiffers(record);
+  if (differs && !differed) logEvent(ctx.paths, { type: "w3c_result_differs", gameKey, replayWinnerTeam: differs.replay, w3championsWinnerTeam: differs.w3champions, replay: record.result.replay });
   return record;
 }
 
+/** RESULT_READING as of the last settleW3cResults with `reread`; kept by the collector (w3c-results.json). */
+export const RESULT_READING = 2;
+
 /**
- * Your W3Champions games' results as W3Champions gives them now (official.ts), at each start: the
- * ones still from the replay (up to 0.2.4, once) and, when the lookups were turned on or off since
- * the last start (`modeChanged`), the ones without a winner. Only the games whose result changes
- * are written. Returns how many.
+ * Your W3Champions games' results set again at a start (official.ts). Only the games whose result
+ * changes are written. Returns how many.
+ * - `reread` (once, at the first start of a version that reads the leave records another way,
+ *   RESULT_READING): every one, with what its replay says read again from the stored parse, so a
+ *   game the replay decides gets its result without being imported again;
+ * - else `modeChanged` (the lookups were turned on or off since the last start): the ones
+ *   without a winner, "Reviewing" or "Unknown" as the lookups are on or off.
  */
-export function settleW3cResults(ctx: IngestContext, modeChanged: boolean): number {
+export function settleW3cResults(ctx: IngestContext, opts: { modeChanged: boolean; reread: boolean }): number {
+  if (!opts.modeChanged && !opts.reread) return 0;
   const rows = ctx.db
     .prepare(
       `SELECT game_key, result_detected, result_method FROM games
        WHERE source = 'w3champions' AND analyzed = 1 AND category = '1v1_human' AND opp_name IS NOT NULL
-         AND (result_method <> 'w3champions' OR (? AND result_detected IN ('reviewing', 'unknown')))`,
+         AND (? OR result_detected IN ('reviewing', 'unknown'))`,
     )
-    .all(modeChanged ? 1 : 0) as { game_key: string; result_detected: string; result_method: string }[];
+    .all(opts.reread ? 1 : 0) as { game_key: string; result_detected: string; result_method: string }[];
   let changed = 0;
   for (const row of rows) {
     const record = readRecord(ctx.paths, row.game_key);
     if (!record || !takesW3cResult(record)) continue;
+    if (opts.reread) {
+      try {
+        record.result = replayResult(readRaw(ctx.paths, row.game_key), record.classification, record.provenance.files, record.provenance.canonicalFile);
+      } catch {
+        // no stored parse: what the record has stays
+      }
+    }
     settleW3cResult(record, ctx.w3cResults);
     if (record.result.me === row.result_detected && record.result.method === row.result_method) continue;
     saveRecord(ctx, record);

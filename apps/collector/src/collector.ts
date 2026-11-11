@@ -22,6 +22,7 @@ import {
   replayDirs,
   resolveLanguage,
   setLanguage,
+  RESULT_READING,
   settleW3cResults,
   startOverIfNewAnalysis,
   tr,
@@ -126,19 +127,21 @@ async function awake(mode: CollectorMode, wake: Wake | null, first: boolean, asl
     writeFileSync(applied, accountsKey);
     writeProgress({ setup: null, import: null, sims: null });
   }
-  // Up to 0.2.4 a W3Champions game's result came from the replay, often wrongly (official.ts):
-  // once, they become W3Champions' ("Reviewing" until the lookups below find them). When the
-  // lookups were turned on or off, the games without a winner follow.
+  // Your W3Champions games' results (official.ts) follow two things that change between starts:
+  // how the replay is read (0.3.0 reads the leave records of W3Champions' servers: once, every
+  // game's replay is read again) and the lookups turned on or off (the games without a winner).
   const resultsFile = join(p.root, "w3c-results.json");
-  let modeBefore: unknown = null;
+  let before: { mode?: unknown; reading?: unknown } = {};
   try {
-    modeBefore = (JSON.parse(readFileSync(resultsFile, "utf8")) as { mode?: unknown }).mode;
+    before = JSON.parse(readFileSync(resultsFile, "utf8")) as typeof before;
   } catch {
     // never done
   }
-  const settled = settleW3cResults(ctx, modeBefore !== ctx.w3cResults);
-  if (settled) log(`W3Champions results: ${settled} game(s) ${lookups ? "now take theirs from W3Champions" : "unknown while the W3Champions lookups are off"}`);
-  if (modeBefore !== ctx.w3cResults) writeFileSync(resultsFile, JSON.stringify({ mode: ctx.w3cResults, at: new Date().toISOString() }));
+  const modeChanged = before.mode !== ctx.w3cResults;
+  const reread = before.reading !== RESULT_READING;
+  const settled = settleW3cResults(ctx, { modeChanged, reread });
+  if (settled) log(`W3Champions results: ${settled} game(s) changed (${reread ? "their replays read again" : lookups ? "the lookups are on" : "the lookups are off"})`);
+  if (modeChanged || reread) writeFileSync(resultsFile, JSON.stringify({ mode: ctx.w3cResults, reading: RESULT_READING, at: new Date().toISOString() }));
   // Warcraft III as last seen (every few seconds): "game" mode holds simulations while it runs.
   let warcraft = isWarcraftRunning();
   const sims = new SimQueue(ctx, log, () => holdSimulations(warcraft));
