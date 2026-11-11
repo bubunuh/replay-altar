@@ -26,9 +26,10 @@ import { logEvent, readRecord } from "./store.ts";
 
 /**
  * 1: everything up to 0.2.1 (and 0.2.2 before this mark existed). 2: 0.2.2 (new metrics, replay
- * checks, the new WC3V).
+ * checks, the new WC3V). 3: 0.2.6 (upstream WC3V with the end-of-game fix, income model v7, the
+ * W3Champions result read from the replay).
  */
-export const ANALYSIS_VERSION = 2;
+export const ANALYSIS_VERSION = 3;
 
 export const analysisFile = (p: Paths = dataPaths()) => join(p.root, "analysis.json");
 /** The database as it was before the last start-over. */
