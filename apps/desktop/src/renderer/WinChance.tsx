@@ -39,11 +39,13 @@ const featureName = (f: number) =>
     // Counted against the race's usual (a model fitted with --workers by-race): the same words.
     tr("workers", "trabalhadores", "trabajadores", "ouvriers"),
     tr("amount of units", "quantidade de unidades", "cantidad de unidades", "nombre d'unités"),
+    tr("hero experience", "experiência dos heróis", "experiencia de los héroes", "expérience des héros"),
+    tr("losses", "perdas", "pérdidas", "pertes"),
   ][f] ?? "?";
 
 function driverText(d: Driver): string {
   // Losses read the other way round: in your favour means they lost more.
-  if (d.feature === 7)
+  if (d.feature === 7 || d.feature === 19)
     return d.favours === "me"
       ? tr("losses (they lost more)", "perdas (o oponente perdeu mais)", "pérdidas (el rival perdió más)", "pertes (l'adversaire a perdu plus)")
       : tr("losses (you lost more)", "perdas (você perdeu mais)", "pérdidas (perdiste más)", "pertes (vous avez perdu plus)");

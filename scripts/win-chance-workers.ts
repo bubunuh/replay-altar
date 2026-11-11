@@ -151,6 +151,25 @@ const X1: Candidate = {
     return d;
   },
 };
+/**
+ * D+: D, and hero experience and resources lost against the race's usual too (written down after
+ * the 0.2.x round, docs/WIN-CHANCE.md "What is still off with D": the Human is behind in both on
+ * average and wins as often anyway). Fitted on the 0.2.6 simulation.
+ */
+const HERO_XP = 3, LOST = 7;
+CANDIDATES.push({
+  id: "D+",
+  name: "D+: D, and hero experience and resources lost against the race's usual",
+  ghouls: "as D",
+  change: (m, u) => {
+    const d = dOfChange(m, u);
+    for (const f of [HERO_XP, LOST]) d[f] = m.d[f] - (usualOfRace(u, m.races[0], m.t, X_VALUES + f) - usualOfRace(u, m.races[1], m.t, X_VALUES + f));
+    return d;
+  },
+});
+function dOfChange(m: Moment, u: Averages) {
+  return set(m, againstUsual(m, u, X_WORKERS, X_WORKERS), againstUsual(m, u, X_FOOD, X_FOOD));
+}
 // Looked at after A–D were scored (see docs/WIN-CHANCE.md for why): X1, and the usual taken as the
 // middle between a race's winners and losers, for A, D and X1.
 const dOf = CANDIDATES.find((c) => c.id === "D")!, aOf = CANDIDATES.find((c) => c.id === "A")!;

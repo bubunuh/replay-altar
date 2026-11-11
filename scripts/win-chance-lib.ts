@@ -5,7 +5,7 @@
 import { existsSync, readdirSync } from "node:fs";
 import { openDb, paths, readRecord, referencePaths, type GameRecord } from "@replay-altar/core";
 import { gamedataDir, loadCosts } from "@replay-altar/sim";
-import { basis, diffs, sampleAt, sideOf, sigmoid, START_MS, STEP_MS, type ResearchTimes, type Side, type Usual, type WinModel } from "@replay-altar/rules/winchance";
+import { basis, diffs, lostSoFar, sampleAt, sideOf, sigmoid, START_MS, STEP_MS, xpSoFar, type ResearchTimes, type Side, type Usual, type WinModel } from "@replay-altar/rules/winchance";
 
 export const costs = loadCosts(gamedataDir(paths().root));
 export const RESEARCH: ResearchTimes = Object.fromEntries(Object.entries(costs.upgrades).map(([code, u]) => [code, [u.timeBase, u.timeMod]]));
@@ -59,24 +59,28 @@ export function momentsOf(g: Game, opts: MomentOptions = {}): Moment[] {
 /** A race's usual needs at least this many players still in the game at that minute. */
 export const USUAL_MIN_PLAYERS = 30;
 /** Averages per race and whole minute, while at least USUAL_MIN_PLAYERS players are still playing. */
-export function usualTables(rows: { race: string; minute: number; workers: number; food: number }[]): Usual {
-  const usual: Usual = { workers: {}, food: {} };
+type UsualRow = { race: string; minute: number; workers: number; food: number; xp: number; lost: number };
+export function usualTables(rows: UsualRow[]): Usual {
+  const usual: Usual = { workers: {}, food: {}, xp: {}, lost: {} };
   for (const race of new Set(rows.map((r) => r.race))) {
     const mine = rows.filter((r) => r.race === race);
-    const w: number[] = [], f: number[] = [];
+    const w: number[] = [], f: number[] = [], x: number[] = [], l: number[] = [];
+    const avg = (at: UsualRow[], k: "workers" | "food" | "xp" | "lost", digits: number) => Number((at.reduce((s, r) => s + r[k], 0) / at.length).toFixed(digits));
     for (let m = 0; ; m++) {
       const at = mine.filter((r) => r.minute === m);
       if (at.length < USUAL_MIN_PLAYERS) break;
-      w.push(Number((at.reduce((s, r) => s + r.workers, 0) / at.length).toFixed(2)));
-      f.push(Number((at.reduce((s, r) => s + r.food, 0) / at.length).toFixed(2)));
+      w.push(avg(at, "workers", 2));
+      f.push(avg(at, "food", 2));
+      x.push(avg(at, "xp", 0));
+      l.push(avg(at, "lost", 0));
     }
-    if (w.length) (usual.workers[race] = w), (usual.food[race] = f);
+    if (w.length) (usual.workers[race] = w), (usual.food[race] = f), (usual.xp![race] = x), (usual.lost![race] = l);
   }
   return usual;
 }
 /** Each race's usual workers and food used at each minute, from these games (the calibration set). */
 export function usualOf(games: Game[]): Usual {
-  const rows: { race: string; minute: number; workers: number; food: number }[] = [];
+  const rows: UsualRow[] = [];
   for (const g of games) {
     const r = g.record;
     if (r.sim?.status !== "ok" || r.players.length !== 2 || !["win", "loss"].includes(r.players[0].result ?? "")) continue;
@@ -85,7 +89,7 @@ export function usualOf(games: Game[]): Usual {
       if (!side) continue;
       for (let m = 0; m * 60_000 < r.game.durationMs; m++) {
         const s = sampleAt(side.series, m * 60_000);
-        rows.push({ race: side.race, minute: m, workers: s.workers, food: s.foodUsed });
+        rows.push({ race: side.race, minute: m, workers: s.workers, food: s.foodUsed, xp: xpSoFar(side, m * 60_000), lost: lostSoFar(s) });
       }
     }
   }

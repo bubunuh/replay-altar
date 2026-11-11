@@ -50,7 +50,8 @@ describe("win chance", () => {
     expect(curve.points.at(-1)!.p).toBeLessThan(0.45);
     const swing = curve.swings.find((s) => s.to >= 420_000 && s.from <= 420_000)!;
     expect(swing.pTo).toBeLessThan(swing.pFrom);
-    expect(swing.drivers[0]).toEqual({ feature: 7, favours: "opp" });
+    // Losses as counted (7) or against the race's usual (19, since 0.2.6): the same for two Humans.
+    expect(swing.drivers[0]).toEqual({ feature: model.keep.includes(19) ? 19 : 7, favours: "opp" });
     expect(swing.events).toContainEqual(expect.objectContaining({ kind: "fight", myLoss: 900, oppLoss: 100 }));
   });
 
@@ -90,5 +91,17 @@ describe("win chance", () => {
     const mine = winCurve(ahead.r, byRace, ahead.me, ahead.opp)!, theirs = winCurve(ahead.r, byRace, ahead.opp, ahead.me)!;
     expect(mine.points[2].p).toBeGreaterThan(0.5);
     mine.points.forEach((p, k) => expect(p.p + theirs.points[k].p).toBeCloseTo(1, 9));
+  });
+
+  test("hero experience and losses against the race's usual: a race's usual losses cancel out", () => {
+    const usual = { workers: {}, food: {}, xp: { H: [0, 0], U: [0, 0] }, lost: { H: [0, 600], U: [0, 100] } };
+    const { r, me, opp } = game(series(() => 15, () => 600), series(() => 5, () => 100));
+    (opp as { race: string }).race = "U";
+    const a = sideOf(r, me, model.research)!, b = sideOf(r, opp, model.research)!;
+    expect(diffs(a, b, 300_000)[7]).toBeCloseTo(0.5, 9);
+    expect(diffs(a, b, 300_000, usual)[BY_RACE[7]]).toBeCloseTo(0, 9);
+    expect(diffs(a, b, 300_000, usual)[BY_RACE[3]]).toBe(0);
+    // Usual tables from before 0.2.6 have no experience or losses: those differences stay at 0.
+    expect(diffs(a, b, 300_000, { workers: {}, food: {} })[BY_RACE[7]]).toBe(0);
   });
 });

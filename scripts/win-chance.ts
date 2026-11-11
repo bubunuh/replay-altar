@@ -9,7 +9,9 @@
 //
 // --workers by-race: workers and the amount of units are counted against what is usual for the
 // player's race at that minute (packages/rules/src/winchance.ts, Usual), not as they are.
-// --workers by-race-workers: only the workers are; the amount of units as counted. Without the
+// --workers by-race-workers: only the workers are; the amount of units as counted.
+// --workers by-race-plus: workers, the amount of units, hero experience and resources lost (the
+// model shipped from 0.2.6, candidate D+ of scripts/win-chance-workers.ts). Without the
 // option, the counting of the model the app shipped until 0.2.x. --out: write everything
 // (WIN-CHANCE.md, win-chance/, winchance.json) into that folder instead of docs/ and data/, to
 // try a fit without replacing the model the app ships. The reference sets are only read.
@@ -42,7 +44,7 @@ const option = (name: string) => {
   return i < 0 ? null : args.splice(i, 2)[1] ?? "";
 };
 const workersOption = option("--workers") ?? "as-counted";
-if (!["as-counted", "by-race", "by-race-workers"].includes(workersOption)) throw new Error("--workers: as-counted, by-race or by-race-workers");
+if (!["as-counted", "by-race", "by-race-workers", "by-race-plus"].includes(workersOption)) throw new Error("--workers: as-counted, by-race, by-race-workers or by-race-plus");
 const BY_RACE_ON = workersOption !== "as-counted";
 const sameAt = args.indexOf("--same-differences");
 const SAME = sameAt >= 0 && args.splice(sameAt, 1).length > 0;
@@ -50,7 +52,10 @@ const outRoot = option("--out");
 const docsDir = outRoot ?? join(import.meta.dirname, "../docs");
 const modelFile = outRoot ? join(outRoot, "winchance.json") : join(import.meta.dirname, "../data/winchance.json");
 /** The differences the search may use: workers and food used as counted, or against the race's usual. */
-const swap = (f: number) => (workersOption === "by-race" || (workersOption === "by-race-workers" && f === 2) ? BY_RACE[f] ?? f : f);
+// by-race: workers and food used (D); by-race-workers: workers only (A); by-race-plus: also hero
+// experience and resources lost (D+, scripts/win-chance-workers.ts).
+const SWAPPED: Record<string, number[]> = { "as-counted": [], "by-race": [2, 8], "by-race-workers": [2], "by-race-plus": [2, 8, 3, 7] };
+const swap = (f: number) => (SWAPPED[workersOption].includes(f) ? BY_RACE[f] : f);
 
 /** Input names as the app shows them ("food used" is "amount of units" there). */
 const inputName = (name: string) => name.replace("food used", "amount of units").replace(/, (against the race's usual)$/, " ($1)");
@@ -180,7 +185,10 @@ const scored = candidates.map((spec) => ({ spec, cv: crossValidate(spec) })).map
 for (const c of scored) progress(`${label(c.spec)} λ=${c.spec.lambda}: ${c.loss.toFixed(4)}`);
 // Counted by race, a fixed edge per matchup is only shown for comparison, never chosen: one curve
 // for every matchup (and on the calibration set the edges learn who was followed, not the races).
-const best = [...scored].filter((c) => !(BY_RACE_ON && c.spec.matchup)).sort((a, b) => a.loss - b.loss)[0];
+// With --same-differences the first model (its own search on the calibration set) is only shown too:
+// on the 0.2.6 simulation it won there with army value and resources spent in place of the workers
+// (0.5997 cross-validated) and lost on the validation set (0.6332 against 0.6219).
+const best = [...scored].filter((c) => !(BY_RACE_ON && c.spec.matchup) && !(SAME && c.spec === firstModel)).sort((a, b) => a.loss - b.loss)[0];
 const finals = scored.map((c) => ({ ...c, model: fitModel(calMoments, c.spec) }));
 const finalBest = finals.find((f) => f.spec === best.spec)!;
 const finalFirst = finals[0];

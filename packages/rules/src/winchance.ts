@@ -18,9 +18,10 @@ export const FEATURES = [
   "highest hero level", "heroes alive", "hero deaths", "upgrades", "attack and armor upgrades", "items bought", "creep camps (levels)",
   // Counted against what is usual for the player's race at that minute (see Usual below).
   "workers, against the race's usual", "food used, against the race's usual",
+  "hero experience, against the race's usual", "resources lost, against the race's usual",
 ] as const;
 /** A number counted as it is → the same number counted against the race's usual (the fit swaps one for the other). */
-export const BY_RACE: Record<number, number> = { 2: 16, 8: 17 };
+export const BY_RACE: Record<number, number> = { 2: 16, 8: 17, 3: 18, 7: 19 };
 
 /**
  * What is usual for each race at each whole minute (index 0 is 0:00) among the pro games the model
@@ -30,7 +31,13 @@ export const BY_RACE: Record<number, number> = { 2: 16, 8: 17 };
  * count means little across races: the model compares how far each player is from their own
  * race's usual instead. After the last minute of a table, its last value.
  */
-export type Usual = { workers: Record<string, number[]>; food: Record<string, number[]> };
+export type Usual = {
+  workers: Record<string, number[]>;
+  food: Record<string, number[]>;
+  /** Hero experience so far and resources lost so far (since 0.2.6; a model without them reads 0 there). */
+  xp?: Record<string, number[]>;
+  lost?: Record<string, number[]>;
+};
 
 /** The usual value at time t: straight lines between the minutes; 0 for a race with no table. */
 export function usualAt(table: number[] | undefined, t: number): number {
@@ -126,7 +133,9 @@ const countTo = (times: number[], t: number) => {
  * charts, fills in between level-ups with the next one's time, which would let the model see a
  * level-up, and so a won fight, coming.)
  */
-const xpSoFar = (s: Side, t: number) => s.levels.reduce((sum, l) => sum + HERO_XP_FOR_LEVEL[Math.min(10, countTo(l, t))], 0);
+export const xpSoFar = (s: Side, t: number) => s.levels.reduce((sum, l) => sum + HERO_XP_FOR_LEVEL[Math.min(10, countTo(l, t))], 0);
+
+export const lostSoFar = (s: SimSample) => s.goldLost + s.lumberLost;
 
 /**
  * The differences A − B at time t (FEATURES order), scaled to similar sizes. Without `usual`, the
@@ -160,6 +169,8 @@ export function diffs(a: Side, b: Side, t: number, usual?: Usual): number[] {
     (camps(a) - camps(b)) / 20,
     usual ? (sa.workers - usualAt(usual.workers[a.race], t) - (sb.workers - usualAt(usual.workers[b.race], t))) / 10 : 0,
     usual ? (sa.foodUsed - usualAt(usual.food[a.race], t) - (sb.foodUsed - usualAt(usual.food[b.race], t))) / 10 : 0,
+    usual?.xp ? (xpSoFar(a, t) - usualAt(usual.xp[a.race], t) - (xpSoFar(b, t) - usualAt(usual.xp[b.race], t))) / 1000 : 0,
+    usual?.lost ? (lostSoFar(sa) - usualAt(usual.lost[a.race], t) - (lostSoFar(sb) - usualAt(usual.lost[b.race], t))) / 1000 : 0,
   ];
 }
 
@@ -206,7 +217,7 @@ export type SwingEvent =
 export type Swing = { from: number; to: number; pFrom: number; pTo: number; drivers: Driver[]; events: SwingEvent[] };
 
 /** Differences where more is worse for you (losing more resources): their weight is negative. */
-const MORE_IS_WORSE = new Set([7, 11]);
+const MORE_IS_WORSE = new Set([7, 11, 19]);
 /** Swings over this window; the biggest ones, at least this far apart and this big. */
 const SWING_MS = 60_000;
 const SWING_GAP_MS = 90_000;
