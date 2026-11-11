@@ -40,7 +40,7 @@ Each layer can be rebuilt from the one above it with `replay-altar reingest`. Th
 - **`players[]`:** you first, then your opponent. Each player has `metrics`, `apmPerMinute`, `heroes[]` (skill order with times), `build[]` (every order with its time), action counts and control groups.
 - **`provenance`:** every file this game was seen as (path, sha256, mtime), the archive path, the parser version, the classifier and metrics versions, and the first ingest time.
 - **`sim`** (once simulated): `status` `ok` or `failed` (with a `reason`). When `ok` it also has:
-  - **Run details:** WC3V `engine.commit` (the submodule's commit; in 0.2.2 to 0.2.5 Replay Altar's patches in `patches/wc3v/` came on top of it, 0.3.0 is upstream WC3V with three patches for the end of the game), `gameData` (version and manifest hash), `model` (income-model version and constants), and `outputPath`, the full WC3V output kept for audit.
+  - **Run details:** WC3V `engine.commit` (the submodule's commit; in 0.2.2 to 0.2.5 Replay Altar's patches in `patches/wc3v/` came on top of it, 0.2.6 is upstream WC3V with three patches for the end of the game), `gameData` (version and manifest hash), `model` (income-model version and constants), and `outputPath`, the full WC3V output kept for audit.
   - **`warnings`:** model checks, such as spending more than the model says was mined in the first 10 minutes.
   - **`players[]`:** each with `parseConfidence`, `validationWarnings`, `metrics`, and `series[]`, sampled every 10 s:
 

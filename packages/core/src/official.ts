@@ -63,7 +63,7 @@ export function mergeOfficial(record: GameRecord, official: OfficialStats | unde
 
 /**
  * Where your W3Champions games' results come from in a store. The replay says it at once when its
- * leave records decide (result.ts reads the records of W3Champions' server, FLO, since 0.3.0; in
+ * leave records decide (result.ts reads the records of W3Champions' server, FLO, since 0.2.6; in
  * 0.2.5 they weren't trusted). "lookup": W3Champions' own winner is looked up too and is the
  * authority: it replaces the replay's when found, and a game the replay doesn't decide is
  * "Reviewing" until then, "Unknown" if it never is found. "off": the lookups are turned off

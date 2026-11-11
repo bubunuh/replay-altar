@@ -5,7 +5,7 @@
 // won't appear later). The later tries live only in this process: when the collector goes back to
 // waiting or stops, the next start looks up again the recent games still missing them (catchUp).
 // The match also says who won: from 0.2.5 that is your W3Champions games' result (core official.ts),
-// the authority over what the replay says (0.3.0); a game the replay doesn't decide is "Reviewing" until
+// the authority over what the replay says (0.2.6); a game the replay doesn't decide is "Reviewing" until
 // it is found, "Unknown" once the last try missed.
 import { applyOfficial, readRecord, w3cResultDiffers, w3cResultDone, type IngestContext, type OfficialStats } from "@replay-altar/core";
 import { officialForMatch, officialForOwnGame, RateLimited, w3cClient } from "@replay-altar/reference";

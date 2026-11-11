@@ -128,7 +128,7 @@ async function awake(mode: CollectorMode, wake: Wake | null, first: boolean, asl
     writeProgress({ setup: null, import: null, sims: null });
   }
   // Your W3Champions games' results (official.ts) follow two things that change between starts:
-  // how the replay is read (0.3.0 reads the leave records of W3Champions' servers: once, every
+  // how the replay is read (0.2.6 reads the leave records of W3Champions' servers: once, every
   // game's replay is read again) and the lookups turned on or off (the games without a winner).
   const resultsFile = join(p.root, "w3c-results.json");
   let before: { mode?: unknown; reading?: unknown } = {};

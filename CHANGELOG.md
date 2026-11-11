@@ -24,7 +24,7 @@ statistics (`data/`).
   found (a private game, or the lookups are turned off in Settings) the result is **Unknown**,
   and you can set it on the game's page. Your W3Champions games from before are looked up once
   more for their result; results you corrected by hand stay. Reading the replay right for
-  W3Champions games is for 0.3.0.
+  W3Champions games is for 0.2.6.
 - **A new game's W3Champions lookup no longer waits behind another game's.** When one game's
   lookup was waiting for its next try (10 minutes or an hour later), the next game's waited too.
 
@@ -270,13 +270,13 @@ W3Champions' official numbers); what helped is in the list above.
 - **Linux AppImage**, alongside the Windows installer: one file, no Node, git or podman needed. On first start it sets up the background collector (a systemd user service), the `replay-altar` command and a menu entry, reads the game data with a built-in read-only extractor, and updates itself in place like the Windows version.
 - **Linux: Battle.net is found in more places:** Lutris folders under `~/Games`, `~/.wine`, Steam's Proton prefixes and Bottles, for both the replays and the game data.
 
-## Planned for 0.3.0
+## Planned for 0.2.6
 
 The numbers get more right: the simulation, the gold and lumber estimates, the evaluation curve and
 W3Champions results. Everything that changes the simulation goes in together, because each such
 change means simulating the pro games again and players importing their games again; what is
 fitted on the simulation's numbers (income model, evaluation curve, rules) is redone once, after
-the simulation is settled. New rules are for 0.4.
+the simulation is settled. New rules are for 0.3.
 
 - **More recorded games, first:** every change below is judged against Warcraft III's own numbers,
   read from the game while it plays a replay. From 51 recorded games to about 120: W3Champions
@@ -305,11 +305,11 @@ the simulation is settled. New rules are for 0.4.
   building a gold and lumber model, the most it could gain was measured on 89 recorded games, by
   refusing the orders the game's own gold, lumber and food at that moment could not pay for: the
   army error got 6% better at best (13 to 17% on the newer recordings, which have a reading every
-  2 seconds), under the 15% set beforehand, so no model is in 0.3.0. Even with the game's real
+  2 seconds), under the 15% set beforehand, so no model is in 0.2.6. Even with the game's real
   numbers a third of the refusals were wrong (players click as the gold arrives; an order into a
   busy building is accepted at the food limit and waits) and half of the real ones were missed.
   Knowing exactly how many units the game made would gain 20%. What it did show is planned for
-  0.4.
+  0.3.
 - **Income model:** since 0.2.2 the second and third heroes count in the gold spent, and the
   mined-income model now often runs short early in the game (pros "spend" about 900 gold more than
   it estimates by 10:00), so the unspent gold reads 0 and the *unspent gold* finding stopped
@@ -336,14 +336,14 @@ the simulation is settled. New rules are for 0.4.
   replay does say who won, read differently: W3Champions' server closes every connection at the
   end, so the last leave record describes the player who saved the replay, not the player it
   names. That reading fixed the 2 wrong games of 0.2.5 and changed nothing on about 4,400 stored
-  replays, which proves it on 2 games only. For 0.3.0: test it on every W3Champions replay saved
+  replays, which proves it on 2 games only. For 0.2.6: test it on every W3Champions replay saved
   by a player whose result we know, and use it only if it is right on all of them. W3Champions'
   own result still wins when the match is found there; the replay gives the result at once and
   covers private games.
 
-## Planned for 0.4
+## Planned for 0.3
 
-New things to coach on, on 0.3.0's numbers. Only the first item changes the simulation (games simulated and imported again); the rules do not.
+New things to coach on, on 0.2.6's numbers. Only the first item changes the simulation (games simulated and imported again); the rules do not.
 
 - **A train order to several buildings, paid building by building:** half of the train orders
   that never became a unit are orders given to several buildings at once: the game charges each

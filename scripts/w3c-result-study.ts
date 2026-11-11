@@ -1,11 +1,11 @@
-// Study for 0.3.0: can a W3Champions game's result be read from the replay's leave records?
+// Study for 0.2.6: can a W3Champions game's result be read from the replay's leave records?
 // Step 1 (this script): dump the leave records, with their order and game time, of every replay
 // under the given folders, one JSON line per file. Read-only on the folders.
 //
 //   nice node scripts/w3c-result-study.ts dump <out.jsonl> <folder-or-file>...
 //   node scripts/w3c-result-study.ts report <dump.jsonl>... [--truth=<truth.json>]
 //
-// `report` reads the dumps, applies the rule Replay Altar used up to 0.2.5 and the 0.3.0 rule
+// `report` reads the dumps, applies the rule Replay Altar used up to 0.2.5 and the 0.2.6 rule
 // (packages/core/src/result.ts) and lists every file where they differ; with a truth file
 // ({ "<gameName or sha256>": "<winner's name>" }) it also scores each rule.
 import { createHash } from "node:crypto";
@@ -118,7 +118,7 @@ function report(args: string[]) {
     }
   }
   console.log(`${files} different files, ${changed} with another result or confidence`);
-  if (truthArg) console.log(`labelled files with leave records: ${labelled}\n  rule up to 0.2.5: ${JSON.stringify(score.old)}\n  0.3.0 rule:       ${JSON.stringify(score.new)}`);
+  if (truthArg) console.log(`labelled files with leave records: ${labelled}\n  rule up to 0.2.5: ${JSON.stringify(score.old)}\n  0.2.6 rule:       ${JSON.stringify(score.new)}`);
 }
 
 const [cmd, ...rest] = process.argv.slice(2);
