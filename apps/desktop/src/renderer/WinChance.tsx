@@ -36,6 +36,9 @@ const featureName = (f: number) =>
     tr("attack and armor upgrades", "upgrades de ataque e armadura", "mejoras de ataque y armadura", "améliorations d'attaque et d'armure"),
     tr("items bought", "itens comprados", "objetos comprados", "objets achetés"),
     tr("creep camps", "campos de creeps", "campamentos de creeps", "camps de creeps"),
+    // Counted against the race's usual (a model fitted with --workers by-race): the same words.
+    tr("workers", "trabalhadores", "trabajadores", "ouvriers"),
+    tr("amount of units", "quantidade de unidades", "cantidad de unidades", "nombre d'unités"),
   ][f] ?? "?";
 
 function driverText(d: Driver): string {

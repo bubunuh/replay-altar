@@ -16,7 +16,29 @@ export const STEP_MS = 30_000;
 export const FEATURES = [
   "army value", "army value ratio (log)", "workers", "hero experience", "bases", "tier", "resources spent", "resources lost", "food used",
   "highest hero level", "heroes alive", "hero deaths", "upgrades", "attack and armor upgrades", "items bought", "creep camps (levels)",
+  // Counted against what is usual for the player's race at that minute (see Usual below).
+  "workers, against the race's usual", "food used, against the race's usual",
 ] as const;
+/** A number counted as it is → the same number counted against the race's usual (the fit swaps one for the other). */
+export const BY_RACE: Record<number, number> = { 2: 16, 8: 17 };
+
+/**
+ * What is usual for each race at each whole minute (index 0 is 0:00) among the pro games the model
+ * was fitted on: the average worker count and food used of the players of that race in games
+ * still going. The races' economies are not built alike (five Acolytes mine an Undead's gold and
+ * Ghouls, which are army, cut the lumber; a Human or an Orc has some fifteen workers), so a worker
+ * count means little across races: the model compares how far each player is from their own
+ * race's usual instead. After the last minute of a table, its last value.
+ */
+export type Usual = { workers: Record<string, number[]>; food: Record<string, number[]> };
+
+/** The usual value at time t: straight lines between the minutes; 0 for a race with no table. */
+export function usualAt(table: number[] | undefined, t: number): number {
+  if (!table?.length) return 0;
+  const m = Math.max(0, t / 60_000), i = Math.floor(m);
+  if (i >= table.length - 1) return table[table.length - 1];
+  return table[i] + (table[i + 1] - table[i]) * (m - i);
+}
 
 /** Research time per research code, in seconds: [first level, added per level]. */
 export type ResearchTimes = Record<string, [number, number]>;
@@ -29,6 +51,8 @@ export type WinModel = {
   /** Weights: for each kept difference, one per time-basis function. */
   weights: number[];
   research: ResearchTimes;
+  /** Each race's usual numbers; only in a model that keeps a difference counted against them. */
+  usual?: Usual;
   /** What it was fitted on and how it scored, for the app's note and the report. */
   about: { games: number; patch: string; fittedAt: string; commit: string; cvLogLoss: number; validationGames: number; validationLogLoss: number };
 };
@@ -86,7 +110,7 @@ export function sideOf(r: GameRecord, p: PlayerRecord, research: ResearchTimes):
   };
 }
 
-const sampleAt = (series: SimSample[], t: number) => {
+export const sampleAt = (series: SimSample[], t: number) => {
   let best = series[0];
   for (const s of series) if (s.t <= t) best = s;
   return best;
@@ -104,8 +128,11 @@ const countTo = (times: number[], t: number) => {
  */
 const xpSoFar = (s: Side, t: number) => s.levels.reduce((sum, l) => sum + HERO_XP_FOR_LEVEL[Math.min(10, countTo(l, t))], 0);
 
-/** The differences A − B at time t (FEATURES order), scaled to similar sizes. */
-export function diffs(a: Side, b: Side, t: number): number[] {
+/**
+ * The differences A − B at time t (FEATURES order), scaled to similar sizes. Without `usual`, the
+ * differences counted against the race's usual are 0 (a model that keeps them carries its own).
+ */
+export function diffs(a: Side, b: Side, t: number, usual?: Usual): number[] {
   const sa = sampleAt(a.series, t), sb = sampleAt(b.series, t);
   const bases = (s: Side) => s.bases.filter((x) => x.at <= t && (x.lostAt === null || x.lostAt > t)).length;
   const tier = (s: Side) => (s.t2 !== null && s.t2 <= t ? 1 : 0) + (s.t3 !== null && s.t3 <= t ? 1 : 0);
@@ -131,6 +158,8 @@ export function diffs(a: Side, b: Side, t: number): number[] {
     countTo(a.weaponArmor, t) - countTo(b.weaponArmor, t),
     (countTo(a.items, t) - countTo(b.items, t)) / 5,
     (camps(a) - camps(b)) / 20,
+    usual ? (sa.workers - usualAt(usual.workers[a.race], t) - (sb.workers - usualAt(usual.workers[b.race], t))) / 10 : 0,
+    usual ? (sa.foodUsed - usualAt(usual.food[a.race], t) - (sb.foodUsed - usualAt(usual.food[b.race], t))) / 10 : 0,
   ];
 }
 
@@ -191,7 +220,7 @@ export function winCurve(r: GameRecord, model: WinModel, me: PlayerRecord, opp: 
   if (!a || !b) return null;
   const end = r.game.durationMs;
   const points: WinPoint[] = [];
-  for (let t = START_MS; t < end; t += STEP_MS) points.push({ t, p: chance(model, diffs(a, b, t), t) });
+  for (let t = START_MS; t < end; t += STEP_MS) points.push({ t, p: chance(model, diffs(a, b, t, model.usual), t) });
   if (points.length < 3) return null;
 
   const back = SWING_MS / STEP_MS;
@@ -219,7 +248,7 @@ export function winCurve(r: GameRecord, model: WinModel, me: PlayerRecord, opp: 
   // difference whose weight has the unexpected sign at that moment (the model uses it to correct
   // another one) is left out of the explanation: it would read backwards.
   const drivers = (t0: number, t1: number, up: boolean): Driver[] => {
-    const d0 = diffs(a, b, t0), d1 = diffs(a, b, t1);
+    const d0 = diffs(a, b, t0, model.usual), d1 = diffs(a, b, t1, model.usual);
     return model.keep
       .map((f, k) => ({ f, w: weightAt(model, k, t1), c: weightAt(model, k, t1) * d1[f] - weightAt(model, k, t0) * d0[f] }))
       .filter((x) => (MORE_IS_WORSE.has(x.f) ? x.w < 0 : x.w > 0))
