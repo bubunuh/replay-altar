@@ -215,6 +215,11 @@ def watch(inp, game, batch, entry, speed):
         screenshot(batch, stem + "-nostart")
         log(batch, f"{stem}: FAILED, did not start")
         return False
+    # A replay the game doesn't list (its map is missing) leaves the list's last selection in place,
+    # and Watch then plays that one.
+    if entry.get("names") and {p["name"] for p in players} != {n.split("#")[0] for n in entry["names"]}:
+        log(batch, f"{stem}: FAILED, the game opened another replay (is this one in its list?)")
+        return False if leave(inp, game) else None
     # Speed: each "=" doubles it (1, 2, 4 ... 64); checked against the game's own clock.
     inp.focus()
     presses = max(0, speed.bit_length() - 1)
