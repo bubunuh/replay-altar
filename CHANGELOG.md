@@ -3,7 +3,9 @@
 What changes for players in each version. Work happens on `dev`; a version is made from `main`
 (see README, "Branches and builds"). Research scripts, experiments and the data they use are not
 part of a version: an installer ships only the app, the simulation engine and the published pro
-statistics (`data/`).
+statistics (`data/`). From 0.2.6 on, each version has two parts: **Changed**, what is different in
+the app, and **Checked**, what was measured or tried and changed nothing. Release notes carry only
+what changed.
 
 ## 0.2.5 (2026-11-10)
 
@@ -272,44 +274,39 @@ W3Champions' official numbers); what helped is in the list above.
 
 ## Planned for 0.2.6
 
-The numbers get more right: the simulation, the gold and lumber estimates, the evaluation curve and
-W3Champions results. Everything that changes the simulation goes in together, because each such
-change means simulating the pro games again and players importing their games again; what is
-fitted on the simulation's numbers (income model, evaluation curve, rules) is redone once, after
-the simulation is settled. New rules are for 0.3.
+The numbers get more right: the end of the game in the simulation, the gold estimates, the
+evaluation curve and W3Champions results. Everything that changes the simulation goes in together,
+because it means simulating the pro games again and players importing their games again; what is
+fitted on the simulation's numbers (income model, evaluation curve, rules) is redone once, after.
 
-- **More recorded games, first:** every change below is judged against Warcraft III's own numbers,
-  read from the game while it plays a replay. From 51 recorded games to about 120: W3Champions
-  ladder games at three skill levels and tournament games, every matchup at every level, and more
-  of what the 51 are short of (games over 20 minutes, two or more expansions, Night Elf, Undead).
-  Half of the new games are put aside before anyone looks at them and only score the finished
-  work (the 15 games put aside for 0.2.2 are used up).
-- **WC3V from upstream:** our WC3V changes are merged upstream (jblanchette/wc3v #23 and #24), so
-  Replay Altar can use upstream WC3V and drop its 26 patches (ready on branch
-  `wc3v-upstream`, ec21018; a checkout needs `vendor/wc3v` reset, see its README). Upstream also has
-  the author's follow-ups to #24, which move unit deaths by up to about a second in almost every
-  game (244 of 251 checked): the army error stays the same (36 recorded games 70.9 → 71.0, the 15
-  others 78.1 → 76.3) and all 3,626 regression replays still simulate to the end.
+### Changed
+
 - **Armies no longer "die" as the game ends:** in 14 of 105 player-games on one player's PC, an
   army lost more than half its value in the last 10 seconds, mostly the winner's (1410 → 235 at
   the end of a won game). The cause: Warcraft III clears every player's selection when a game is
   over, and the simulation read that as the selected units dying (and, less often, a selection
   added to a group, or narrowed to one unit, in the same way). Fixed in WC3V (three changes on top
-  of upstream, offered upstream). On 958 player-games, armies falling by more than half in the
+  of upstream, offered upstream as jblanchette/wc3v #25). On 958 player-games, armies falling by more than half in the
   last 10 seconds went from 11.1% to 1.1% (the recordings say about 4% really do, all on the
   losing side); the army error on the recorded games is unchanged (115 on 89 games, 169 on the 36
   put aside). Still open: units killed in the very last fight of a lost game are often not counted
   as lost, because the replay ends before the player selects them again.
-- **Gold and lumber in WC3V: measured, not built.** The biggest error left in the simulation is
-  train orders the game refused for lack of gold, lumber or food, which still become units. Before
-  building a gold and lumber model, the most it could gain was measured on 89 recorded games, by
-  refusing the orders the game's own gold, lumber and food at that moment could not pay for: the
-  army error got 6% better at best (13 to 17% on the newer recordings, which have a reading every
-  2 seconds), under the 15% set beforehand, so no model is in 0.2.6. Even with the game's real
-  numbers a third of the refusals were wrong (players click as the gold arrives; an order into a
-  busy building is accepted at the food limit and waits) and half of the real ones were missed.
-  Knowing exactly how many units the game made would gain 20%. What it did show is planned for
-  0.3.
+- **W3Champions results are read from the replay.** Since 0.2.5 a W3Champions game showed
+  *Reviewing* until its result was found on W3Champions. The replay does say who won, read
+  differently from a Battle.net replay: W3Champions' server closes every connection at the end,
+  so the last leave record describes the player who saved the replay. A 1v1 game on W3Champions'
+  servers now shows its result at once; *Reviewing* is left for the games the replay doesn't
+  decide. W3Champions' own result still wins when the match is found there (a difference is
+  logged). Tested on every replay with a known winner, none wrong: 5 ladder games saved by a
+  player, 273 tournament games saved by a player, 92 server copies. Over 4,098 stored replays the
+  new reading changes 2 results, the 2 that 0.2.5 got wrong. Team games on W3Champions' servers
+  are read as before, until there are team replays with a known winner to test on.
+- **WC3V from upstream:** Replay Altar's WC3V changes of 0.2.2 and 0.2.3 are merged upstream
+  (jblanchette/wc3v #23 and #24), so it now uses upstream WC3V and its 26 patches are gone.
+  Upstream also has the author's follow-ups to #24, which move unit deaths by up to about a second
+  in almost every game (244 of 251 checked): the army error stays the same (36 recorded games
+  70.9 → 71.0, the 15 others 78.1 → 76.3) and all 3,626 regression replays still simulate to the
+  end.
 - **Income model:** since 0.2.2 the second and third heroes count in the gold spent, and the
   mined-income model now often runs short early in the game (pros "spend" about 900 gold more than
   it estimates by 10:00), so the unspent gold reads 0 and the *unspent gold* finding stopped
@@ -331,15 +328,27 @@ the simulation is settled. New rules are for 0.3.
   games each.
 - **Every rule and strength scored again** on the new numbers, held out (docs/RULES.md), to decide
   which are shown.
-- **W3Champions results read from the replay:** since 0.2.5 a W3Champions game shows *Reviewing*
-  until its result is found on W3Champions, and a private W3Champions game stays *Unknown*. The
-  replay does say who won, read differently: W3Champions' server closes every connection at the
-  end, so the last leave record describes the player who saved the replay, not the player it
-  names. That reading fixed the 2 wrong games of 0.2.5 and changed nothing on about 4,400 stored
-  replays, which proves it on 2 games only. For 0.2.6: test it on every W3Champions replay saved
-  by a player whose result we know, and use it only if it is right on all of them. W3Champions'
-  own result still wins when the match is found there; the replay gives the result at once and
-  covers private games.
+
+### Checked
+
+- **More recorded games.** Every change to the simulation is judged against Warcraft III's own
+  numbers, read from the game while it plays a replay. The recorded games went from 51 to 125: 59
+  W3Champions ladder games at three skill levels (1000-1300, 1500-1700, 2000-2300) and 15
+  tournament games, about two per matchup at each level, most of them over 20 minutes. Half of the
+  new games (36) were put aside by their game key before anyone looked at them and only score
+  finished work. The new games are much harder for the simulation than the old ones: the army
+  error per player-game is 172 on the new development games against 72 on the 51 older, shorter
+  ones.
+- **Gold and lumber in WC3V: measured, not built.** The biggest error left in the simulation is
+  train orders the game refused for lack of gold, lumber or food, which still become units. Before
+  building a gold and lumber model, the most it could gain was measured on 89 recorded games, by
+  refusing the orders the game's own gold, lumber and food at that moment could not pay for: the
+  army error got 6% better at best (13 to 17% on the newer recordings, which have a reading every
+  2 seconds), under the 15% set beforehand, so no model is in 0.2.6. Even with the game's real
+  numbers a third of the refusals were wrong (players click as the gold arrives; an order into a
+  busy building is accepted at the food limit and waits) and half of the real ones were missed.
+  Knowing exactly how many units the game made would gain 20%. What it did show is planned for
+  0.3.
 
 ## Planned for 0.3
 
