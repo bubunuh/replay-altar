@@ -5,127 +5,56 @@
 // Writes docs/WIN-CHANCE.md (pro games only); your games go to the file given as an argument,
 // never into the repository.
 //
-//   node scripts/win-chance.ts [your-games.md]
+//   node scripts/win-chance.ts [your-games.md] [--workers by-race] [--out <folder>]
+//
+// --workers by-race: workers and the amount of units are counted against what is usual for the
+// player's race at that minute (packages/rules/src/winchance.ts, Usual), not as they are. Without
+// it, the model the app shipped until 0.2.x. --out: write everything (WIN-CHANCE.md, win-chance/,
+// winchance.json) into that folder instead of docs/ and data/, to try a fit without replacing the
+// model the app ships. The reference sets are only read.
 //
 // The models: logistic regression on the differences between the two players at each moment, each
 // weighted by functions of the game time so a lead can matter more or less as the game goes on.
 // No intercept and only differences, so the two players' chances always add up to 100%. Each game
 // weighs the same, whatever its length.
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { listGames, openDb, paths, readRecord, referencePaths, researchLevels, type GameRecord, type PlayerRecord, type SimSample } from "@replay-altar/core";
+import { listGames, openDb, paths, readRecord, referencePaths } from "@replay-altar/core";
 import { mmss } from "@replay-altar/core/time";
-import { gamedataDir, loadCosts } from "@replay-altar/sim";
-import { basis, diffs, FEATURES, KNOTS_MIN, sideOf, sigmoid, START_MS, STEP_MS, weightAt, winCurve, type ResearchTimes, type Side, type SwingEvent, type WinModel } from "@replay-altar/rules/winchance";
+import { basis, BY_RACE, FEATURES, KNOTS_MIN, sigmoid, weightAt, winCurve, type Side, type SwingEvent, type WinModel } from "@replay-altar/rules/winchance";
 import { fightLabel } from "@replay-altar/rules/series";
+import {
+  accuracyAt, bootstrapDiff, brierOf, CALIBRATION, calibrationSlope, crossValidate as cvOn, finiteGames, fitModel, fold, FOLDS, loadGames, lossOf, matchupCalibration, MATCHUPS, momentsOf, mulberry32,
+  predsOn, RESEARCH, usualOf, VALIDATION, validationMeta, type Game, type Model, type Moment, type Pred, type Spec,
+} from "./win-chance-lib.ts";
+
+// ---- Options ---------------------------------------------------------------------------------
+const args = process.argv.slice(2);
+const option = (name: string) => {
+  const i = args.indexOf(name);
+  return i < 0 ? null : args.splice(i, 2)[1] ?? "";
+};
+const workersOption = option("--workers") ?? "as-counted";
+if (!["as-counted", "by-race"].includes(workersOption)) throw new Error("--workers: as-counted or by-race");
+const BY_RACE_ON = workersOption === "by-race";
+const outRoot = option("--out");
+const docsDir = outRoot ?? join(import.meta.dirname, "../docs");
+const modelFile = outRoot ? join(outRoot, "winchance.json") : join(import.meta.dirname, "../data/winchance.json");
+/** The differences the search may use: workers and food used as counted, or against the race's usual. */
+const swap = (f: number) => (BY_RACE_ON ? BY_RACE[f] ?? f : f);
 
 /** Input names as the app shows them ("food used" is "amount of units" there). */
-const inputName = (name: string) => (name === "food used" ? "amount of units" : name);
-
-const costs = loadCosts(gamedataDir(paths().root));
-const RESEARCH: ResearchTimes = Object.fromEntries(Object.entries(costs.upgrades).map(([code, u]) => [code, [u.timeBase, u.timeMod]]));
-const CALIBRATION = ["pros", "pros-orc", "pros-undead", "pros-nightelf"];
-const VALIDATION = "validation";
-const FOLDS = 4;
+const inputName = (name: string) => name.replace("food used", "amount of units").replace(/, (against the race's usual)$/, " ($1)");
 
 
+
+/** Every difference the search may keep (the first sixteen, with the swap above). */
+const allFeatures = [...new Set(FEATURES.map((_, i) => i).filter((i) => i < 16).map(swap))].sort((a, b) => a - b);
 /** The first model's differences: the original nine. */
-const ORIGINAL = [0, 1, 2, 3, 4, 5, 6, 7, 8];
-const MATCHUPS = ["HvO", "HvU", "HvN", "OvU", "OvN", "UvN"];
-/** The model's view of one moment: which differences, which time curve, and race edges per matchup. */
-type Spec = { keep: number[]; basis: WinModel["basis"]; matchup: boolean; lambda: number };
+const ORIGINAL = [0, 1, 2, 3, 4, 5, 6, 7, 8].map(swap);
 const label = (s: Spec) => `${s.keep.length} differences, ${s.basis === "linear" ? "straight-line" : "curved"} time weights${s.matchup ? ", matchup edges" : ""}`;
 
-type Moment = { game: string; d: number[]; t: number; y: number; w: number; races: [string, string] };
-type Game = { key: string; record: GameRecord; year: number | null; matchup: string };
-
-/** `tweak` changes a side before the differences are taken (the sensitivity test below). */
-function momentsOf(g: Game, tweak: (s: Side) => Side = (s) => s): Moment[] {
-  const r = g.record;
-  if (r.sim?.status !== "ok" || r.players.length !== 2) return [];
-  const [p, q] = r.players;
-  if (!["win", "loss"].includes(p.result ?? "")) return [];
-  const sa = sideOf(r, p, RESEARCH), sb = sideOf(r, q, RESEARCH);
-  if (!sa || !sb) return [];
-  const a = tweak(sa), b = tweak(sb);
-  const end = r.game.durationMs;
-  const times: number[] = [];
-  for (let t = START_MS; t < end; t += STEP_MS) times.push(t);
-  const out: Moment[] = [];
-  // Both sides of every game, each game weighing 1 in all.
-  for (const t of times) {
-    const d = diffs(a, b, t);
-    const w = 1 / (2 * times.length);
-    out.push({ game: r.gameKey, d, t, y: p.result === "win" ? 1 : 0, w, races: [a.race, b.race] });
-    out.push({ game: r.gameKey, d: d.map((v) => -v), t, y: p.result === "win" ? 0 : 1, w, races: [b.race, a.race] });
-  }
-  return out;
-}
-
-/** +1 when A has the first race of the matchup, −1 when B has it: a race edge that keeps the sum at 100%. */
-const matchupTerms = (races: [string, string]) =>
-  MATCHUPS.map((mu) => (races[0] === mu[0] && races[1] === mu[2] ? 1 : races[0] === mu[2] && races[1] === mu[0] ? -1 : 0));
-
-function design(m: Moment, s: Spec): number[] {
-  const bs = basis(s.basis, m.t);
-  const x: number[] = [];
-  for (const f of s.keep) for (const b of bs) x.push(m.d[f] * b);
-  if (s.matchup) x.push(...matchupTerms(m.races));
-  return x;
-}
-
-const dot = (a: number[], b: number[]) => a.reduce((s, v, i) => s + v * b[i], 0);
-
-/** Logistic regression by Newton's method, with a ridge penalty. */
-function fit(xs: number[][], ys: number[], ws: number[], lambda: number): number[] {
-  const k = xs[0].length;
-  let w = new Array(k).fill(0);
-  for (let iter = 0; iter < 30; iter++) {
-    const g = new Array(k).fill(0);
-    const h = Array.from({ length: k }, () => new Array(k).fill(0));
-    for (let n = 0; n < xs.length; n++) {
-      const x = xs[n];
-      const p = sigmoid(dot(w, x));
-      const gw = ws[n] * (p - ys[n]), hw = ws[n] * p * (1 - p);
-      for (let i = 0; i < k; i++) {
-        if (x[i] === 0) continue;
-        g[i] += gw * x[i];
-        const hi = h[i], hx = hw * x[i];
-        for (let j = i; j < k; j++) hi[j] += hx * x[j];
-      }
-    }
-    for (let i = 0; i < k; i++) {
-      for (let j = 0; j < i; j++) h[i][j] = h[j][i];
-      g[i] += lambda * w[i];
-      h[i][i] += lambda;
-    }
-    const step = solve(h, g);
-    w = w.map((v, i) => v - step[i]);
-    if (Math.max(...step.map(Math.abs)) < 1e-6) break;
-  }
-  return w;
-}
-
-function solve(a: number[][], b: number[]): number[] {
-  const n = b.length;
-  const m = a.map((row, i) => [...row, b[i]]);
-  for (let c = 0; c < n; c++) {
-    let piv = c;
-    for (let r = c + 1; r < n; r++) if (Math.abs(m[r][c]) > Math.abs(m[piv][c])) piv = r;
-    [m[c], m[piv]] = [m[piv], m[c]];
-    for (let r = 0; r < n; r++) {
-      if (r === c || !m[c][c]) continue;
-      const f = m[r][c] / m[c][c];
-      for (let k = c; k <= n; k++) m[r][k] -= f * m[c][k];
-    }
-  }
-  return m.map((row, i) => row[n] / (row[i] || 1));
-}
-
-type Model = { spec: Spec; w: number[] };
-const fitModel = (ms: Moment[], spec: Spec): Model => ({ spec, w: fit(ms.map((m) => design(m, spec)), ms.map((m) => m.y), ms.map((m) => m.w), spec.lambda) });
-const predict = (model: Model, m: Moment) => sigmoid(dot(model.w, design(m, model.spec)));
 
 // ---- A more flexible model: boosted decision trees --------------------------------------------
 // Small trees on the differences and the game time, added up (gradient boosting on log loss). A
@@ -134,7 +63,7 @@ const predict = (model: Model, m: Moment) => sigmoid(dot(model.w, design(m, mode
 type TreeSpec = { trees: number; depth: number; rate: number };
 type Node = { f: number; thr: number; left: Node | number; right: Node | number };
 type Trees = { spec: TreeSpec; nodes: (Node | number)[] };
-const treeInput = (m: Moment, sign = 1) => [...m.d.map((v) => v * sign), m.t / 60_000];
+const treeInput = (m: Moment, sign = 1) => [...allFeatures.map((f) => m.d[f] * sign), m.t / 60_000];
 const BINS = 32;
 
 function fitTrees(ms: Moment[], spec: TreeSpec): Trees {
@@ -193,63 +122,20 @@ const predictTrees = (model: Trees, m: Moment) => {
 };
 
 // ---- Data ------------------------------------------------------------------------------------
-/** Each game once; where race groups hold different copies, the one with a simulation. */
-function loadGames(groups: string[], meta?: Map<string, { year: number; matchup: string }>): Game[] {
-  const games = new Map<string, Game>();
-  for (const g of groups) {
-    const rp = referencePaths(g);
-    if (!existsSync(rp.games)) continue;
-    for (const f of readdirSync(rp.games)) {
-      const key = f.replace(/\.json$/, "");
-      if (games.get(key)?.record.sim?.status === "ok") continue;
-      if (meta && !meta.has(key)) continue;
-      const r = readRecord(rp, key) as GameRecord | null;
-      if (!r) continue;
-      const races = r.players.map((p) => p.race).sort((a, b) => "HONU".indexOf(a) - "HONU".indexOf(b));
-      games.set(key, { key, record: r, year: meta?.get(key)?.year ?? null, matchup: meta?.get(key)?.matchup ?? races.join("v") });
-    }
-  }
-  return [...games.values()];
-}
-
 const calibration = loadGames(CALIBRATION);
-const valMeta = new Map<string, { year: number; matchup: string }>();
+const valMeta = validationMeta();
 const valDb = referencePaths(VALIDATION).db;
-if (existsSync(valDb)) {
-  const db = openDb(valDb);
-  try {
-    for (const r of db.prepare("SELECT game_key, year, matchup FROM val_games").all() as { game_key: string; year: number; matchup: string }[]) valMeta.set(r.game_key, r);
-  } catch {
-    // no validation games yet
-  }
-}
 const validation = valMeta.size ? loadGames([VALIDATION], valMeta) : [];
+// Each race's usual workers and food used, from the calibration games only.
+const usual = BY_RACE_ON ? usualOf(calibration) : undefined;
 
-// A game with an unreadable number anywhere (a broken simulation) is left out whole.
-const finiteGames = (ms: Moment[]) => {
-  const bad = new Set(ms.filter((m) => m.d.some((v) => !Number.isFinite(v))).map((m) => m.game));
-  if (bad.size) console.error(`left out ${bad.size} games with unreadable numbers`);
-  return ms.filter((m) => !bad.has(m.game));
-};
-const calMoments = finiteGames(calibration.flatMap((g) => momentsOf(g)));
-const valMoments = finiteGames(validation.flatMap((g) => momentsOf(g)));
+const calMoments = finiteGames(calibration.flatMap((g) => momentsOf(g, { usual })));
+const valMoments = finiteGames(validation.flatMap((g) => momentsOf(g, { usual })));
 const calUsed = new Set(calMoments.map((m) => m.game));
 const valUsed = new Set(valMoments.map((m) => m.game));
 const gameOf = new Map([...calibration, ...validation].map((g) => [g.key, g]));
-const fold = (key: string) => parseInt(key.slice(-2), 16) % FOLDS;
 
-type Pred = Moment & { p: number };
-/** Cross-validation on the calibration set: fit on three quarters, predict the fourth, four times. */
-function crossValidate(spec: Spec): Pred[] {
-  const out: Pred[] = [];
-  for (let f = 0; f < FOLDS; f++) {
-    const model = fitModel(calMoments.filter((m) => fold(m.game) !== f), spec);
-    for (const m of calMoments.filter((m) => fold(m.game) === f)) out.push({ ...m, p: predict(model, m) });
-  }
-  return out;
-}
-const lossOf = (ps: Pred[]) => -ps.reduce((s, r) => s + r.w * Math.log(Math.min(1 - 1e-9, Math.max(1e-9, r.y ? r.p : 1 - r.p))), 0) / ps.reduce((s, r) => s + r.w, 0);
-const brierOf = (ps: Pred[]) => ps.reduce((s, r) => s + r.w * (r.p - r.y) ** 2, 0) / ps.reduce((s, r) => s + r.w, 0);
+const crossValidate = (spec: Spec) => cvOn(calMoments, spec);
 const cvLoss = (spec: Spec) => lossOf(crossValidate(spec));
 
 /** Drop, one at a time, any difference whose absence doesn't hurt (simpler and easier to explain). */
@@ -271,7 +157,6 @@ const progress = (s: string) => console.error(s);
 progress(`calibration: ${calUsed.size} games, ${calMoments.length} moments; validation: ${valUsed.size} games`);
 const firstModel = backward({ keep: ORIGINAL, basis: "linear", matchup: false, lambda: 0.01 }, progress);
 progress(`first model: ${label(firstModel)} ${cvLoss(firstModel).toFixed(4)}`);
-const allFeatures = FEATURES.map((_, i) => i);
 const widerLinear = backward({ keep: allFeatures, basis: "linear", matchup: false, lambda: 0.01 }, progress);
 progress(`more differences: ${label(widerLinear)} ${cvLoss(widerLinear).toFixed(4)}`);
 const candidates: Spec[] = [firstModel, widerLinear];
@@ -310,66 +195,14 @@ const valTrees: Pred[] = valMoments.map((m) => ({ ...m, p: predictTrees(treeMode
 
 // ---- Scores ----------------------------------------------------------------------------------
 const pct = (v: number) => `${Math.round(v * 100)}%`;
-const predsOn = (model: Model, ms: Moment[]): Pred[] => ms.map((m) => ({ ...m, p: predict(model, m) }));
 const valBest = predsOn(finalBest.model, valMoments);
 const valFirst = predsOn(finalFirst.model, valMoments);
-/** Share of games (one side each) where the favourite at minute m went on to win. */
-const accuracyAt = (ps: Pred[], minute: number) => {
-  const t = minute * 60_000;
-  const rows = ps.filter((r) => Math.abs(r.t - t) < STEP_MS / 2 && r.y === 1);
-  return { n: rows.length, acc: rows.filter((r) => r.p > 0.5).length / rows.length, sure: rows.filter((r) => r.p > 0.8 || r.p < 0.2).length / rows.length };
-};
-/** A small seeded random number generator (mulberry32), so every run resamples the same way. */
-function mulberry32(seed: number) {
-  return () => {
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-/** Calibration slope: b in P(win) = σ(b · logit p). 1 means honest confidence, below 1 too confident. */
-function calibrationSlope(ps: Pred[]): number {
-  let b = 1;
-  for (let i = 0; i < 30; i++) {
-    let g = 0, h = 0;
-    for (const r of ps) {
-      const p = Math.min(1 - 1e-9, Math.max(1e-9, r.p)), z = Math.log(p / (1 - p)), q = sigmoid(b * z);
-      g += r.w * (q - r.y) * z;
-      h += r.w * q * (1 - q) * z * z;
-    }
-    b -= g / h;
-  }
-  return b;
-}
-/** Resampled by game: how sure is a difference in log loss between two models on the same moments? */
-function bootstrapDiff(a: Pred[], b: Pred[], rounds = 400): { lo: number; hi: number } {
-  const byGame = new Map<string, number[]>();
-  a.forEach((r, i) => (byGame.get(r.game) ?? byGame.set(r.game, []).get(r.game)!).push(i));
-  const games = [...byGame.values()];
-  const rand = mulberry32(7);
-  const diffs: number[] = [];
-  for (let k = 0; k < rounds; k++) {
-    let la = 0, lb = 0, w = 0;
-    for (let g = 0; g < games.length; g++) {
-      for (const i of games[Math.floor(rand() * games.length)]) {
-        const ra = a[i], rb = b[i];
-        la -= ra.w * Math.log(Math.max(1e-9, ra.y ? ra.p : 1 - ra.p));
-        lb -= rb.w * Math.log(Math.max(1e-9, rb.y ? rb.p : 1 - rb.p));
-        w += ra.w;
-      }
-    }
-    diffs.push((la - lb) / w);
-  }
-  diffs.sort((x, y) => x - y);
-  return { lo: diffs[Math.floor(rounds * 0.025)], hi: diffs[Math.floor(rounds * 0.975)] };
-}
 
 const lines: string[] = [];
 const out = (s = "") => lines.push(s);
 out("# Win chance from pro games (research)");
 out();
-out(`Generated by \`node scripts/win-chance.ts\`, which also writes the best model to \`data/winchance.json\` for the app. The method in full: [the technical report](win-chance/report.pdf).`);
+out(`Generated by \`node scripts/win-chance.ts${BY_RACE_ON ? " --workers by-race" : ""}\`, which also writes the best model to \`data/winchance.json\` for the app. The method in full: [the technical report](win-chance/report.pdf).`);
 out();
 out(`**The data.** Fitted on the **calibration set**: ${calUsed.size} curated pro games of the current patch with a full simulation and a known winner. Scored on the **validation set**: ${valUsed.size} tournament games from warcraft3.info, 2022 to today, spread over the years and matchups (\`scripts/download-validation.ts\`), never used for fitting or for choosing the model.`);
 out();
@@ -383,7 +216,7 @@ for (const f of finals) {
   const v = predsOn(f.model, valMoments);
   out(`| ${label(f.spec)}${f.spec.basis === "curve" ? ` (ridge ${f.spec.lambda})` : ""}${f === finalBest ? " **(best)**" : ""} | ${f.spec.keep.map((i) => inputName(FEATURES[i])).join(", ")} | ${f.loss.toFixed(4)} | ${valMoments.length ? lossOf(v).toFixed(4) : "–"} | ${valMoments.length ? brierOf(v).toFixed(4) : "–"} |`);
 }
-out(`| Boosted trees (${bestTrees.spec.trees} trees of depth ${bestTrees.spec.depth}) | all ${FEATURES.length}, and the game time | ${bestTrees.loss.toFixed(4)} | ${valMoments.length ? lossOf(valTrees).toFixed(4) : "–"} | ${valMoments.length ? brierOf(valTrees).toFixed(4) : "–"} |`);
+out(`| Boosted trees (${bestTrees.spec.trees} trees of depth ${bestTrees.spec.depth}) | all ${allFeatures.length}, and the game time | ${bestTrees.loss.toFixed(4)} | ${valMoments.length ? lossOf(valTrees).toFixed(4) : "–"} | ${valMoments.length ? brierOf(valTrees).toFixed(4) : "–"} |`);
 out(`| Coin flip | | 0.6931 | 0.6931 | 0.2500 |`);
 out();
 if (valMoments.length && finalBest !== finalFirst) {
@@ -460,20 +293,50 @@ if (finalBest.spec.matchup) {
   out(`Matchup edges (the first race's chance with no other difference): ${MATCHUPS.map((mu, i) => `${mu} ${pct(sigmoid(finalBest.model.w[nb + i]))}`).join(", ")}.`);
 }
 
-writeFileSync(join(import.meta.dirname, "../docs/WIN-CHANCE.md"), lines.join("\n") + "\n");
+// ---- Per matchup: does the model lean towards a race? -----------------------------------------
+const pts = (v: number) => `${v >= 0 ? "+" : "−"}${Math.abs(v * 100).toFixed(0)}`;
+const matchupTables = [
+  ...(valMoments.length ? [{ name: "validation set", rows: matchupCalibration(valBest) }] : []),
+  { name: "calibration set, cross-validated", rows: matchupCalibration(best.cv) },
+];
+out();
+out("**Each matchup's evaluation against its results** (best model). For the first race of each matchup, among games still going at that minute: the average chance the model gave, how often that race won, and the gap between the two in points (with its 95% range). A gap well away from 0 means the model leans towards a race. Mirror matchups (the record's first player) are a check.");
+for (const tb of matchupTables) {
+  out();
+  out(`On the ${tb.name}:`);
+  out();
+  out("| Matchup | 5:00 | 10:00 | 15:00 | 20:00 |");
+  out("|---|---|---|---|---|");
+  for (const mu of [...new Set(tb.rows.map((r) => r.matchup))]) {
+    const cell = (minute: number) => {
+      const r = tb.rows.find((x) => x.matchup === mu && x.minute === minute);
+      return r && r.games >= 20 ? `said ${pct(r.said)}, won ${pct(r.won)}: ${pts(r.gap)} ±${(r.half * 100).toFixed(0)} (${r.games})` : "–";
+    };
+    out(`| ${mu} | ${cell(5)} | ${cell(10)} | ${cell(15)} | ${cell(20)} |`);
+  }
+}
+if (usual) {
+  out();
+  out("**What is usual for each race** (calibration set; the workers and the amount of units are counted against these):");
+  out();
+  out("| Minute | " + ["H", "O", "U", "N"].map((r) => `${r} workers | ${r} amount of units`).join(" | ") + " |");
+  out("|---|" + "---|".repeat(8));
+  for (const m of [2, 5, 10, 15, 20, 25]) out(`| ${m}:00 | ${["H", "O", "U", "N"].map((r) => `${usual.workers[r]?.[m]?.toFixed(1) ?? "–"} | ${usual.food[r]?.[m]?.toFixed(1) ?? "–"}`).join(" | ")} |`);
+}
+
+// What was written by hand below the marker stays (the notes on how workers are counted).
+const KEEP_MARKER = "<!-- Written by hand from here on; scripts/win-chance.ts keeps it. -->";
+mkdirSync(docsDir, { recursive: true });
+const docFile = join(docsDir, "WIN-CHANCE.md");
+const repoDoc = join(import.meta.dirname, "../docs/WIN-CHANCE.md");
+const before = existsSync(repoDoc) ? readFileSync(repoDoc, "utf8") : "";
+const kept = before.includes(KEEP_MARKER) ? "\n" + before.slice(before.indexOf(KEEP_MARKER)) : "";
+writeFileSync(docFile, lines.join("\n") + "\n" + kept);
 
 // ---- Sensitivity: how much does the army value's error matter? -------------------------------
 // The army value is an estimate (docs/DATA.md: typically off by about 30%). Extra noise of that
 // size, added to each player's army value at every sample, shows how much the model loses with an
 // army value twice as wrong; leaving the army out entirely bounds what a perfect one could add.
-const cvOn = (ms: Moment[], spec: Spec): Pred[] => {
-  const out: Pred[] = [];
-  for (let f = 0; f < FOLDS; f++) {
-    const model = fitModel(ms.filter((m) => fold(m.game) !== f), spec);
-    for (const m of ms.filter((m) => fold(m.game) === f)) out.push({ ...m, p: predict(model, m) });
-  }
-  return out;
-};
 const ARMY = [0, 1];
 const sensitivity: { name: string; cv: number; validation: number | null }[] = [];
 const scoreOn = (name: string, cal: Moment[], val: Moment[], spec: Spec) => {
@@ -491,16 +354,16 @@ for (const sigma of usesArmy ? [500, 1000] : []) {
   const gauss = () => Math.sqrt(-2 * Math.log(1 - rand())) * Math.cos(2 * Math.PI * rand());
   const noisy = (s: Side): Side => ({ ...s, series: s.series.map((x) => ({ ...x, armyValue: Math.max(0, (x.armyValue ?? 0) + sigma * gauss()) })) });
   const keep = (ms: Moment[], used: Set<string>) => ms.filter((m) => used.has(m.game));
-  scoreOn(`army value with extra noise (sd ${sigma} per player)`, keep(calibration.flatMap((g) => momentsOf(g, noisy)), calUsed), keep(validation.flatMap((g) => momentsOf(g, noisy)), valUsed), finalBest.spec);
+  scoreOn(`army value with extra noise (sd ${sigma} per player)`, keep(calibration.flatMap((g) => momentsOf(g, { tweak: noisy, usual })), calUsed), keep(validation.flatMap((g) => momentsOf(g, { tweak: noisy, usual })), valUsed), finalBest.spec);
 }
 
 // ---- Everything the technical report quotes: docs/win-chance/results.json, games.csv --------
-const reportDir = join(import.meta.dirname, "../docs/win-chance");
+const reportDir = join(docsDir, "win-chance");
 mkdirSync(reportDir, { recursive: true });
 const commit = execFileSync("git", ["rev-parse", "--short", "HEAD"], { cwd: import.meta.dirname, encoding: "utf8" }).trim();
 const valCounts = (() => {
   if (!existsSync(valDb)) return null;
-  const db = openDb(valDb);
+  const db = openDb(valDb, { readOnly: true });
   const one = (sql: string) => (db.prepare(sql).get() as { n: number }).n;
   return { downloaded: one("SELECT count(*) n FROM val_games"), simulationFailed: one("SELECT count(*) n FROM games WHERE sim_status = 'failed'"), simulated: one("SELECT count(*) n FROM games WHERE sim_status = 'ok'") };
 })();
@@ -524,8 +387,11 @@ const results = {
   commit,
   calibration: { games: calUsed.size, moments: calMoments.length },
   // usable: simulated with a known winner (before games with unreadable numbers are left out).
-  validation: { ...valCounts, usable: new Set(validation.flatMap((g) => momentsOf(g)).map((m) => m.game)).size, scored: valUsed.size, moments: valMoments.length },
-  features: FEATURES,
+  validation: { ...valCounts, usable: new Set(validation.flatMap((g) => momentsOf(g, { usual })).map((m) => m.game)).size, scored: valUsed.size, moments: valMoments.length },
+  workers: workersOption,
+  features: allFeatures.map((f) => FEATURES[f]),
+  matchupCalibration: Object.fromEntries(matchupTables.map((tb) => [tb.name.startsWith("validation") ? "validation" : "cv", tb.rows])),
+  usual: usual ?? null,
   models: scored.map((c) => ({ label: label(c.spec), keep: c.spec.keep.map((f) => FEATURES[f]), basis: c.spec.basis, matchup: c.spec.matchup, lambda: c.spec.lambda, cv: c.loss, validation: valMoments.length ? lossOf(predsOn(finals.find((f) => f.spec === c.spec)!.model, valMoments)) : null, brier: valMoments.length ? brierOf(predsOn(finals.find((f) => f.spec === c.spec)!.model, valMoments)) : null, best: c.spec === best.spec })),
   trees: { trees: bestTrees.spec.trees, depth: bestTrees.spec.depth, cv: bestTrees.loss, validation: valMoments.length ? lossOf(valTrees) : null, brier: valMoments.length ? brierOf(valTrees) : null },
   bootstrap: valMoments.length ? { bestMinusFirst: { diff: lossOf(valBest) - lossOf(valFirst), ...bootstrapDiff(valBest, valFirst) }, treesMinusBest: { diff: lossOf(valTrees) - lossOf(valBest), ...bootstrapDiff(valTrees, valBest) } } : null,
@@ -548,7 +414,7 @@ const sourceOf = new Map<string, string>();
 for (const g of CALIBRATION) {
   const db = referencePaths(g).db;
   if (!existsSync(db)) continue;
-  for (const r of openDb(db).prepare("SELECT game_key, w3c_match_id FROM ref_matches").all() as { game_key: string; w3c_match_id: string }[]) if (!sourceOf.has(r.game_key)) sourceOf.set(r.game_key, r.w3c_match_id);
+  for (const r of openDb(db, { readOnly: true }).prepare("SELECT game_key, w3c_match_id FROM ref_matches").all() as { game_key: string; w3c_match_id: string }[]) if (!sourceOf.has(r.game_key)) sourceOf.set(r.game_key, r.w3c_match_id);
 }
 const csv = ["set,source,id,matchup"];
 for (const key of [...calUsed].sort()) {
@@ -556,7 +422,7 @@ for (const key of [...calUsed].sort()) {
   csv.push(`calibration,${id.startsWith("w3info:") ? "warcraft3.info" : "w3champions"},${id.replace(/^w3info:/, "")},${gameOf.get(key)!.matchup}`);
 }
 if (existsSync(valDb)) {
-  const ids = new Map((openDb(valDb).prepare("SELECT game_key, w3info_id FROM val_games").all() as { game_key: string; w3info_id: number }[]).map((r) => [r.game_key, r.w3info_id]));
+  const ids = new Map((openDb(valDb, { readOnly: true }).prepare("SELECT game_key, w3info_id FROM val_games").all() as { game_key: string; w3info_id: number }[]).map((r) => [r.game_key, r.w3info_id]));
   for (const key of [...valUsed].sort()) csv.push(`validation,warcraft3.info,${ids.get(key)},${gameOf.get(key)!.matchup}`);
 }
 writeFileSync(join(reportDir, "games.csv"), csv.join("\n") + "\n");
@@ -568,6 +434,7 @@ const exported: WinModel = {
   basis: finalBest.spec.basis,
   weights: finalBest.model.w.map((w) => Number(w.toPrecision(6))),
   research: RESEARCH,
+  ...(usual && finalBest.spec.keep.some((f) => f >= 16) ? { usual } : {}),
   about: {
     games: calUsed.size,
     patch: "3.0",
@@ -578,12 +445,12 @@ const exported: WinModel = {
     validationLogLoss: valMoments.length ? Number(lossOf(valBest).toFixed(4)) : NaN,
   },
 };
-writeFileSync(join(import.meta.dirname, "../data/winchance.json"), JSON.stringify(exported) + "\n");
+writeFileSync(modelFile, JSON.stringify(exported) + "\n");
 
 // ---- Your games: the curve and the moments that swung it (as the app shows them) -------------
 lines.length = 0;
 const p = paths();
-const db = openDb(p.db);
+const db = openDb(p.db, { readOnly: true });
 const mine = listGames(db).filter((g) => g.analyzed === 1 && g.sim_status === "ok");
 out();
 out("## Your games");
@@ -632,5 +499,5 @@ for (const e of examples) {
   out();
 }
 
-if (process.argv[2]) writeFileSync(process.argv[2], lines.join("\n") + "\n");
+if (args[0]) writeFileSync(args[0], lines.join("\n") + "\n");
 else console.log(lines.join("\n"));
