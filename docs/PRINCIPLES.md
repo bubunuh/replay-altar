@@ -10,69 +10,69 @@ Builds with 8+ games: fast expand (375, 54% won); early towers (371, 49% won); f
 
 | Milestone | Median (middle 50%) | n | Median in wins / losses | Win rate: lowest / highest quarter | Across builds |
 |---|---|---|---|---|---|
-| Tier 2 started (food) | 30 (27–35) | 1712 | 31 / 30 | 49% / 57% | depends (1.4) |
+| Tier 2 started (food) | 30 (27–36) | 1712 | 31 / 30 | 49% / 56% | depends (1.3) |
 | Tier 2 started (time) | 4:16 (3:16–6:06) | 1712 | 4:35 / 4:05 | 50% / 49% | depends (1.4) |
 | First hero level 3 (food) | 33 (30–37) | 1706 | 33 / 33 | 49% / 52% | depends (1.9) |
 | First hero level 3 (time) | 5:06 (4:07–6:48) | 1706 | 4:58 / 5:16 | 55% / 47% | depends (1.2) |
-| Second hero (food) | 37 (33–43) | 1566 | 38 / 37 | 43% / 60% | depends (1.6) |
+| Second hero (food) | 38 (33–43) | 1566 | 38 / 37 | 44% / 60% | depends (1.6) |
 | Second hero (time) | 7:40 (6:36–9:33) | 1566 | 7:45 / 7:35 | 49% / 51% | depends (1.1) |
-| Second hero level 3 (food) | 54 (47–68) | 1199 | 55 / 53 | 49% / 60% | depends (1.1) |
+| Second hero level 3 (food) | 54 (47–69) | 1199 | 55 / 53 | 49% / 59% | depends (1.1) |
 | Second hero level 3 (time) | 12:44 (10:31–15:09) | 1199 | 12:36 / 12:46 | 55% / 53% | similar (1.0) |
 | First hero level 5 (time) | 16:01 (13:20–19:18) | 829 | 15:34 / 16:49 | 65% / 48% | similar (1.0) |
-| First expansion (food) | 33 (29–40) | 1117 | 33 / 33 | 51% / 55% | depends (1.4) |
+| First expansion (food) | 33 (29–40) | 1117 | 33 / 33 | 52% / 55% | depends (1.3) |
 | First expansion (time) | 4:46 (3:56–8:34) | 1117 | 4:45 / 4:52 | 57% / 53% | depends (1.2) |
-| Tier 3 started (food) | 42 (36–49) | 848 | 43 / 41 | 48% / 60% | similar (0.7) |
+| Tier 3 started (food) | 42 (36–49) | 848 | 43 / 41 | 47% / 59% | similar (0.7) |
 | Tier 3 started (time) | 9:09 (7:56–11:12) | 848 | 9:09 / 9:10 | 53% / 57% | similar (0.8) |
-| First attack upgrade (food) | 45 (40–52) | 1212 | 45 / 44 | 52% / 56% | depends (1.3) |
+| First attack upgrade (food) | 45 (40–52) | 1212 | 46 / 45 | 52% / 56% | depends (1.3) |
 | First attack upgrade (time) | 10:13 (8:31–12:11) | 1212 | 10:06 / 10:22 | 57% / 51% | depends (1.8) |
-| 50 food reached (time) | 10:50 (9:40–12:10) | 1362 | 10:50 / 11:00 | 58% / 51% | similar (0.9) |
-| 60 food reached (time) | 12:50 (11:40–14:40) | 1028 | 12:40 / 13:00 | 61% / 51% | similar (0.6) |
-| 3-3-60 reached (time) | 14:35 (13:00–16:50) | 910 | 14:30 / 14:48 | 62% / 48% | similar (0.7) |
+| 50 food reached (time) | 10:50 (9:40–12:10) | 1378 | 10:40 / 11:00 | 58% / 51% | depends (1.0) |
+| 60 food reached (time) | 12:50 (11:40–14:30) | 1046 | 12:40 / 13:00 | 61% / 52% | similar (0.6) |
+| 3-3-60 reached (time) | 14:33 (13:00–16:51) | 925 | 14:30 / 14:41 | 61% / 47% | similar (0.8) |
 | Workers at 6:00 | 14 (12–17) | 1771 | 14 / 14 | 46% / 56% | depends (1.3) |
 | Most workers | 19 (15–24) | 1771 | 19 / 19 | 53% / 49% | depends (1.3) |
-| Time at 46-50 food | 7% (2%–13%) | 1771 | 7% / 6% | 45% / 50% | depends (1.4) |
-| Time in low upkeep (51-80) | 24% (0%–39%) | 1771 | 26% / 20% | 43% / 52% | similar (0.8) |
-| Time in high upkeep (81+) | 0% (0%–1%) | 1771 | 0% / 0% | 49% / 57% | same (0.0) |
+| Time at 46-50 food | 7% (2%–13%) | 1771 | 7% / 7% | 47% / 50% | depends (1.1) |
+| Time in low upkeep (51-80) | 24% (2%–39%) | 1771 | 25% / 22% | 42% / 51% | similar (0.8) |
+| Time in high upkeep (81+) | 0% (0%–3%) | 1771 | 0% / 0% | 49% / 58% | depends (1.1) |
 | Creep camps by 6:00 | 2 (1–3) | 1771 | 2 / 2 | 47% / 55% | similar (0.5) |
 | Creep camps by 10:00 | 3 (2–4) | 1771 | 3 / 3 | 48% / 57% | depends (1.0) |
 | Items bought | 8 (4–16) | 1771 | 9 / 8 | 48% / 50% | depends (1.3) |
 | Tower orders | 5 (2–9) | 1771 | 5 / 4 | 47% / 56% | depends (1.4) |
-| Hero deaths | 0 (0–1) | 1771 | 0 / 0 | 57% / 40% | depends (1.0) |
+| Hero deaths | 0 (0–1) | 1771 | 0 / 0 | 57% / 39% | depends (1.0) |
 | Hero to first creep | 0:10 (0:05–0:48) | 1759 | 0:10 / 0:10 | 54% / 46% | depends (3.0) |
 | Workers lost by 12:00 | 2 (0–4) | 1771 | 1 / 2 | 60% / 43% | similar (0.6) |
 | Tower orders per base | 3 (2–4.5) | 1771 | 3 / 2.7 | 49% / 51% | depends (3.3) |
 | Seconds above 80 food on fewer than 2 expansions | 0 (0–0) | 1771 | 0 / 0 | 50% / 51% | same (0.0) |
-| Longest production stop with gold (to 10:00), s | 0 (0–10) | 1770 | 0 / 0 | 54% / 44% | similar (0.5) |
-| Unspent gold, first 10 min (≈) | 41.1 (25.9–86.2) | 1771 | 39 / 43.4 | 52% / 45% | similar (0.7) |
+| Longest production stop with gold (to 10:00), s | 50 (30–90) | 1770 | 50 / 50 | 52% / 47% | similar (0.9) |
+| Unspent gold, first 10 min (≈) | 279.9 (220.5–362) | 1771 | 276 / 287.8 | 54% / 44% | depends (1.1) |
 | Workers at 10:00 | 16 (13–22) | 1531 | 17 / 16 | 49% / 55% | depends (1.4) |
 | Expanded at all | 63% | 1771 | 66% / 60% | — | depends (1.0) |
 | Had a second hero (games 10+ min) | 97% | 1531 | 97% / 96% | — | depends (5.0) |
 | Reached tier 3 (games 15+ min) | 65% | 1054 | 69% / 62% | — | depends (1.0) |
-| Used the 50-food spike within 4 min | 97% | 1027 | 97% / 97% | — | same (0.0) |
+| Used the 50-food spike within 4 min | 97% | 1039 | 97% / 97% | — | same (0.0) |
 
 **Library builds as pros play them** (each pro matched to the closest guide build; the food at each step is the pros' median when they did it):
 
-- **Bloody Beginner – Archmage Mountain King Rifles**: 463 pros, 48% won. Altar of Kings 5, Barracks 6, Archmage 9 (guide 10), Footman 15 (guide 16), Scout Tower 18 (guide 19), Arcane Tower 25 (guide 21), Keep 28 (guide 27), Blacksmith 30 (guide 27), Arcane Vault 30 (guide 29), Mountain King 30 (guide 34), Arcane Sanctum 34, Priest 35 (guide 45)
-- **Archmage Straight Tier 1 Fast Expand**: 453 pros, 55% won. Altar of Kings 5 (guide 6), Barracks 6 (guide 7), Archmage 9 (guide 10), Footman 15 (guide 16), Town Hall 30 (guide 25), Scout Tower 29, Arcane Tower 30 (guide 29), Keep 35 (guide 40), Blacksmith 39 (guide 40), Lumber Mill 37 (guide 40)
-- **Archmage Alchemist Rifle Priest**: 246 pros, 46% won. Altar of Kings 5 (guide 6), Barracks 6 (guide 7), Archmage 9 (guide 10), Footman 15 (guide 16), Keep 24, Blacksmith 25 (guide 24), Scout Tower 24, Lumber Mill 27 (guide 24), Arcane Tower 24, Arcane Sanctum 29 (guide 27), Priest 32, Mountain King 26 (guide 40)
-- **Human Fast Altar (standard)**: 182 pros, 48% won. Altar of Kings 5 (guide 6), Barracks 6 (guide 7), Archmage 9 (guide 10), Footman 15 (guide 16)
-- **MK + Paladin Mass Dragonhawks vs Night Elf**: 169 pros, 58% won. Altar of Kings 5 (guide 7), Barracks 6 (guide 7), Mountain King 37 (guide 11), Footman 15 (guide 16), Town Hall 32 (guide 26), Arcane Vault 35 (guide 33), Keep 36 (guide 37), Lumber Mill 36 (guide 37), Scout Tower 37, Scout Tower 39, Guard Tower 42 (guide 43), Lumber Harvesting 40 (guide 43), Blacksmith 39 (guide 45)
-- **Mountain King Fast Expand**: 123 pros, 50% won. Altar of Kings 5 (guide 6), Barracks 6 (guide 7), Mountain King 34 (guide 10), Footman 15 (guide 16), Town Hall 30 (guide 27), Scout Tower 29 (guide 27), Keep 33 (guide 35), Blacksmith 35, Lumber Mill 33 (guide 35), Workshop 40, Arcane Sanctum 40, Castle 41 (guide 45)
+- **Bloody Beginner – Archmage Mountain King Rifles**: 464 pros, 48% won. Altar of Kings 5, Barracks 6, Archmage 9 (guide 10), Footman 15 (guide 16), Scout Tower 18 (guide 19), Arcane Tower 25 (guide 21), Keep 28 (guide 27), Blacksmith 30 (guide 27), Arcane Vault 30 (guide 29), Mountain King 30 (guide 34), Arcane Sanctum 34, Priest 35 (guide 45)
+- **Archmage Straight Tier 1 Fast Expand**: 456 pros, 55% won. Altar of Kings 5 (guide 6), Barracks 6 (guide 7), Archmage 9 (guide 10), Footman 15 (guide 16), Town Hall 30 (guide 25), Scout Tower 29, Arcane Tower 30 (guide 29), Keep 36 (guide 40), Blacksmith 39 (guide 40), Lumber Mill 37 (guide 40)
+- **Archmage Alchemist Rifle Priest**: 242 pros, 46% won. Altar of Kings 5 (guide 6), Barracks 6 (guide 7), Archmage 9 (guide 10), Footman 15 (guide 16), Keep 24, Blacksmith 24, Scout Tower 24, Arcane Tower 24, Arcane Sanctum 29 (guide 27), Priest 32, Mountain King 26 (guide 40)
+- **Human Fast Altar (standard)**: 193 pros, 48% won. Altar of Kings 5 (guide 6), Barracks 6 (guide 7), Archmage 9 (guide 10), Footman 15 (guide 16)
+- **MK + Paladin Mass Dragonhawks vs Night Elf**: 167 pros, 57% won. Altar of Kings 5 (guide 7), Barracks 6 (guide 7), Mountain King 37 (guide 11), Footman 15 (guide 16), Town Hall 32 (guide 26), Arcane Vault 35 (guide 33), Keep 37 (guide 37), Lumber Mill 36 (guide 37), Scout Tower 37, Scout Tower 39, Guard Tower 42 (guide 43), Lumber Harvesting 40 (guide 43), Blacksmith 39 (guide 45)
+- **Mountain King Fast Expand**: 117 pros, 50% won. Altar of Kings 5 (guide 6), Barracks 6 (guide 7), Mountain King 34 (guide 10), Footman 15 (guide 16), Town Hall 30 (guide 27), Scout Tower 29 (guide 27), Keep 33 (guide 35), Blacksmith 35, Lumber Mill 33 (guide 35), Workshop 40, Arcane Sanctum 40, Castle 42 (guide 45)
 - **Human Fast Rifleman**: 49 pros, 61% won. Altar of Kings 7 (guide 8), Barracks 8, Blacksmith 7 (guide 8), Paladin 11 (guide 12), Rifleman 17 (guide 16), Keep 27 (guide 26)
-- **Dark Ranger Tower Rush vs Night Elf**: 35 pros, 51% won. Barracks 6 (guide 7), Altar of Kings 5 (guide 8), Footman 12 (guide 10), Lumber Mill 29 (guide 20), Scout Tower 28 (guide 27), Guard Tower 31, Guard Tower 32 (guide 31), Guard Tower 35 (guide 34), Scout Tower 35 (guide 36)
+- **Dark Ranger Tower Rush vs Night Elf**: 33 pros, 52% won. Barracks 6 (guide 7), Altar of Kings 5 (guide 8), Footman 11 (guide 10), Lumber Mill 29 (guide 20), Scout Tower 28 (guide 27), Guard Tower 31, Guard Tower 31, Guard Tower 35 (guide 34), Scout Tower 35 (guide 36)
 
 **Plans** (order of heroes, tier upgrades and expansions; food at each step, median):
 
 - Archmage 9 → Keep 27 → Mountain King 29: 234 pros, 47% won
 - Archmage 9 → Keep 30 → Mountain King 30 → expand 43: 158 pros, 52% won
-- Archmage 9 → expand 30 → Keep 36 → Mountain King 39 → Castle 42 → Paladin 43: 104 pros, 52% won
-- Archmage 9 → expand 32 → Keep 36 → Castle 39 → Mountain King 39 → Paladin 41: 94 pros, 62% won
+- Archmage 9 → expand 30 → Keep 36 → Mountain King 39 → Castle 43 → Paladin 43: 104 pros, 52% won
+- Archmage 9 → expand 32 → Keep 36 → Castle 40 → Mountain King 40 → Paladin 41: 94 pros, 62% won
 - Archmage 9 → Keep 27 → tavern hero 29: 92 pros, 50% won
 - Archmage 9 → Keep 28 → Mountain King 29 → Castle 36 → Paladin 35: 73 pros, 45% won
 - Archmage 9 → expand 30 → Keep 37 → tavern hero 39: 71 pros, 58% won
 - Archmage 9 → expand 29 → Keep 36 → Mountain King 40: 54 pros, 63% won
 - Archmage 9 → Keep 30: 43 pros, 40% won
-- Archmage 9 → expand 30 → Keep 34: 39 pros, 49% won
+- Archmage 9 → expand 30 → Keep 35: 39 pros, 49% won
 
 ## Orc (1722 player-games, 798 wins)
 
@@ -82,26 +82,26 @@ Builds with 8+ games: fast tech (877, 44% won); Headhunter opening + fast tech (
 |---|---|---|---|---|---|
 | Tier 2 started (food) | 20 (19–21) | 1702 | 20 / 20 | 45% / 49% | depends (5.3) |
 | Tier 2 started (time) | 2:39 (2:20–2:49) | 1702 | 2:41 / 2:38 | 47% / 48% | depends (4.6) |
-| First hero level 3 (food) | 35 (30–43) | 1513 | 35 / 35 | 48% / 47% | depends (1.5) |
+| First hero level 3 (food) | 35 (30–43) | 1513 | 36 / 35 | 48% / 47% | depends (1.5) |
 | First hero level 3 (time) | 7:30 (5:40–9:25) | 1513 | 7:13 / 7:47 | 53% / 43% | depends (1.2) |
 | Second hero (food) | 31 (28–34) | 1629 | 31 / 31 | 43% / 50% | depends (2.5) |
 | Second hero (time) | 6:04 (5:39–6:27) | 1629 | 6:01 / 6:06 | 51% / 40% | depends (2.8) |
-| Second hero level 3 (food) | 46 (41–49) | 1237 | 45 / 46 | 46% / 48% | depends (1.3) |
+| Second hero level 3 (food) | 46 (41–49) | 1237 | 46 / 46 | 46% / 48% | depends (1.3) |
 | Second hero level 3 (time) | 10:14 (9:13–11:32) | 1237 | 10:02 / 10:30 | 56% / 39% | depends (1.4) |
 | First hero level 5 (time) | 17:04 (14:27–19:51) | 617 | 16:42 / 17:56 | 63% / 48% | depends (1.3) |
-| First expansion (food) | 44 (38–50) | 627 | 45 / 43 | 47% / 54% | depends (2.0) |
+| First expansion (food) | 44 (38–50) | 627 | 45 / 43 | 47% / 53% | depends (2.1) |
 | First expansion (time) | 10:08 (8:19–14:03) | 627 | 10:18 / 10:05 | 57% / 54% | depends (1.4) |
-| Tier 3 started (food) | 32 (27–38) | 818 | 33 / 31 | 44% / 57% | depends (1.5) |
+| Tier 3 started (food) | 32 (27–38) | 818 | 33 / 31 | 44% / 56% | depends (1.5) |
 | Tier 3 started (time) | 6:02 (5:19–8:17) | 818 | 6:03 / 6:01 | 48% / 52% | depends (1.1) |
-| First attack upgrade (food) | 43 (34–51) | 658 | 45 / 42 | 42% / 55% | depends (1.1) |
+| First attack upgrade (food) | 44 (34–51) | 658 | 45 / 42 | 42% / 56% | depends (1.1) |
 | First attack upgrade (time) | 9:42 (7:04–12:56) | 658 | 9:59 / 9:32 | 46% / 53% | depends (1.4) |
-| 50 food reached (time) | 11:00 (9:40–12:50) | 1105 | 10:40 / 11:10 | 54% / 46% | similar (0.7) |
-| 60 food reached (time) | 14:20 (12:30–16:50) | 639 | 14:20 / 14:10 | 54% / 56% | depends (1.2) |
-| 3-3-60 reached (time) | 14:30 (12:42–17:10) | 605 | 14:30 / 14:30 | 54% / 55% | depends (1.4) |
+| 50 food reached (time) | 11:00 (9:40–12:40) | 1125 | 10:40 / 11:10 | 54% / 46% | similar (0.7) |
+| 60 food reached (time) | 14:10 (12:20–16:50) | 661 | 14:20 / 14:00 | 53% / 57% | depends (1.1) |
+| 3-3-60 reached (time) | 14:30 (12:40–17:04) | 623 | 14:30 / 14:20 | 54% / 56% | depends (1.4) |
 | Workers at 6:00 | 12 (11–12) | 1722 | 12 / 12 | 48% / 45% | depends (2.0) |
-| Most workers | 12 (12–15) | 1721 | 12 / 12 | 46% / 49% | depends (3.8) |
-| Time at 46-50 food | 9% (0%–17%) | 1722 | 10% / 8% | 39% / 52% | same (0.5) |
-| Time in low upkeep (51-80) | 8% (0%–29%) | 1722 | 14% / 5% | 40% / 55% | depends (1.6) |
+| Most workers | 12 (12–15) | 1722 | 12 / 12 | 46% / 49% | depends (3.8) |
+| Time at 46-50 food | 9% (0%–17%) | 1722 | 10% / 8% | 39% / 51% | same (0.5) |
+| Time in low upkeep (51-80) | 10% (0%–30%) | 1722 | 15% / 5% | 40% / 55% | depends (1.5) |
 | Time in high upkeep (81+) | 0% (0%–0%) | 1722 | 0% / 0% | 45% / 46% | depends (2.2) |
 | Creep camps by 6:00 | 1 (1–3) | 1722 | 1.5 / 1 | 46% / 49% | depends (2.0) |
 | Creep camps by 10:00 | 3 (2–4) | 1722 | 3 / 3 | 44% / 50% | depends (3.0) |
@@ -111,30 +111,30 @@ Builds with 8+ games: fast tech (877, 44% won); Headhunter opening + fast tech (
 | Hero to first creep | 0:49 (0:08–3:16) | 1646 | 0:43 / 0:53 | 46% / 48% | depends (1.3) |
 | Workers lost by 12:00 | 0 (0–1) | 1722 | 0 / 0 | 49% / 39% | same (0.0) |
 | Tower orders per base | 0 (0–1) | 1722 | 0 / 0 | 45% / 52% | depends (8.0) |
-| Seconds above 80 food on fewer than 2 expansions | 0 (0–0) | 1722 | 0 / 0 | 46% / 46% | same (0.0) |
-| Longest production stop with gold (to 10:00), s | 0 (0–0) | 1720 | 0 / 0 | 47% / 46% | same (0.0) |
-| Unspent gold, first 10 min (≈) | 31.6 (21.4–57.9) | 1721 | 30.9 / 32.4 | 50% / 44% | depends (3.2) |
+| Seconds above 80 food on fewer than 2 expansions | 0 (0–0) | 1722 | 0 / 0 | 45% / 46% | same (0.0) |
+| Longest production stop with gold (to 10:00), s | 30 (20–50) | 1720 | 30 / 30 | 51% / 42% | depends (3.2) |
+| Unspent gold, first 10 min (≈) | 223.7 (181.7–290.5) | 1722 | 216.8 / 230.2 | 50% / 42% | depends (2.3) |
 | Workers at 10:00 | 12 (11–13) | 1457 | 12 / 12 | 48% / 43% | depends (3.0) |
 | Expanded at all | 36% | 1722 | 41% / 33% | — | depends (1.0) |
 | Had a second hero (games 10+ min) | 97% | 1457 | 97% / 97% | — | depends (10.0) |
 | Reached tier 3 (games 15+ min) | 65% | 878 | 71% / 60% | — | same (0.0) |
-| Used the 50-food spike within 4 min | 97% | 804 | 98% / 96% | — | same (0.0) |
+| Used the 50-food spike within 4 min | 97% | 813 | 98% / 96% | — | same (0.0) |
 
 **Library builds as pros play them** (each pro matched to the closest guide build; the food at each step is the pros' median when they did it):
 
-- **Far Seer Headhunter 2 Burrow Tech**: 352 pros, 51% won. Altar of Storms 5 (guide 6), War Mill 8 (guide 9), Far Seer 8 (guide 10), Troll Headhunter 17, Stronghold 21, Voodoo Lounge 26 (guide 29), Tauren Chieftain 29 (guide 34)
-- **Tri-Hero Grunt Raider Kodo vs Undead**: 215 pros, 47% won. Altar of Storms 5 (guide 6), Blademaster 9 (guide 10), Grunt 15 (guide 16), Voodoo Lounge 15 (guide 19), Stronghold 19 (guide 20), Shadow Hunter 24 (guide 20), Beastiary 28 (guide 31), Fortress 30 (guide 31), War Mill 30 (guide 31), Raider 31
-- **Orc for Beginners – Blademaster Shadow Hunter Tier 2 Expand**: 215 pros, 34% won. Altar of Storms 5, Blademaster 9 (guide 10), Voodoo Lounge 15 (guide 16), Grunt 15 (guide 16), Stronghold 20, War Mill 23 (guide 20), Shadow Hunter 25 (guide 26), Beastiary 28 (guide 31), Raider 31
-- **Orc Fast Altar (standard)**: 178 pros, 47% won. Altar of Storms 5 (guide 6), Blademaster 9 (guide 10), Grunt 15 (guide 17), Voodoo Lounge 14 (guide 17), Stronghold 19 (guide 20)
-- **Orc Headhunter**: 129 pros, 55% won. Altar of Storms 5 (guide 6), War Mill 8 (guide 9), Far Seer 9 (guide 10), Troll Headhunter 17, Stronghold 20 (guide 21)
+- **Far Seer Headhunter 2 Burrow Tech**: 350 pros, 51% won. Altar of Storms 5 (guide 6), War Mill 8 (guide 9), Far Seer 8 (guide 10), Troll Headhunter 17, Stronghold 21, Voodoo Lounge 26 (guide 29), Tauren Chieftain 29 (guide 34)
+- **Orc for Beginners – Blademaster Shadow Hunter Tier 2 Expand**: 216 pros, 35% won. Altar of Storms 5, Blademaster 9 (guide 10), Voodoo Lounge 15 (guide 16), Grunt 15 (guide 16), Stronghold 20, War Mill 23 (guide 20), Shadow Hunter 25 (guide 26), Beastiary 28 (guide 31), Raider 31
+- **Tri-Hero Grunt Raider Kodo vs Undead**: 214 pros, 46% won. Altar of Storms 5 (guide 6), Blademaster 9 (guide 10), Grunt 15 (guide 16), Voodoo Lounge 15 (guide 19), Stronghold 19 (guide 20), Shadow Hunter 24 (guide 20), Beastiary 28 (guide 31), Fortress 30 (guide 31), War Mill 30 (guide 31), Raider 31
+- **Orc Fast Altar (standard)**: 176 pros, 47% won. Altar of Storms 5 (guide 6), Blademaster 9 (guide 10), Grunt 15 (guide 17), Voodoo Lounge 14 (guide 17), Stronghold 19 (guide 20)
+- **Orc Headhunter**: 132 pros, 55% won. Altar of Storms 5 (guide 6), War Mill 8 (guide 9), Far Seer 9 (guide 10), Troll Headhunter 17, Stronghold 20 (guide 21)
 - **Far Seer Firelord Rush**: 99 pros, 45% won. Altar of Storms 5 (guide 6), Far Seer 9 (guide 10), Stronghold 16 (guide 17), War Mill 16 (guide 17), Voodoo Lounge 17, Troll Headhunter 18 (guide 17)
-- **Far Seer Shadow Hunter Barracks Beastiary**: 91 pros, 45% won. Altar of Storms 5 (guide 6), Far Seer 9 (guide 10), Grunt 15 (guide 16), Voodoo Lounge 20 (guide 19), Stronghold 22 (guide 23), Shadow Hunter 28 (guide 29), Beastiary 29, War Mill 28 (guide 29)
-- **Far Seer Fast Tech without Barracks**: 85 pros, 41% won. Altar of Storms 5 (guide 6), Far Seer 9 (guide 10), Stronghold 18 (guide 17), Grunt 16 (guide 17), Voodoo Lounge 21 (guide 20), Spirit Lodge 29 (guide 28), Beastiary 27 (guide 28)
+- **Far Seer Shadow Hunter Barracks Beastiary**: 91 pros, 45% won. Altar of Storms 5 (guide 6), Far Seer 9 (guide 10), Grunt 15 (guide 16), Voodoo Lounge 20 (guide 19), Stronghold 22 (guide 23), Shadow Hunter 28 (guide 29), Beastiary 30 (guide 29), War Mill 28 (guide 29)
+- **Far Seer Fast Tech without Barracks**: 86 pros, 41% won. Altar of Storms 5 (guide 6), Far Seer 9 (guide 10), Stronghold 18 (guide 17), Grunt 16 (guide 17), Voodoo Lounge 21 (guide 20), Spirit Lodge 29 (guide 28), Beastiary 27 (guide 28)
 
 **Plans** (order of heroes, tier upgrades and expansions; food at each step, median):
 
 - Blademaster 9 → Stronghold 20 → Shadow Hunter 25: 209 pros, 33% won
-- Blademaster 9 → Stronghold 20 → Shadow Hunter 25 → expand 44: 124 pros, 44% won
+- Blademaster 9 → Stronghold 20 → Shadow Hunter 25 → expand 45: 124 pros, 44% won
 - Far Seer 9 → Stronghold 20 → tavern hero 28: 121 pros, 62% won
 - Far Seer 8 → Stronghold 21 → Tauren Chieftain 27 → expand 40: 118 pros, 53% won
 - Blademaster 9 → Stronghold 20 → Shadow Hunter 25 → Fortress 29 → Tauren Chieftain 35: 107 pros, 41% won
@@ -150,29 +150,29 @@ Builds with 8+ games: Crypt before the altar + Ghoul opening + fast tech (411, 5
 
 | Milestone | Median (middle 50%) | n | Median in wins / losses | Win rate: lowest / highest quarter | Across builds |
 |---|---|---|---|---|---|
-| Tier 2 started (food) | 25 (22–32) | 1619 | 25 / 25 | 47% / 51% | depends (1.4) |
+| Tier 2 started (food) | 25 (22–32) | 1619 | 25 / 25 | 47% / 50% | depends (1.4) |
 | Tier 2 started (time) | 3:29 (2:56–5:40) | 1619 | 3:26 / 3:32 | 49% / 47% | depends (1.3) |
 | First hero level 3 (food) | 33 (29–38) | 1575 | 32 / 33 | 53% / 44% | depends (1.2) |
 | First hero level 3 (time) | 6:33 (5:26–8:01) | 1575 | 6:18 / 6:46 | 59% / 41% | similar (0.9) |
-| Second hero (food) | 35 (31–42) | 1458 | 35 / 34 | 44% / 54% | depends (1.6) |
+| Second hero (food) | 35 (31–42) | 1458 | 36 / 34 | 44% / 54% | depends (1.6) |
 | Second hero (time) | 7:22 (6:29–9:31) | 1458 | 7:16 / 7:29 | 50% / 45% | depends (1.3) |
-| Second hero level 3 (food) | 52 (47–62) | 1133 | 51 / 52 | 53% / 49% | depends (1.3) |
+| Second hero level 3 (food) | 52 (47–63) | 1133 | 52 / 53 | 53% / 49% | depends (1.2) |
 | Second hero level 3 (time) | 13:04 (11:19–15:07) | 1133 | 12:46 / 13:22 | 60% / 44% | similar (1.0) |
 | First hero level 5 (time) | 17:05 (14:06–20:05) | 812 | 16:25 / 17:44 | 65% / 48% | depends (1.0) |
-| First expansion (food) | 36 (31–46) | 815 | 37 / 36 | 46% / 56% | depends (1.3) |
+| First expansion (food) | 36 (31–47) | 815 | 37 / 36 | 45% / 56% | depends (1.1) |
 | First expansion (time) | 7:18 (5:51–11:44) | 815 | 7:35 / 7:07 | 50% / 53% | depends (1.2) |
-| Tier 3 started (food) | 32 (28–38) | 1455 | 32 / 32 | 47% / 49% | depends (1.2) |
+| Tier 3 started (food) | 32 (28–38) | 1455 | 32 / 32 | 47% / 50% | depends (1.4) |
 | Tier 3 started (time) | 6:47 (5:39–8:50) | 1455 | 6:39 / 6:51 | 54% / 45% | depends (1.5) |
-| First attack upgrade (food) | 46 (38–52) | 996 | 46 / 46 | 52% / 50% | depends (1.2) |
+| First attack upgrade (food) | 47 (39–52) | 996 | 47 / 46 | 52% / 51% | depends (1.2) |
 | First attack upgrade (time) | 10:28 (8:34–12:44) | 996 | 10:17 / 10:43 | 53% / 49% | similar (0.7) |
-| 50 food reached (time) | 11:00 (9:50–12:30) | 1275 | 10:50 / 11:10 | 58% / 46% | similar (0.6) |
-| 60 food reached (time) | 13:40 (12:00–16:10) | 939 | 13:40 / 13:40 | 54% / 52% | similar (0.7) |
-| 3-3-60 reached (time) | 15:18 (13:42–17:30) | 846 | 14:59 / 15:40 | 62% / 48% | similar (0.9) |
+| 50 food reached (time) | 10:50 (9:40–12:30) | 1286 | 10:40 / 11:10 | 56% / 45% | similar (0.6) |
+| 60 food reached (time) | 13:40 (12:00–16:00) | 963 | 13:40 / 13:40 | 54% / 53% | similar (0.7) |
+| 3-3-60 reached (time) | 15:14 (13:41–17:29) | 861 | 14:51 / 15:38 | 62% / 49% | similar (0.9) |
 | Workers at 6:00 | 6 (6–9) | 1691 | 6 / 6 | 50% / 50% | depends (1.0) |
-| Most workers | 10 (6–13) | 1689 | 10 / 10 | 52% / 47% | similar (0.9) |
-| Time at 46-50 food | 8% (2%–14%) | 1691 | 8% / 7% | 41% / 52% | similar (0.8) |
-| Time in low upkeep (51-80) | 23% (0%–40%) | 1691 | 25% / 19% | 39% / 50% | similar (0.6) |
-| Time in high upkeep (81+) | 0% (0%–0%) | 1691 | 0% / 0% | 48% / 48% | same (0.0) |
+| Most workers | 10 (6–13) | 1691 | 10 / 10 | 52% / 47% | similar (0.9) |
+| Time at 46-50 food | 7% (2%–14%) | 1691 | 8% / 7% | 40% / 50% | similar (0.8) |
+| Time in low upkeep (51-80) | 24% (0%–41%) | 1691 | 26% / 20% | 39% / 48% | similar (0.6) |
+| Time in high upkeep (81+) | 0% (0%–0%) | 1691 | 0% / 0% | 47% / 48% | same (0.0) |
 | Creep camps by 6:00 | 2 (1–2) | 1691 | 2 / 2 | 45% / 51% | depends (1.0) |
 | Creep camps by 10:00 | 3 (2–4) | 1691 | 3 / 3 | 43% / 55% | depends (1.0) |
 | Items bought | 10 (6–16) | 1691 | 10 / 10 | 47% / 50% | similar (0.6) |
@@ -182,24 +182,24 @@ Builds with 8+ games: Crypt before the altar + Ghoul opening + fast tech (411, 5
 | Workers lost by 12:00 | 0 (0–1) | 1691 | 0 / 0 | 52% / 44% | depends (1.0) |
 | Tower orders per base | 1 (1–2) | 1691 | 1 / 1 | 49% / 45% | depends (1.0) |
 | Seconds above 80 food on fewer than 2 expansions | 0 (0–0) | 1691 | 0 / 0 | 48% / 48% | same (0.0) |
-| Longest production stop with gold (to 10:00), s | 0 (0–10) | 1691 | 0 / 0 | 51% / 42% | same (0.0) |
-| Unspent gold, first 10 min (≈) | 23.7 (14.4–67) | 1689 | 23.1 / 25.1 | 52% / 41% | similar (0.7) |
+| Longest production stop with gold (to 10:00), s | 50 (30–70) | 1691 | 40 / 50 | 53% / 42% | depends (1.3) |
+| Unspent gold, first 10 min (≈) | 268.1 (201.1–402.3) | 1691 | 250.4 / 287.1 | 57% / 41% | depends (1.6) |
 | Workers at 10:00 | 7 (6–10) | 1469 | 7 / 7 | 51% / 48% | depends (1.3) |
 | Expanded at all | 48% | 1691 | 51% / 45% | — | depends (1.0) |
 | Had a second hero (games 10+ min) | 95% | 1469 | 97% / 93% | — | same (0.0) |
 | Reached tier 3 (games 15+ min) | 98% | 1067 | 99% / 98% | — | same (0.0) |
-| Used the 50-food spike within 4 min | 100% | 1016 | 99% / 100% | — | same (0.0) |
+| Used the 50-food spike within 4 min | 100% | 1022 | 99% / 100% | — | same (0.0) |
 
 **Library builds as pros play them** (each pro matched to the closest guide build; the food at each step is the pros' median when they did it):
 
-- **Dreadlord Fast Expand**: 357 pros, 46% won. Crypt 5, Altar of Darkness 5 (guide 7), Ghoul 8 (guide 7), Tomb of Relics 8 (guide 9), Haunted Gold Mine 25 (guide 23), Nerubian Tower 25 (guide 23), Graveyard 28 (guide 26), Spirit Tower 31 (guide 29), Halls of the Dead 28 (guide 29)
-- **New Dreadlord Fast Expand**: 334 pros, 53% won. Crypt 5, Altar of Darkness 5, Necropolis 33 (guide 7), Ghoul 8 (guide 7), Tomb of Relics 8 (guide 9), Haunted Gold Mine 27 (guide 23), Nerubian Tower 29, Halls of the Dead 35, Graveyard 35
-- **Two Crypt Ghoul Gargoyle Fiend**: 252 pros, 50% won. Altar of Darkness 5, Crypt 5, Tomb of Relics 8 (guide 7), Ghoul 8, Death Knight 10, Halls of the Dead 24 (guide 25), Graveyard 26 (guide 25), Lich 27 (guide 21)
-- **Fast Death Knight with Fiends**: 195 pros, 45% won. Altar of Darkness 5 (guide 6), Crypt 5 (guide 7), Tomb of Relics 8, Death Knight 10 (guide 8), Graveyard 25 (guide 13), Ghoul 8 (guide 13), Rod of Necromancy 19 (guide 17), Crypt Fiend 23 (guide 17), Halls of the Dead 21 (guide 20), Lich 26 (guide 25), Black Citadel 29 (guide 30), Slaughterhouse 31 (guide 30), tavern 39, Orb of Corruption 39
-- **Undead Fiend (standard)**: 113 pros, 62% won. Crypt 5 (guide 6), Graveyard 27 (guide 6), Altar of Darkness 5 (guide 7), Ghoul 8 (guide 7), Tomb of Relics 8 (guide 9), Death Knight 10 (guide 9), Crypt Fiend 32 (guide 9), Halls of the Dead 23, Nerubian Tower 23, Lich 29 (guide 30), Slaughterhouse 32 (guide 30), Black Citadel 32 (guide 35), Obsidian Statue 36 (guide 35), Orb of Corruption 44 (guide 45), tavern 42 (guide 45)
-- **Easy Undead Fast Tech**: 109 pros, 42% won. Altar of Darkness 5, Crypt 7, Tomb of Relics 8, Death Knight 8, Graveyard 13, Ghoul 13, Rod of Necromancy 17, Nerubian Tower 17, Halls of the Dead 17, Crypt Fiend 17, Slaughterhouse 26 (guide 25), Lich 25, Black Citadel 26 (guide 25), Obsidian Statue 30, Orb of Corruption 39
-- **DK Lich Fiends Fast T3**: 104 pros, 48% won. Altar of Darkness 5 (guide 6), Crypt 5 (guide 6), Tomb of Relics 8, Ghoul 8, Death Knight 10, Graveyard 23 (guide 17), Halls of the Dead 20 (guide 17), Nerubian Tower 20 (guide 17), Crypt Fiend 22 (guide 17), Black Citadel 24 (guide 23), Slaughterhouse 26 (guide 23), Lich 23, Obsidian Statue 29 (guide 28), Orb of Corruption 35 (guide 34)
-- **Lich Tier 1 Tower Rush**: 66 pros, 52% won. Crypt 5 (guide 6), Graveyard 24 (guide 6), Altar of Darkness 5 (guide 7), Ghoul 7, Tomb of Relics 8 (guide 7), Lich 9, Rod of Necromancy 19 (guide 20), Nerubian Tower 27 (guide 24)
+- **Dreadlord Fast Expand**: 347 pros, 45% won. Crypt 5, Altar of Darkness 5 (guide 7), Ghoul 8 (guide 7), Tomb of Relics 8 (guide 9), Haunted Gold Mine 25 (guide 23), Nerubian Tower 25 (guide 23), Graveyard 28 (guide 26), Spirit Tower 31 (guide 29), Halls of the Dead 28 (guide 29)
+- **New Dreadlord Fast Expand**: 338 pros, 53% won. Crypt 5, Altar of Darkness 5, Necropolis 33 (guide 7), Ghoul 8 (guide 7), Tomb of Relics 8 (guide 9), Haunted Gold Mine 27 (guide 23), Nerubian Tower 29, Halls of the Dead 35, Graveyard 35
+- **Two Crypt Ghoul Gargoyle Fiend**: 251 pros, 50% won. Altar of Darkness 5, Crypt 5, Tomb of Relics 8 (guide 7), Ghoul 8, Death Knight 10, Halls of the Dead 24 (guide 25), Graveyard 26 (guide 25), Lich 27 (guide 21)
+- **Fast Death Knight with Fiends**: 196 pros, 45% won. Altar of Darkness 5 (guide 6), Crypt 5 (guide 7), Tomb of Relics 8, Death Knight 9 (guide 8), Graveyard 25 (guide 13), Ghoul 8 (guide 13), Rod of Necromancy 18 (guide 17), Crypt Fiend 22 (guide 17), Halls of the Dead 21 (guide 20), Lich 26 (guide 25), Black Citadel 29 (guide 30), Slaughterhouse 31 (guide 30), tavern 39, Orb of Corruption 39
+- **Undead Fiend (standard)**: 118 pros, 62% won. Crypt 5 (guide 6), Graveyard 27 (guide 6), Altar of Darkness 5 (guide 7), Ghoul 8 (guide 7), Tomb of Relics 8 (guide 9), Death Knight 10 (guide 9), Crypt Fiend 32 (guide 9), Halls of the Dead 23, Nerubian Tower 23, Lich 29 (guide 30), Slaughterhouse 33 (guide 30), Black Citadel 32 (guide 35), Obsidian Statue 36 (guide 35), Orb of Corruption 44 (guide 45), tavern 42 (guide 45)
+- **Easy Undead Fast Tech**: 108 pros, 42% won. Altar of Darkness 5, Crypt 7, Tomb of Relics 8, Death Knight 8, Graveyard 13, Ghoul 13, Rod of Necromancy 17, Nerubian Tower 17, Halls of the Dead 17, Crypt Fiend 17, Slaughterhouse 26 (guide 25), Lich 25, Black Citadel 26 (guide 25), Obsidian Statue 30, Orb of Corruption 39
+- **DK Lich Fiends Fast T3**: 101 pros, 48% won. Altar of Darkness 5 (guide 6), Crypt 5 (guide 6), Tomb of Relics 8, Ghoul 8, Death Knight 10, Graveyard 22 (guide 17), Halls of the Dead 20 (guide 17), Nerubian Tower 20 (guide 17), Crypt Fiend 22 (guide 17), Black Citadel 24 (guide 23), Slaughterhouse 26 (guide 23), Lich 23, Obsidian Statue 29 (guide 28), Orb of Corruption 35 (guide 34)
+- **Lich Tier 1 Tower Rush**: 70 pros, 54% won. Crypt 5 (guide 6), Graveyard 25 (guide 6), Altar of Darkness 5 (guide 7), Ghoul 7, Tomb of Relics 8 (guide 7), Lich 9, Rod of Necromancy 19 (guide 20), Nerubian Tower 27 (guide 24)
 
 **Plans** (order of heroes, tier upgrades and expansions; food at each step, median):
 
@@ -211,7 +211,7 @@ Builds with 8+ games: Crypt before the altar + Ghoul opening + fast tech (411, 5
 - Death Knight 10 → Halls of the Dead 21 → Lich 25 → Black Citadel 30: 33 pros, 39% won
 - Death Knight 10 → expand 27 → Halls of the Dead 34 → expand 35 → Lich 34 → Black Citadel 40: 29 pros, 48% won
 - Death Knight 9 → Halls of the Dead 22 → Lich 27 → Black Citadel 31 → tavern hero 42 → expand 52: 27 pros, 48% won
-- Lich 9 → expand 27 → expand 32 → Halls of the Dead 33 → Death Knight 42 → Black Citadel 45: 25 pros, 48% won
+- Lich 9 → expand 27 → expand 32 → Halls of the Dead 34 → Death Knight 42 → Black Citadel 45: 25 pros, 48% won
 - Crypt Lord 9 → Halls of the Dead 23 → Black Citadel 26 → Death Knight 27 → Lich 38: 25 pros, 40% won
 
 ## Night Elf (1836 player-games, 986 wins)
@@ -222,27 +222,27 @@ Builds with 8+ games: fast tech (1009, 55% won); fast expand (187, 54% won); fas
 |---|---|---|---|---|---|
 | Tier 2 started (food) | 22 (21–24) | 1743 | 22 / 22 | 55% / 53% | depends (3.7) |
 | Tier 2 started (time) | 3:00 (2:45–3:29) | 1743 | 3:00 / 2:00 | 55% / 52% | depends (3.0) |
-| First hero level 3 (food) | 30 (27–35) | 1713 | 31 / 30 | 54% / 52% | depends (1.0) |
+| First hero level 3 (food) | 30 (27–36) | 1713 | 31 / 30 | 54% / 51% | depends (1.0) |
 | First hero level 3 (time) | 6:13 (5:10–7:44) | 1713 | 6:05 / 6:23 | 56% / 48% | similar (0.8) |
-| Second hero (food) | 30 (27–33) | 1621 | 30 / 30 | 49% / 56% | depends (2.0) |
+| Second hero (food) | 30 (27–33) | 1621 | 30 / 30 | 48% / 56% | depends (2.0) |
 | Second hero (time) | 6:05 (5:37–6:43) | 1621 | 6:03 / 6:07 | 61% / 54% | depends (1.9) |
-| Second hero level 3 (food) | 47 (42–52) | 1255 | 47 / 47 | 57% / 61% | depends (1.3) |
+| Second hero level 3 (food) | 47 (42–52) | 1255 | 47 / 47 | 57% / 62% | depends (1.4) |
 | Second hero level 3 (time) | 11:03 (9:51–12:39) | 1255 | 10:54 / 11:14 | 63% / 54% | depends (1.1) |
 | First hero level 5 (time) | 16:30 (13:47–19:54) | 837 | 16:14 / 17:35 | 66% / 53% | similar (0.9) |
-| First expansion (food) | 33 (25–48) | 907 | 33 / 33 | 58% / 63% | depends (1.0) |
+| First expansion (food) | 33 (25–48) | 907 | 34 / 33 | 59% / 63% | depends (1.0) |
 | First expansion (time) | 7:26 (4:12–13:14) | 907 | 7:20 / 7:33 | 56% / 59% | similar (0.9) |
 | Tier 3 started (food) | 32 (29–38) | 1394 | 32 / 32 | 51% / 59% | depends (3.0) |
 | Tier 3 started (time) | 6:48 (6:00–8:38) | 1394 | 6:50 / 6:45 | 57% / 58% | depends (2.6) |
-| First attack upgrade (food) | 46 (38–53) | 1061 | 46 / 46 | 58% / 56% | depends (1.1) |
+| First attack upgrade (food) | 46 (38–53) | 1061 | 46 / 46 | 57% / 56% | depends (1.1) |
 | First attack upgrade (time) | 10:39 (8:27–13:28) | 1061 | 10:44 / 10:34 | 56% / 53% | depends (1.1) |
-| 50 food reached (time) | 11:10 (10:00–12:30) | 1279 | 11:00 / 11:10 | 58% / 56% | depends (1.5) |
-| 60 food reached (time) | 14:05 (12:30–16:30) | 854 | 14:00 / 14:20 | 62% / 54% | depends (1.1) |
-| 3-3-60 reached (time) | 14:30 (12:50–17:04) | 813 | 14:30 / 14:40 | 64% / 55% | depends (1.2) |
+| 50 food reached (time) | 11:00 (10:00–12:30) | 1288 | 11:00 / 11:10 | 58% / 56% | depends (1.5) |
+| 60 food reached (time) | 14:00 (12:30–16:30) | 866 | 14:00 / 14:10 | 61% / 54% | depends (1.0) |
+| 3-3-60 reached (time) | 14:30 (12:50–17:00) | 822 | 14:30 / 14:32 | 64% / 54% | depends (1.2) |
 | Workers at 6:00 | 13 (12–14) | 1836 | 13 / 13 | 54% / 53% | depends (3.8) |
-| Most workers | 15 (14–19) | 1835 | 15 / 15 | 52% / 56% | depends (2.4) |
-| Time at 46-50 food | 7% (1%–14%) | 1836 | 7% / 7% | 47% / 54% | similar (0.7) |
-| Time in low upkeep (51-80) | 17% (0%–37%) | 1836 | 20% / 11% | 46% / 60% | depends (1.2) |
-| Time in high upkeep (81+) | 0% (0%–0%) | 1836 | 0% / 0% | 52% / 54% | same (0.2) |
+| Most workers | 15 (14–19) | 1836 | 15 / 15 | 52% / 56% | depends (2.4) |
+| Time at 46-50 food | 7% (1%–14%) | 1836 | 7% / 7% | 48% / 52% | similar (0.8) |
+| Time in low upkeep (51-80) | 18% (0%–38%) | 1836 | 21% / 12% | 46% / 60% | depends (1.2) |
+| Time in high upkeep (81+) | 0% (0%–0%) | 1836 | 0% / 0% | 52% / 54% | same (0.4) |
 | Creep camps by 6:00 | 2 (1–3) | 1836 | 2 / 2 | 49% / 59% | similar (0.8) |
 | Creep camps by 10:00 | 3 (2–4) | 1836 | 3 / 3 | 47% / 60% | similar (0.8) |
 | Items bought | 9 (5–15) | 1836 | 9 / 8 | 52% / 56% | depends (1.4) |
@@ -251,24 +251,24 @@ Builds with 8+ games: fast tech (1009, 55% won); fast expand (187, 54% won); fas
 | Hero to first creep | 0:00 (0:00–0:44) | 1798 | 0:00 / 0:00 | 57% / 48% | depends (1.6) |
 | Workers lost by 12:00 | 1 (0–2) | 1836 | 1 / 1 | 60% / 46% | depends (1.0) |
 | Tower orders per base | 0 (0–0.5) | 1836 | 0 / 0 | 53% / 55% | depends (3.0) |
-| Seconds above 80 food on fewer than 2 expansions | 0 (0–0) | 1836 | 0 / 0 | 53% / 54% | same (0.0) |
-| Longest production stop with gold (to 10:00), s | 0 (0–20) | 1826 | 0 / 0 | 55% / 52% | depends (3.5) |
-| Unspent gold, first 10 min (≈) | 39.4 (18.6–123.4) | 1836 | 39.9 / 38.6 | 52% / 50% | depends (12.0) |
+| Seconds above 80 food on fewer than 2 expansions | 0 (0–0) | 1836 | 0 / 0 | 52% / 54% | same (0.0) |
+| Longest production stop with gold (to 10:00), s | 50 (30–80) | 1826 | 50 / 50 | 54% / 52% | depends (1.6) |
+| Unspent gold, first 10 min (≈) | 283.1 (202.6–486.6) | 1836 | 276.8 / 290.7 | 56% / 55% | depends (4.4) |
 | Workers at 10:00 | 13 (11–15) | 1588 | 13 / 13 | 54% / 55% | depends (1.0) |
 | Expanded at all | 49% | 1836 | 54% / 44% | — | depends (1.0) |
 | Had a second hero (games 10+ min) | 92% | 1588 | 93% / 91% | — | depends (10.0) |
 | Reached tier 3 (games 15+ min) | 92% | 1060 | 94% / 90% | — | depends (10.0) |
-| Used the 50-food spike within 4 min | 99% | 973 | 99% / 98% | — | same (0.0) |
+| Used the 50-food spike within 4 min | 99% | 976 | 99% / 98% | — | same (0.0) |
 
 **Library builds as pros play them** (each pro matched to the closest guide build; the food at each step is the pros' median when they did it):
 
-- **Fast Bears → DH + Naga**: 817 pros, 54% won. Altar of Elders 5, Ancient of War 6, Demon Hunter 8 (guide 9), Archer 14 (guide 15), Tree of Ages 22 (guide 21), Hunter's Hall 26 (guide 25), Naga Sea Witch 27 (guide 25), Ancient of Lore 30, Tree of Eternity 30 (guide 31), Ancient of Wonders 29, Druid of the Claw 32 (guide 28)
-- **DH Keeper → Dryads Bears**: 192 pros, 52% won. Altar of Elders 5, Ancient of War 7 (guide 6), Demon Hunter 9, Archer 15, Tree of Ages 21, Hunter's Hall 26 (guide 27), Ancient of Wonders 28 (guide 27), Keeper of the Grove 25 (guide 26), Ancient of Lore 27 (guide 26), Ancient of Lore 31 (guide 26), Staff of Preservation 35 (guide 31), Dryad 30 (guide 31), Tree of Eternity 32 (guide 37), Druid of the Claw 37 (guide 39)
-- **Safe Semi Fast Expand vs Orc**: 119 pros, 63% won. Altar of Elders 5, Ancient of War 6 (guide 8), Keeper of the Grove 8 (guide 10), Archer 14 (guide 15), Hunter's Hall 19, Tree of Ages 21 (guide 20), Huntress 20, Goblin Alchemist 29, Tree of Life 28 (guide 37), Ancient of War 34 (guide 36)
-- **Warden Domination 2: Fast Expand**: 98 pros, 52% won. Altar of Elders 5, Ancient of War 7 (guide 8), Archer 14 (guide 15), Tree of Life 25, Tree of Ages 26 (guide 28), Hunter's Hall 29 (guide 30)
-- **Warden Domination 1: Fast Tech**: 98 pros, 54% won. Altar of Elders 5, Ancient of War 7 (guide 8), Warden 9 (guide 10), Archer 14 (guide 15), Tree of Ages 24 (guide 26), Hunter's Hall 26, Ancient of Lore 26, Ancient of Lore 28 (guide 26), Tree of Eternity 28 (guide 26), Dryad 27 (guide 28), Druid of the Claw 35 (guide 38)
-- **Bloody Beginner – Demon Hunter Archer**: 94 pros, 55% won. Altar of Elders 5, Ancient of War 7 (guide 8), Demon Hunter 9, Archer 15 (guide 16), Tree of Ages 24 (guide 26), Hunter's Hall 29 (guide 30), Ancient of Wonders 32 (guide 30), Ancient of Lore 31 (guide 29), Ancient of Lore 33 (guide 29), Keeper of the Grove 28 (guide 29), Dryad 33 (guide 34), Tree of Eternity 37 (guide 40)
-- **Keeper Fast Expand**: 74 pros, 53% won. Altar of Elders 5, Ancient of War 7 (guide 8), Keeper of the Grove 9 (guide 10), Archer 15, Tree of Life 25, Tree of Ages 25 (guide 28), Ancient of Wind 36 (guide 40)
+- **Fast Bears → DH + Naga**: 813 pros, 54% won. Altar of Elders 5, Ancient of War 6, Demon Hunter 8 (guide 9), Archer 14 (guide 15), Tree of Ages 22 (guide 21), Hunter's Hall 26 (guide 25), Naga Sea Witch 27 (guide 25), Ancient of Lore 30, Tree of Eternity 30 (guide 31), Ancient of Wonders 30 (guide 29), Druid of the Claw 32 (guide 28)
+- **DH Keeper → Dryads Bears**: 194 pros, 52% won. Altar of Elders 5, Ancient of War 7 (guide 6), Demon Hunter 9, Archer 15, Tree of Ages 21, Hunter's Hall 26 (guide 27), Ancient of Wonders 28 (guide 27), Keeper of the Grove 25 (guide 26), Ancient of Lore 27 (guide 26), Ancient of Lore 31 (guide 26), Staff of Preservation 35 (guide 31), Dryad 30 (guide 31), Tree of Eternity 33 (guide 37), Druid of the Claw 37 (guide 39)
+- **Safe Semi Fast Expand vs Orc**: 116 pros, 62% won. Altar of Elders 5, Ancient of War 7 (guide 8), Keeper of the Grove 8 (guide 10), Archer 14 (guide 15), Hunter's Hall 19, Tree of Ages 21 (guide 20), Huntress 20, Goblin Alchemist 29, Tree of Life 28 (guide 37), Ancient of War 34 (guide 36)
+- **Warden Domination 2: Fast Expand**: 100 pros, 53% won. Altar of Elders 5, Ancient of War 7 (guide 8), Archer 14 (guide 15), Tree of Life 25, Tree of Ages 26 (guide 28), Hunter's Hall 28 (guide 30)
+- **Warden Domination 1: Fast Tech**: 98 pros, 54% won. Altar of Elders 5, Ancient of War 7 (guide 8), Warden 9 (guide 10), Archer 14 (guide 15), Tree of Ages 24 (guide 26), Hunter's Hall 26, Ancient of Lore 27 (guide 26), Ancient of Lore 28 (guide 26), Tree of Eternity 28 (guide 26), Dryad 27 (guide 28), Druid of the Claw 35 (guide 38)
+- **Bloody Beginner – Demon Hunter Archer**: 95 pros, 55% won. Altar of Elders 5, Ancient of War 7 (guide 8), Demon Hunter 9, Archer 15 (guide 16), Tree of Ages 24 (guide 26), Hunter's Hall 29 (guide 30), Ancient of Wonders 32 (guide 30), Ancient of Lore 31 (guide 29), Ancient of Lore 33 (guide 29), Keeper of the Grove 28 (guide 29), Dryad 33 (guide 34), Tree of Eternity 37 (guide 40)
+- **Keeper Fast Expand**: 76 pros, 54% won. Altar of Elders 5, Ancient of War 7 (guide 8), Keeper of the Grove 9 (guide 10), Archer 15, Tree of Life 25, Tree of Ages 25 (guide 28), Ancient of Wind 36 (guide 40)
 - **Night Elf Beginner Build**: 61 pros, 57% won. Altar of Elders 5, Ancient of War 7, Demon Hunter 9 (guide 10), Archer 15 (guide 16), Tree of Ages 25 (guide 27), Hunter's Hall 30 (guide 33), Ancient of Wonders 35 (guide 33), Ancient of Lore 37, Ancient of Lore 37, Staff of Preservation 40 (guide 41), Tree of Eternity 37 (guide 41)
 
 **Plans** (order of heroes, tier upgrades and expansions; food at each step, median):
