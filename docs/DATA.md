@@ -24,9 +24,19 @@ Each layer can be rebuilt from the one above it with `replay-altar reingest`. Th
   - `leave_victory` (high confidence)
   - `leave_game_over` (high)
   - `first_leaver_lost` (medium)
+  - `flo_saver_won` (high): a game on a W3Champions server, see below
+  - `w3champions`: W3Champions' own result (your W3Champions 1v1s, once the lookup finds the match); `result.replay` then keeps what the replay said
   - `none`
 
   The record also keeps the raw leave codes as evidence.
+
+  **W3Champions games** run on W3Champions' servers (FLO, which sits in an observer slot), and their replays write the leave records another way than Battle.net's (`packages/core/src/result.ts`, `readLeaves`). A replay a player saved (the game's own LastReplay.w3g) tells the result from the saver's side, and the saver's record is the last: once the saver has won, FLO's record and every connection closed after it carry reason `0c` and result `09`, the opponent's too when they were beaten without leaving. Read the Battle.net way, that `09` made the opponent the winner (2 of one player's 5 such games). So in a FLO game a `0c`/`09` record means the saver won (`flo_saver_won`); a player's `09` with another reason is that player's own (the server's and the observers' copies); the rest is read as on Battle.net, which covers the saver who left (every record `0c`/`07`: the other player won).
+
+  Checked with `scripts/w3c-result-study.ts` (2026-11) on every replay whose winner is known another way, none wrong: 5 player-saved games against W3Champions' result (3 won, 2 left), 230 player-saved tournament games where one player left first, 43 where the saver left and wrote "gg" first, 92 server copies against W3Champions' result. Over 4,098 stored replays the reading changes two results, the two it corrects, and no game outside W3Champions' servers. Result `08` was never seen. A private game on a W3Champions map that Battle.net hosted has no FLO and is read as any Battle.net game. The FLO reading applies to 1v1 only (two players on two teams); team games on W3Champions' servers are read as on Battle.net until there are team replays with a known winner to check it on.
+
+  The copies of a W3Champions game differ: the launcher's `w3c-<date>.w3g` has at most the record of a player who left (in 6 of 9 none), and it can be a few milliseconds longer than the game's own copy, so it is the one analyzed. Each copy's leave records are kept (`provenance.files[].leaves`) and the result comes from the copy that says it with the most confidence.
+
+  Your W3Champions 1v1s get the replay's result at once and W3Champions' own when the lookup finds the match, which stands when the two differ (the difference goes to the collector's log and to `events.jsonl` as `w3c_result_differs`). A game the replay doesn't decide is `reviewing` until the lookup answers, then `unknown` if the match is never found.
 - **`players[]`:** you first, then your opponent. Each player has `metrics`, `apmPerMinute`, `heroes[]` (skill order with times), `build[]` (every order with its time), action counts and control groups.
 - **`provenance`:** every file this game was seen as (path, sha256, mtime), the archive path, the parser version, the classifier and metrics versions, and the first ingest time.
 - **`sim`** (once simulated): `status` `ok` or `failed` (with a `reason`). When `ok` it also has:

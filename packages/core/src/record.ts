@@ -8,7 +8,7 @@ import { dropRepeatedBuildOrders } from "./gamedata.ts";
 import { abilityName, nameOf, NAMES_SOURCE } from "./names.ts";
 import { GAME_KEY_METHOD, gameKeyOf } from "./gamekey.ts";
 import type { RawReplay } from "./parse.ts";
-import { detectResult, type ResultInfo } from "./result.ts";
+import { detectResult, resultFromLeaves, type LeaveRecord, type ResultInfo } from "./result.ts";
 import type { OfficialStats } from "./official.ts";
 import type { SimSummary } from "./sim.ts";
 
@@ -24,6 +24,12 @@ export type SourceFile = {
   durationMs: number;
   timeSource: TimeSource;
   endedAt: string;
+  /**
+   * This file's leave records, all of them in file order, kept for games on W3Champions' servers:
+   * their copies differ (the launcher's w3c-<date>.w3g often has none), and the copy that says who
+   * won isn't always the longest, which is the one analyzed.
+   */
+  leaves?: LeaveRecord[];
 };
 
 export type BuildEvent = { ms: number; kind: "building" | "unit" | "upgrade" | "item"; code: string; name: string };
@@ -141,6 +147,23 @@ function buildEvents(p: RawReplay["output"]["players"][number]): BuildEvent[] {
     .sort((a, b) => a.ms - b.ms || a.kind.localeCompare(b.kind));
 }
 
+const CONFIDENCE_RANK = { none: 0, medium: 1, high: 2 } as const;
+
+/**
+ * What the replay says of who won: the analyzed copy's leave records (result.ts); for a
+ * W3Champions game, another copy's when they are surer (SourceFile.leaves).
+ */
+export function replayResult(raw: RawReplay, c: Classification, files: SourceFile[], canonicalFile: SourceFile): ResultInfo {
+  let best = detectResult(raw, c);
+  if (c.source !== "w3champions") return best;
+  for (const f of files) {
+    if (f.sha256 === canonicalFile.sha256 || !f.leaves?.length) continue;
+    const r = resultFromLeaves(f.leaves, c);
+    if (CONFIDENCE_RANK[r.confidence] > CONFIDENCE_RANK[best.confidence]) best = { ...r, evidence: `${r.evidence} | from the copy ${basename(f.path)}` };
+  }
+  return best;
+}
+
 export function buildRecord(input: {
   raw: RawReplay;
   myAccounts: string[];
@@ -152,7 +175,7 @@ export function buildRecord(input: {
   const { raw, files } = input;
   const out = raw.output;
   const classification = classify(raw, input.myAccounts);
-  const result = detectResult(raw, classification);
+  const result = replayResult(raw, classification, files, input.canonicalFile);
   const timeFile = bestTimeFile(files);
   const durationMs = out.duration;
   const playedAt = new Date(Date.parse(timeFile.endedAt) - durationMs).toISOString();
