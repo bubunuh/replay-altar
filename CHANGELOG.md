@@ -272,15 +272,19 @@ W3Champions' official numbers); what helped is in the list above.
 - **Linux AppImage**, alongside the Windows installer: one file, no Node, git or podman needed. On first start it sets up the background collector (a systemd user service), the `replay-altar` command and a menu entry, reads the game data with a built-in read-only extractor, and updates itself in place like the Windows version.
 - **Linux: Battle.net is found in more places:** Lutris folders under `~/Games`, `~/.wine`, Steam's Proton prefixes and Bottles, for both the replays and the game data.
 
-## Planned for 0.2.6
+## 0.2.6 (not released yet)
 
 The numbers get more right: the end of the game in the simulation, the gold estimates, the
-evaluation curve and W3Champions results. Everything that changes the simulation goes in together,
-because it means simulating the pro games again and players importing their games again; what is
-fitted on the simulation's numbers (income model, evaluation curve, rules) is redone once, after.
+evaluation curve and W3Champions results. Everything that changes the simulation went in together:
+the pro games were simulated again once, and what is fitted on the simulation's numbers (income
+model, evaluation curve, rules) was redone once, after.
 
 ### Changed
 
+- **Your games are imported again.** The first start after the update starts the match list over,
+  as 0.2.2 did: "Import 20 replays" or "Import all replays" reads them with the new simulation.
+  Your settings, battletag, results you corrected by hand, the replays' archive and W3Champions'
+  statistics are kept, and the database as it was stays in a backup file.
 - **Armies no longer "die" as the game ends:** in 14 of 105 player-games on one player's PC, an
   army lost more than half its value in the last 10 seconds, mostly the winner's (1410 → 235 at
   the end of a won game). The cause: Warcraft III clears every player's selection when a game is
@@ -307,27 +311,31 @@ fitted on the simulation's numbers (income model, evaluation curve, rules) is re
   in almost every game (244 of 251 checked): the army error stays the same (36 recorded games
   70.9 → 71.0, the 15 others 78.1 → 76.3) and all 3,626 regression replays still simulate to the
   end.
-- **Income model:** since 0.2.2 the second and third heroes count in the gold spent, and the
-  mined-income model now often runs short early in the game (pros "spend" about 900 gold more than
-  it estimates by 10:00), so the unspent gold reads 0 and the *unspent gold* finding stopped
-  working. Refit it on the new simulation, checked against the recordings' gold and lumber over
-  the whole game (every skill level) and W3Champions' end-of-game numbers.
-- **The evaluation curve, fitted again, no longer favours whoever plays against Undead:** it
-  compares the players' worker counts as they are, but Undead mine with 5 acolytes while ghouls
-  cut the lumber, so a Human or Orc always looks about 10 workers ahead (and the amount of units
-  counts those workers too). On the 0.2.2 pro and tournament games, a Human against Undead gets
-  59-62% on average at 10 and 15 minutes but won 51% of those games, an Orc 56-59% but won 49%,
-  and the Undead side reads about 10 points too low; Human against Orc reads about 8 points low
-  for the Human at 10 minutes. Found on a user's HvU game recorded from the game's own numbers
-  (`observer/check-strauss.jsonl`): the curve said 75-90% all game, while the armies were close
-  until the last fight. Fix: count workers by race (ghouls cutting lumber, or the difference from
-  each race's usual count), refit on the ~500 current-patch pro games, validate on the ~3,000
-  tournament games as for 0.2.0, and check that each matchup's average evaluation matches how
-  often that side won. One curve for all matchups stays: a fixed edge per matchup was tried for
-  0.2.0 and did worse (docs/WIN-CHANCE.md), and a curve per matchup would have about 50 fitting
-  games each.
-- **Every rule and strength scored again** on the new numbers, held out (docs/RULES.md), to decide
-  which are shown.
+- **Unspent gold reads right again.** The replay keeps the train orders the game refused for lack
+  of gold, and the income estimate paid for all of them, so it ran short early and the unspent
+  gold read 0 (in about three player-games in four at 5 and at 10 minutes). Now a unit order the
+  estimated gold can't pay for counts as refused, and the mining rate is fitted to the game's own
+  gold mined on the recorded games (W3Champions' "gold collected" turned out to be that same
+  number). Against the game's numbers on the 36 recorded games put aside, the unspent gold is off by
+  a median 89 at 5:00 and 240 at 10:00 (621 and 1,091 before), and the gold mined within 1% at
+  every skill level. The *unspent gold* finding works again (below).
+- **The evaluation curve no longer favours whoever plays against Undead.** It compared the
+  players' worker counts as they are, but an Undead mines with five Acolytes while Ghouls cut the
+  lumber, so a Human or an Orc always looked about ten workers ahead. It now counts workers, the
+  amount of units, hero experience and losses against what is usual for each race at that minute.
+  On 3,140 tournament games it never saw, a Human against Undead was given 10 to 17 points more
+  than how often they won and is now 2 to 5 points off, an Orc against Undead up to 14 and now 4 at
+  most; over all matchups 4.5 points off on average instead of 5.8. Its chances are also less
+  overconfident, and the favourite wins as often (65% at 10 minutes, 69% at 20). Still off: a Human
+  against an Orc reads 6 to 10 points low from 10 minutes on.
+- **Findings and strengths, scored again on the new numbers** (held out, docs/RULES.md). All the
+  findings shown before still pass. *You lost the fights* separates losses from wins much better
+  (it fires in 11% of pros' wins instead of 17%), because the winner's army no longer "dies" at the
+  end. *Unspent gold* passes again (7% of wins, 11% of losses) and is shown again. Every strength
+  still passes.
+- **Pro comparisons rebuilt** on the pro and tournament games simulated again (about 1,700 to
+  1,800 player-games per race): your unspent gold is now compared with the pros' (280 on average in
+  the first 10 minutes, where it read 41).
 
 ### Checked
 
@@ -349,6 +357,14 @@ fitted on the simulation's numbers (income model, evaluation curve, rules) is re
   busy building is accepted at the food limit and waits) and half of the real ones were missed.
   Knowing exactly how many units the game made would gain 20%. What it did show is planned for
   0.3.
+- **Other ways to count workers in the evaluation curve.** Workers alone against the race's usual,
+  workers by what they bring in (an Undead's first Ghouls as lumber workers), and workers with the
+  amount of units against the race's usual were fitted too; the one shipped (also hero experience
+  and losses against the race's usual) was the best on the games none of them was fitted on
+  (docs/WIN-CHANCE.md).
+- **The income estimate against W3Champions' numbers.** W3Champions' end-of-game "gold collected"
+  is the game's own gold mined (116 recorded ladder player-games, 93 within 1%); the estimate reads
+  about 5% above it at the end because the replay runs on for a while after the game is decided.
 
 ## Planned for 0.3
 

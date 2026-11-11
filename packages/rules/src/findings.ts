@@ -113,7 +113,7 @@ function becauseFor(f: Finding, c: Ctx): string[] {
  * (scripts/eval-findings.ts scores them) but stay hidden until
  * they can be tuned per skill level.
  */
-export const SHOWN_RULES = new Set(["fights", "heroes", "hero_deaths", "expansion", "out_expanded", "workers_lost", "no_sustain", "mine_dry", "upgrades", "goal_3360"]);
+export const SHOWN_RULES = new Set(["fights", "heroes", "hero_deaths", "expansion", "out_expanded", "workers_lost", "no_sustain", "mine_dry", "upgrades", "goal_3360", "floating"]);
 
 /**
  * Every rule that fires, most costly first: the shown rules, plus the hotkeys check (shown whenever

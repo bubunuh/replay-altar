@@ -21,7 +21,8 @@ and how pros play each library build: [PRINCIPLES.md](PRINCIPLES.md).
 
 **Shown in the app** (since 2026-10-27, 0.2.2): only the rules whose whole 95% range of lift (games
 resampled 400 times) lies above 1: fights, heroes, hero deaths, expansion, out-expanded, workers
-lost, no sustain, mine dry, upgrades and 3-3-60 (`goal_3360`) (`SHOWN_RULES` in `findings.ts`).
+lost, no sustain, mine dry, upgrades and 3-3-60 (`goal_3360`), and since 0.2.6 unspent gold
+(`floating`) again (`SHOWN_RULES` in `findings.ts`).
 `no_items` also passes but fires in under 1% of games (0.3%), so it stays hidden. The
 others still run and are scored here, but stay hidden until they can be tuned per skill level:
 several matter more for beginners than for tournament players. The hotkeys check (`mechanics`)
@@ -42,11 +43,13 @@ the most (lift 2.1 → 4.0: it fires in 11% of wins instead of 17%, 45% of losse
 the winner's army no longer "dies" as the game ends, which booked a lost fight to many winners.
 `floating` passes again (1.5, 95% range 1.3–1.9; 7% of wins, 11% of losses): with the refused
 orders no longer paid for, the unspent gold is no longer mostly 0 (on the recorded games the
-estimate is off by a median 118 at 5:00 and 202 at 10:00, against 557 and 1149 before).
+estimate is off by a median 118 at 5:00 and 202 at 10:00, against 557 and 1149 before); it is
+shown again.
 `supply` (0.9–1.3), `upkeep` (0.7–1.1) and `no_anti_air` (1.0–6.3) stay hidden; `no_items`
 passes (1.1–inf) but still fires in under 1% of games.
 
-Shown per game (top 3 of the shown rules): 0.95 findings in wins, 1.88 in losses (0.2.2: 1.04 and 1.84).
+Shown per game (top 3 of the shown rules, unspent gold included): 1.01 findings in wins, 1.95 in
+losses (0.2.2: 1.04 and 1.84).
 
 ## Main findings
 
