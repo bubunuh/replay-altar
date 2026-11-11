@@ -75,7 +75,9 @@ function readBattleNet(leaves: LeaveRecord[], players: { playerId: number; teamI
 export function readLeaves(all: LeaveRecord[], players: { playerId: number; teamId: number }[], flo: boolean): Decision {
   const teamOf = new Map(players.map((s) => [s.playerId, s.teamId]));
   const leaves = all.filter((e) => teamOf.has(e.playerId));
-  if (flo) {
+  // Only checked on 1v1 (two players, two teams): team games on FLO are read as on Battle.net until
+  // there are team replays with a known winner to test rule 2 on.
+  if (flo && players.length === 2 && players[0].teamId !== players[1].teamId) {
     const named = leaves.some((e) => e.result === RESULT_VICTORY && e.reason !== REASON_GAME_OVER);
     const saverTeam = all.length ? teamOf.get(all[all.length - 1].playerId) : undefined;
     if (!named && saverTeam !== undefined && all.some((e) => e.reason === REASON_GAME_OVER && e.result === RESULT_VICTORY)) {

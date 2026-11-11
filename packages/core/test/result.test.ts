@@ -35,6 +35,15 @@ describe("a W3Champions (FLO) game saved by a player: the file's last record is 
   });
 });
 
+describe("a team game on FLO", () => {
+  test("is read the Battle.net way: the saver's reading is checked on 1v1 only", () => {
+    const four = [{ playerId: 1, teamId: 0 }, { playerId: 2, teamId: 0 }, { playerId: 4, teamId: 1 }, { playerId: 5, teamId: 1 }];
+    const list = recs([24, "0c", "09"], [4, "0c", "09"], [5, "0c", "09"], [2, "0c", "07"], [1, "0c", "07"]);
+    expect(readLeaves(list, four, true)).toEqual(readLeaves(list, four, false));
+    expect(readLeaves(list, four, true).method).not.toBe("flo_saver_won");
+  });
+});
+
 describe("the other copies of a W3Champions (FLO) game", () => {
   test("the server's copy: the loser's record 07/07, the winner's 09/09", () => {
     expect(flo([1, "07", "07"], [2, "09", "09"])).toEqual({ winnerTeamId: 1, method: "leave_victory", confidence: "high" });
