@@ -1,0 +1,86 @@
+From f443f676e3f8243231c1a471a777bfddff93f614 Mon Sep 17 00:00:00 2001
+From: bubunuh <76405364+bubunuh@users.noreply.github.com>
+Date: Wed, 11 Nov 2026 16:55:25 +0100
+Subject: [PATCH 2/3] Selection ledger: a group the selection is added to
+ leaves the selection as it was
+
+Shift + a group key adds the selected units to the group, and the replay's
+AssignGroupHotkey then lists the whole group: the selected units and the ones
+that were in it already. The ledger took every assign for "this is now the
+selection", so the player's next click, whose deselect lists the units really
+selected, looked like the rest of the group had just died (a whole-selection
+deselect that leaves them out). In the middle of a game a later list names
+them again and takes the death back; at the end of one nothing does. One won
+game in the recorded set lost 7 of 9 Dryads in its last second this way
+(army value 3185 -> 1285 in the last 10 s, real 2720 -> 2515).
+
+An assign that names every unit of a known selection and more is now taken
+as an addition: the group is updated, the selection is not.
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
+---
+ lib/SelectionLedger.js         | 11 +++++++++--
+ tests/selection-ledger.test.js | 18 +++++++++++++++++-
+ 2 files changed, 26 insertions(+), 3 deletions(-)
+
+diff --git a/lib/SelectionLedger.js b/lib/SelectionLedger.js
+index c6f02d4..b4724c2 100644
+--- a/lib/SelectionLedger.js
++++ b/lib/SelectionLedger.js
+@@ -293,8 +293,15 @@ class SelectionLedger {
+           }
+           this._listing(pl, t, e.keys);
+           pl.groups.set(e.group, new Set(e.keys));
+-          pl.sel = new Set(e.keys);
+-          pl.selKnown = true;
++          // Adding the selection to a group (shift + the group's key) lists
++          // the whole group as well: every selected unit and more. The
++          // selection stays what it was.
++          const added = pl.selKnown && pl.sel.size > 0 && e.keys.length > pl.sel.size &&
++            [...pl.sel].every(k => e.keys.includes(k));
++          if (!added) {
++            pl.sel = new Set(e.keys);
++            pl.selKnown = true;
++          }
+           break;
+         }
+ 
+diff --git a/tests/selection-ledger.test.js b/tests/selection-ledger.test.js
+index acd017b..fbfa903 100644
+--- a/tests/selection-ledger.test.js
++++ b/tests/selection-ledger.test.js
+@@ -9,7 +9,8 @@
+  *   4. the peer rule, and a hidden unit that comes back
+  *   5. handle ownership between players, enemy clicks as sightings
+  *   6. last order per handle
+- *   7. the end of the game: the selection the game clears is no death
++ *   7. a group the selection is added to
++ *   8. the end of the game: the selection the game clears is no death
+  *
+  * Run: `node tests/selection-ledger.test.js`
+  */
+@@ -148,6 +149,21 @@ check('a shift-add naming some companions is no full list for the peer rule', ()
+   assert.strictEqual(handleOf(L, 1, A).death, null);
+ });
+ 
++check('adding the selection to a group lists the whole group; the selection stays', () => {
++  const L = new SelectionLedger();
++  L.selectionChange(1, 1000, SELECT, [A, B, C]);
++  L.assignGroup(1, 1500, 1, [A, B, C]);
++  L.selectionChange(1, 2000, DESELECT, [A, B, C]);
++  L.selectionChange(1, 2000, SELECT, [D]);
++  // shift + group key: the game lists the group with the new unit in it
++  L.assignGroup(1, 3000, 1, [A, B, C, D]);
++  // the next click drops the selection, which is still D alone
++  L.selectionChange(1, 4000, DESELECT, [D]);
++  L.selectionChange(1, 4000, SELECT, [E]);
++  L.resolve();
++  for (const x of [A, B, C, D, E]) assert.strictEqual(handleOf(L, 1, x).death, null);
++});
++
+ console.log('[the end of the game]');
+ 
+ check('the selection the game clears when the game is over is no death', () => {
+-- 
+2.56.0
+

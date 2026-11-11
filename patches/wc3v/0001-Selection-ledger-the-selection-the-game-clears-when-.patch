@@ -1,0 +1,173 @@
+From 68bcd26485904bd4821b68107331ed5cad7dbc35 Mon Sep 17 00:00:00 2001
+From: bubunuh <76405364+bubunuh@users.noreply.github.com>
+Date: Wed, 11 Nov 2026 16:51:09 +0100
+Subject: [PATCH 1/3] Selection ledger: the selection the game clears when a
+ game is over is no death
+
+When a 1v1 ends, the game takes the selection away from both players: a
+deselect of everything selected, with no select after it, in the tick the
+first player leaves or a moment later (the winner's comes 100 to 300 ms after
+the loser left; a player who stays on the score screen gets it then too, long
+before their own LeaveGameBlock). The ledger read it as the game taking dead
+units out of the selection, the one deselect it takes as an exact death, and
+nothing could correct it: there is no later list to name the units again. So
+the army a player had selected as the game ended died with the game.
+
+On 89 games recorded with the game's observer API (178 player-games), 34
+army units were lost this way, and in 5 player-games (4 of them the
+winner's) the army value fell by more than half at the end while the game's
+own count shows nothing of the kind (one won game: 1625 -> 600, real 1505).
+
+wc3v.js now tells the ledger about each LeaveGameBlock (playerLeft), and
+resolve() marks a player's trailing deselects from the first leave on as the
+game's closing of the selection: they still show the units alive, but are
+no deselect "alone". A deselect before any player left, or one followed by
+anything else of the player's, counts as before.
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
+---
+ lib/SelectionLedger.js         | 32 +++++++++++++++++++++++++--
+ tests/selection-ledger.test.js | 40 ++++++++++++++++++++++++++++++++++
+ wc3v.js                        |  1 +
+ 3 files changed, 71 insertions(+), 2 deletions(-)
+
+diff --git a/lib/SelectionLedger.js b/lib/SelectionLedger.js
+index a1956c5..c6f02d4 100644
+--- a/lib/SelectionLedger.js
++++ b/lib/SelectionLedger.js
+@@ -13,7 +13,9 @@
+  *            in the same tick, of a handle that is never listed again — is the
+  *            game taking a unit that just died out of the selection: the death
+  *            time, exact. A player's own shift-click removal of a unit never
+- *            selected again reads the same; nothing in the replay tells them apart;
++ *            selected again reads the same; nothing in the replay tells them apart.
++ *            Not the deselects that end a game: once a player has left, the game
++ *            clears the selection of everyone it is over for;
+  *   died     a list that should hold a handle and doesn't — the recall of a group
+  *            it was in (PreSubselection lists the group as recalled), the
+  *            whole-selection deselect of a selection it was in, a group assigned
+@@ -67,6 +69,7 @@ const unitKeys = (units) => (units || [])
+ class SelectionLedger {
+   constructor () {
+     this.log = [];
++    this.leaves = [];
+     this.players = null;
+   }
+ 
+@@ -104,9 +107,31 @@ class SelectionLedger {
+     this.log.push({ t, playerId, kind: 'order', order: orderId, target, aimedAtUnit, work, keys: [] });
+   }
+ 
++  // A player left the game (a LeaveGameBlock).
++  playerLeft (playerId, t) {
++    this.leaves.push({ t, playerId });
++  }
++
+   // ---- resolving -------------------------------------------------------------
+ 
++  // When the game is over the game itself clears every player's selection:
++  // deselects with nothing of the player's after them, at or after the first
++  // player's leaving. They name live units like any list.
++  _markClosing () {
++    if (!this.leaves.length) return;
++    const over = Math.min(...this.leaves.map(l => l.t));
++    const done = new Set();
++    for (let i = this.log.length - 1; i >= 0; i--) {
++      const e = this.log[i];
++      if (done.has(e.playerId)) continue;
++      if (e.kind === 'deselect' && e.t >= over) e.closing = true;
++      else done.add(e.playerId);
++    }
++  }
++
+   resolve () {
++    this._markClosing();
++
+     const players = new Map();
+     const playerState = (id) => {
+       let pl = players.get(id);
+@@ -215,7 +240,10 @@ class SelectionLedger {
+           // selection to drop it. Alone it is a shift-click — or the game taking
+           // out a unit that died or was hidden.
+           const replace = pre !== null || selectFollows(q);
+-          for (const k of e.keys) this._see(pl, k, t, replace ? 'deselect' : 'deselectAlone');
++          // The game's own clearing of the selection when the game is over
++          // (_markClosing) took nobody out because they died.
++          const alone = !replace && !e.closing;
++          for (const k of e.keys) this._see(pl, k, t, alone ? 'deselectAlone' : 'deselect');
+           if (!replace) {
+             for (const k of e.keys) pl.sel.delete(k);
+             break;
+diff --git a/tests/selection-ledger.test.js b/tests/selection-ledger.test.js
+index fe81de4..acd017b 100644
+--- a/tests/selection-ledger.test.js
++++ b/tests/selection-ledger.test.js
+@@ -9,6 +9,7 @@
+  *   4. the peer rule, and a hidden unit that comes back
+  *   5. handle ownership between players, enemy clicks as sightings
+  *   6. last order per handle
++ *   7. the end of the game: the selection the game clears is no death
+  *
+  * Run: `node tests/selection-ledger.test.js`
+  */
+@@ -147,6 +148,45 @@ check('a shift-add naming some companions is no full list for the peer rule', ()
+   assert.strictEqual(handleOf(L, 1, A).death, null);
+ });
+ 
++console.log('[the end of the game]');
++
++check('the selection the game clears when the game is over is no death', () => {
++  const L = new SelectionLedger();
++  L.selectionChange(1, 1000, SELECT, [A, B, C]);
++  L.selectionChange(2, 1000, SELECT, [D]);
++  L.playerLeft(2, 9000);
++  // the game takes the winner's selection away a moment after the loser left
++  L.selectionChange(1, 9150, DESELECT, [A, B, C]);
++  L.playerLeft(1, 9150);
++  L.resolve();
++  for (const x of [A, B, C]) {
++    assert.strictEqual(handleOf(L, 1, x).death, null);
++    assert.strictEqual(handleOf(L, 1, x).last, 9150);
++  }
++});
++
++check('a unit the game deselected before the game was over still died', () => {
++  const L = new SelectionLedger();
++  L.selectionChange(1, 1000, SELECT, [A, B, C]);
++  L.selectionChange(1, 8000, DESELECT, [B]);
++  L.playerLeft(2, 9000);
++  L.selectionChange(1, 9150, DESELECT, [A, C]);
++  L.resolve();
++  assert.deepStrictEqual(handleOf(L, 1, B).death, { at: 8000, from: 8000, kind: 'deselected' });
++  assert.strictEqual(handleOf(L, 1, A).death, null);
++});
++
++check('a player who plays on after another left: their deselects count as before', () => {
++  const L = new SelectionLedger();
++  L.selectionChange(1, 1000, SELECT, [A, B]);
++  L.playerLeft(3, 2000);
++  L.selectionChange(1, 5000, DESELECT, [B]);
++  L.selectionChange(1, 6000, DESELECT, [A]);
++  L.selectionChange(1, 6000, SELECT, [C]);
++  L.resolve();
++  assert.deepStrictEqual(handleOf(L, 1, B).death, { at: 5000, from: 5000, kind: 'deselected' });
++});
++
+ console.log('[owners and orders]');
+ 
+ check('a unit the enemy clicks belongs to its owner, and the click shows it alive', () => {
+diff --git a/wc3v.js b/wc3v.js
+index 915fe2a..ba2abae 100644
+--- a/wc3v.js
++++ b/wc3v.js
+@@ -184,6 +184,7 @@ const doParsing = async (input, options = {}) => {
+         result: block.result,
+         gameTimeMs: globalTime
+       });
++      if (playerManager.selectionLedger) playerManager.selectionLedger.playerLeft(block.playerId, globalTime);
+       return;
+     }
+ 
+-- 
+2.56.0
+
