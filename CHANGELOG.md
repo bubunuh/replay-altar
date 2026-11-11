@@ -290,22 +290,26 @@ the simulation is settled. New rules are for 0.4.
   the author's follow-ups to #24, which move unit deaths by up to about a second in almost every
   game (244 of 251 checked): the army error stays the same (36 recorded games 70.9 → 71.0, the 15
   others 78.1 → 76.3) and all 3,626 regression replays still simulate to the end.
-- **Armies that "die" as the game ends:** in 14 of 105 player-games on one player's PC, an army
-  loses more than half its value in the last 10 seconds, mostly the winner's (1410 → 235 at the
-  end of a won game): the simulation counts units as lost when the game ends, not in a fight. The
-  army chart's last point and the resources lost at the end read too high. For the WC3V lab.
-- **Gold and lumber in WC3V, if a first measurement says it pays:** the biggest error left in the
-  new WC3V is train orders the game refused for lack of gold, lumber or food, which WC3V still
-  turns into units (worst with Night Elf Druid spam until 0.2.2 trained Night Elf units in the
-  first selected Ancient only). A gold and lumber model inside the simulation would tell them
-  apart, and would let Replay Altar's own counts (units ordered, spending, build order) count a
-  train click once per selected building, which they can't do safely yet (see 0.2.2's checks).
-  The recordings hold gold, lumber, gold mined and lumber harvested at every snapshot, so they
-  serve as ground truth. First the most it can gain is measured: on the recorded games, refuse the
-  orders the game's real gold, lumber and food couldn't pay for, and score the army error. Under
-  about 15% better, no model is built for 0.3.0 and the measurement is written down here.
-  Clearly better, the model is built once and has to beat the games put aside; if it doesn't,
-  0.3.0 ships without it.
+- **Armies no longer "die" as the game ends:** in 14 of 105 player-games on one player's PC, an
+  army lost more than half its value in the last 10 seconds, mostly the winner's (1410 → 235 at
+  the end of a won game). The cause: Warcraft III clears every player's selection when a game is
+  over, and the simulation read that as the selected units dying (and, less often, a selection
+  added to a group, or narrowed to one unit, in the same way). Fixed in WC3V (three changes on top
+  of upstream, offered upstream). On 958 player-games, armies falling by more than half in the
+  last 10 seconds went from 11.1% to 1.1% (the recordings say about 4% really do, all on the
+  losing side); the army error on the recorded games is unchanged (115 on 89 games, 169 on the 36
+  put aside). Still open: units killed in the very last fight of a lost game are often not counted
+  as lost, because the replay ends before the player selects them again.
+- **Gold and lumber in WC3V: measured, not built.** The biggest error left in the simulation is
+  train orders the game refused for lack of gold, lumber or food, which still become units. Before
+  building a gold and lumber model, the most it could gain was measured on 89 recorded games, by
+  refusing the orders the game's own gold, lumber and food at that moment could not pay for: the
+  army error got 6% better at best (13 to 17% on the newer recordings, which have a reading every
+  2 seconds), under the 15% set beforehand, so no model is in 0.3.0. Even with the game's real
+  numbers a third of the refusals were wrong (players click as the gold arrives; an order into a
+  busy building is accepted at the food limit and waits) and half of the real ones were missed.
+  Knowing exactly how many units the game made would gain 20%. What it did show is planned for
+  0.4.
 - **Income model:** since 0.2.2 the second and third heroes count in the gold spent, and the
   mined-income model now often runs short early in the game (pros "spend" about 900 gold more than
   it estimates by 10:00), so the unspent gold reads 0 and the *unspent gold* finding stopped
@@ -341,6 +345,12 @@ the simulation is settled. New rules are for 0.4.
 
 New things to coach on, on 0.3.0's numbers. Neither needs the games simulated or imported again.
 
+- **A train order to several buildings, paid building by building:** half of the train orders
+  that never became a unit are orders given to several buildings at once: the game charges each
+  building on its own and refuses the later ones when the gold is gone, the simulation trains in
+  all of them. Checking the gold for the second and later buildings only (measured with the game's
+  real gold, not built) made the army error 14% better overall and about 40% for Orc. It needs an
+  estimate of income and spending inside the simulation, a smaller one than a full model.
 - **Race-specific rules:** today's rules are the same for every race (only their thresholds follow
   the pros of your race). Screen the sources again (Warcraft 3 Gym's race pages, Liquipedia's race
   pages, and new race guides and coaching videos) for checks that belong to one race or matchup and
