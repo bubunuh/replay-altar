@@ -6,9 +6,9 @@
 // Replays with a damaged start (missing first selections: the game plays them back wrong) are left out.
 // Files are named zq01_..., zq02_...: watch.py finds each one by typing that first word into the game's filter.
 // Copies the replays into the game's Replays folder and writes a manifest for batch-compare.py.
-// Polite: W3Champions one replay every 45 s, warcraft3.info one request every 10 s.
+// Polite: W3Champions one replay every 45 s (--pace), half an hour's wait if it asks to slow down, warcraft3.info one request every 10 s.
 //
-//   node scripts/observer/download-mixed.ts <batch name> <replays folder> [--low 6] [--avg 8] [--high 8] [--pro 8] [--per-cell 1] [--build 7003]
+//   node scripts/observer/download-mixed.ts <batch name> <replays folder> [--low 6] [--avg 8] [--high 8] [--pro 8] [--per-cell 1] [--pace 45] [--build 7003]
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { applySim, ingestFile, loadConfig, mapFolders, parseReplay, paths, type GameRecord } from "@replay-altar/core";
@@ -33,7 +33,7 @@ const THIN = ["OvO", "UvU", "HvO", "OvU", "HvU", "NvU", "OvN", "HvH", "HvN", "Nv
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 let lastW3i = 0;
 const politeFetch = async (url: string, init?: RequestInit) => {
-  const wait = lastW3i + 10_000 - Date.now();
+  const wait = lastW3i + 20_000 - Date.now();
   if (wait > 0) await sleep(wait);
   lastW3i = Date.now();
   return fetch(url, init);
@@ -59,12 +59,23 @@ const manifest: Record<string, unknown>[] = existsSync(manifestFile) ? JSON.pars
 const perCell = Number(arg("--per-cell", "1"));
 const inCell = (band: string, mu: string) => manifest.filter((e) => e.band === band && e.mu === mu).length;
 const taken = (band: string, mu: string) => inCell(band, mu) >= perCell;
+const pace = Number(arg("--pace", "45")) * 1000; // seconds between W3Champions replay downloads
+const limited = new Set<string>();
 const LONG = 1200; // seconds: a cell's later games should be at least this long, if there are any
 const count = (band: string) => manifest.filter((e) => e.band === band).length;
 
+/** The replay's game build; -1 for a file the parser can't read (some warcraft3.info uploads). */
+async function buildOf(buffer: Buffer): Promise<number> {
+  try {
+    return (await parseReplay(buffer)).output.buildNumber;
+  } catch {
+    return -1;
+  }
+}
+
 /** Ingests, checks the version and simulates; copies the replay into the Replays folder if all is well. */
 async function keep(buffer: Buffer, id: string, band: string, extra: Record<string, unknown>): Promise<boolean> {
-  const replayBuild = (await parseReplay(buffer)).output.buildNumber;
+  const replayBuild = await buildOf(buffer);
   if (replayBuild !== build) {
     console.log(`${id}: build ${replayBuild}, skipped`);
     return false;
@@ -119,8 +130,21 @@ for (const band of ["low", "avg", "high"] as const) {
   for (const [round, list] of rounds.entries()) for (const { m, mu } of list) {
     if (count(band) >= want[band]) break;
     if (inCell(band, mu) > round || taken(band, mu) || manifest.some((e) => e.w3c === m.id)) continue;
-    await sleep(45_000);
-    const buffer = await w3c.downloadReplay(m.id);
+    await sleep(pace);
+    let buffer: Buffer | null = null;
+    try {
+      buffer = await w3c.downloadReplay(m.id);
+    } catch (err) {
+      // W3Champions asked us to slow down: wait half an hour once per band, then leave the band as it is.
+      if (limited.has(band)) {
+        console.log(`${band}: W3Champions asked to slow down again, band left at ${count(band)}`);
+        break;
+      }
+      limited.add(band);
+      console.log(`${band}: ${(err as Error).message}; waiting 30 minutes`);
+      await sleep(30 * 60_000);
+      continue;
+    }
     if (!buffer) continue;
     const players = m.teams.flatMap((t) => t.players);
     await keep(buffer, `w3c-${m.id}`, band, { source: "w3c", w3c: m.id, mmr: players.map((p) => p.oldMmr) });
@@ -140,9 +164,22 @@ outer: for (let page = 1; page <= 40 && count("pro") < want.pro; page++) {
     // A cell's later places go to long games while the list is young; after 15 pages any length will do.
     if (inCell("pro", mu) >= 1 && r.duration < LONG && page <= 15) continue;
     if (taken("pro", mu) || manifest.some((e) => e.w3info === r.id)) continue;
-    const buffer = await w3i.download(r.id);
+    // warcraft3.info limits downloads too: wait half an hour and try again, three times at most.
+    let buffer: Buffer | null = null;
+    for (let attempt = 1; ; attempt++) {
+      try {
+        buffer = await w3i.download(r.id);
+        break;
+      } catch (err) {
+        if (attempt >= 3) throw err;
+        console.log(`warcraft3.info: ${(err as Error).message}; waiting 30 minutes`);
+        await sleep(30 * 60_000);
+      }
+    }
     if (!buffer) continue;
-    if ((await parseReplay(buffer)).output.buildNumber < build) {
+    const itsBuild = await buildOf(buffer);
+    if (itsBuild < 0) continue;
+    if (itsBuild < build) {
       if (++olderInARow >= 8) break outer;
       continue;
     }

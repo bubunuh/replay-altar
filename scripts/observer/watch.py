@@ -15,7 +15,7 @@
 # first "_") into the list's Quick Filter, so that word must be unique in the folder and made of
 # letters and digits (download-mixed.ts names them zq01_, zq02_, ...). Writes
 # recordings/<file without .w3g>.jsonl and watch.log; a replay that doesn't start within 90 s, or whose
-# recording stops before 90% of its length, is listed as failed and the script goes on.
+# recording stops without a result before 90% of its length, is listed as failed and the script goes on.
 import json
 import os
 import struct
@@ -254,7 +254,9 @@ def watch(inp, game, batch, entry, speed):
         time.sleep(0.05)
     f.close()
     length = entry.get("durationMs") or entry.get("dur", 0) * 60000
-    ok = samples > 20 and (not length or last_t >= 0.9 * length - 60000)
+    # The game's own verdict ends a recording whatever the file's length says (a file can run on for
+    # minutes after the result); without one, the recording must reach about the file's end.
+    ok = samples > 20 and (ended is not None or not length or last_t >= 0.9 * length - 60000)
     log(batch, f"{stem}: {'ok' if ok else 'FAILED, stopped early'}, {samples} samples to {last_t // 60000}:{last_t // 1000 % 60:02d}"
         + (f" of {length // 60000}:{length // 1000 % 60:02d}" if length else ""))
     if not ok:
