@@ -7,7 +7,8 @@
 # Before starting: open Warcraft III, go to Replays and open the batch's folder. Leave the PC alone
 # while it runs: the game only plays a replay while its window has the focus (the script gives the
 # focus back every time it clicks, and whenever the replay stops advancing). Another window that covers
-# the game must be open (--away, a part of its caption; default Konsole): see Input.focus.
+# the game must be open (--away, a part of its caption; default Konsole; the script maximizes it): see
+# Input.focus.
 #
 #   python3 scripts/observer/watch.py <batch folder with manifest.json> [--speed 8] [--only 03,07] [--redo] [--away Konsole]
 #
@@ -180,6 +181,12 @@ def leave(inp, game):
     for _ in range(5):
         if not on_results(inp):
             return True
+        # Escape closes Match Results. The Back button is the fallback: the pointer often doesn't
+        # reach the game after a replay, whatever window had the focus before.
+        inp.key("ESC")
+        time.sleep(3)
+        if not on_results(inp):
+            return True
         inp.reset()
         inp.click(BACK)
         time.sleep(3)
@@ -276,12 +283,17 @@ def main():
     manifest = json.load(open(os.path.join(batch, "manifest.json")))
     os.makedirs(os.path.join(batch, "recordings"), exist_ok=True)
     game, inp = Game(), Input()
+    # The away window must cover the whole game: where it doesn't, the game takes no clicks after a replay.
+    inp.kwin(f'const re = new RegExp("{AWAY}");\n'
+             "for (const w of workspace.windowList()) if (re.test(w.caption)) { w.setMaximize(true, true); break; }\n")
     done = failed = 0
     for entry in manifest:
         stem = entry["file"][:-4]
         if only and not any(stem.startswith(o) or stem.split("_")[0].endswith(o) for o in only):
             continue
         if os.path.exists(os.path.join(batch, "recordings", stem + ".jsonl")) and "--redo" not in sys.argv:
+            continue
+        if os.path.exists(os.path.join(batch, "recordings", stem + ".jsonl.desync")):  # set aside by hand: the game plays it wrong
             continue
         if not os.path.exists(f"/proc/{game.pid}"):
             log(batch, "the game closed: stopping")
