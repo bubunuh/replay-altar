@@ -8,10 +8,16 @@
 //   node scripts/win-chance.ts [your-games.md] [--workers by-race] [--out <folder>]
 //
 // --workers by-race: workers and the amount of units are counted against what is usual for the
-// player's race at that minute (packages/rules/src/winchance.ts, Usual), not as they are. Without
-// it, the model the app shipped until 0.2.x. --out: write everything (WIN-CHANCE.md, win-chance/,
-// winchance.json) into that folder instead of docs/ and data/, to try a fit without replacing the
-// model the app ships. The reference sets are only read.
+// player's race at that minute (packages/rules/src/winchance.ts, Usual), not as they are.
+// --workers by-race-workers: only the workers are; the amount of units as counted. Without the
+// option, the counting of the model the app shipped until 0.2.x. --out: write everything
+// (WIN-CHANCE.md, win-chance/, winchance.json) into that folder instead of docs/ and data/, to
+// try a fit without replacing the model the app ships. The reference sets are only read.
+// --same-differences: no search for which differences to keep; the ones of the model in
+// data/winchance.json, counted as --workers says. The search scores models on the calibration
+// set, where a race can lose most of its games (it follows some players more than others), so it
+// rewards whatever tells the races apart; counted by race, it dropped the workers and took army
+// value, resources spent and items bought in their place (docs/WIN-CHANCE.md).
 //
 // The models: logistic regression on the differences between the two players at each moment, each
 // weighted by functions of the game time so a lead can matter more or less as the game goes on.
@@ -36,13 +42,15 @@ const option = (name: string) => {
   return i < 0 ? null : args.splice(i, 2)[1] ?? "";
 };
 const workersOption = option("--workers") ?? "as-counted";
-if (!["as-counted", "by-race"].includes(workersOption)) throw new Error("--workers: as-counted or by-race");
-const BY_RACE_ON = workersOption === "by-race";
+if (!["as-counted", "by-race", "by-race-workers"].includes(workersOption)) throw new Error("--workers: as-counted, by-race or by-race-workers");
+const BY_RACE_ON = workersOption !== "as-counted";
+const sameAt = args.indexOf("--same-differences");
+const SAME = sameAt >= 0 && args.splice(sameAt, 1).length > 0;
 const outRoot = option("--out");
 const docsDir = outRoot ?? join(import.meta.dirname, "../docs");
 const modelFile = outRoot ? join(outRoot, "winchance.json") : join(import.meta.dirname, "../data/winchance.json");
 /** The differences the search may use: workers and food used as counted, or against the race's usual. */
-const swap = (f: number) => (BY_RACE_ON ? BY_RACE[f] ?? f : f);
+const swap = (f: number) => (workersOption === "by-race" || (workersOption === "by-race-workers" && f === 2) ? BY_RACE[f] ?? f : f);
 
 /** Input names as the app shows them ("food used" is "amount of units" there). */
 const inputName = (name: string) => name.replace("food used", "amount of units").replace(/, (against the race's usual)$/, " ($1)");
@@ -157,7 +165,12 @@ const progress = (s: string) => console.error(s);
 progress(`calibration: ${calUsed.size} games, ${calMoments.length} moments; validation: ${valUsed.size} games`);
 const firstModel = backward({ keep: ORIGINAL, basis: "linear", matchup: false, lambda: 0.01 }, progress);
 progress(`first model: ${label(firstModel)} ${cvLoss(firstModel).toFixed(4)}`);
-const widerLinear = backward({ keep: allFeatures, basis: "linear", matchup: false, lambda: 0.01 }, progress);
+const shippedKeep = () => (JSON.parse(readFileSync(join(import.meta.dirname, "../data/winchance.json"), "utf8")) as WinModel).keep;
+// A model already counted by race maps onto itself; one counted as it is, onto what --workers says.
+const unswap = (f: number) => Number(Object.entries(BY_RACE).find(([, to]) => to === f)?.[0] ?? f);
+const widerLinear = SAME
+  ? { keep: shippedKeep().map((f) => swap(unswap(f))), basis: "linear" as const, matchup: false, lambda: 0.01 }
+  : backward({ keep: allFeatures, basis: "linear", matchup: false, lambda: 0.01 }, progress);
 progress(`more differences: ${label(widerLinear)} ${cvLoss(widerLinear).toFixed(4)}`);
 const candidates: Spec[] = [firstModel, widerLinear];
 for (const lambda of [0.01, 0.1, 0.5]) candidates.push({ ...widerLinear, basis: "curve", lambda });
@@ -165,7 +178,9 @@ const bestCurve = candidates.slice(2).sort((a, b) => cvLoss(a) - cvLoss(b))[0];
 candidates.push({ ...bestCurve, matchup: true });
 const scored = candidates.map((spec) => ({ spec, cv: crossValidate(spec) })).map((c) => ({ ...c, loss: lossOf(c.cv), brier: brierOf(c.cv) }));
 for (const c of scored) progress(`${label(c.spec)} λ=${c.spec.lambda}: ${c.loss.toFixed(4)}`);
-const best = [...scored].sort((a, b) => a.loss - b.loss)[0];
+// Counted by race, a fixed edge per matchup is only shown for comparison, never chosen: one curve
+// for every matchup (and on the calibration set the edges learn who was followed, not the races).
+const best = [...scored].filter((c) => !(BY_RACE_ON && c.spec.matchup)).sort((a, b) => a.loss - b.loss)[0];
 const finals = scored.map((c) => ({ ...c, model: fitModel(calMoments, c.spec) }));
 const finalBest = finals.find((f) => f.spec === best.spec)!;
 const finalFirst = finals[0];
@@ -202,7 +217,7 @@ const lines: string[] = [];
 const out = (s = "") => lines.push(s);
 out("# Win chance from pro games (research)");
 out();
-out(`Generated by \`node scripts/win-chance.ts${BY_RACE_ON ? " --workers by-race" : ""}\`, which also writes the best model to \`data/winchance.json\` for the app. The method in full: [the technical report](win-chance/report.pdf).`);
+out(`Generated by \`node scripts/win-chance.ts${BY_RACE_ON ? ` --workers ${workersOption}` : ""}\`, which also writes the best model to \`data/winchance.json\` for the app. The method in full: [the technical report](win-chance/report.pdf).`);
 out();
 out(`**The data.** Fitted on the **calibration set**: ${calUsed.size} curated pro games of the current patch with a full simulation and a known winner. Scored on the **validation set**: ${valUsed.size} tournament games from warcraft3.info, 2022 to today, spread over the years and matchups (\`scripts/download-validation.ts\`), never used for fitting or for choosing the model.`);
 out();

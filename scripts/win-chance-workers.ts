@@ -44,9 +44,9 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { paths, readRecord } from "@replay-altar/core";
 import { mmss } from "@replay-altar/core/time";
-import { BY_RACE, diffs, sideOf, START_MS, STEP_MS, usualAt, winCurve, type Side, type Usual, type WinModel } from "@replay-altar/rules/winchance";
+import { BY_RACE, diffs, FEATURES, sideOf, START_MS, STEP_MS, usualAt, weightAt, winCurve, type Side, type Usual, type WinModel } from "@replay-altar/rules/winchance";
 import {
-  accuracyAt, bootstrapDiff, brierOf, CALIBRATION, calibrationSlope, costs, finiteGames, fitModel, fold, FOLDS, loadGames, lossOf, matchupCalibration, momentsOf, predsOn, RESEARCH, usualOf,
+  accuracyAt, bootstrapDiff, brierOf, CALIBRATION, calibrationSlope, costs, evenResults, finiteGames, fitModel, fold, FOLDS, loadGames, lossOf, matchupCalibration, momentsOf, predsOn, RESEARCH, usualOf,
   VALIDATION, validationMeta, type MatchupRow, type Moment, type Pred, type Spec,
 } from "./win-chance-lib.ts";
 import economy from "../packages/sim/src/economy-constants.json" with { type: "json" };
@@ -72,22 +72,33 @@ const extra = (s: Side, t: number): number[] => {
   return [d[WORKERS] * 10, d[FOOD] * 10, d[4], ghouls, ...d];
 };
 
-/** Averages of `x` per race and whole minute over these moments (each player once). */
+/**
+ * Averages of `x` per race and whole minute over these moments (each player once). `balanced`:
+ * the middle between the average of that race's eventual winners and of its losers, so a race
+ * that mostly lost in these games (the calibration set follows some players more than others) is
+ * not measured against its losers.
+ */
 type Averages = Map<string, number[][]>;
-function averages(ms: Moment[]): Averages {
-  const sums = new Map<string, { n: number; v: number[] }[]>();
+function averages(ms: Moment[], balanced = false): Averages {
+  const sums = new Map<string, { n: number; v: number[] }[][]>();
   for (const m of ms) {
     if (m.t % 60_000) continue;
     const minute = m.t / 60_000, race = m.races[0];
     const rows = sums.get(race) ?? sums.set(race, []).get(race)!;
-    const row = (rows[minute] ??= { n: 0, v: m.x![0].map(() => 0) });
+    const pair = (rows[minute] ??= [0, 1].map(() => ({ n: 0, v: m.x![0].map(() => 0) })));
+    const row = pair[balanced ? m.y : 0];
     row.n++;
     m.x![0].forEach((v, i) => (row.v[i] += v));
   }
   const out: Averages = new Map();
   for (const [race, rows] of sums) {
     const table: number[][] = [];
-    for (let m = 1; m < rows.length && rows[m] && rows[m].n >= 30; m++) table[m] = rows[m].v.map((v) => v / rows[m].n);
+    for (let m = 1; m < rows.length && rows[m]; m++) {
+      const [a, b] = rows[m];
+      if (a.n + b.n < 30 || (balanced && (a.n < 10 || b.n < 10))) break;
+      table[m] = a.v.map((v, i) => (balanced ? (v / a.n + b.v[i] / b.n) / 2 : v / a.n));
+    }
+    if (!table[1]) continue;
     table[0] = table[1];
     out.set(race, table);
   }
@@ -96,7 +107,7 @@ function averages(ms: Moment[]): Averages {
 const usualOfRace = (u: Averages, race: string, t: number, i: number) => usualAt(u.get(race)?.map((row) => row[i]), t);
 
 // ---- The candidates --------------------------------------------------------------------------
-type Candidate = { id: string; name: string; ghouls: string; change: (m: Moment, u: Averages) => number[] };
+type Candidate = { id: string; name: string; ghouls: string; balanced?: boolean; even?: boolean; change: (m: Moment, u: Averages) => number[] };
 const againstUsual = (m: Moment, u: Averages, value: number, usual: number) =>
   m.x![0][value] - usualOfRace(u, m.races[0], m.t, usual) - (m.x![1][value] - usualOfRace(u, m.races[1], m.t, usual));
 const set = (m: Moment, workers: number, food: number) => {
@@ -140,7 +151,20 @@ const X1: Candidate = {
     return d;
   },
 };
-if (process.env.WIN_CHANCE_EXTENSIONS === "1") CANDIDATES.push(X1);
+// Looked at after A–D were scored (see docs/WIN-CHANCE.md for why): X1, and the usual taken as the
+// middle between a race's winners and losers, for A, D and X1.
+const dOf = CANDIDATES.find((c) => c.id === "D")!, aOf = CANDIDATES.find((c) => c.id === "A")!;
+if (process.env.WIN_CHANCE_EXTENSIONS === "1")
+  CANDIDATES.push(
+    X1,
+    { ...aOf, id: "A2", name: "A2: A, the usual between the race's winners and losers", balanced: true },
+    { ...dOf, id: "D2", name: "D2: D, the usual between the race's winners and losers", balanced: true },
+    { ...X1, id: "X1b", name: "X1b: X1, the usual between the race's winners and losers", balanced: true },
+    // The fit weighted so each race's wins weigh the same in each matchup (evenResults).
+    { ...CANDIDATES[0], id: "today-even", name: "Today's counting, each race's wins weighing the same in the fit", even: true },
+    { ...aOf, id: "A-even", name: "A, each race's wins weighing the same in the fit", even: true },
+    { ...dOf, id: "D-even", name: "D, each race's wins weighing the same in the fit", even: true },
+  );
 
 // ---- Data ------------------------------------------------------------------------------------
 const log = (s: string) => console.error(s);
@@ -152,6 +176,7 @@ const val = finiteGames(valGames.flatMap((g) => momentsOf(g, { extra })));
 log(`calibration: ${new Set(cal.map((m) => m.game)).size} games; validation: ${new Set(val.map((m) => m.game)).size} games`);
 
 const changed = (ms: Moment[], c: Candidate, u: Averages): Moment[] => ms.map((m) => ({ ...m, d: c.change(m, u) }));
+const forFit = (ms: Moment[], c: Candidate) => (c.even ? evenResults(ms) : ms);
 type Score = {
   id: string; name: string; ghouls: string;
   cvLoss: number; valLoss: number; valBrier: number; slope: number; at10: number; at20: number;
@@ -168,11 +193,11 @@ const scores: Score[] = CANDIDATES.map((c) => {
   // Cross-validated on the calibration games; the race's usual comes from the fitting games only.
   const cv: Pred[] = [];
   for (let f = 0; f < FOLDS; f++) {
-    const train = cal.filter((m) => fold(m.game) !== f), u = averages(train);
-    cv.push(...predsOn(fitModel(changed(train, c, u), SHIPPED), changed(cal.filter((m) => fold(m.game) === f), c, u)));
+    const train = cal.filter((m) => fold(m.game) !== f), u = averages(train, c.balanced);
+    cv.push(...predsOn(fitModel(forFit(changed(train, c, u), c), SHIPPED), changed(cal.filter((m) => fold(m.game) === f), c, u)));
   }
-  const u = averages(cal);
-  const model = fitModel(changed(cal, c, u), SHIPPED);
+  const u = averages(cal, c.balanced);
+  const model = fitModel(forFit(changed(cal, c, u), c), SHIPPED);
   preds.set(c.id, { model, usual: u });
   const v = predsOn(model, changed(val, c, u));
   if (c.id === "today") todayVal = v;
@@ -226,6 +251,30 @@ for (const [set, title] of [["validation", "validation set"], ["cv", "calibratio
   }
 }
 
+// Where a lean comes from: each difference's average push (in points of win chance around 50%)
+// for the first race of a matchup, on the validation games.
+out();
+out("## Where the lean comes from");
+out();
+out("Each difference's average push for the first race of the matchup, in points of win chance around 50% (validation set). A race that is pushed up by a difference without winning more is being favoured by it.");
+for (const id of ["today", "D", "D-even"]) {
+  const c = CANDIDATES.find((x) => x.id === id), fitted = preds.get(id);
+  if (!c || !fitted) continue;
+  for (const minute of [10, 15]) {
+    out();
+    out(`${c.name}, at ${minute}:00:`);
+    out();
+    out(`| Matchup | ${SHIPPED.keep.map((f) => FEATURES[f].replace("food used", "amount of units")).join(" | ")} | All | Won |`);
+    out(`|---|${SHIPPED.keep.map(() => "---|").join("")}---|---|`);
+    for (const mu of CROSS) {
+      const at = changed(val.filter((m) => m.t === minute * 60_000 && m.races[0] === mu[0] && m.races[1] === mu[2]), c, fitted.usual);
+      const push = SHIPPED.keep.map((f, k) => at.reduce((s, m) => s + weightAt({ basis: SHIPPED.basis, weights: fitted.model.w }, k, m.t) * m.d[f], 0) / at.length);
+      const points = (z: number) => pts(1 / (1 + Math.exp(-z)) - 0.5);
+      out(`| ${mu} | ${push.map(points).join(" | ")} | ${points(push.reduce((a, b) => a + b, 0))} | ${pct(at.filter((m) => m.y).length / at.length)} |`);
+    }
+  }
+}
+
 // The race's usual, and a check that the rules' own tables (what the app would use) agree.
 const u = averages(cal);
 out();
@@ -237,6 +286,11 @@ for (const m of [2, 5, 10, 15, 20, 25]) {
   const cell = (r: string, i: number) => u.get(r)?.[m]?.[i]?.toFixed(1) ?? "–";
   out(`| ${m}:00 | ${cell("H", 0)} | ${cell("H", 1)} | ${cell("O", 0)} | ${cell("O", 1)} | ${cell("U", 0)} | ${cell("U", 1)} | ${cell("U", 3)} | ${cell("N", 0)} | ${cell("N", 1)} |`);
 }
+out();
+out("How often each race won in each set (games between different races): " + [["calibration", cal], ["validation", val]].map(([name, ms]) => {
+  const rows = (ms as Moment[]).filter((m) => m.t === START_MS && m.races[0] !== m.races[1]);
+  return `${name}: ` + ["H", "O", "U", "N"].map((r) => { const mine = rows.filter((m) => m.races[0] === r); return `${r} ${pct(mine.filter((m) => m.y).length / mine.length)} of ${mine.length}`; }).join(", ");
+}).join("; ") + ".");
 const rulesUsual: Usual = usualOf(calGames);
 const worst = Math.max(...["H", "O", "U", "N"].flatMap((r) => [5, 10, 15, 20].map((m) => Math.abs((rulesUsual.workers[r]?.[m] ?? NaN) - (u.get(r)?.[m]?.[0] ?? NaN)))));
 out();

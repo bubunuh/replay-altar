@@ -111,8 +111,8 @@ const sens = (name: string) => R.sensitivity.find((s) => s.name.startsWith(name)
 const asFitted = sens("as fitted")!, noArmy = sens("without"), withArmy = sens("with the army value"), noise500 = sens("army value with extra noise (sd 500"), noise1000 = sens("army value with extra noise (sd 1000");
 // The chosen model's inputs in the summary's words.
 /** The model's input names as the app shows them ("food used" is "amount of units" there). */
-const word = (f: string) => (f === "food used" ? "amount of units" : f);
-const INPUT_WORDS: Record<string, string> = { "army value": "army", "army value ratio (log)": "army", "food used": "amount of units", workers: "workers", "hero experience": "hero experience", "heroes alive": "heroes alive", bases: "expansions", "resources lost": "resources lost", upgrades: "upgrades", tier: "tier" };
+const word = (f: string) => f.replace("food used", "amount of units").replace(/, (against the race's usual)$/, " ($1)");
+const INPUT_WORDS: Record<string, string> = { "army value": "army", "army value ratio (log)": "army", "food used": "amount of units", workers: "workers", "workers, against the race's usual": "workers", "food used, against the race's usual": "amount of units", "hero experience": "hero experience", "heroes alive": "heroes alive", bases: "expansions", "resources lost": "resources lost", upgrades: "upgrades", tier: "tier" };
 const inputWords = [...new Set(best.keep.map((k) => INPUT_WORDS[k] ?? k))];
 const inputsText = `${inputWords.slice(0, -1).join(", ")} and ${inputWords.at(-1)}`;
 const knotsText = best.basis === "curve" ? "1, 5, 10, 15, 22 and 30 minutes" : "";

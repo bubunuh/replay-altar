@@ -92,6 +92,24 @@ export function usualOf(games: Game[]): Usual {
   return usualTables(rows);
 }
 
+/**
+ * The same moments, weighted so that in each matchup between two races each race's wins weigh
+ * the same in a fit. The calibration set follows some players more than others, so a race can
+ * lose most of its games there (Undead won 34% in 0.2.x's); fitted as they are, anything that
+ * tells the races apart (a worker count, above all) is learnt as a sign of losing. Scores are
+ * never taken with these weights.
+ */
+export function evenResults(ms: Moment[]): Moment[] {
+  const won = new Map<string, number>();
+  for (const m of ms) if (m.y && m.races[0] !== m.races[1]) won.set(m.races.join(">"), (won.get(m.races.join(">")) ?? 0) + m.w);
+  return ms.map((m) => {
+    if (m.races[0] === m.races[1]) return m;
+    const winner = m.y ? m.races : [m.races[1], m.races[0]];
+    const mine = won.get(winner.join(">")) ?? 0, theirs = won.get(`${winner[1]}>${winner[0]}`) ?? 0;
+    return mine && theirs ? { ...m, w: (m.w * (mine + theirs)) / (2 * mine) } : m;
+  });
+}
+
 /** +1 when A has the first race of the matchup, −1 when B has it: a race edge that keeps the sum at 100%. */
 const matchupTerms = (races: [string, string]) =>
   MATCHUPS.map((mu) => (races[0] === mu[0] && races[1] === mu[2] ? 1 : races[0] === mu[2] && races[1] === mu[0] ? -1 : 0));

@@ -89,3 +89,58 @@ Boosted trees minus the best logistic model, on the validation set: 0.0020 (95% 
 | upgrades | -6 pts | +6 pts | +10 pts |
 
 (A typical step is one standard deviation of that difference across all moments. The leads overlap, so read these together, not one by one.)
+
+<!-- Written by hand from here on; scripts/win-chance.ts keeps it. -->
+
+## Workers by race (designed for 0.3.0 on 0.2.x's data; the final fit comes after the games are simulated again)
+
+**The bias.** The model above compares the two players' worker counts and food used as they are. An Undead mines gold with five Acolytes while Ghouls, which are army, cut the lumber; a Human has fifteen to twenty workers. So against Undead a Human or an Orc always looks some ten workers ahead, and the food used counts those workers again. On the validation set the model gave a Human against Undead 59–62% on average at 5, 10 and 15 minutes, and that Human won 43–49%; an Orc against Undead 52–59%, winning 45–46%.
+
+Why the fit learnt it: the calibration set follows some players more than others, and in it Undead won 34% of their games against other races (Human 55%, Orc 50%, Night Elf 59%); on the validation set Undead won 50%, Human 51%, Orc 44%, Night Elf 56%. A worker count tells the races apart better than anything else, so "few workers" was learnt partly as "the race that loses here". Counted by race, the weight of a worker lead falls to a third at 5–10 minutes and to nothing from 15 minutes on.
+
+**The check** (`node scripts/win-chance-workers.ts <folder>`): for each matchup, at 5, 10, 15 and 20 minutes, among games still going, the average chance the model gave the first race against how often it won. The fit script now prints the same table for its best model (above, after the next fit).
+
+**The candidates**, written down before any was fitted (the header of `scripts/win-chance-workers.ts`, commit 870b660), all with the shipped model's seven differences, curve and ridge. What the records hold: the worker count is the race's worker unit alone; Ghouls are only in the build order (when each was ordered), and WC3V's "ghouls on lumber" is every Ghoul ever made, so a Ghoul on lumber can't be told from one in the army. And since the model is a weighted sum, "amount of units without the workers" next to the workers is the same model as today's: only what is taken off per race changes anything.
+
+- **A** workers against the race's usual (the average worker count of that race at that minute among the pros); food used as it is. Ghouls are army.
+- **B** A, and the food used with the race's usual workers taken off. Ghouls are army.
+- **C** workers by what they bring in: gold workers up to 5 per mine, the rest on lumber, an Undead's first 5 Ghouls as its lumber workers (and out of the amount of units), weighted by the income model's rates. No averages.
+- **D** workers against the race's usual workers, food used against the race's usual food. Ghouls are army; an Undead's usual Ghouls cancel out with its usual food.
+
+**The numbers** (validation set, 3138 games; the gap is what the model gave the first race minus how often it won, in points, at 5 / 10 / 15 / 20 minutes; ± 5 to 8 points each):
+
+| | Today | A | B | C | D |
+|---|---|---|---|---|---|
+| Log loss, validation | 0.6326 | 0.6276 | 0.6302 | 0.6313 | 0.6276 |
+| against today (95% range) | | −0.0050 (−0.0080 to −0.0019) | −0.0024 (−0.0072 to +0.0026) | −0.0013 (−0.0050 to +0.0024) | −0.0050 (−0.0093 to −0.0006) |
+| Log loss, calibration (cross-validated) | 0.5889 | 0.5969 | 0.6114 | 0.5937 | 0.6046 |
+| Favourite won at 10:00 / 20:00 | 64.0% / 69.6% | 64.3% / 69.5% | 64.4% / 69.6% | 63.6% / 69.4% | 64.6% / 69.4% |
+| Calibration slope | 0.75 | 0.79 | 0.84 | 0.77 | 0.83 |
+| Human v Undead | +13 +13 +17 +10 | +8 +5 +9 +5 | +3 +1 +2 −1 | +15 +8 +12 +6 | +7 +2 +4 +1 |
+| Orc v Undead | +6 +14 +8 +1 | 0 +10 +3 −1 | −3 +8 +3 −2 | +6 +13 +7 +3 | +1 +9 +7 +4 |
+| Undead v Night Elf | +1 −4 −1 −1 | +7 +2 +5 +2 | +11 +2 +6 +3 | −8 −8 −6 −3 | +5 +1 +4 −1 |
+| Human v Orc | +2 −8 −5 −5 | +1 −11 −8 −6 | −1 −15 −15 −11 | 0 −12 −10 −10 | −1 −12 −16 −14 |
+| Human v Night Elf | +9 −1 +2 0 | +10 −3 0 0 | +9 −7 −6 −6 | +2 −10 −7 −5 | +8 −6 −6 −8 |
+| Orc v Night Elf | +9 +6 0 0 | +10 +8 +2 +1 | +10 +8 +4 +1 | +3 +2 −4 −1 | +10 +6 +5 +2 |
+| Matchups off by, average / at most | 5.7 / 17.4 | 4.9 / 11.2 | 5.7 / 15.1 | 6.7 / 15.0 | 5.9 / 16.3 |
+
+The log loss on the calibration set gets worse with every candidate, and that is the point: there the worker count was telling which race, and the race was telling who won. On games it never saw, A and D are better than today's model, the favourite wins as often, and the chances are less overconfident.
+
+**The choice: D.** It takes the lean against Undead away where it was measured (Human against Undead from +10 to +17 down to +1 to +7), and it is the only candidate that removes the workers from both places they were counted. A is the cautious half: it leaves Human against Undead at +5 to +9, because the Human's extra workers are still inside the amount of units. C does not help (the count of Ghouls trained is not the count cutting lumber).
+
+**What is still off with D.** A Human reads 12–16 points too low against an Orc from 10 minutes on (today 5–8), and 6–8 too low against a Night Elf; an Orc reads about 9 too high against Undead at 10 minutes and 10 too high against a Night Elf at 5. These do not come from the workers: on average the Human is behind in hero experience (by 5 points against an Orc, 14 against a Night Elf at 15 minutes) and in resources lost (3–5 points), and wins as often anyway. Today's model hid that behind the Human's extra workers. The smallest extension is the same idea for those two: hero experience and resources lost against the race's usual. Taking every kept difference against the race's usual (X1 in the script) was tried: Human against Orc −4 −6 −12 −11, Orc against Undead 0 −2 +2 −1, but Undead against Night Elf +10 +6 +10 +6 and the log loss gain shrinks to −0.0015. Not adopted; to be looked at again on the new simulation.
+
+**Everything that was fitted**, so the choice can be judged: the four candidates; X1; A, D and X1 with the usual taken between a race's winners and losers (no change: the same log loss to 0.0001, the matchup gaps within a point); today's counting, A and D with each race's wins weighing the same in the fit (today's counting gets most of A's gain that way, 0.6286; D does not gain, 0.6311); and the fit script twice with `--workers by-race`, once with its search and once with `--same-differences`. The search is not to be trusted with this calibration set: counted by race it drops the workers and takes army value, resources spent and items bought, which tell the races apart again, and it prefers the fixed edge per matchup (0.5971 cross-validated, 0.6385 on the validation set). Hence `--same-differences`, and a fixed edge is never chosen when counting by race.
+
+**The game that showed it** (a Human against Undead, 17:37, lost; the game's own numbers were recorded: 15 Peasants against 5 Acolytes and 3 Ghouls all game, the two players' gold mined within 6% of each other, food used 50 against 39 at 8 minutes and 68 against 63 at 16). The Human's chance each minute, today's model → D as the fit script writes it: 62→51, 75→57, 82→66, 78→63, 78→70, 76→63, 85→76, 88→79, 79→68, 82→72, 80→71, 83→73, 85→74, 77→61, 81→69, 91→81, 90→80. Eleven points lower on average, and still above 60% from 3 minutes on: the Human did have more units for most of the game, which the model counts as before.
+
+**How the app uses it.** `packages/rules/src/winchance.ts` computes the two new differences (FEATURES 16 and 17) from the `usual` tables a model carries; a model without them (the one shipped until 0.2.x) is read exactly as before. Nothing changes in the app until `data/winchance.json` is replaced.
+
+**The fit after the games are simulated again:**
+
+```
+node scripts/win-chance.ts --workers by-race --same-differences && node scripts/win-chance-report.ts
+node scripts/win-chance-workers.ts <a folder outside the repository>
+```
+
+The first writes `data/winchance.json` (with the usual tables), this file and the report; on 0.2.x's data it gives log loss 0.6253 on the validation set (ridge 0.5; today 0.6326), the favourite winning 65% at 10 minutes and 69% at 20, calibration slope 0.91 (today 0.75), and matchup gaps within a point or two of D's above. To try it without replacing the shipped model, add `--out <folder>`. The second prints the candidates side by side again: look at the matchup table before shipping, the usual of each race changes with the simulation. `--workers by-race-workers` is candidate A.
