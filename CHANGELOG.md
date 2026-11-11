@@ -343,7 +343,7 @@ the simulation is settled. New rules are for 0.4.
 
 ## Planned for 0.4
 
-New things to coach on, on 0.3.0's numbers. Neither needs the games simulated or imported again.
+New things to coach on, on 0.3.0's numbers. Only the first item changes the simulation (games simulated and imported again); the rules do not.
 
 - **A train order to several buildings, paid building by building:** half of the train orders
   that never became a unit are orders given to several buildings at once: the game charges each
