@@ -8,9 +8,9 @@ in their wins and in their losses. A useful rule fires more often in losses ("li
 Numbers below: 3,532 held-out player-games over the four races (1,765 wins, 1,767 losses), from
 the curated current-patch pro games (warcraft3.info tournaments and W3Champions 2400+) pooled with
 the validation set's tournament games from 2022 to 2026 (older patches, players from semi-pro to
-the very top), all read and simulated again with 0.2.2's reading and simulation (2026-10-27:
-WC3V with Replay Altar's 26 patches (0001–0026, upstream since), no death correction afterwards, food used counted from the units;
-140 more validation games simulate than on 2026-10-23). On the current-patch pro games alone (408 held-out player-games) the main
+the very top), all simulated again for 0.2.6 (2026-11-11: upstream WC3V 06ae68c with the
+end-of-game fix, patches 0001–0003; income model v7, which refuses the unit orders the gold can't
+pay for; food used counted from the units). On the current-patch pro games alone (408 held-out player-games) the main
 rules score: heroes 2.2, fights 3.7, hero deaths 2.3, expansion 2.4, out-expanded 1.7.
 
 **Calibration:** thresholds follow the pros of your race where a rule depends on style (pros'
@@ -37,25 +37,34 @@ early, so the unspent gold is mostly 0 (to be revisited with the gold and lumber
 simulation (2.1 instead of 3.1: it fires in 17% of wins instead of 13%; raising its 1.3x to 1.5x
 gave 2.3, 12% / 28%, on the first 0.2.2 scoring).
 
-Shown per game (top 3 of the shown rules): 1.04 findings in wins, 1.84 in losses.
+**Re-scored on 0.2.6's simulation (2026-11-11):** the shown rules all still pass. `fights` gains
+the most (lift 2.1 → 4.0: it fires in 11% of wins instead of 17%, 45% of losses instead of 37%):
+the winner's army no longer "dies" as the game ends, which booked a lost fight to many winners.
+`floating` passes again (1.5, 95% range 1.3–1.9; 7% of wins, 11% of losses): with the refused
+orders no longer paid for, the unspent gold is no longer mostly 0 (on the recorded games the
+estimate is off by a median 118 at 5:00 and 202 at 10:00, against 557 and 1149 before).
+`supply` (0.9–1.3), `upkeep` (0.7–1.1) and `no_anti_air` (1.0–6.3) stay hidden; `no_items`
+passes (1.1–inf) but still fires in under 1% of games.
+
+Shown per game (top 3 of the shown rules): 0.95 findings in wins, 1.88 in losses (0.2.2: 1.04 and 1.84).
 
 ## Main findings
 
 | Rule | Fires when | Source | Pro wins / losses | Lift (H O U N) |
 |---|---|---|---|---|
 | `heroes` | hero XP by 6:00/10:00 worse than 75% of pros, or under 45% of both players' XP ("their heroes out-levelled yours" when your own pace was at pro level) | metric research on W3C score sheets | 24% / 67% | 2.8 (2.5 3.0 3.0 2.9) |
-| `fights` | you lost 1.3x more than the opponent in fights (detected, or inferred from loss bursts; 800+), unless your whole-game trade beats the pro median. Overlapping fights split the losses (they used to count them twice: 1.5x then gave 2.2) | metric research | 17% / 37% | 2.1 (1.9 2.2 2.2 2.4) |
-| `hero_deaths` | your heroes died more often than theirs (2+) | Blizzard hero basics: keep heroes alive, carry a Town Portal | 6% / 14% | 2.4 (2.0 2.3 3.0 2.4) |
+| `fights` | you lost 1.3x more than the opponent in fights (detected, or inferred from loss bursts; 800+), unless your whole-game trade beats the pro median. Overlapping fights split the losses (they used to count them twice: 1.5x then gave 2.2) | metric research | 11% / 45% | 4.0 (3.3 4.4 3.6 5.2) |
+| `hero_deaths` | your heroes died more often than theirs (2+) | Blizzard hero basics: keep heroes alive, carry a Town Portal | 6% / 14% | 2.4 (2.0 2.3 3.0 2.5) |
 | `expansion` | no expansion in a 20+ minute game while the opponent expanded | Liquipedia: expand early when safe | 3% / 7% | 2.1 (2.1 1.5 2.5 3.1) |
 | `out_expanded` | they had more bases standing than you for 4+ minutes (whole game; was before 20:00 only: 12% / 21%) | reviews (REVIEWS.md); Grubby #3 (economy) | 13% / 21% | 1.6 (2.0 1.6 1.2 2.0) |
 | `economy` | workers at 6:00 / 10:00 below what your bases need (5 on gold per base + lumber crew) by 3 / 2, and below 9 in 10 pros of your race | Grubby, Beginner's Guide #3 and Human guides; pro data | 5% / 6% | 1.2 (1.2 inf - 1.5) |
-| `army_mismatch` | your recent units did ≤80% damage on average against their armor and your race had units doing 40+ points better | game data (`data/gamedata/combat.json`) | 3% / 3% | 1.1 (0.8 1.3 0.9 1.2) |
-| `supply` | supply blocked longer than 75% of pros (and 30+ s) | metric research | 11% / 12% | 1.1 (0.9 1.2 1.1 1.8) |
+| `army_mismatch` | your recent units did ≤80% damage on average against their armor and your race had units doing 40+ points better | game data (`data/gamedata/combat.json`) | 3% / 3% | 1.1 (0.8 1.6 0.7 1.0) |
+| `supply` | supply blocked longer than 75% of pros (and 30+ s) | metric research | 12% / 12% | 1.0 (0.8 1.1 1.1 1.7) |
 | `unused_lead` | army 1.5x theirs (600+ more) and at least as many workers for 4+ minutes, with no attack, expansion or 300+ of their losses in the first 4 | reviews (REVIEWS.md) | under 1% / under 1% | rare |
 | `window` | the opponent had no army for 4+ minutes and you neither expanded, made them lose 400+, nor out-levelled pros | Replay Altar; Warcraft3.info Human guide | 1% / 1% | 1.1 (inf 2.1 0.9 0.0) |
-| `exposed` | you had no army for 4+ minutes while they had one | Replay Altar | 1% / 2% | 1.3 (1.4 1.1 - 3.0) |
+| `exposed` | you had no army for 4+ minutes while they had one | Replay Altar | 1% / 2% | 1.2 (1.0 1.1 - 2.4) |
 | `no_heroes` | you fought while all your heroes were dead (lost 300+; not counting their attacks on your towers or base) | Blizzard hero basics | 0% / 1% | 1.4 (1.6 inf 1.4 0.4) |
-| `no_anti_air` | 40%+ of their recent army flew (1,200+ value) and under 25% of yours could attack air | game data | 0% / 1% | 1.6 (0.5 2.1 1.8 1.8) |
+| `no_anti_air` | 40%+ of their recent army flew (1,200+ value) and under 25% of yours could attack air | game data | 0% / 1% | 2.1 (1.0 3.1 1.8 2.4) |
 | `mechanics` | no control groups (at most 1 group, or under 5 recalls a minute) or under 15% of selections by hotkey: limits below 99 in 100 tournament player-games; shown whenever it fires | tournament data (8,294 player-games) | 0% / 1% | 4.7 (shown whatever the lift) |
 
 ## Basics (beginner mistakes, ranked below the main findings)
@@ -68,9 +77,9 @@ near 1 here means "pros rarely do this either way", not that the advice is wrong
 | `unused_spike` | 4 minutes after first reaching 50 food: no fight started, no expansion, no tier 3 | Warcraft 3 Gym; Grubby's 3360 | 1% / 1% | 1.5 |
 | `build_drift` | a confident library-build match with tier/expansion steps 8+ food later than pros on that build | build library | 2% / 2% | 0.9 |
 | `upgrades` | no attack or armor upgrade by 15:00 | pro data; Grubby: one attack upgrade around 50 food | 17% / 21% | 1.3 |
-| `mine_dry` | ≈ 11,500+ gold collected from one base and no expansion | Warcraft 3 Gym (Pit Lord guide) | 9% / 13% | 1.4 |
+| `mine_dry` | ≈ 11,500+ gold collected from one base and no expansion | Warcraft 3 Gym (Pit Lord guide) | 5% / 7% | 1.4 |
 | `goal_3360` | first hero level 3, second hero level 3 and 60 food later than 3 in 4 pros, or never in a long game | Grubby, Beginner's Guide #6 | 16% / 20% | 1.2 |
-| `floating` | ≈ unspent gold in the first 10 minutes above the pros' 90th percentile | pro data | 3% / 3% | 1.3 |
+| `floating` | ≈ unspent gold in the first 10 minutes above the pros' 90th percentile | pro data | 7% / 11% | 1.5 |
 | `upkeep_before_upgrades` | went over 50 food with no attack/armor upgrade or caster training (ordered within 30 s), no expansion and no tier 3 | Warcraft 3 Gym (Orc auras guide); Grubby #3 | 2% / 2% | 0.9 |
 | `upkeep` | above 80 food with fewer than 2 expansions for longer than 9 in 10 pros (2+ minutes); a basic since 2026-10-18 (food counts in long games are uncertain) | Blizzard's upkeep page; Grubby #3 | 7% / 6% | 0.9 |
 | `no_sustain` | a hero died after 6:00 with no potion, healing scroll or Town Portal bought before it | Blizzard hero basics; Grubby | 4% / 6% | 1.6 |
@@ -130,6 +139,11 @@ of the difference above 0, and in at least 1% of games.
 
 Pros reach the same worker counts and gold in wins and losses, so those are no longer praised
 (`NOT_STRENGTHS`).
+
+**Re-scored on 0.2.6's simulation** (`--holdout --pool validation --strengths`, 3,532 held-out
+player-games): every strength shown still qualifies clearly more often in wins: hero_xp_share +49.9
+(+47.2 to +52.5), trade_efficiency +40.5, units_killed +30.3, hero_xp_6m +21.4, hero_xp_10m +21.1,
+creep_camps_6m +19.2, hero_deaths (the hero trade) +18.0, hero_level3_ms +16.9 (+14.5 to +19.3).
 
 ## Around the findings (no model needed)
 
