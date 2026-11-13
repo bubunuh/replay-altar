@@ -285,6 +285,17 @@ model, evaluation curve, rules) was redone once, after.
   as 0.2.2 did: "Import 20 replays" or "Import all replays" reads them with the new simulation.
   Your settings, battletag, results you corrected by hand, the replays' archive and W3Champions'
   statistics are kept, and the database as it was stays in a backup file.
+- **Your W3Champions games are read in full again** (a user: the app undercounts population in
+  W3Champions games). The game's own copy of a W3Champions game, and games against the computer
+  or in custom lobbies, lack one record in their header that says how the game's newer actions
+  are written, so Replay Altar and its simulation read them the old way: one action was taken as
+  4 bytes longer than it is, and the rest of that moment's actions were lost, nearly every unit
+  trained among them (an 18-worker Human read as 5 to 9 workers, and the food used about half the
+  real one). Since 0.2.5 that copy was the one analyzed for W3Champions games, because it is a few
+  seconds longer. Now the game's version decides. On one player's 247 replays, 16 were misread
+  (14 W3Champions games, 2 against the computer); against W3Champions' "largest army" their
+  highest food used went from 9% low on median, 12.9 food off on average, to 2% low and 7.0 off.
+  Battle.net ladder games and the pro and tournament games were not affected.
 - **Armies no longer "die" as the game ends:** in 14 of 105 player-games on one player's PC, an
   army lost more than half its value in the last 10 seconds, mostly the winner's (1410 → 235 at
   the end of a won game). The cause: Warcraft III clears every player's selection when a game is
