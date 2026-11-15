@@ -45,12 +45,16 @@ for (const d of ["packages", "apps/desktop/src", "data/gamedata"]) collect(join(
 
 const mine = new Set(loadConfig().accounts);
 const alias = new Map<string, string>();
+// A bare name that is also a word of the app's ("eden") is still replaced where it is a whole
+// text by itself (the match list's opponent column), never inside a sentence.
+const whole = new Map<string, string>();
 let n = 0;
 for (const name of [...names].sort((a, b) => b.length - a.length || a.localeCompare(b))) {
   const tag = mine.has(name) ? "Player#1234" : `Rival${++n}#${1000 + n}`;
   alias.set(name, tag);
   const bare = name.split("#")[0];
   if (bare.length >= 3 && !alias.has(bare) && !words.has(bare.toLowerCase())) alias.set(bare, tag.split("#")[0]);
+  else if (bare.length >= 3 && !alias.has(bare) && !whole.has(bare)) whole.set(bare, tag.split("#")[0]);
 }
 // Your Linux user name in folder paths.
 const user = process.env.USER;
@@ -62,7 +66,8 @@ const js = `(async () => {
   const esc = (s) => s.replace(/[.*+?^\${}()|[\\]\\\\]/g, "\\\\$&");
   const re = new RegExp("(?<![\\\\p{L}\\\\p{N}_])(" + pairs.map((p) => esc(p[0])).join("|") + ")(?![\\\\p{L}\\\\p{N}])", "gu");
   const map = new Map(pairs);
-  const f = (s) => s.replace(re, (x) => map.get(x));
+  const whole = new Map(${JSON.stringify([...whole])});
+  const f = (s) => (whole.has(s.trim()) ? s.replace(s.trim(), whole.get(s.trim())) : s.replace(re, (x) => map.get(x)));
   const run = () => {
     const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     for (let t; (t = w.nextNode()); ) { const v = f(t.nodeValue); if (v !== t.nodeValue) t.nodeValue = v; }
