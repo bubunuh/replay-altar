@@ -258,6 +258,10 @@ Replay Altar stands on other people's work, all of it freely available.
 - [Vortix](https://www.youtube.com/channel/UC4MGzV7ahAN1khnzdjp3rkw): commented games and general tips.
 - carsoNNN's creeping guides, Back2Warcraft, warcraft3.info's "How To Basic" race guides, StrategyWiki, and Blizzard's Warcraft III basics pages.
 
+## Support
+
+If Replay Altar has helped you, consider supporting the project.
+
 <a href="https://buymeacoffee.com/bubunuh"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" height="48"></a>
 
 ## License
