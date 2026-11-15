@@ -19,7 +19,7 @@ Replay Altar is a Warcraft III: Reforged replay analyzer for 1v1 players. It run
 - **Private and local.** Everything runs on your computer, with no account. In English, Brazilian Portuguese, Spanish and French.
 - **Windows and Linux.** A Windows installer, and for Linux a single AppImage file.
 
-If Replay Altar helps you, you can support it: https://buymeacoffee.com/bubunuh
+<a href="https://buymeacoffee.com/bubunuh"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" height="48"></a>
 
 ![The report of a won game: result, heroes, the main numbers against the opponent, the map, and the findings: what went well first, then the problems with advice](docs/images/report.png)
 
