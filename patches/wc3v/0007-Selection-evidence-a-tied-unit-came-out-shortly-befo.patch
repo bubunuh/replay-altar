@@ -1,0 +1,146 @@
+From d92784f3ce509ff7f611a5a351d0b1dcdfb55743 Mon Sep 17 00:00:00 2001
+From: bubunuh <76405364+bubunuh@users.noreply.github.com>
+Date: Sat, 14 Nov 2026 19:03:23 +0100
+Subject: [PATCH 7/8] Selection evidence: a tied unit came out shortly before
+ its handle had to be made
+
+WC3V's training times run early, and more so as a game goes on: its queues
+also hold orders the game refused (no gold, no food), and each one pushes
+the units behind it forward. A unit counted from such a time is in the army
+minutes before it exists; on the recorded games that is where most of the
+late-game surplus came from (after 20 minutes WC3V's army was 14% above the
+game's, and nearly all of it was units the lists do name later).
+
+The handle a unit is tied to bounds when it came out: handles are allocated
+in order, so it was made before the first sighting of any handle allocated
+after it (madeBy, which HandleBinder already uses the other way round).
+Where the replay lists every selection change (PreSubselection) new units
+are named soon after they come out, so the bound is tight; a tied unit
+whose training time is earlier than 30 s before it now comes out there.
+Not workers, not replays without PreSubselection lists (there the bound is
+loose).
+
+Recorded games, army value error 117 -> 103 (Human 116 -> 100, Orc 119 ->
+86, Undead 131 -> 122, Night Elf 104 -> 103; bands avg 124 -> 97, high
+117 -> 101, low 124 -> 116, pro 114 -> 98, the user's own 85 -> 85), unit
+type error 0.85 -> 0.78, workers unchanged. By phase 39 / 227 / 394 / 485
+-> 39 / 200 / 334 / 480 (0-10, 10-20, 20-30, 30+ minutes); 37 player-games
+better by more than 10, 12 worse. The margin is flat between 20 and 45 s
+(102 / 103 / 105).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ lib/SelectionEvidence.js         | 19 +++++++++++++
+ tests/selection-evidence.test.js | 47 ++++++++++++++++++++++++++++++++
+ 2 files changed, 66 insertions(+)
+
+diff --git a/lib/SelectionEvidence.js b/lib/SelectionEvidence.js
+index 77a6973..ef642ed 100644
+--- a/lib/SelectionEvidence.js
++++ b/lib/SelectionEvidence.js
+@@ -23,6 +23,10 @@ const Unit = require('./Unit');
+ const { getUnitInfo, getBuildTime } = require('../helpers/mappings');
+ 
+ const START_MS = 1000;
++// A unit comes out a little before the handle allocation bound (madeBy) says
++// it had to: where the replay lists every selection change, units made after
++// it are named within seconds to a minute of coming out.
++const MADE_BEFORE_BOUND_MS = 30 * 1000;
+ 
+ const isPlayerId = (id) => Number(id) >= 0 && Number(id) < 24;
+ 
+@@ -181,11 +185,26 @@ class SelectionEvidence {
+       if (h.death) this.stats.deaths++;
+       e.unit.selectionLife = this._life(key, h, pl);
+       this._applyListedForms(e.unit, h);
++      if (pl.presub && !e.worker) this._notBeforeHandle(e.unit, h);
+     }
+ 
+     this._addListedUnits(player, pl, handles, new Set(ties.values()));
+   }
+ 
++  // A tied unit came out when its handle was made, not when WC3V's queue says.
++  // WC3V's queues also hold orders the game refused (no gold, no food), so its
++  // training times run early, more so as a game goes on; the handle the unit
++  // got can only have been made before the first sighting of any handle
++  // allocated after it (madeBy). Where the replay lists every selection change
++  // (PreSubselection) such sightings come thick and fast, and the unit came
++  // out shortly before that bound: a training time earlier than that moves up
++  // to it. Not workers: they are made from the start and listed rarely.
++  _notBeforeHandle (unit, h) {
++    if (unit.trainedTime == null) return;
++    const out = Math.min(h.first, this.madeBy(h.counter)) - MADE_BEFORE_BOUND_MS;
++    if (unit.trainedTime < out) unit.trainedTime = out;
++  }
++
+   // The forms SelectSubgroup saw the unit in (Bear Form, Destroyer, Rider...),
+   // for a unit the simulation never morphed itself.
+   _applyListedForms (unit, h) {
+diff --git a/tests/selection-evidence.test.js b/tests/selection-evidence.test.js
+index d29aff5..862999f 100644
+--- a/tests/selection-evidence.test.js
++++ b/tests/selection-evidence.test.js
+@@ -9,6 +9,8 @@
+  *   4. a foreign handle (only ever clicked alone) is not bound or added
+  *   5. a handle Player.bindHandlesByCreationOrder gave the wrong unit goes to
+  *      the unit the lists fit, not to both
++ *   6. with PreSubselection lists, a tied unit's training time moves up to
++ *      shortly before its handle had to be made
+  *
+  * Run: `node tests/selection-evidence.test.js`
+  */
+@@ -127,6 +129,51 @@ check('a creation-order binding is no hint: the handle goes to the unit that fit
+   assert.strictEqual(late.selectionLife, undefined);
+ });
+ 
++check('with PreSubselection lists, a tied unit comes out shortly before its handle had to be made', () => {
++  const eventTimer = new EventTimer();
++  const trained = (type, t) => {
++    const unit = new Unit(eventTimer, null, null, type, false);
++    unit.spawnTime = t - 20000;
++    unit.trainedTime = t;
++    return unit;
++  };
++  // WC3V trained two footmen, at 1:00 and at 2:00
++  const first = trained('hfoo', 60000);
++  const second = trained('hfoo', 120000);
++  const player = { id: 1, units: [first, second], eventTimer, startingPosition: { x: 0, y: 0 } };
++  const L = new SelectionLedger();
++  // a handle allocated after the first footman's is listed at 3:00, so both were made by then
++  L.preSubselection(1, 180000, 30, 3000);
++  L.selectionChange(1, 180000, SELECT, [u(30, 3000), u(31, 3100)]);
++  L.selectSubgroup(1, 180000, 'hfoo', 30, 3000);
++  L.order(1, 181000, 0xD0003);
++  // the first footman's own handle is first listed later still
++  L.preSubselection(1, 300000, 20, 2000);
++  L.selectionChange(1, 300000, SELECT, [u(20, 2000), u(30, 3000)]);
++  L.order(1, 301000, 0xD0003);
++  new SelectionEvidence({ selectionLedger: L, players: { 1: player } }).run();
++  assert.strictEqual(first.selectionLife.handle, '20/2000');
++  assert.strictEqual(second.selectionLife.handle, '30/3000');
++  // out by 3:00 at the latest, so about 2:30, not WC3V's 1:00 and 2:00
++  assert.strictEqual(first.trainedTime, 150000);
++  assert.strictEqual(second.trainedTime, 150000);
++});
++
++check('without PreSubselection lists training times stay as WC3V has them', () => {
++  const eventTimer = new EventTimer();
++  const unit = new Unit(eventTimer, null, null, 'hfoo', false);
++  unit.spawnTime = 40000;
++  unit.trainedTime = 60000;
++  const player = { id: 1, units: [unit], eventTimer, startingPosition: { x: 0, y: 0 } };
++  const L = new SelectionLedger();
++  L.selectionChange(1, 300000, SELECT, [u(20, 2000), u(21, 2100)]);
++  L.selectSubgroup(1, 300000, 'hfoo', 20, 2000);
++  L.order(1, 301000, 0xD0003);
++  new SelectionEvidence({ selectionLedger: L, players: { 1: player } }).run();
++  assert.strictEqual(unit.selectionLife.handle, '20/2000');
++  assert.strictEqual(unit.trainedTime, 60000);
++});
++
+ if (failures) {
+   console.log(`\n${failures} failure(s)`);
+   process.exit(1);
+-- 
+2.56.0
+

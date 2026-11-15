@@ -1,0 +1,151 @@
+From 03a6672963832c093b2f9373f495213df1f5885f Mon Sep 17 00:00:00 2001
+From: bubunuh <76405364+bubunuh@users.noreply.github.com>
+Date: Sat, 14 Nov 2026 19:02:28 +0100
+Subject: [PATCH 6/8] Death inference: a worker an enemy went for and never
+ listed again died there
+
+Workers killed in raids stayed alive to the end of the game: the death
+inference takes nothing from a worker's selection lists or its silence,
+because a worker leaves the lists for good while it mines (inside the mine,
+in a burrow) and nobody selects it again. On the recorded games WC3V booked
+581 of the 1,301 worker deaths, and its worker count drifted up with the
+game: +4 workers on average between 20 and 30 minutes, +10 after 30.
+
+What the replay does say is who went for a unit: an order another player
+aims at it (an attack, a spell) is a sighting the ledger now tells from the
+owner's own. A worker whose last sighting is such an order, and that no
+list names again in the 30 s or more left of the game, died there.
+
+Recorded games (90, 180 player-games): worker count error 1.8 -> 1.6
+(Human 2.6 -> 2.3, Orc 1.1 -> 1.0, Undead 1.3 -> 1.0, Night Elf 1.9 -> 1.9);
+by phase 1.3 / 1.8 / 4.6 / 10.0 -> 1.2 / 1.6 / 3.5 / 7.0 (0-10, 10-20,
+20-30, 30+ minutes). Worker deaths booked 581 -> 782; matched against the
+game's own counts, about 4 of 5 of the new ones are real. Army numbers
+do not move.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ lib/DeathInference.js                   | 20 +++++++
+ tests/death-inference-selection.test.js | 72 +++++++++++++++++++++++++
+ 2 files changed, 92 insertions(+)
+ create mode 100644 tests/death-inference-selection.test.js
+
+diff --git a/lib/DeathInference.js b/lib/DeathInference.js
+index fb060a3..f5d8a28 100644
+--- a/lib/DeathInference.js
++++ b/lib/DeathInference.js
+@@ -36,6 +36,9 @@ const LOST_MS = 120 * 1000;         // silent this long → lost (last resort)
+ // A unit the selection lists track and that they haven't named for this long:
+ // players list their army many times a minute, so it is gone.
+ const LISTED_LOST_MS = 60 * 1000;
++// A worker last seen as another player's target and not listed for this long
++// after it (up to the end of the game) died there.
++const TARGETED_WORKER_MS = 30 * 1000;
+ // A death the lists show this close to a battle of the owner's is one of its losses.
+ const BATTLE_DEATH_SLACK_MS = 10 * 1000;
+ 
+@@ -172,6 +175,23 @@ class DeathInference {
+       };
+     }
+ 
++    // 1c. A worker another player aimed an order at (an attack, a spell) and
++    //     that the lists never show again: the raid killed it. A worker's
++    //     silence alone says nothing (it works out of the lists for good), but
++    //     the last thing the replay saw of this one was an enemy going for it.
++    if (life && isWorker && life.lastKind === 'target' &&
++        this._gameEndTime() - life.last >= TARGETED_WORKER_MS) {
++      return {
++        state: 'possiblyLost',
++        since: life.last,
++        confidence: 60,
++        source: 'selection',
++        killedInBattleId: null,
++        killerPlayerIds: null,
++        xpAwarded: null
++      };
++    }
++
+     const lastSample = (unit.path && unit.path.length)
+       ? unit.path[unit.path.length - 1]
+       : null;
+diff --git a/tests/death-inference-selection.test.js b/tests/death-inference-selection.test.js
+new file mode 100644
+index 0000000..2a6b539
+--- /dev/null
++++ b/tests/death-inference-selection.test.js
+@@ -0,0 +1,72 @@
++/*
++ * death-inference-selection.test.js — pure unit tests for what DeathInference
++ * makes of the selection lists (unit.selectionLife, selectionUnlisted), on
++ * hand-made units; no replay needed.
++ *
++ * Run: `node tests/death-inference-selection.test.js`
++ */
++
++const assert = require('assert');
++const DeathInference = require('../lib/DeathInference');
++
++let failures = 0;
++function check (label, fn) {
++  try {
++    fn();
++    console.log(`  ✓ ${label}`);
++  } catch (err) {
++    failures++;
++    console.log(`  ✗ ${label}`);
++    console.log(`    ${err.message}`);
++  }
++}
++
++const GAME_END = 600000;
++
++// a unit as DeathInference reads it; `end` keeps the game running to GAME_END
++function unit (itemId, extra = {}) {
++  return {
++    uuid: `${itemId}-${Math.random()}`,
++    itemId,
++    meta: { worker: ['hpea', 'opeo', 'uaco', 'ewsp'].includes(itemId), hero: false },
++    spawnTime: 10000,
++    trainedTime: 25000,
++    path: [{ x: 0, y: 0, gameTime: 25000 }],
++    ...extra
++  };
++}
++
++function run (units, battles = []) {
++  const clock = unit('hfoo', { path: [{ x: 0, y: 0, gameTime: GAME_END }], selectionLife: { last: GAME_END, recallsListed: true } });
++  const pm = { players: { 1: { id: 1, units: [clock, ...units] } }, world: { battles } };
++  new DeathInference(pm).run();
++  return units.map(u => u.lostState);
++}
++
++const life = (last, lastKind, extra = {}) => ({ handle: '1/1', recallsListed: true, first: 30000, last, lastKind, death: null, ...extra });
++
++console.log('[workers]');
++
++check('a worker last seen as an enemy target and never listed again died there', () => {
++  const [ls] = run([unit('hpea', { selectionLife: life(300000, 'target') })]);
++  assert.strictEqual(ls.state, 'possiblyLost');
++  assert.strictEqual(ls.since, 300000);
++  assert.strictEqual(ls.source, 'selection');
++});
++
++check('not when its owner aimed the order, nor when the lists name it later', () => {
++  const [own, seen] = run([
++    unit('hpea', { selectionLife: life(300000, 'ownTarget') }),
++    unit('hpea', { selectionLife: life(300000, 'presub') })
++  ]);
++  assert.notStrictEqual(own.state, 'possiblyLost');
++  assert.notStrictEqual(seen.state, 'possiblyLost');
++});
++
++check('not in the last seconds of the game: the replay may stop before the list that shows it', () => {
++  const [ls] = run([unit('hpea', { selectionLife: life(GAME_END - 10000, 'target') })]);
++  assert.notStrictEqual(ls.state, 'possiblyLost');
++});
++
++console.log(failures ? `\n${failures} failed` : '\nall passed');
++process.exit(failures ? 1 : 0);
+-- 
+2.56.0
+

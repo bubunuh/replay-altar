@@ -1,0 +1,87 @@
+From 0524376b388400064f6a845d7b81c720631f0bdc Mon Sep 17 00:00:00 2001
+From: bubunuh <76405364+bubunuh@users.noreply.github.com>
+Date: Sat, 14 Nov 2026 19:01:55 +0100
+Subject: [PATCH 5/8] Selection ledger: tell a click by another player from one
+ by the owner
+
+An order aimed at a unit shows it alive, whoever gave it, and the ledger
+kept such a sighting as lastKind 'target'. Who aimed it says more: another
+player aiming at a unit is, nearly always, an attack or a spell on it; its
+owner aiming at it is a heal, a repair, a follow. The sighting now keeps
+'target' for the first and 'ownTarget' for the second, so that the death
+inference can read "the last thing seen of this unit was an enemy going
+for it". Nothing else reads lastKind; no death or sighting changes.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ lib/SelectionLedger.js         | 12 ++++++++----
+ tests/selection-ledger.test.js | 14 ++++++++++++++
+ 2 files changed, 22 insertions(+), 4 deletions(-)
+
+diff --git a/lib/SelectionLedger.js b/lib/SelectionLedger.js
+index b4b27bc..1d751cd 100644
+--- a/lib/SelectionLedger.js
++++ b/lib/SelectionLedger.js
+@@ -8,7 +8,8 @@
+  * (the objectId pair that names a unit in every action) that gives:
+  *
+  *   alive    every list that names a handle shows the unit alive at that moment;
+- *            so does a click on it (an order targeting it, by anyone);
++ *            so does a click on it (an order targeting it, by anyone; lastKind
++ *            'target' when another player aimed it, 'ownTarget' its owner);
+  *   died     a deselect the game made by itself — alone, with no select after it
+  *            in the same tick, of a handle that is never listed again — is the
+  *            game taking a unit that just died out of the selection: the death
+@@ -377,7 +378,7 @@ class SelectionLedger {
+       list.sort((a, b) => (b.h.orders - a.h.orders) || (b.h.multi - a.h.multi) ||
+         (b.h.seen - a.h.seen) || (a.h.first - b.h.first));
+       const own = list[0].h;
+-      owned.set(k, own);
++      owned.set(k, { h: own, pl: list[0].pl });
+       for (const other of list.slice(1)) {
+         this._seenBy(own, other.h.last, 'other');
+         own.first = Math.min(own.first, other.h.first);
+@@ -385,10 +386,13 @@ class SelectionLedger {
+       }
+     }
+ 
++    // An order aimed at a unit shows it alive. Aimed by another player
++    // ('target'): an attack or a spell on it, most of the time; by its owner
++    // ('ownTarget'): a heal, a repair, a follow.
+     for (const pl of players.values()) {
+       for (const { t, k } of pl.targets) {
+-        const h = owned.get(k);
+-        if (h) this._seenBy(h, t, 'target');
++        const own = owned.get(k);
++        if (own) this._seenBy(own.h, t, own.pl === pl ? 'ownTarget' : 'target');
+       }
+     }
+   }
+diff --git a/tests/selection-ledger.test.js b/tests/selection-ledger.test.js
+index 96e737d..036c5f0 100644
+--- a/tests/selection-ledger.test.js
++++ b/tests/selection-ledger.test.js
+@@ -257,6 +257,20 @@ check('an attack aimed at a unit counts as a sighting of it', () => {
+   assert.strictEqual(handleOf(L, 1, A).death, null);
+ });
+ 
++check('a click by another player is a target, one by the owner an ownTarget', () => {
++  const L = new SelectionLedger();
++  L.selectionChange(1, 1000, SELECT, [A, B]);
++  L.selectionChange(1, 2000, DESELECT, [A, B]);
++  L.selectionChange(1, 2000, SELECT, [C]);
++  L.order(1, 3000, 0xD0003, 101, 1010, true);       // the owner aims at B (a heal, a follow)
++  L.selectionChange(2, 3000, SELECT, [D, E]);
++  L.order(2, 4000, 0xD000F, 100, 1000, true);       // the enemy attacks A
++  L.resolve();
++  assert.strictEqual(handleOf(L, 1, A).lastKind, 'target');
++  assert.strictEqual(handleOf(L, 1, B).lastKind, 'ownTarget');
++  assert.strictEqual(handleOf(L, 1, B).last, 3000);
++});
++
+ check('the last order of the selection is kept per handle, with its work flag', () => {
+   const L = new SelectionLedger();
+   L.selectionChange(1, 1000, SELECT, [A, B]);
+-- 
+2.56.0
+
