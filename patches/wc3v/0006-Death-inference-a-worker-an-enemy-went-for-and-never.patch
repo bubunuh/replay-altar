@@ -1,4 +1,4 @@
-From 03a6672963832c093b2f9373f495213df1f5885f Mon Sep 17 00:00:00 2001
+From 1a4f4c2d05715df160dbd2149226f02bd2776131 Mon Sep 17 00:00:00 2001
 From: bubunuh <76405364+bubunuh@users.noreply.github.com>
 Date: Sat, 14 Nov 2026 19:02:28 +0100
 Subject: [PATCH 6/8] Death inference: a worker an enemy went for and never

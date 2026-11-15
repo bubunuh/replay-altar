@@ -19,8 +19,6 @@ Replay Altar is a Warcraft III: Reforged replay analyzer for 1v1 players. It run
 - **Private and local.** Everything runs on your computer, with no account. In English, Brazilian Portuguese, Spanish and French.
 - **Windows and Linux.** A Windows installer, and for Linux a single AppImage file.
 
-<a href="https://buymeacoffee.com/bubunuh"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" height="48"></a>
-
 ![The report of a won game: result, heroes, the main numbers against the opponent, the map, and the findings: what went well first, then the problems with advice](docs/images/report.png)
 
 Your games stay on your computer. Replay Altar fetches only two things from the internet, and Settings can turn off either: the result and the game's own end-of-game statistics for your W3Champions games (a few small requests per game, one game at a time; they carry both battletags), and once a day the list of Replay Altar releases from GitHub, to tell you when a new version is out. The pro statistics come with the app, and no maps are shipped: each game's map is read from your own copy. See the [privacy policy](PRIVACY.md).
@@ -259,6 +257,8 @@ Replay Altar stands on other people's work, all of it freely available.
 - Grubby (GrubbyTalks on YouTube, [followgrubby.com](https://followgrubby.com)): the beginner series and race guides, and the build orders shared on his Discord.
 - [Vortix](https://www.youtube.com/channel/UC4MGzV7ahAN1khnzdjp3rkw): commented games and general tips.
 - carsoNNN's creeping guides, Back2Warcraft, warcraft3.info's "How To Basic" race guides, StrategyWiki, and Blizzard's Warcraft III basics pages.
+
+<a href="https://buymeacoffee.com/bubunuh"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" height="48"></a>
 
 ## License
 
