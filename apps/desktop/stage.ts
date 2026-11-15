@@ -20,7 +20,7 @@ export const version = JSON.parse(readFileSync(join(desktop, "package.json"), "u
 /** Stages everything for `platform`; `extractor` is that system's built casc-extract (scripts/casc/bin). */
 export async function stageApp(extractor: string, platform: "win32" | "linux") {
   rmSync(stage, { recursive: true, force: true });
-  // Replay Altar's fixes to WC3V (patches/wc3v), so this build simulates like every other copy.
+  // Replay Altar's patches to WC3V, if any (patches/wc3v), so this build simulates like every other copy.
   execFileSync(process.execPath, [join(root, "scripts/patch-wc3v.ts")], { stdio: "inherit" });
   execFileSync(process.execPath, [join(desktop, "build.ts")], { stdio: "inherit" });
 

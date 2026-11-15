@@ -4,3 +4,6 @@ out/
 apps/desktop/out/
 scripts/casc/bin/
 scripts/observer/__pycache__/
+
+# Claude Code per-user settings (may contain approved commands)
+.claude/settings.local.json

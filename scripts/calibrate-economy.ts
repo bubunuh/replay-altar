@@ -1,6 +1,11 @@
 // Calibrates the income model's gold mining rate.
 //
-//   node scripts/calibrate-economy.ts [--write]
+//   node scripts/calibrate-economy.ts [--gold <rate>] [--write]
+//
+// Since 0.2.6 the rate comes from the recorded games (scripts/observer/income-check.ts --fit:
+// the model's gold mined against the game's own, at 5 and 10 minutes) and is passed with --gold;
+// this script then only reports how the end-of-game estimate compares with W3Champions' numbers
+// and fits the units-killed factor. Without --gold:
 //
 // Preferred method: fit to the game's own "gold collected" (W3Champions score sheets, for your
 // W3C games and the reference games): pick the rate at which the model's end-of-game gold
@@ -63,13 +68,15 @@ function bisect(f: (g: number) => number, target: number) {
 const official = samples.filter((s) => s.official !== null && s.official > 0);
 let gold: number;
 let calibration: Record<string, unknown>;
-if (official.length >= MIN_OFFICIAL) {
-  gold = bisect((g) => median(official.map((s) => endGold(s, withGold(g)) / s.official!)), 1);
+const given = process.argv.includes("--gold") ? Number(process.argv[process.argv.indexOf("--gold") + 1]) : null;
+if (given !== null || official.length >= MIN_OFFICIAL) {
+  gold = given ?? bisect((g) => median(official.map((s) => endGold(s, withGold(g)) / s.official!)), 1);
   const k = withGold(gold);
   const errs = official.map((s) => Math.abs(endGold(s, k) - s.official!) / s.official!);
   const ratioFor = (pred: (s: Sample) => boolean) => median(official.filter(pred).map((s) => endGold(s, k) / s.official!));
   calibration = {
-    method: "median end-of-game estimate = official gold collected (W3Champions score sheets)",
+    method: given !== null ? "gold mined of the recorded games at 5 and 10 minutes (scripts/observer/income-check.ts --fit); checked against official gold collected" : "median end-of-game estimate = official gold collected (W3Champions score sheets)",
+    medianRatioOfficial: Math.round(median(official.map((s) => endGold(s, k) / s.official!)) * 100) / 100,
     playerGames: official.length,
     medianAbsError: Math.round(median(errs) * 1000) / 1000,
     medianRatioUnder15Min: Math.round(ratioFor((s) => s.minutes < 15) * 100) / 100,

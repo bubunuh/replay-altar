@@ -46,7 +46,7 @@ const hero = (code: string, firstPickMs: number, orderedMs?: number | null) => (
 describe("heroes in the spending", () => {
   test("the heroes a player had are priced when ordered, the first one free", () => {
     const s = spendFromOrders([ev(300_000, "unit", "hfoo")], FAKE, [hero("Hamg", 120_000, 64_000), hero("Hmkg", 480_000, 410_000)]);
-    expect(s).toEqual([{ t: 300_000, gold: 135, lumber: 0 }, { t: 410_000, gold: 425, lumber: 100 }]);
+    expect(s).toEqual([{ t: 300_000, gold: 135, lumber: 0, unit: true }, { t: 410_000, gold: 425, lumber: 100 }]);
   });
   test("without the order time (older records), a hero is priced its training time before its first skill", () => {
     expect(spendFromOrders([], FAKE, [hero("Hamg", 120_000), hero("Npal", 500_000, null)])).toEqual([{ t: 445_000, gold: 425, lumber: 100 }]);
@@ -152,6 +152,13 @@ describe("income model", () => {
     const last = runIncome(base({ spend: [{ t: 50_000, gold: 300, lumber: 20 }] }), k).series.at(-1)!;
     expect(last.estGoldBank).toBe(CONSTANTS.startGold + 1000 - 300);
     expect(last.estLumberBank).toBe(CONSTANTS.startLumber - 20);
+  });
+  test("a unit order the gold can't pay for is refused; buildings are not", () => {
+    // 500 at the start, 10 per second: at 10 s 600 in the bank.
+    const spend = [{ t: 10_000, gold: 400, lumber: 0, unit: true }, { t: 10_000, gold: 300, lumber: 0, unit: true }, { t: 10_000, gold: 300, lumber: 0 }];
+    const { series, refused } = runIncome(base({ spend }), k);
+    expect(refused).toBe(1);
+    expect(series.at(-1)!.goldSpent).toBe(700);
   });
 });
 

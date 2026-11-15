@@ -22,6 +22,13 @@ OBS = os.path.join(bc.DATA, "observer")
 ME = "Pedrovisk"
 
 
+def number(entry):
+    """The game's number within its batch: the file name's first two characters, or the digits of its
+    first word (download-mixed.ts names them zq01_, zq02_, ...)."""
+    word = entry["file"].split("_")[0]
+    return word[2:] if word.startswith("zq") else entry["file"][:2]
+
+
 def recordings(batch, manifest, skip):
     """Each recording to its game (map and players); a replay watched twice keeps its longest one."""
     best = {}
@@ -36,7 +43,7 @@ def recordings(batch, manifest, skip):
             print(f"{batch}/{os.path.basename(rec_file)}: no matching game in the manifest")
             continue
         entry = min(matches, key=lambda e: abs(e["dur"] * 60_000 - samples[-1]["game"]["t"]))
-        if entry["file"][:2] in skip:
+        if number(entry) in skip:
             continue
         # A player who left (the last seconds of most games) or a glitched snapshot shows no units and
         # no heroes at all; those snapshots aren't the game's state. The first ones are the game start.
@@ -81,7 +88,7 @@ def main():
             if r["classification"].get("replayProblem"):
                 print(f"{batch}/{entry['file']}: damaged replay ({r['classification']['replayProblem']}), the game played it wrong; skipped")
                 continue
-            gid = f"{batch}-{entry['file'][:2]}"
+            gid = f"{batch}-{number(entry)}"
             d = os.path.join(out, gid)
             os.makedirs(d, exist_ok=True)
             shutil.copyfile(r["provenance"]["archivePath"], os.path.join(d, "replay.w3g"))

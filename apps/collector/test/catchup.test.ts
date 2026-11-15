@@ -50,7 +50,7 @@ describe.skipIf(!have)("catch-up at start", () => {
     applyOfficial(ctx, keys[4], stats());
     const ended = [now - 120 * MIN, now - 17 * MIN, now - 3 * MIN, now - 30 * 24 * 60 * MIN, now - 10 * MIN];
     // The fixtures aren't all W3Champions games: what the start (settleW3cResults) makes of these.
-    keys.forEach((k, i) => db.prepare("UPDATE games SET source = 'w3champions', analyzed = 1, result_detected = 'reviewing', ended_at = ? WHERE game_key = ?").run(iso(ended[i]), k));
+    keys.forEach((k, i) => db.prepare("UPDATE games SET source = 'w3champions', analyzed = 1, category = '1v1_human', opp_name = 'x', result_detected = 'reviewing', result_method = 'w3champions', ended_at = ? WHERE game_key = ?").run(iso(ended[i]), k));
 
     const q = new OfficialQueue(ctx, () => {});
     const added: [string, number, number][] = [];
@@ -66,11 +66,13 @@ describe.skipIf(!have)("catch-up at start", () => {
     ]);
 
     // Found with the winner: done. Not found, tries left but older than the catch-up window: given
-    // up (final, so Unknown), without asking. Not reviewing: not looked at.
+    // up (final, so Unknown), without asking. With W3Champions' result: not looked at. With the
+    // replay's result only: still looked up (W3Champions' is the authority).
     applyOfficial(ctx, keys[4], stats(true));
     db.prepare("UPDATE games SET ended_at = ? WHERE game_key = ?").run(iso(now - CATCH_UP_MS - MIN), keys[1]);
     db.prepare("UPDATE games SET result_detected = 'reviewing' WHERE game_key IN (?, ?)").run(keys[1], keys[4]);
     db.prepare("UPDATE games SET result_detected = 'win' WHERE game_key = ?").run(keys[0]);
+    db.prepare("UPDATE games SET result_detected = 'loss', result_method = 'flo_saver_won' WHERE game_key = ?").run(keys[2]);
     added.length = 0;
     expect(q.catchUp(now)).toBe(2);
     expect(added.map(([k]) => k)).toEqual([keys[2], keys[3]]);
@@ -126,8 +128,12 @@ describe("the line the catch-up joins", () => {
 });
 
 describe.skipIf(!have)("a lookup sets who won", () => {
-  /** replay1 (a W3Champions 1v1 of Pedrovisk#1486) as the collector stores it, ended `agoMs` ago. */
-  async function game(agoMs: number) {
+  /**
+   * replay1 (a W3Champions 1v1 of Pedrovisk#1486) as the collector stores it, ended `agoMs` ago.
+   * `silent` (default): as if the replay had no leave record, so it doesn't say who won (replay1's
+   * says Pedrovisk#1486 did). `iWon`: what W3Champions says.
+   */
+  async function game(agoMs: number, { silent = true, iWon = true } = {}) {
     const p = paths();
     const ctx = { db: openDb(p.db), config: { ...DEFAULT_CONFIG, accounts: ["Pedrovisk#1486"] }, paths: p, w3cResults: "lookup" as const };
     mkdirSync(join(p.root, "inbox"), { recursive: true });
@@ -139,12 +145,16 @@ describe.skipIf(!have)("a lookup sets who won", () => {
     const endedAt = Date.now() - agoMs;
     r.game.endedAt = new Date(endedAt).toISOString();
     r.game.playedAt = new Date(endedAt - r.game.durationMs).toISOString();
+    if (silent) {
+      r.result = { winnerTeamId: null, method: "w3champions", confidence: "none", me: "reviewing", evidence: "looking it up on W3Champions", replay: { winnerTeamId: null, method: "none", confidence: "none", me: "unknown", evidence: "" } };
+      ctx.db.prepare("UPDATE games SET result_detected = 'reviewing', result_method = 'w3champions' WHERE game_key = ?").run(r.gameKey);
+    }
     writeFileSync(join(p.games, `${r.gameKey}.json`), JSON.stringify(r));
     const me = r.players.find((x) => x.isMe)!;
     const opp = r.players.find((x) => !x.isMe)!;
     const match = (id: string): W3cMatch => ({
       id, map: "x", startTime: r.game.playedAt, durationInSeconds: 600, gateWay: 20, season: 25, gameMode: 1,
-      teams: [{ won: true, players: [{ battleTag: me.name, race: 1, oldMmr: 1500, won: true }] }, { won: false, players: [{ battleTag: opp.name, race: 2, oldMmr: 1500, won: false }] }],
+      teams: [{ won: iWon, players: [{ battleTag: me.name, race: 1, oldMmr: 1500, won: iWon }] }, { won: !iWon, players: [{ battleTag: opp.name, race: 2, oldMmr: 1500, won: !iWon }] }],
     });
     const score = (battleTag: string): W3cScore => ({ battleTag, unitScore: { unitsProduced: 1, unitsKilled: 1, largestArmy: 1 }, heroScore: { heroesKilled: 0, itemsObtained: 0, mercsHired: 0, expGained: 1 }, resourceScore: { goldCollected: 1, lumberCollected: 1, goldUpkeepLost: 0 } });
     const calls: string[] = [];
@@ -156,11 +166,12 @@ describe.skipIf(!have)("a lookup sets who won", () => {
       searchPlayerMatches: async (q) => (calls.push(`search ${q.gateway} ${q.season}`), listed && q.gateway === 20 && q.season === 25 ? [match("found")] : []),
       matchDetail: async (id) => (calls.push(`match ${id}`), { match: match(id), playerScores: [score(me.name), score(opp.name)] }),
     };
-    const q = new OfficialQueue(ctx, () => {});
+    const log: string[] = [];
+    const q = new OfficialQueue(ctx, (m) => void log.push(m));
     (q as unknown as { client: W3cClient }).client = client;
     const lookup = (attempt: number) => (q as unknown as { lookup: (k: string, a: number) => Promise<Outcome> }).lookup(r.gameKey, attempt);
     const result = () => (ctx.db.prepare("SELECT result FROM v_games WHERE game_key = ?").get(r.gameKey) as { result: string }).result;
-    return { ctx, key: r.gameKey, calls, lookup, result, unlist: () => (listed = false) };
+    return { ctx, key: r.gameKey, calls, log, lookup, result, unlist: () => (listed = false) };
   }
 
   test("found: W3Champions' winner", async () => {
@@ -187,6 +198,32 @@ describe.skipIf(!have)("a lookup sets who won", () => {
     g.unlist();
     expect(await g.lookup(0)).toBe("done");
     expect(g.result()).toBe("unknown");
+  });
+
+  test("the replay says who won: its result at once, then W3Champions'", async () => {
+    const g = await game(2 * MIN, { silent: false });
+    expect(g.result()).toBe("win");
+    expect(await g.lookup(0)).toBe("done");
+    expect(g.result()).toBe("win");
+    expect(g.log.some((m) => m.includes("differs"))).toBe(false);
+  });
+
+  test("the replay and W3Champions disagree: W3Champions' result stands", async () => {
+    const other = await game(2 * MIN, { silent: false, iWon: false });
+    expect(other.result()).toBe("win");
+    expect(await other.lookup(0)).toBe("done");
+    expect(other.result()).toBe("loss"); // W3Champions' stands
+    expect(other.log.filter((m) => m.includes("differs"))).toEqual([expect.stringMatching(/^W3Champions result for [0-9a-f]{8} differs from the replay's: W3Champions says team 0 won, the replay team 1 \(first_leaver_lost: player 1 left reason=07000000/)]);
+  });
+
+  test("the replay says who won and W3Champions doesn't list the game (a private game): the replay's result stays", async () => {
+    const g = await game(2 * MIN, { silent: false });
+    g.unlist();
+    expect(await g.lookup(0)).toBe("retry");
+    expect(await g.lookup(1)).toBe("retry");
+    expect(await g.lookup(2)).toBe("done");
+    expect(g.result()).toBe("win");
+    expect(readRecord(paths(), g.key)!.result).toMatchObject({ method: "first_leaver_lost", confidence: "medium" });
   });
 
   test("statistics from before 0.2.5: only the match is fetched again, for who won", async () => {

@@ -121,8 +121,29 @@ function tolerateTruncation(replay: W3GReplay): { cut: boolean } {
   return state;
 }
 
+/**
+ * Since game build 6116 (patch 2.0.2) the game data uses the newer action layout (ids above 0x77
+ * moved up by one), but w3gjs only reads it that way when the player metadata carries a 0x38
+ * record. The game's own copy of a W3Champions game, and games against the computer or in custom
+ * lobbies, have none: read the old way, each 0x7a (16 bytes) was skipped as 20, which broke the
+ * rest of that command block, and with it nearly every train and research order (an 18-worker
+ * Human read as 5-9 workers). Of 3,762 replays checked (one player's, the validation set, the
+ * recordings; the 832 pro and review replays all carry the record), 43 of builds 7000-7003 have
+ * none: 42 were misread, none is now, and no other replay reads differently. Build 6115 has both
+ * layouts, and its record says which.
+ */
+export const NEW_ACTION_LAYOUT_BUILD = 6116;
+export function readNewLayoutByBuild(replay: W3GReplay) {
+  const internals = replay.parser as unknown as { on: (e: string, f: (info: { subheader?: { buildNo?: number } }) => void) => void; gameDataParser: { parse: (data: unknown, post202?: boolean) => Promise<unknown> } };
+  let build = 0;
+  internals.on("basic_replay_information", (info) => (build = info.subheader?.buildNo ?? 0));
+  const parse = internals.gameDataParser.parse.bind(internals.gameDataParser);
+  internals.gameDataParser.parse = (data, post202) => parse(data, post202 || build >= NEW_ACTION_LAYOUT_BUILD);
+}
+
 export async function parseReplay(buffer: Buffer): Promise<RawReplay> {
   const replay = new W3GReplay();
+  readNewLayoutByBuild(replay);
   const actions = actionCollector();
   replay.on("gamedatablock", actions.onBlock);
   const truncation = tolerateTruncation(replay);

@@ -1,0 +1,100 @@
+From af95e18965e5677bdb49fa1ec96b4900bdb5fafe Mon Sep 17 00:00:00 2001
+From: bubunuh <76405364+bubunuh@users.noreply.github.com>
+Date: Wed, 11 Nov 2026 16:56:22 +0100
+Subject: [PATCH 3/3] Selection ledger: without PreSubselection, a deselect of
+ several units narrows the selection
+
+A player who presses a hero's key, or clicks one portrait of the selection,
+keeps that unit and drops the rest. Replays with PreSubselection lists say so
+(the list names who stays). Replays without them (a player's own saved games
+among them) only carry the deselect of everybody else, with no select after
+it, which is also how the game takes a dead unit out of the selection. The
+ledger read it as that: every unit dropped this way and not listed again
+died on the spot. In the middle of a game the army is listed again soon; a
+player who does it in the last seconds lost the whole army (one recorded
+game: 8 Crypt Fiends 11 s before the end, army value 3625 -> 1310 while the
+game's own count stayed at 3860).
+
+The game takes dead units out one at a time, so in a replay without
+PreSubselection lists a deselect of several units at once is now a sighting
+of them and no death. On the 9 recorded games of the set that have such
+players (18 player-games) the army value error at the end of the game falls
+from 401 to 292; players whose actions come with the lists are untouched.
+
+Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>
+---
+ lib/SelectionLedger.js         | 13 ++++++++++---
+ tests/selection-ledger.test.js | 26 ++++++++++++++++++++++++++
+ 2 files changed, 36 insertions(+), 3 deletions(-)
+
+diff --git a/lib/SelectionLedger.js b/lib/SelectionLedger.js
+index b4724c2..b4b27bc 100644
+--- a/lib/SelectionLedger.js
++++ b/lib/SelectionLedger.js
+@@ -15,7 +15,9 @@
+  *            time, exact. A player's own shift-click removal of a unit never
+  *            selected again reads the same; nothing in the replay tells them apart.
+  *            Not the deselects that end a game: once a player has left, the game
+- *            clears the selection of everyone it is over for;
++ *            clears the selection of everyone it is over for. And not a deselect
++ *            of several units at once where the replay has no PreSubselection
++ *            lists: that is the player keeping only part of the selection;
+  *   died     a list that should hold a handle and doesn't — the recall of a group
+  *            it was in (PreSubselection lists the group as recalled), the
+  *            whole-selection deselect of a selection it was in, a group assigned
+@@ -241,8 +243,13 @@ class SelectionLedger {
+           // out a unit that died or was hidden.
+           const replace = pre !== null || selectFollows(q);
+           // The game's own clearing of the selection when the game is over
+-          // (_markClosing) took nobody out because they died.
+-          const alone = !replace && !e.closing;
++          // (_markClosing) took nobody out because they died. Nor did a
++          // deselect of several units at once in a replay without
++          // PreSubselection lists: there the player cut the selection down to
++          // some of its units (a hero's key, a click on a portrait), which
++          // with the lists comes with one naming who stays.
++          const narrowed = !pl.presub && e.keys.length > 1;
++          const alone = !replace && !e.closing && !narrowed;
+           for (const k of e.keys) this._see(pl, k, t, alone ? 'deselectAlone' : 'deselect');
+           if (!replace) {
+             for (const k of e.keys) pl.sel.delete(k);
+diff --git a/tests/selection-ledger.test.js b/tests/selection-ledger.test.js
+index fbfa903..96e737d 100644
+--- a/tests/selection-ledger.test.js
++++ b/tests/selection-ledger.test.js
+@@ -149,6 +149,32 @@ check('a shift-add naming some companions is no full list for the peer rule', ()
+   assert.strictEqual(handleOf(L, 1, A).death, null);
+ });
+ 
++check('without PreSubselection, a deselect of several units at once narrows the selection', () => {
++  const L = new SelectionLedger();
++  L.selectionChange(1, 1000, SELECT, [A, B, C, D]);
++  // the hero's key: everything but the hero leaves the selection, nothing is selected
++  L.selectionChange(1, 5000, DESELECT, [B, C, D]);
++  L.selectSubgroup(1, 5000, 'Hpal', A.itemId1, A.itemId2);
++  L.resolve();
++  for (const x of [B, C, D]) {
++    assert.strictEqual(handleOf(L, 1, x).death, null);
++    assert.strictEqual(handleOf(L, 1, x).last, 5000);
++  }
++});
++
++check('with PreSubselection, units the game deselects together died together', () => {
++  const L = new SelectionLedger();
++  L.preSubselection(1, 1000, A.itemId1, A.itemId2);
++  L.preSubselection(1, 1000, B.itemId1, B.itemId2);
++  L.preSubselection(1, 1000, C.itemId1, C.itemId2);
++  L.selectionChange(1, 1000, SELECT, [A, B, C]);
++  L.selectionChange(1, 5000, DESELECT, [B, C]);
++  L.resolve();
++  assert.deepStrictEqual(handleOf(L, 1, B).death, { at: 5000, from: 5000, kind: 'deselected' });
++  assert.deepStrictEqual(handleOf(L, 1, C).death, { at: 5000, from: 5000, kind: 'deselected' });
++  assert.strictEqual(handleOf(L, 1, A).death, null);
++});
++
+ check('adding the selection to a group lists the whole group; the selection stays', () => {
+   const L = new SelectionLedger();
+   L.selectionChange(1, 1000, SELECT, [A, B, C]);
+-- 
+2.56.0
+

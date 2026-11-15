@@ -64,7 +64,8 @@ export type EconomyConstants = {
 };
 
 // --- Timeline: everything the income model needs, independent of its constants -----------
-type Amount = { t: number; gold: number; lumber: number };
+/** `unit`: a train order, which the game refuses when the player can't pay for it (see runIncome). */
+type Amount = { t: number; gold: number; lumber: number; unit?: boolean };
 type Mine = { activeFrom: number; until: number };
 export type Timeline = {
   playerId: number;
@@ -152,7 +153,7 @@ export function spendFromOrders(build: GameRecord["players"][number]["build"], c
         const p = costOf(costs, parent);
         spend.push({ t: b.ms, gold: Math.max(0, c.gold - p.gold), lumber: Math.max(0, c.lumber - p.lumber) });
       } else {
-        spend.push({ t: b.ms, gold: c.gold, lumber: c.lumber });
+        spend.push({ t: b.ms, gold: c.gold, lumber: c.lumber, ...(b.kind === "unit" && !c.isHero ? { unit: true } : {}) });
       }
     }
   }
@@ -221,8 +222,9 @@ export function buildTimelines(o: WOutput, record: GameRecord, costs: CostTables
             return { t, used: u, max: Math.max(u, stepAt(supply, t).max) };
           })
       : [];
+    // A few events (5 of 7,000 player-games) carry no worker total; those are skipped.
     const workers = events
-      .filter((e) => e.workers)
+      .filter((e) => typeof e.workers?.totalWorkers === "number")
       .map((e) => ({ t: e.gameTime, total: e.workers!.totalWorkers, onBuild: e.workers!.onBuild ?? 0, ghoulsOnLumber: e.workers!.ghoulsOnLumber ?? 0 }));
     const heroLevels = units
       .flatMap((u) => u.levelStream ?? [])
@@ -275,9 +277,14 @@ function stepAt<T extends { t: number }>(steps: T[], t: number): T {
   return steps[lo];
 }
 
-export type IncomeResult = { series: SimSample[]; perSecond: { gold: number; lumber: number; spentGold: number; spentLumber: number }[] };
+/** `refused`: unit orders the model took as refused for lack of gold. */
+export type IncomeResult = { series: SimSample[]; perSecond: { gold: number; lumber: number; spentGold: number; spentLumber: number }[]; refused: number };
 
-/** Second-by-second income model; returns 10 s samples plus the per-second banks used by calibration. */
+/**
+ * Second-by-second income model; returns 10 s samples plus the per-second banks used by calibration.
+ * A unit order the estimated gold can't pay for is taken as refused and not spent (the rate is
+ * fitted to the game's own gold mined, scripts/observer/income-check.ts).
+ */
 export function runIncome(tl: Timeline, k: EconomyConstants): IncomeResult {
   const seconds = Math.ceil(tl.endMs / 1000);
   const mineLeft = tl.mines.map(() => k.goldPerMine);
@@ -289,6 +296,7 @@ export function runIncome(tl: Timeline, k: EconomyConstants): IncomeResult {
   let lostLumber = 0;
   let si = 0;
   let li = 0;
+  let refused = 0;
   const series: SimSample[] = [];
   const perSecond: IncomeResult["perSecond"] = [];
 
@@ -316,9 +324,16 @@ export function runIncome(tl: Timeline, k: EconomyConstants): IncomeResult {
       lumberMined += lumberWorkers * k.lumberPerWorkerSecond[tl.race];
     }
     while (si < tl.spend.length && tl.spend[si].t <= t) {
-      spentGold += tl.spend[si].gold;
-      spentLumber += tl.spend[si].lumber;
-      si++;
+      const a = tl.spend[si++];
+      // The game takes the cost when a unit is queued and refuses the order when the gold isn't
+      // there; the replay keeps refused orders like any other. Without this the model ran short
+      // early (unspent gold read 0 in half the recorded player-games at 5:00).
+      if (a.unit && a.gold > 0 && k.startGold + goldMined - spentGold < a.gold) {
+        refused++;
+        continue;
+      }
+      spentGold += a.gold;
+      spentLumber += a.lumber;
     }
     while (li < tl.losses.length && tl.losses[li].t <= t) {
       lostGold += tl.losses[li].gold;
@@ -344,7 +359,7 @@ export function runIncome(tl: Timeline, k: EconomyConstants): IncomeResult {
       });
     }
   }
-  return { series, perSecond };
+  return { series, perSecond, refused };
 }
 
 /** Income estimates are only reported up to here (see economyMetrics). */

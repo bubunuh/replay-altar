@@ -1,0 +1,119 @@
+From 94693e89cd4c77532f32d3a9ff5dae500a08c601 Mon Sep 17 00:00:00 2001
+From: bubunuh <76405364+bubunuh@users.noreply.github.com>
+Date: Sat, 14 Nov 2026 19:03:50 +0100
+Subject: [PATCH 8/8] Death inference: a unit the lists never show never
+ existed, whatever a battle says
+
+A trained unit that the player's selection lists never name is an order
+the game refused or one that was cancelled: the death inference counts it
+from nowhere (possiblyLost since its training time). But the battle step
+came first, and such a unit often has a path, the one WC3V's stale copies
+of hotkey groups gave it, that takes it into fights; a battle outcome
+"possibly dead" at the end of one then kept it alive until that fight,
+sometimes for the rest of the game (one recorded game: a phantom Priest
+from 17:31 to 30:32, a Sorceress from 18:01 to 26:13).
+
+The unlisted check now runs before the battle outcomes. Recorded games,
+army value error 103 -> 98 (Human 100 -> 95, Orc 86 -> 83, Undead 122 ->
+112, Night Elf 103 -> 103; bands avg 97 -> 94, high 101 -> 95, low 116 ->
+113, pro 98 -> 92, the user's own 85 -> 84), unit type error 0.79 -> 0.76;
+by phase 39 / 200 / 334 / 480 -> 37 / 192 / 322 / 477 (0-10, 10-20, 20-30,
+30+ minutes).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ lib/DeathInference.js                   | 40 +++++++++++++------------
+ tests/death-inference-selection.test.js | 13 ++++++++
+ 2 files changed, 34 insertions(+), 19 deletions(-)
+
+diff --git a/lib/DeathInference.js b/lib/DeathInference.js
+index f5d8a28..921e055 100644
+--- a/lib/DeathInference.js
++++ b/lib/DeathInference.js
+@@ -214,7 +214,26 @@ class DeathInference {
+     const gameEnd = this._gameEndTime();
+     const silentFor = gameEnd - lastActivity;
+ 
+-    // 2. Was this unit in any battle? If yes, take the LATEST meaningful outcome.
++    // 2. A trained unit the player's selection lists never show, long after
++    //     it was due: most likely an order the game refused (no gold, no food)
++    //     or a cancelled one. Whatever path it has belongs to another unit, and
++    //     so do the fights that path took it to: it never existed, whatever a
++    //     battle's outcome says of it.
++    //     Not a ghoul its building's rally sent to the trees: it goes to work
++    //     without ever being selected.
++    if (unit.selectionUnlisted && !isWorker && unit.trainedTime != null &&
++        !unit.harvestConfident &&
++        gameEnd - unit.trainedTime >= LOST_MS) {
++      return {
++        state: 'possiblyLost',
++        since: unit.trainedTime,
++        confidence: 40,
++        source: 'unlisted',
++        killedInBattleId: null, killerPlayerIds: null, xpAwarded: null
++      };
++    }
++
++    // 3. Was this unit in any battle? If yes, take the LATEST meaningful outcome.
+     let bestOutcome = null;
+     let bestBattle = null;
+     if (battleEntries && battleEntries.length) {
+@@ -233,7 +252,7 @@ class DeathInference {
+       }
+     }
+ 
+-    // 3. If the latest battle marked them possiblyDead/expired AND they're
++    //    If the latest battle marked them possiblyDead/expired AND they're
+     //    still silent at game end, they're lost.
+     if (bestOutcome && (bestOutcome.status === 'possiblyDead' || bestOutcome.status === 'expired')) {
+       const confWeight = bestOutcome.confidence === 'high' ? 90
+@@ -272,23 +291,6 @@ class DeathInference {
+       // Got away — still moving after.
+     }
+ 
+-    // 3b. A trained unit the player's selection lists never show, long after
+-    //     it was due: most likely an order the game refused (no gold, no food)
+-    //     or a cancelled one. Whatever path it has belongs to another unit.
+-    //     Not a ghoul its building's rally sent to the trees: it goes to work
+-    //     without ever being selected.
+-    if (unit.selectionUnlisted && !isWorker && unit.trainedTime != null &&
+-        !unit.harvestConfident &&
+-        gameEnd - unit.trainedTime >= LOST_MS) {
+-      return {
+-        state: 'possiblyLost',
+-        since: unit.trainedTime,
+-        confidence: 40,
+-        source: 'unlisted',
+-        killedInBattleId: null, killerPlayerIds: null, xpAwarded: null
+-      };
+-    }
+-
+     // 4. No battle context — pure path-silence heuristic.
+     if (silentFor >= (tracked ? LISTED_LOST_MS : LOST_MS)) {
+       return {
+diff --git a/tests/death-inference-selection.test.js b/tests/death-inference-selection.test.js
+index 2a6b539..58ea71c 100644
+--- a/tests/death-inference-selection.test.js
++++ b/tests/death-inference-selection.test.js
+@@ -68,5 +68,18 @@ check('not in the last seconds of the game: the replay may stop before the list
+   assert.notStrictEqual(ls.state, 'possiblyLost');
+ });
+ 
++console.log('[unlisted]');
++
++check('a trained unit the lists never show never existed, even if a battle saw it die later', () => {
++  const ghost = unit('hfoo', { selectionUnlisted: true, path: [{ x: 0, y: 0, gameTime: 400000 }] });
++  const battle = {
++    id: 'b1', startTime: 390000, endTime: 400000, participants: [{ playerId: 1, unitUuids: [ghost.uuid] }],
++    unitOutcomes: [{ unitUuid: ghost.uuid, status: 'possiblyDead', lastSeenTime: 400000, confidence: 'high' }]
++  };
++  const [ls] = run([ghost], [battle]);
++  assert.strictEqual(ls.source, 'unlisted');
++  assert.strictEqual(ls.since, 25000);
++});
++
+ console.log(failures ? `\n${failures} failed` : '\nall passed');
+ process.exit(failures ? 1 : 0);
+-- 
+2.56.0
+
