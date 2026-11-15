@@ -9,7 +9,7 @@ Numbers below: 3,532 held-out player-games over the four races (1,765 wins, 1,76
 the curated current-patch pro games (warcraft3.info tournaments and W3Champions 2400+) pooled with
 the validation set's tournament games from 2022 to 2026 (older patches, players from semi-pro to
 the very top), all simulated again for 0.2.6 (2026-11-11: upstream WC3V 06ae68c with the
-end-of-game fix, patches 0001–0003 (0004, for replays without the 0x38 record, would change 4 of the validation games and no pro game; those 4 are not simulated again); income model v7, which refuses the unit orders the gold can't
+end-of-game fix, patches 0001–0003, the reading fix 0004 and the late-game patches 0005–0008 (the 4 validation games the reading fix concerns keep their earlier build orders); income model v7, which refuses the unit orders the gold can't
 pay for; food used counted from the units). On the current-patch pro games alone (408 held-out player-games) the main
 rules score: heroes 2.2, fights 3.7, hero deaths 2.3, expansion 2.4, out-expanded 1.7.
 
@@ -48,15 +48,20 @@ shown again.
 `supply` (0.9–1.3), `upkeep` (0.7–1.1) and `no_anti_air` (1.0–6.3) stay hidden; `no_items`
 passes (1.1–inf) but still fires in under 1% of games.
 
-Shown per game (top 3 of the shown rules, unspent gold included): 1.01 findings in wins, 1.95 in
+Shown per game (top 3 of the shown rules, unspent gold included): 1.03 findings in wins, 1.97 in
 losses (0.2.2: 1.04 and 1.84).
+
+**Again with WC3V patches 0004–0008 (2026-11-15, the lab's late-game changes):** the shown set is
+unchanged. `fights` 4.1 (11% / 46%); `workers_lost` fires about twice as often now that more worker
+deaths are seen (6% of wins, 9% of losses, lift 1.4, 1.1–1.8) and still passes; every strength still
+passes (the smallest, hero_level3_ms, +16.7, +14.3 to +19.1).
 
 ## Main findings
 
 | Rule | Fires when | Source | Pro wins / losses | Lift (H O U N) |
 |---|---|---|---|---|
 | `heroes` | hero XP by 6:00/10:00 worse than 75% of pros, or under 45% of both players' XP ("their heroes out-levelled yours" when your own pace was at pro level) | metric research on W3C score sheets | 24% / 67% | 2.8 (2.5 3.0 3.0 2.9) |
-| `fights` | you lost 1.3x more than the opponent in fights (detected, or inferred from loss bursts; 800+), unless your whole-game trade beats the pro median. Overlapping fights split the losses (they used to count them twice: 1.5x then gave 2.2) | metric research | 11% / 45% | 4.0 (3.3 4.4 3.6 5.2) |
+| `fights` | you lost 1.3x more than the opponent in fights (detected, or inferred from loss bursts; 800+), unless your whole-game trade beats the pro median. Overlapping fights split the losses (they used to count them twice: 1.5x then gave 2.2) | metric research | 11% / 46% | 4.1 (3.5 5.1 3.6 5.0) |
 | `hero_deaths` | your heroes died more often than theirs (2+) | Blizzard hero basics: keep heroes alive, carry a Town Portal | 6% / 14% | 2.4 (2.0 2.3 3.0 2.5) |
 | `expansion` | no expansion in a 20+ minute game while the opponent expanded | Liquipedia: expand early when safe | 3% / 7% | 2.1 (2.1 1.5 2.5 3.1) |
 | `out_expanded` | they had more bases standing than you for 4+ minutes (whole game; was before 20:00 only: 12% / 21%) | reviews (REVIEWS.md); Grubby #3 (economy) | 13% / 21% | 1.6 (2.0 1.6 1.2 2.0) |
@@ -89,7 +94,7 @@ near 1 here means "pros rarely do this either way", not that the advice is wrong
 | `one_hero` | one hero all game (15+ min) against two or more | Grubby #6 | 2% / 2% | 1.0 |
 | `towers` | more tower orders per base than 9 in 10 pros (and more than 6) | Grubby, Human guide 2026 | 3% / 4% | 1.0 |
 | `unanswered_expansion` | they expanded while your army was bigger and you didn't fight for 4 minutes | StrategyWiki | under 1% / under 1% | rare |
-| `workers_lost` | ≈ 5+ workers lost by 12:00 (and more than 9 in 10 pros) | Grubby, Human guide | 3% / 5% | 1.6 |
+| `workers_lost` | ≈ 5+ workers lost by 12:00 (and more than 9 in 10 pros) | Grubby, Human guide | 6% / 9% | 1.4 |
 | `just_over_50` | 2+ minutes at 51-54 food without fighting | Grubby #3 | under 1% / under 1% | rare |
 | `no_items` | no shop purchase in 12+ minutes | Blizzard hero basics | 0% / 1% | 3.0 |
 | `no_scout` | your first unit on their side of the map after 9 in 10 pros (and after 5:00) | pro data; Grubby, Liquipedia | never in pros | – |

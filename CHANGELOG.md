@@ -306,6 +306,16 @@ model, evaluation curve, rules) was redone once, after.
   losing side); the army error on the recorded games is unchanged (115 on 89 games, 169 on the 36
   put aside). Still open: units killed in the very last fight of a lost game are often not counted
   as lost, because the replay ends before the player selects them again.
+- **Long games read closer to the real game.** A recorded game showed the simulation close for 20
+  minutes and then drifting: units counted as trained long before they existed, workers killed in
+  raids still counted alive, units the replay never shows kept alive by a fight nearby. Four
+  changes to WC3V fix much of it, judged on curves over the whole game, not only an average. On 36
+  recorded games put aside, the army value error went from 165 to 140 (by phase 0-10 / 10-20 /
+  20-30 minutes: 40 / 257 / 373 to 39 / 216 / 316; the worst 3-minute stretch of each game 470 to
+  386), and no game got worse by more than 50. Workers late in the game: off by 4.6 to 3.7 at 20-30
+  minutes, 11.3 to 8.3 after 30. Still missed: about half the workers killed in raids, and part of
+  the losing side's last fight. *Workers lost* now fires more often (it sees more of those deaths)
+  and still passes the held-out check.
 - **W3Champions results are read from the replay.** Since 0.2.5 a W3Champions game showed
   *Reviewing* until its result was found on W3Champions. The replay does say who won, read
   differently from a Battle.net replay: W3Champions' server closes every connection at the end,
@@ -336,14 +346,14 @@ model, evaluation curve, rules) was redone once, after.
   amount of units, hero experience and losses against what is usual for each race at that minute.
   On 3,140 tournament games it never saw, a Human against Undead was given 10 to 17 points more
   than how often they won and is now 2 to 5 points off, an Orc against Undead up to 14 and now 4 at
-  most; over all matchups 4.5 points off on average instead of 5.8. Its chances are also less
+  most; over all matchups 4.4 points off on average instead of 5.8. Its chances are also less
   overconfident, and the favourite wins as often (65% at 10 minutes, 69% at 20). Still off: a Human
   against an Orc reads 6 to 10 points low from 10 minutes on.
 - **Findings and strengths, scored again on the new numbers** (held out, docs/RULES.md). All the
   findings shown before still pass. *You lost the fights* separates losses from wins much better
-  (it fires in 11% of pros' wins instead of 17%), because the winner's army no longer "dies" at the
-  end. *Unspent gold* passes again (7% of wins, 11% of losses) and is shown again. Every strength
-  still passes.
+  (it fires in 11% of pros' wins instead of 17%, and in 46% of losses instead of 37%), because the
+  winner's army no longer "dies" at the end. *Unspent gold* passes again (7% of wins, 11% of
+  losses) and is shown again. Every strength still passes.
 - **Pro comparisons rebuilt** on the pro and tournament games simulated again (about 1,700 to
   1,800 player-games per race): your unspent gold is now compared with the pros' (280 on average in
   the first 10 minutes, where it read 41).
